@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sercan Sözer — sersoz.com</title>
+<meta name="description" content="Sercan Sözer — makine görüşü, endüstriyel otomasyon ve yazılım üzerine kişisel site.">
+<meta property="og:title" content="Sercan Sözer">
+<meta property="og:description" content="Makine görüşü · Endüstriyel otomasyon · Yazılım">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23060b16'/%3E%3Ctext x='32' y='44' font-family='Segoe UI,Arial' font-size='34' font-weight='700' fill='%234cc9f0' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #05080f;
+    --text: #e8edf5;
+    --muted: #8b98ab;
+    --accent: #4cc9f0;
+    --accent-soft: rgba(76, 201, 240, .14);
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    background: radial-gradient(1200px 700px at 50% 20%, #0a1322 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, 'Inter', sans-serif;
+    overflow: hidden;
+  }
+
+  #bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: .95;
+  }
+
+  .veil {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background:
+      radial-gradient(720px 420px at 50% 42%, rgba(5, 8, 15, .62) 0%, rgba(5, 8, 15, .18) 60%, transparent 100%),
+      linear-gradient(to bottom, rgba(5, 8, 15, .55) 0%, transparent 30%, transparent 62%, rgba(5, 8, 15, .78) 100%);
+    pointer-events: none;
+  }
+
+  main {
+    position: relative;
+    z-index: 2;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 24px;
+    animation: rise .9s cubic-bezier(.2, .7, .3, 1) both;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .eyebrow {
+    font-family: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+    font-size: 13px;
+    letter-spacing: .35em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 22px;
+  }
+
+  h1 {
+    font-size: clamp(42px, 8vw, 84px);
+    font-weight: 650;
+    letter-spacing: -.02em;
+    line-height: 1.05;
+    text-shadow: 0 2px 30px rgba(5, 8, 15, .9);
+  }
+
+  .tagline {
+    margin-top: 18px;
+    font-size: clamp(15px, 2.2vw, 19px);
+    color: var(--muted);
+    letter-spacing: .04em;
+  }
+
+  .tagline b {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .desc {
+    margin-top: 14px;
+    max-width: 52ch;
+    font-size: clamp(14px, 1.8vw, 16px);
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .links {
+    margin-top: 34px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 22px;
+    border: 1px solid rgba(139, 152, 171, .28);
+    border-radius: 999px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 14.5px;
+    letter-spacing: .02em;
+    background: rgba(10, 19, 34, .45);
+    backdrop-filter: blur(6px);
+    transition: border-color .25s, background .25s, transform .25s, box-shadow .25s;
+  }
+
+  .links a:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(76, 201, 240, .18);
+  }
+
+  .links a svg { width: 17px; height: 17px; fill: currentColor; }
+
+  .status {
+    margin-top: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13px;
+    letter-spacing: .08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 0 rgba(76, 201, 240, .55);
+    animation: pulse 2.2s ease-out infinite;
+  }
+
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(76, 201, 240, .55); }
+    70%  { box-shadow: 0 0 0 11px rgba(76, 201, 240, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(76, 201, 240, 0); }
+  }
+
+  footer {
+    position: fixed;
+    z-index: 2;
+    bottom: 18px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 12.5px;
+    letter-spacing: .06em;
+    color: rgba(139, 152, 171, .65);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    main { animation: none; }
+    .dot { animation: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="veil"></div>
+
+<main>
+  <p class="eyebrow">sersoz.com</p>
+  <h1>Sercan Sözer</h1>
+  <p class="tagline"><b>Makine görüşü</b> · <b>Endüstriyel otomasyon</b> · <b>Yazılım</b></p>
+  <p class="desc">3D kamera sistemleri, derin öğrenme ile görüntü işleme ve PLC haberleşmesi
+    üzerine çalışıyorum. Bu sayfa yapım aşamasında — yakında daha fazlası burada olacak.</p>
+
+  <div class="links">
+    <a href="https://github.com/sercansozer20-dot" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+    <a href="mailto:sercan@sersoz.com">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M.05 3.56A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.56L8 7.41.05 3.56zM0 4.7v6.8A2 2 0 0 0 2 13.5h12a2 2 0 0 0 2-2V4.7L8.35 8.42a.8.8 0 0 1-.7 0L0 4.7z"/></svg>
+      E-posta
+    </a>
+  </div>
+
+  <div class="status"><span class="dot"></span> Yakında — site yapım aşamasında</div>
+</main>
+
+<footer>© 2026 Sercan Sözer</footer>
+
+<script>
+(function () {
+  var canvas = document.getElementById('bg');
+  var ctx = canvas.getContext('2d');
+  var W, H, dpr;
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = canvas.width = Math.floor(innerWidth * dpr);
+    H = canvas.height = Math.floor(innerHeight * dpr);
+    canvas.style.width = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
+  }
+  resize();
+  addEventListener('resize', resize);
+
+  var N = 46;                      // ızgara kenarı — 46x46 nokta
+  var TILT = -1.02;                // sabit bakış eğimi
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+
+    var ry = t * 0.10;
+    var cosY = Math.cos(ry), sinY = Math.sin(ry);
+    var cosX = Math.cos(TILT), sinX = Math.sin(TILT);
+    var scale = Math.min(W, H) * 0.46;
+    var fov = 3.2;
+    var cx = W / 2, cy = H * 0.60;
+    var sweep = ((t * 0.30) % 2.6) - 1.3;   // lazer çizgisi süpürmesi (nesne uzayında x)
+
+    for (var i = 0; i < N; i++) {
+      var x = (i / (N - 1) - 0.5) * 2;
+      for (var j = 0; j < N; j++) {
+        var z = (j / (N - 1) - 0.5) * 2;
+
+        var y = 0.16 * Math.sin(2.6 * x + t * 0.9) * Math.cos(2.0 * z - t * 0.7)
+              + 0.06 * Math.sin(4.5 * (0.8 * x + z) + t * 1.4);
+
+        var xr = x * cosY + z * sinY;
+        var zr = -x * sinY + z * cosY;
+        var yr = y * cosX - zr * sinX;
+        var zd = y * sinX + zr * cosX;
+
+        var s = fov / (fov + zd);
+        var px = cx + xr * s * scale;
+        var py = cy + yr * s * scale;
+
+        var onLaser = Math.abs(x - sweep) < 0.05;
+        var size = (onLaser ? 2.6 : 1.7) * dpr * s;
+
+        if (onLaser) {
+          ctx.fillStyle = 'rgba(190, 233, 255, 0.95)';
+        } else {
+          var yn = Math.max(0, Math.min(1, (y + 0.24) / 0.48));
+          var hue = 212 - yn * 150;             // mavi → yeşil-sarı yükseklik haritası
+          var alpha = Math.max(0.12, 0.66 - (zd + 1.0) * 0.22);
+          ctx.fillStyle = 'hsla(' + hue + ', 85%, ' + (48 + yn * 14) + '%, ' + alpha + ')';
+        }
+        ctx.fillRect(px - size / 2, py - size / 2, size, size);
+      }
+    }
+  }
+
+  if (reduced) {
+    draw(1.7);
+  } else {
+    (function loop() {
+      draw(performance.now() / 1000);
+      requestAnimationFrame(loop);
+    })();
+  }
+})();
+</script>
+</body>
+</html>
