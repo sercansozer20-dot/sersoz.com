@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forum — Sercan Sözer</title>
+<meta name="description" content="Makine görüşü, robotik ve endüstriyel otomasyon üzerine soru-cevap ve tartışma alanı. GitHub Discussions altyapısıyla çalışır.">
+<meta property="og:title" content="Forum — Sercan Sözer">
+<meta property="og:description" content="Makine görüşü · Robotik · Endüstriyel otomasyon tartışmaları">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f6f2ea;
+    --ink: #1a1815;
+    --muted: #5b564d;
+    --accent: #c2410c;
+    --green: #14532d;
+    --line: rgba(26, 24, 21, .2);
+    --line-soft: rgba(26, 24, 21, .1);
+    --faint: rgba(26, 24, 21, .055);
+    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  section { scroll-margin-top: 72px; }
+
+  .container { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- Nav ---------- */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    background: rgba(246, 242, 234, .9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .nav-inner {
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand .mark {
+    width: 22px; height: 22px;
+    background: var(--accent);
+    color: var(--bg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .brand span.host { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--ink); }
+
+  .nav-links { display: flex; gap: 4px; }
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 10px 12px;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.active { color: var(--accent); }
+  .nav-links a.nav-cta { border: 1px solid var(--ink); padding: 9px 14px; margin-left: 10px; transition: color .2s, border-color .2s; }
+  .nav-links a.nav-cta:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- Sayfa başlığı ---------- */
+  .page-head {
+    position: relative;
+    padding: clamp(140px, 20vh, 200px) 0 clamp(56px, 8vh, 90px);
+    overflow: hidden;
+  }
+
+  .page-head .section-index { top: clamp(84px, 12vh, 120px); }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 28px;
+  }
+  .eyebrow::before { content: ''; width: 42px; height: 2px; background: var(--accent); }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(46px, 8vw, 84px);
+    font-weight: 700;
+    letter-spacing: -.015em;
+    line-height: 1.0;
+  }
+  h1::after { content: '.'; color: var(--accent); }
+
+  .tagline {
+    margin-top: 22px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(16px, 2.3vw, 21px);
+    color: var(--muted);
+    letter-spacing: .01em;
+  }
+  .tagline b { color: var(--ink); font-weight: 600; font-style: italic; }
+
+  .page-lead {
+    margin-top: 18px;
+    max-width: 62ch;
+    font-size: clamp(14px, 1.8vw, 16px);
+    line-height: 1.78;
+    color: var(--muted);
+  }
+
+  .dropcap::first-letter {
+    font-family: var(--serif);
+    font-size: 3.35em;
+    font-weight: 700;
+    float: left;
+    line-height: .8;
+    padding: .06em .13em 0 0;
+    color: var(--accent);
+  }
+
+  /* ---------- Ortak bölüm düzeni ---------- */
+  .section { position: relative; padding: clamp(84px, 12vh, 150px) 0; border-top: 3px double var(--line); overflow: hidden; }
+
+  .section-index {
+    position: absolute;
+    top: clamp(24px, 5vh, 56px);
+    right: -8px;
+    font-family: var(--serif);
+    font-size: clamp(110px, 18vw, 210px);
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: .8;
+    color: var(--faint);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .kicker .idx { color: var(--accent); margin-right: 10px; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(31px, 4.8vw, 54px);
+    font-weight: 700;
+    letter-spacing: -.012em;
+    line-height: 1.06;
+    margin-bottom: 26px;
+  }
+  h2::after { content: '.'; color: var(--accent); }
+
+  .section-lead { color: var(--muted); line-height: 1.78; font-size: 16px; max-width: 60ch; }
+
+  /* ---------- Kategori kartları ---------- */
+  .cat-cards { margin-top: 30px; border-top: 1px solid var(--line); }
+
+  .cat-card {
+    display: grid;
+    grid-template-columns: 168px 1fr auto;
+    gap: 32px;
+    align-items: start;
+    padding: clamp(28px, 4.5vh, 42px) 0;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .cat-side { display: flex; flex-direction: column; gap: 10px; }
+
+  .cat-no {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: .1em;
+    transition: letter-spacing .25s ease;
+  }
+
+  .cat-tag {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .cat-card h3 {
+    font-family: var(--serif);
+    font-size: clamp(21px, 2.6vw, 28px);
+    font-weight: 700;
+    letter-spacing: -.008em;
+    line-height: 1.14;
+    transition: color .22s ease;
+  }
+
+  .cat-card p { margin-top: 10px; color: var(--muted); line-height: 1.7; font-size: 14.5px; max-width: 64ch; }
+
+  .cat-go {
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+    transition: color .22s ease;
+  }
+  .cat-go svg { width: 14px; height: 14px; fill: currentColor; transition: transform .25s ease; }
+
+  @media (hover: hover) {
+    .cat-card:hover h3 { color: var(--accent); }
+    .cat-card:hover .cat-no { letter-spacing: .3em; }
+    .cat-card:hover .cat-go { color: var(--accent); }
+    .cat-card:hover .cat-go svg { transform: translateX(4px); }
+  }
+
+  /* ---------- Nasıl çalışır ---------- */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin-top: 34px;
+    border-top: 1px solid var(--line);
+  }
+
+  .step { padding: 32px 32px 8px 32px; border-left: 1px solid var(--line-soft); }
+  .step:first-child { border-left: none; padding-left: 0; }
+
+  .step-no {
+    font-family: var(--serif);
+    font-size: clamp(40px, 5vw, 56px);
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .step h4 {
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .step h4::before { content: ''; width: 8px; height: 8px; background: var(--accent); flex: none; }
+
+  .step p { margin-top: 12px; color: var(--muted); line-height: 1.7; font-size: 14.5px; }
+
+  .note-box {
+    margin-top: 44px;
+    max-width: 76ch;
+    background: var(--faint);
+    border-left: 3px solid var(--accent);
+    padding: 20px 24px;
+  }
+  .note-box .note-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .note-box p { color: var(--muted); line-height: 1.7; font-size: 14px; }
+  .note-box p b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- İletişim CTA ---------- */
+  .contact-wrap { max-width: 760px; }
+  .contact-wrap > p.lead { color: var(--muted); line-height: 1.78; font-size: 16px; max-width: 52ch; margin-bottom: 34px; }
+
+  .links { margin-top: 38px; display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 24px;
+    border: 1px solid var(--ink);
+    border-radius: 0;
+    color: var(--ink);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    background: transparent;
+    transition: border-color .22s, background .22s, color .22s;
+  }
+  .pill svg { width: 15px; height: 15px; fill: currentColor; }
+  .pill.primary { background: var(--ink); color: var(--bg); }
+
+  @media (hover: hover) {
+    .pill:hover { border-color: var(--accent); color: var(--accent); }
+    .pill.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  }
+  .pill:active { border-color: var(--accent); }
+
+  .status {
+    margin-top: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .12em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .dot {
+    width: 8px; height: 8px;
+    background: var(--green);
+    box-shadow: 0 0 0 0 rgba(20, 83, 45, .4);
+    animation: pulse 2.2s ease-out infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(20, 83, 45, .4); }
+    70%  { box-shadow: 0 0 0 11px rgba(20, 83, 45, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(20, 83, 45, 0); }
+  }
+
+  footer { border-top: 3px double var(--line); padding: 26px 0; }
+  .footer-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--muted);
+  }
+  .footer-inner .mono { font-family: var(--mono); }
+
+  /* ---------- Scroll reveal ---------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .6s cubic-bezier(.2, .7, .3, 1), transform .6s cubic-bezier(.2, .7, .3, 1);
+    transition-delay: var(--d, 0s);
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  /* ---------- Mobil ---------- */
+  @media (max-width: 1080px) {
+    .container, .nav-inner, .footer-inner { max-width: 920px; }
+    .cat-card { grid-template-columns: 132px 1fr auto; gap: 24px; }
+  }
+
+  @media (max-width: 880px) {
+    .steps { grid-template-columns: 1fr; }
+    .step { border-left: none; border-top: 1px solid var(--line-soft); padding: 28px 0 8px 0; }
+    .step:first-child { border-top: none; }
+    .section-index { font-size: clamp(90px, 22vw, 150px); }
+    .cat-go { display: none; }
+    .cat-card { grid-template-columns: 132px 1fr; }
+  }
+
+  @media (max-width: 720px) {
+    .cat-card { grid-template-columns: 1fr; gap: 12px; }
+    .cat-side { flex-direction: row; align-items: baseline; gap: 16px; }
+  }
+
+  @media (max-width: 640px) {
+    .nav-links a { display: none; }
+    .nav-links a.nav-cta { display: inline-block; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .dot { animation: none; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .cat-no, .cat-card h3, .cat-go, .cat-go svg, .pill { transition: none; }
+  }
+</style>
+<noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/" aria-label="sersoz.com">
+      <span class="mark" aria-hidden="true">S</span>
+      <span class="host">sersoz.com</span>
+    </a>
+    <div class="nav-links">
+      <a href="/">Ana Sayfa</a>
+      <a href="/yazilar.html">Yazılar</a>
+      <a class="active" href="/forum.html" aria-current="page">Forum</a>
+      <a class="nav-cta" href="/#iletisim">İletişim</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-head">
+  <span class="section-index" aria-hidden="true">F</span>
+  <div class="container">
+    <p class="eyebrow">sersoz.com / forum</p>
+    <h1>Forum</h1>
+    <p class="tagline"><b>Makine görüşü</b> · <b>Robotik</b> · <b>Endüstriyel otomasyon</b></p>
+    <p class="page-lead dropcap">Makine görüşü, robotik ve endüstriyel otomasyon üzerine soru-cevap
+      ve tartışma alanı. Katılmak için bir GitHub hesabı yeterli — konu açın, deneyiminizi paylaşın,
+      sahadan gelen sorulara birlikte yanıt arayalım.</p>
+  </div>
+</header>
+
+<main>
+  <!-- Kategoriler -->
+  <section class="section" id="kategoriler">
+    <span class="section-index" aria-hidden="true">01</span>
+    <div class="container">
+      <p class="kicker reveal"><span class="idx">01</span>Kategoriler</p>
+      <h2 class="reveal">Tartışma başlıkları</h2>
+      <p class="section-lead reveal">Aşağıdaki kategorilerden birine tıklayın; tartışma GitHub
+        Discussions üzerinde açılır. Kategoriler GitHub tarafında zamanla genişletilecek.</p>
+
+      <div class="cat-cards">
+        <a class="cat-card reveal" href="https://github.com/sercansozer20-dot/sersoz.com/discussions" target="_blank" rel="noopener">
+          <div class="cat-side">
+            <p class="cat-no">01</p>
+            <p class="cat-tag">Genel</p>
+          </div>
+          <div class="cat-body">
+            <h3>Genel Tartışma</h3>
+            <p>Belirli bir kategoriye sığmayan her şey: tanışma, öneriler, sektör gündemi,
+              araç ve kaynak paylaşımları.</p>
+          </div>
+          <span class="cat-go">Tartışmaya git
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8a.7.7 0 0 1 .7-.7h5.9L7.8 5a.7.7 0 1 1 1-1l3.5 3.5a.7.7 0 0 1 0 1L8.8 12a.7.7 0 1 1-1-1l2.3-2.3H4.2a.7.7 0 0 1-.7-.7z"/></svg>
+          </span>
+        </a>
+
+        <a class="cat-card reveal" href="https://github.com/sercansozer20-dot/sersoz.com/discussions" target="_blank" rel="noopener">
+          <div class="cat-side">
+            <p class="cat-no">02</p>
+            <p class="cat-tag">3D Vizyon</p>
+          </div>
+          <div class="cat-body">
+            <h3>3D Vizyon &amp; Metroloji</h3>
+            <p>Nokta bulutu işleme, profil sensörleri, RANSAC/ICP, düzlemsellik ve boyutsal
+              ölçüm, CAD karşılaştırma, kalibrasyon soruları.</p>
+          </div>
+          <span class="cat-go">Tartışmaya git
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8a.7.7 0 0 1 .7-.7h5.9L7.8 5a.7.7 0 1 1 1-1l3.5 3.5a.7.7 0 0 1 0 1L8.8 12a.7.7 0 1 1-1-1l2.3-2.3H4.2a.7.7 0 0 1-.7-.7z"/></svg>
+          </span>
+        </a>
+
+        <a class="cat-card reveal" href="https://github.com/sercansozer20-dot/sersoz.com/discussions" target="_blank" rel="noopener">
+          <div class="cat-side">
+            <p class="cat-no">03</p>
+            <p class="cat-tag">Haberleşme</p>
+          </div>
+          <div class="cat-body">
+            <h3>PLC &amp; Haberleşme</h3>
+            <p>Mitsubishi MC/SLMP, Siemens S7, Modbus TCP, PROFINET; el sıkışma desenleri,
+              vizyon→PLC köprüleri ve saha ağı sorunları.</p>
+          </div>
+          <span class="cat-go">Tartışmaya git
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8a.7.7 0 0 1 .7-.7h5.9L7.8 5a.7.7 0 1 1 1-1l3.5 3.5a.7.7 0 0 1 0 1L8.8 12a.7.7 0 1 1-1-1l2.3-2.3H4.2a.7.7 0 0 1-.7-.7z"/></svg>
+          </span>
+        </a>
+
+        <a class="cat-card reveal" href="https://github.com/sercansozer20-dot/sersoz.com/discussions" target="_blank" rel="noopener">
+          <div class="cat-side">
+            <p class="cat-no">04</p>
+            <p class="cat-tag">Derin Öğrenme</p>
+          </div>
+          <div class="cat-body">
+            <h3>Derin Öğrenme &amp; Görüntü İşleme</h3>
+            <p>YOLO ve ONNX dağıtımı, anomali tespiti, ürün öğretme, veri toplama ve etiketleme,
+              çıkarım hızlandırma, OpenCV teknikleri.</p>
+          </div>
+          <span class="cat-go">Tartışmaya git
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8a.7.7 0 0 1 .7-.7h5.9L7.8 5a.7.7 0 1 1 1-1l3.5 3.5a.7.7 0 0 1 0 1L8.8 12a.7.7 0 1 1-1-1l2.3-2.3H4.2a.7.7 0 0 1-.7-.7z"/></svg>
+          </span>
+        </a>
+
+        <a class="cat-card reveal" href="https://github.com/sercansozer20-dot/sersoz.com/discussions" target="_blank" rel="noopener">
+          <div class="cat-side">
+            <p class="cat-no">05</p>
+            <p class="cat-tag">Robotik</p>
+          </div>
+          <div class="cat-body">
+            <h3>Robotik</h3>
+            <p>Robot kılavuzlama, el-göz kalibrasyonu, poz sözleşmeleri (KUKA/ABB/Fanuc/Yaskawa),
+              taramadan robot koordinatına giden hat.</p>
+          </div>
+          <span class="cat-go">Tartışmaya git
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8a.7.7 0 0 1 .7-.7h5.9L7.8 5a.7.7 0 1 1 1-1l3.5 3.5a.7.7 0 0 1 0 1L8.8 12a.7.7 0 1 1-1-1l2.3-2.3H4.2a.7.7 0 0 1-.7-.7z"/></svg>
+          </span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Nasıl çalışır -->
+  <section class="section" id="nasil-calisir">
+    <span class="section-index" aria-hidden="true">02</span>
+    <div class="container">
+      <p class="kicker reveal"><span class="idx">02</span>Nasıl çalışır</p>
+      <h2 class="reveal">Üç adımda katılın</h2>
+
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-no">1</div>
+          <h4>Giriş yapın</h4>
+          <p>GitHub hesabınızla giriş yapın. Hesabınız yoksa github.com üzerinden ücretsiz
+            açabilirsiniz — başka üyelik gerekmez.</p>
+        </div>
+        <div class="step reveal" style="--d:.08s">
+          <div class="step-no">2</div>
+          <h4>Konu açın veya yanıtlayın</h4>
+          <p>İlgili kategoride yeni bir tartışma başlatın ya da mevcut bir konuya yanıt yazın.
+            Kod blokları ve görseller desteklenir.</p>
+        </div>
+        <div class="step reveal" style="--d:.16s">
+          <div class="step-no">3</div>
+          <h4>Kalıcı arşiv</h4>
+          <p>Tüm tartışmalar bu sitenin deposunda saklanır: aranabilir, bağlantı verilebilir
+            ve zamanla birikip bir bilgi tabanına dönüşür.</p>
+        </div>
+      </div>
+
+      <div class="note-box reveal">
+        <p class="note-label">Not</p>
+        <p>Forum, <b>GitHub Discussions</b> altyapısıyla çalışır; ilk kez açılıyorsa depo sahibinin
+          Discussions özelliğini etkinleştirmesi gerekir.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- İletişim CTA -->
+  <section class="section" id="iletisim">
+    <span class="section-index" aria-hidden="true">03</span>
+    <div class="container">
+      <div class="contact-wrap">
+        <p class="kicker reveal"><span class="idx">03</span>İletişim</p>
+        <h2 class="reveal">Foruma sığmayan bir konu mu var</h2>
+        <p class="lead reveal">Projeniz hakkında birebir konuşmak isterseniz ya da forumla ilgili
+          bir öneriniz varsa doğrudan e-posta gönderebilirsiniz.</p>
+        <div class="links reveal">
+          <a class="pill primary" href="mailto:sercan@sersoz.com">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M.05 3.56A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.56L8 7.41.05 3.56zM0 4.7v6.8A2 2 0 0 0 2 13.5h12a2 2 0 0 0 2-2V4.7L8.35 8.42a.8.8 0 0 1-.7 0L0 4.7z"/></svg>
+            sercan@sersoz.com
+          </a>
+          <a class="pill" href="https://github.com/sercansozer20-dot/sersoz.com/discussions" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+            Discussions'a git
+          </a>
+        </div>
+        <div class="status reveal"><span class="dot"></span> Forum GitHub Discussions üzerinde barınır</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 Sercan Sözer</span>
+    <span class="mono">sersoz.com</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Scroll reveal ---------- */
+  var revealEls = document.querySelectorAll('.reveal');
+  if (reduced || !('IntersectionObserver' in window)) {
+    revealEls.forEach(function (el) { el.classList.add('visible'); });
+  } else {
+    var ro = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          ro.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
+    revealEls.forEach(function (el) { ro.observe(el); });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El-Göz Kalibrasyonu: Tsai-Lenz Yöntemine Giriş — Sercan Sözer</title>
+<meta name="description" content="Robot flanşı ile kamera arasındaki bilinmeyen dönüşümü AX = XB denkleminden iki aşamada çözen Tsai-Lenz yöntemi: eksen-açı ile dönme, lineer sistemle öteleme, pratik veri toplama kuralları ve sentetik doğrulama.">
+<meta property="og:title" content="El-Göz Kalibrasyonu: Tsai-Lenz Yöntemine Giriş">
+<meta property="og:description" content="AX = XB probleminin iki aşamalı klasik çözümü — mühendislik günlüğünden.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f6f2ea;
+    --ink: #1a1815;
+    --muted: #5b564d;
+    --accent: #c2410c;
+    --green: #14532d;
+    --line: rgba(26, 24, 21, .2);
+    --line-soft: rgba(26, 24, 21, .1);
+    --faint: rgba(26, 24, 21, .055);
+    --body-ink: rgba(26, 24, 21, .84);
+    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  /* ---------- Nav ---------- */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transition: background .3s, border-color .3s;
+  }
+
+  nav.scrolled {
+    background: rgba(246, 242, 234, .9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom-color: var(--line);
+  }
+
+  .nav-inner {
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand .mark {
+    width: 22px; height: 22px;
+    background: var(--accent);
+    color: var(--bg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .brand span.host { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--ink); }
+
+  .nav-links { display: flex; gap: 4px; }
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 10px 12px;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.active { color: var(--accent); }
+  .nav-links a.nav-cta { border: 1px solid var(--ink); padding: 9px 14px; margin-left: 10px; transition: color .2s, border-color .2s; }
+  .nav-links a.nav-cta:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- Makale başlığı ---------- */
+  .wrap { max-width: 780px; margin: 0 auto; padding: 0 28px; }
+
+  .art-head {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(116px, 18vh, 160px) 0 clamp(36px, 6vh, 52px);
+    border-bottom: 3px double var(--line);
+  }
+
+  .crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    margin-bottom: 26px;
+    transition: color .2s;
+  }
+  .crumb svg { width: 13px; height: 13px; fill: currentColor; }
+  .crumb:hover { color: var(--accent); }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .kicker .idx { color: var(--accent); margin-right: 10px; }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(32px, 5.2vw, 52px);
+    font-weight: 700;
+    letter-spacing: -.012em;
+    line-height: 1.08;
+  }
+  h1::after { content: '.'; color: var(--accent); }
+
+  .standfirst {
+    margin-top: 20px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(16px, 2.2vw, 19px);
+    color: var(--muted);
+    letter-spacing: .01em;
+    line-height: 1.6;
+    max-width: 58ch;
+  }
+
+  .meta-row {
+    margin-top: 26px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .meta-row .item { display: inline-flex; align-items: center; gap: 8px; }
+  .meta-row .item::before { content: ''; width: 7px; height: 7px; background: var(--accent); flex: none; }
+  .meta-row .item.ok::before { background: var(--green); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+  .chip {
+    font-size: 12px;
+    font-family: var(--mono);
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 0;
+    color: var(--muted);
+    letter-spacing: .03em;
+    transition: border-color .2s, color .2s;
+  }
+  @media (hover: hover) {
+    .chip:hover { border-color: var(--accent); color: var(--ink); }
+  }
+
+  /* ---------- Okuma gövdesi ---------- */
+  .art-body { padding: clamp(40px, 7vh, 64px) 0 clamp(56px, 9vh, 88px); }
+
+  .art-body p {
+    max-width: 66ch;
+    font-size: 16.5px;
+    line-height: 1.85;
+    color: var(--body-ink);
+  }
+  .art-body p + p { margin-top: 18px; }
+
+  .dropcap::first-letter {
+    font-family: var(--serif);
+    font-size: 3.35em;
+    font-weight: 700;
+    float: left;
+    line-height: .8;
+    padding: .06em .13em 0 0;
+    color: var(--accent);
+  }
+
+  .art-body .kicker { margin-top: clamp(44px, 7vh, 64px); margin-bottom: 12px; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(23px, 3.2vw, 31px);
+    font-weight: 700;
+    letter-spacing: -.01em;
+    line-height: 1.12;
+    margin-bottom: 18px;
+    max-width: 30ch;
+  }
+  h2::after { content: '.'; color: var(--accent); }
+
+  /* Matematik gösterimi: harici kütüphane yok, serif italik + mono karışımı */
+  .m { font-family: var(--serif); font-style: italic; }
+  sub, sup { font-size: .72em; }
+
+  .eq {
+    margin: 24px 0;
+    padding: 14px 24px;
+    border-left: 3px double var(--ink);
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 19px;
+    letter-spacing: .02em;
+    color: var(--ink);
+    max-width: 66ch;
+    overflow-x: auto;
+  }
+  .eq .tag {
+    font-family: var(--mono);
+    font-style: normal;
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-left: 18px;
+    white-space: nowrap;
+  }
+
+  .art-body ul { margin: 18px 0 0; list-style: none; max-width: 66ch; }
+  .art-body li {
+    position: relative;
+    padding-left: 22px;
+    color: var(--body-ink);
+    font-size: 15px;
+    line-height: 1.75;
+    margin-top: 10px;
+  }
+  .art-body li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: .72em;
+    width: 12px;
+    height: 1px;
+    background: var(--accent);
+  }
+  .art-body li b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Şekil ---------- */
+  figure { margin: 34px 0 10px; max-width: 680px; }
+  figure svg { display: block; width: 100%; height: auto; }
+  figcaption {
+    margin-top: 14px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .1em;
+    line-height: 1.6;
+    color: var(--muted);
+    max-width: 66ch;
+  }
+  figcaption::before { content: ''; width: 8px; height: 8px; background: var(--accent); flex: none; transform: translateY(1px); }
+
+  /* ---------- Makale sonu ---------- */
+  .art-end {
+    border-top: 3px double var(--line);
+    padding: clamp(36px, 6vh, 56px) 0 clamp(64px, 10vh, 96px);
+  }
+  .art-end .note {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 15.5px;
+    color: var(--muted);
+    max-width: 58ch;
+    margin-bottom: 30px;
+    line-height: 1.7;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 24px;
+    border: 1px solid var(--ink);
+    border-radius: 0;
+    color: var(--ink);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    background: transparent;
+    transition: border-color .22s, background .22s, color .22s;
+  }
+  .pill svg { width: 15px; height: 15px; fill: currentColor; }
+  .pill.primary { background: var(--ink); color: var(--bg); }
+  @media (hover: hover) {
+    .pill:hover { border-color: var(--accent); color: var(--accent); }
+    .pill.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  }
+  .pill:active { border-color: var(--accent); }
+
+  footer { border-top: 3px double var(--line); padding: 26px 0; }
+  .footer-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--muted);
+  }
+  .footer-inner .mono { font-family: var(--mono); }
+
+  /* ---------- Scroll reveal ---------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .6s cubic-bezier(.2, .7, .3, 1), transform .6s cubic-bezier(.2, .7, .3, 1);
+    transition-delay: var(--d, 0s);
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  /* ---------- Mobil ---------- */
+  @media (max-width: 1080px) {
+    .nav-inner, .footer-inner { max-width: 920px; }
+  }
+
+  @media (max-width: 880px) {
+    .eq { font-size: 17px; padding: 12px 18px; }
+  }
+
+  @media (max-width: 720px) {
+    .art-body p { font-size: 16px; }
+    .meta-row { gap: 8px 16px; }
+  }
+
+  @media (max-width: 640px) {
+    .brand span.host { display: none; }
+    .nav-inner { padding: 0 16px; }
+    .nav-links a { padding: 10px 8px; font-size: 10.5px; letter-spacing: .1em; }
+    .nav-links a.nav-cta { padding: 9px 10px; margin-left: 4px; }
+    .eq .tag { display: block; margin: 8px 0 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .chip, .pill, .crumb { transition: none; }
+  }
+</style>
+<noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/" aria-label="sersoz.com — ana sayfa">
+      <span class="mark" aria-hidden="true">S</span>
+      <span class="host">sersoz.com</span>
+    </a>
+    <div class="nav-links">
+      <a href="/">Ana Sayfa</a>
+      <a href="/yazilar.html" class="active">Yazılar</a>
+      <a href="/forum.html">Forum</a>
+      <a class="nav-cta" href="/#iletisim">İletişim</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ================================================================
+     MAKALE ŞABLONU NOTU
+     Yeni bir makale için bu dosyayı kopyala ve şunları değiştir:
+       1) <title>, meta description, og:* etiketleri
+       2) .art-head içinde: kicker konusu, h1 başlık, standfirst,
+          meta-row (tarih · okuma süresi · yazar) ve chips etiketleri
+       3) .art-body içeriği (kicker + h2 + paragraf blokları;
+          ilk paragrafa class="dropcap")
+       4) Denklemler .eq bloğuyla, şekiller <figure> + inline SVG ile —
+          harici formül/görsel kütüphanesi KULLANMA
+     Sonra yazilar.html listesine yeni bir .entry bloğu ekle
+     (oradaki YENİ YAZI ŞABLONU yorumuna bak).
+     ================================================================ -->
+
+<header class="art-head" id="baslik">
+  <div class="wrap">
+    <a class="crumb" href="/yazilar.html">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M12.5 8.7H5.7l2.6 2.6a.7.7 0 1 1-1 1L3.5 8.5a.7.7 0 0 1 0-1l3.8-3.8a.7.7 0 1 1 1 1L5.7 7.3h6.8a.7.7 0 0 1 0 1.4z"/></svg>
+      Tüm yazılar
+    </a>
+    <p class="kicker"><span class="idx">Yazı 01</span>Robotik Algılama</p>
+    <h1>El-Göz Kalibrasyonu: Tsai-Lenz Yöntemine Giriş</h1>
+    <p class="standfirst">Robot flanşı ile kameranın arasındaki görünmez dönüşümü tek bir matris
+      denkleminden söküp almak: <span class="m">AX&nbsp;=&nbsp;XB</span> probleminin iki aşamalı,
+      kapalı biçimli klasik çözümü.</p>
+    <div class="meta-row">
+      <span class="item">30 Temmuz 2026</span>
+      <span class="item">≈ 7 dk okuma</span>
+      <span class="item ok">Sercan Sözer</span>
+    </div>
+    <div class="chips">
+      <span class="chip">Robotik</span>
+      <span class="chip">3D Metroloji</span>
+      <span class="chip">Kalibrasyon</span>
+    </div>
+  </div>
+</header>
+
+<main class="art-body">
+  <div class="wrap">
+
+    <p class="kicker reveal" style="margin-top:0"><span class="idx">01</span>Problem</p>
+    <h2 class="reveal">İki koordinat sistemi, bir bilinmeyen</h2>
+    <p class="dropcap">Bir robot koluna kamera monte ettiğinizde elinizde iki ayrı "gerçeklik" olur.
+      Robot denetleyicisi, flanşın — uç eleman bağlantı yüzeyinin — taban koordinat sistemindeki
+      pozunu her an bilir; ileri kinematik bunu verir. Kamera ise gördüğü kalibrasyon hedefinin pozunu
+      kendi optik merkezine göre ölçer. İki bilgi de doğrudur, ama farklı dillerde yazılmıştır.
+      Kameranın ölçtüğü bir noktaya robotu gönderebilmek için flanş ile kamera arasındaki katı dönüşümü
+      — üç eksenli dönme artı üç eksenli öteleme, toplam altı serbestlik derecesi — bilmek zorundayız.
+      Bu bilinmeyen dönüşüme <span class="m">X</span> diyelim.</p>
+    <p><span class="m">X</span>'i cetvelle ölçemezsiniz: kameranın optik merkezi lens grubunun içinde
+      bir yerdedir ve mekanik çizimden okunmaz. Onun yerine robotu hareket ettirir, her iki tarafın
+      aynı hareketi nasıl gördüğünü karşılaştırırız. Robot, <span class="m">i</span>. adımda flanşını
+      <span class="m">A<sub>i</sub></span> dönüşümü kadar oynatsın; bu, iki flanş pozunun bileşiminden
+      hesaplanır ve bilinir. Aynı anda kamera, sabit duran hedefe göre kendi pozunun
+      <span class="m">B<sub>i</sub></span> kadar değiştiğini ölçsün; bu da iki hedef gözleminden çıkar.
+      Kamera flanşa vidalı olduğuna göre iki hareket aynı fiziksel olaydır ve ilişkileri tek satırdır:</p>
+    <div class="eq"><span class="m">A<sub>i</sub>&thinsp;X = X&thinsp;B<sub>i</sub></span><span class="tag">Denk. 1 — el-göz denklemi</span></div>
+    <p>Sözle söylersek: "önce flanş hareketi, sonra el-göz dönüşümü" ile "önce el-göz dönüşümü, sonra
+      kamera hareketi" aynı yere varmak zorundadır. Klasik el-göz kalibrasyonu problemi budur;
+      literatür onu kısaca <span class="m">AX&nbsp;=&nbsp;XB</span> diye anar.</p>
+
+    <figure class="reveal" role="img" aria-label="Eye-in-hand düzeninde taban, flanş, kamera ve hedef arasındaki dönüşüm zinciri şeması">
+      <svg viewBox="0 0 680 310" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="ok-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0L10 5L0 10z" fill="#1a1815"/>
+          </marker>
+          <marker id="ok-brick" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0L10 5L0 10z" fill="#c2410c"/>
+          </marker>
+          <marker id="ok-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0L10 5L0 10z" fill="#14532d"/>
+          </marker>
+        </defs>
+
+        <!-- Kenarlar -->
+        <line x1="108" y1="242" x2="204" y2="84" stroke="#1a1815" stroke-width="1.4" marker-end="url(#ok-ink)"/>
+        <line x1="278" y1="61" x2="404" y2="61" stroke="#c2410c" stroke-width="2" marker-end="url(#ok-brick)"/>
+        <line x1="474" y1="82" x2="572" y2="240" stroke="#1a1815" stroke-width="1.4" marker-end="url(#ok-ink)"/>
+        <line x1="146" y1="263" x2="530" y2="263" stroke="#14532d" stroke-width="1.3" stroke-dasharray="6 5" marker-end="url(#ok-green)"/>
+
+        <!-- Düğümler -->
+        <rect x="46" y="246" width="96" height="34" fill="#f6f2ea" stroke="#1a1815" stroke-width="1.5"/>
+        <text x="94" y="267" text-anchor="middle" font-family="Consolas, monospace" font-size="12" fill="#1a1815">Taban {T}</text>
+
+        <rect x="178" y="44" width="96" height="34" fill="#f6f2ea" stroke="#1a1815" stroke-width="1.5"/>
+        <text x="226" y="65" text-anchor="middle" font-family="Consolas, monospace" font-size="12" fill="#1a1815">Flanş {F}</text>
+
+        <rect x="410" y="44" width="104" height="34" fill="#f6f2ea" stroke="#1a1815" stroke-width="1.5"/>
+        <text x="462" y="65" text-anchor="middle" font-family="Consolas, monospace" font-size="12" fill="#1a1815">Kamera {K}</text>
+
+        <rect x="536" y="246" width="96" height="34" fill="#f6f2ea" stroke="#1a1815" stroke-width="1.5"/>
+        <text x="584" y="267" text-anchor="middle" font-family="Consolas, monospace" font-size="12" fill="#1a1815">Hedef {H}</text>
+
+        <!-- Etiketler -->
+        <text x="140" y="156" text-anchor="end" font-family="Consolas, monospace" font-size="11" fill="#5b564d">robot kinematiği</text>
+        <text x="140" y="171" text-anchor="end" font-family="Consolas, monospace" font-size="11" fill="#5b564d">(bilinir)</text>
+
+        <text x="341" y="44" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-weight="700" font-size="16" fill="#c2410c">X — aranan</text>
+
+        <text x="545" y="152" text-anchor="start" font-family="Consolas, monospace" font-size="11" fill="#5b564d">görüntüden poz</text>
+        <text x="545" y="167" text-anchor="start" font-family="Consolas, monospace" font-size="11" fill="#5b564d">(bilinir)</text>
+
+        <text x="338" y="292" text-anchor="middle" font-family="Consolas, monospace" font-size="11" fill="#14532d">sabit ilişki — döngüyü kapatır</text>
+      </svg>
+      <figcaption>Şekil 1 — Eye-in-hand düzeninde dönüşüm zinciri. T→F→K→H yolu ile T→H ilişkisi
+        aynı yere varmak zorundadır; <span class="m">AX&nbsp;=&nbsp;XB</span> bu kapalı döngünün
+        cebirsel ifadesidir.</figcaption>
+    </figure>
+
+    <p class="kicker reveal"><span class="idx">02</span>Düzenler</p>
+    <h2 class="reveal">Eye-in-hand mi, eye-to-hand mi?</h2>
+    <p>Aynı denklem iki farklı fiziksel kurulumu kapsar. <b>Eye-in-hand</b>'de kamera robotun
+      üzerindedir; <span class="m">X</span>, flanştan kameraya giden dönüşümdür ve kalibrasyon hedefi
+      sabit durur. <b>Eye-to-hand</b>'de kamera hücrenin bir köşesine sabitlenmiştir, hedef ise robotun
+      ucuna takılır; bu kez aranan şey taban ile kamera arasındaki dönüşümdür. İki durumda da denklem
+      yapısı birebir aynı kalır — yalnızca <span class="m">A</span> ve <span class="m">B</span>'nin
+      hangi poz çiftlerinden türetildiği değişir. Bu yüzden aynı çözücü kod, tek satır bile
+      değişmeden her iki kurulumda kullanılabilir. Robotlu 3D tarama hücremde kamera flanşta gezdiği
+      için bu yazının kalanı eye-in-hand diliyle ilerliyor.</p>
+
+    <p class="kicker reveal"><span class="idx">03</span>Yöntem</p>
+    <h2 class="reveal">Tsai-Lenz: önce dönme, sonra öteleme</h2>
+    <p>Homojen dönüşüm matrisini dönme bloğu <span class="m">R</span> ile öteleme vektörü
+      <span class="m">t</span>'ye ayırınca Denk.&nbsp;1 ikiye dağılır:</p>
+    <div class="eq"><span class="m">R<sub>A</sub>&thinsp;R<sub>X</sub> = R<sub>X</sub>&thinsp;R<sub>B</sub></span><span class="tag">Denk. 2 — dönme</span></div>
+    <div class="eq"><span class="m">(R<sub>A</sub> − I)&thinsp;t<sub>X</sub> = R<sub>X</sub>&thinsp;t<sub>B</sub> − t<sub>A</sub></span><span class="tag">Denk. 3 — öteleme</span></div>
+    <p>Tsai ve Lenz'in 1989 tarihli makalesinin zarafeti, bu iki denklemi sırayla ve her seferinde
+      <b>lineer</b> biçimde çözmesidir. Önce dönme: her dönme matrisi bir birim eksen
+      <span class="m">k</span> ve açı <span class="m">θ</span> ile, yani eksen-açı gösterimiyle
+      yazılabilir. Denk.&nbsp;2'yi düzenleyince <span class="m">R<sub>A</sub> =
+      R<sub>X</sub>&thinsp;R<sub>B</sub>&thinsp;R<sub>X</sub><sup>T</sup></span> çıkar; bu bir benzerlik
+      dönüşümüdür ve anlamı nettir: <span class="m">R<sub>X</sub></span>, kameranın gördüğü dönme
+      eksenini flanşın dönme eksenine taşır — <span class="m">k<sub>A</sub> =
+      R<sub>X</sub>&thinsp;k<sub>B</sub></span>. Açı ise iki tarafta aynıdır.</p>
+    <p>Tsai-Lenz bu ilişkiyi doğrudan çözmek yerine her dönmeyi değiştirilmiş Rodrigues vektörüne
+      çevirir: <span class="m">P = 2&thinsp;sin(θ/2)&thinsp;k</span>. Bu gösterimde her hareket çifti,
+      bilinmeyen vektör üzerinde çapraz-çarpım (skew) matrisli lineer bir denklem üretir:</p>
+    <div class="eq"><span class="m">skew(P<sub>A</sub> + P<sub>B</sub>)&thinsp;·&thinsp;P&prime;<sub>X</sub> = P<sub>A</sub> − P<sub>B</sub></span><span class="tag">Denk. 4 — lineer dönme sistemi</span></div>
+    <p>(İşaretler, <span class="m">A</span> ile <span class="m">B</span>'nin hangi tarafta
+      tanımlandığına göre kaynaktan kaynağa değişebilir; önemli olan yapıdır.) Skew matrisinin rankı
+      2 olduğundan tek hareket çifti üç bilinmeyen için yetmez: en az iki, pratikte çok daha fazla
+      çift üst üste yığılır ve en küçük kareler ile çözülür. Bulunan
+      <span class="m">P&prime;<sub>X</sub></span>, küçük bir ölçek düzeltmesiyle gerçek Rodrigues
+      vektörüne, oradan da <span class="m">R<sub>X</sub></span> matrisine dönüştürülür.</p>
+    <p>İkinci aşama artık kolaydır: <span class="m">R<sub>X</sub></span> bilindiğine göre
+      Denk.&nbsp;3, <span class="m">t<sub>X</sub></span>'te düpedüz lineerdir. Her hareket çifti için
+      denklem yazılır, hepsi tek bir yığın sisteme dizilir, yine en küçük kareler koşulur. Toplam:
+      iki küçük lineer sistem, kapalı biçim, iterasyon yok — modern bir işlemcide milisaniyeler.</p>
+
+    <p class="kicker reveal"><span class="idx">04</span>Saha</p>
+    <h2 class="reveal">Pratik ipuçları: veri toplamanın sanatı</h2>
+    <p>Çözücü on satırlık lineer cebirdir; kalibrasyonun kalitesini asıl belirleyen, robotu
+      <b>nasıl gezdirdiğinizdir</b>. Sahada işe yarayan kurallar:</p>
+    <ul>
+      <li><b>En az iki, pratikte üç ve üzeri bağımsız dönme ekseni</b> kullanın. Paralel eksenli iki
+        hareket verirseniz sistem dejenere olur: <span class="m">R<sub>X</sub></span>'in o eksen
+        etrafındaki bileşeni denklemlerde hiç görünmez ve çözüm belirsiz kalır.</li>
+      <li><b>Küçük dönüşlerden kaçının.</b> <span class="m">θ</span> küçükken
+        <span class="m">P</span> vektörü küçülür ve ölçüm gürültüsü oransal olarak büyür; poz çiftleri
+        arasında 30°'nin üzerinde dönme hedefleyin.</li>
+      <li><b>Salt öteleme hareketi dönme aşamasına hiçbir bilgi katmaz</b> — iki tarafın dönme kısmı
+        birim matris olur ve Denk.&nbsp;4 boş denklem üretir.</li>
+      <li><b>Öteleme doğruluğu</b> Denk.&nbsp;3'teki <span class="m">(R<sub>A</sub> − I)</span>
+        matrisinin koşuluna bağlıdır; o da yine büyük ve çeşitli dönüşler ister.</li>
+      <li><b>Hedef her pozda görüş alanında ve keskin odakta kalmalı.</b> Köşe tespitinin pikselaltı
+        kalitesi doğrudan <span class="m">B</span>'nin kalitesidir; bulanık bir kare, zinciri en
+        baştan zehirler.</li>
+      <li><b>Pozları rastgele değil planlı seçin:</b> hedefin etrafında hayali bir küre parçası
+        düşünüp farklı bakış yönlerine dağılmak, hem eksen çeşitliliğini hem koşul sayısını
+        kendiliğinden iyileştirir.</li>
+    </ul>
+
+    <p class="kicker reveal"><span class="idx">05</span>Kanıt</p>
+    <h2 class="reveal">Doğrulama: önce sentetik, sonra gerçek</h2>
+    <p>Bir kalibrasyon kodundaki hatayı gerçek verinin gürültüsü içinde ayıklamak neredeyse
+      imkânsızdır; bu yüzden ilk sınav her zaman <b>kapalı döngü sentetik test</b> olmalı. Bilinen bir
+      <span class="m">X<sub>gerçek</sub></span> seçin, rastgele <span class="m">A<sub>i</sub></span>
+      hareketleri üretin, <span class="m">B<sub>i</sub> =
+      X<sup>−1</sup>&thinsp;A<sub>i</sub>&thinsp;X</span> ile kusursuz gözlemleri hesaplayıp çözücüye
+      verin. Doğru yazılmış bir Tsai-Lenz bu veriden <span class="m">X</span>'i makine hassasiyetinde
+      geri bulmalıdır — kendi gerçekleştirmemde öteleme hatası ~10<sup>−13</sup>&nbsp;mm mertebesinde
+      çıkıyor ki bu, algoritmanın değil double aritmetiğinin sınırıdır. Sonra gözlemlere kademeli
+      gürültü enjekte edip hata eğrisini izlersiniz: hangi gürültü seviyesinde, kaç pozla, ne kadar
+      hata. Bu eğri, sahada kaç poz toplamanız gerektiğinin de cevabıdır.</p>
+    <p>Gerçek veride altın ölçüt <b>yeniden-projeksiyon hatasıdır</b>: hedefin bilinen köşe
+      noktalarını, kestirilen <span class="m">X</span> üzerinden zincirleme dönüşümle kamera
+      görüntüsüne yansıtın ve tespit edilen piksellerle karşılaştırın; pikselaltı ortalama hata
+      sağlıklı bir kalibrasyonun işaretidir. Ayrıca her poz çifti için
+      <span class="m">A<sub>i</sub>&thinsp;X&thinsp;B<sub>i</sub><sup>−1</sup>&thinsp;X<sup>−1</sup></span>
+      çarpımının birim matristen sapmasına bakmak, tutarlılığı poz bazında gösterir — tek bir bozuk
+      poz çifti burada hemen sırıtır ve ayıklanır.</p>
+
+    <p class="kicker reveal"><span class="idx">06</span>Kapanış</p>
+    <h2 class="reveal">Tarama hücresindeki yeri</h2>
+    <p>Bu yöntem benim için akademik bir merak değil, robotlu 3D tarama hücresinin taşıyıcı kolonu.
+      3D kameranın nokta bulutunda bulduğu bir kaynak noktası, ancak <span class="m">X</span>
+      üzerinden robot taban koordinatına taşındığında robota bir anlam ifade eder; kalibrasyondaki
+      her milimetre hata, parça üstünde milimetre olarak geri döner. Tsai-Lenz'in iki aşamalı, kapalı
+      biçimli yapısı hem sahada hızlı hem de sentetik testle kanıtlanabilir olduğu için hücrenin
+      kalibrasyon adımında ilk tercihim oldu. İleriki bir yazıda, dönme ile ötelemeyi tek seferde
+      çözen dual-quaternion tabanlı yaklaşımı (Daniilidis) bu yöntemle aynı sentetik tezgâhta
+      karşılaştırmayı planlıyorum.</p>
+
+  </div>
+</main>
+
+<div class="art-end">
+  <div class="wrap">
+    <p class="note reveal">Bu yazı, sersoz.com mühendislik günlüğünün ilk kaydıdır. Düzeltme ve
+      itirazlar için forum her zaman açık.</p>
+    <a class="pill primary reveal" href="/yazilar.html">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M12.5 8.7H5.7l2.6 2.6a.7.7 0 1 1-1 1L3.5 8.5a.7.7 0 0 1 0-1l3.8-3.8a.7.7 0 1 1 1 1L5.7 7.3h6.8a.7.7 0 0 1 0 1.4z"/></svg>
+      Tüm yazılar
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 Sercan Sözer</span>
+    <span class="mono">sersoz.com</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Nav: başlıktan çıkınca zemin ---------- */
+  var nav = document.getElementById('nav');
+  new IntersectionObserver(function (entries) {
+    nav.classList.toggle('scrolled', !entries[0].isIntersecting);
+  }, { rootMargin: '-72px 0px 0px 0px', threshold: 0 }).observe(document.getElementById('baslik'));
+
+  /* ---------- Scroll reveal ---------- */
+  var revealEls = document.querySelectorAll('.reveal');
+  if (reduced) {
+    revealEls.forEach(function (el) { el.classList.add('visible'); });
+  } else {
+    var ro = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          ro.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
+    revealEls.forEach(function (el) { ro.observe(el); });
+  }
+})();
+</script>
+</body>
+</html>
