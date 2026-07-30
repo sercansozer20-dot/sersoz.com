@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sercan Sözer — Makine Görüşü &amp; Endüstriyel Otomasyon</title>
+<meta name="description" content="Sercan Sözer — 3D makine görüşü, robotik algılama, derin öğrenme ile görsel denetim ve endüstriyel PLC haberleşmesi üzerine uçtan uca çözümler.">
+<meta property="og:title" content="Sercan Sözer">
+<meta property="og:description" content="3D makine görüşü · Robotik algılama · Endüstriyel otomasyon">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f6f2ea;
+    --ink: #1a1815;
+    --muted: #5b564d;
+    --accent: #c2410c;
+    --green: #14532d;
+    --line: rgba(26, 24, 21, .2);
+    --line-soft: rgba(26, 24, 21, .1);
+    --faint: rgba(26, 24, 21, .055);
+    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  section { scroll-margin-top: 72px; }
+
+  .container { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- Nav ---------- */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transition: background .3s, border-color .3s;
+  }
+
+  nav.scrolled {
+    background: rgba(246, 242, 234, .9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom-color: var(--line);
+  }
+
+  .nav-inner {
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand .mark {
+    width: 22px; height: 22px;
+    background: var(--accent);
+    color: var(--bg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .brand span.host { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--ink); }
+
+  .nav-links { display: flex; gap: 4px; }
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 10px 12px;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.nav-cta { border: 1px solid var(--ink); padding: 9px 14px; margin-left: 10px; transition: color .2s, border-color .2s; }
+  .nav-links a.nav-cta:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    min-height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 96px 0 90px;
+  }
+
+  #bg { position: absolute; inset: 0; z-index: 0; }
+
+  .veil {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+      linear-gradient(to right, rgba(246, 242, 234, .9) 0%, rgba(246, 242, 234, .5) 44%, rgba(246, 242, 234, 0) 74%),
+      linear-gradient(to bottom, rgba(246, 242, 234, .85) 0%, rgba(246, 242, 234, 0) 30%, rgba(246, 242, 234, 0) 62%, rgba(246, 242, 234, .55) 100%);
+    pointer-events: none;
+  }
+
+  .hero .container { position: relative; z-index: 2; width: 100%; }
+
+  .hero-content { max-width: 780px; animation: rise .9s cubic-bezier(.2, .7, .3, 1) both; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 28px;
+  }
+  .eyebrow::before { content: ''; width: 42px; height: 2px; background: var(--accent); }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(46px, 9vw, 92px);
+    font-weight: 700;
+    letter-spacing: -.015em;
+    line-height: 1.0;
+  }
+
+  .tagline {
+    margin-top: 24px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: clamp(16px, 2.3vw, 21px);
+    color: var(--muted);
+    letter-spacing: .01em;
+  }
+  .tagline b { color: var(--ink); font-weight: 600; font-style: italic; }
+
+  .hero-desc {
+    margin-top: 16px;
+    max-width: 54ch;
+    font-size: clamp(14px, 1.8vw, 16px);
+    line-height: 1.7;
+    color: var(--muted);
+    border-left: 1px solid var(--line);
+    padding-left: 18px;
+  }
+
+  .links { margin-top: 38px; display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 24px;
+    border: 1px solid var(--ink);
+    border-radius: 0;
+    color: var(--ink);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    background: transparent;
+    transition: border-color .22s, background .22s, color .22s;
+  }
+  .pill svg { width: 15px; height: 15px; fill: currentColor; }
+  .pill.primary { background: var(--ink); color: var(--bg); }
+
+  @media (hover: hover) {
+    .pill:hover { border-color: var(--accent); color: var(--accent); }
+    .pill.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  }
+  .pill:active { border-color: var(--accent); }
+
+  .scroll-cue {
+    position: absolute;
+    z-index: 2;
+    bottom: 26px;
+    left: 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .28em;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .scroll-cue svg { width: 14px; height: 14px; fill: var(--accent); animation: bob 2s ease-in-out infinite; }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+
+  .fig-cap {
+    position: absolute;
+    z-index: 2;
+    bottom: 26px;
+    right: 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+  .fig-cap::before { content: ''; width: 8px; height: 8px; background: var(--accent); flex: none; }
+
+  /* ---------- Ortak bölüm düzeni ---------- */
+  .section { position: relative; padding: clamp(84px, 12vh, 150px) 0; border-top: 3px double var(--line); overflow: hidden; }
+
+  .section-index {
+    position: absolute;
+    top: clamp(24px, 5vh, 56px);
+    right: -8px;
+    font-family: var(--serif);
+    font-size: clamp(110px, 18vw, 210px);
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: .8;
+    color: var(--faint);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .kicker .idx { color: var(--accent); margin-right: 10px; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(31px, 4.8vw, 54px);
+    font-weight: 700;
+    letter-spacing: -.012em;
+    line-height: 1.06;
+    margin-bottom: 26px;
+  }
+  h2::after { content: '.'; color: var(--accent); }
+
+  /* ---------- Hakkımda ---------- */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 64px;
+    align-items: start;
+  }
+
+  .about-text p {
+    color: var(--muted);
+    line-height: 1.78;
+    font-size: 16px;
+    max-width: 60ch;
+  }
+  .about-text p.kicker { line-height: 1.5; }
+  .about-text p + p { margin-top: 16px; }
+
+  .dropcap::first-letter {
+    font-family: var(--serif);
+    font-size: 3.35em;
+    font-weight: 700;
+    float: left;
+    line-height: .8;
+    padding: .06em .13em 0 0;
+    color: var(--accent);
+  }
+
+  .spec-card { border-top: 3px double var(--ink); padding-top: 6px; }
+
+  .spec-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 15px 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .spec-row .k { color: var(--muted); letter-spacing: .12em; text-transform: uppercase; }
+  .spec-row .v { color: var(--ink); text-align: right; }
+  .spec-row:last-child .v { color: var(--green); }
+
+  /* ---------- İstatistik şeridi ---------- */
+  .stats {
+    border-top: 3px double var(--line);
+    border-bottom: 3px double var(--line);
+    padding: clamp(48px, 8vh, 72px) 0;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+
+  .stat { padding: 6px 28px; border-left: 1px solid var(--line-soft); }
+  .stat:first-child { border-left: none; padding-left: 0; }
+
+  .stat-value {
+    font-family: var(--serif);
+    font-size: clamp(40px, 5.6vw, 62px);
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .stat-value .suffix { color: var(--accent); }
+
+  .stat-label {
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ---------- Projeler ---------- */
+  .cards { margin-top: 30px; border-top: 1px solid var(--line); }
+
+  .card {
+    display: grid;
+    grid-template-columns: 168px 1fr;
+    gap: 32px;
+    padding: clamp(32px, 5vh, 48px) 0;
+    border-bottom: 1px solid var(--line);
+    transition: border-color .25s ease;
+  }
+
+  .card-side { display: flex; flex-direction: column; gap: 10px; }
+
+  .card-no {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: .1em;
+    transition: letter-spacing .25s ease;
+  }
+
+  .card-tag {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .card h3 {
+    font-family: var(--serif);
+    font-size: clamp(22px, 2.7vw, 30px);
+    font-weight: 700;
+    letter-spacing: -.008em;
+    line-height: 1.14;
+    transition: color .22s ease;
+  }
+  .card.featured h3 { font-size: clamp(24px, 3.3vw, 37px); }
+
+  @media (hover: hover) {
+    .card:hover h3 { color: var(--accent); }
+    .card:hover .card-no { letter-spacing: .3em; }
+  }
+
+  .card-sub {
+    margin-top: 8px;
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--muted);
+    letter-spacing: .01em;
+  }
+
+  .card-body > p { margin-top: 16px; color: var(--muted); line-height: 1.72; font-size: 15px; max-width: 72ch; }
+
+  .card ul { margin-top: 14px; list-style: none; max-width: 72ch; }
+  .card li {
+    position: relative;
+    padding-left: 22px;
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.65;
+    margin-top: 8px;
+  }
+  .card li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: .72em;
+    width: 12px;
+    height: 1px;
+    background: var(--accent);
+  }
+  .card li b { color: var(--ink); font-weight: 600; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+
+  .chip {
+    font-size: 12px;
+    font-family: var(--mono);
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 0;
+    color: var(--muted);
+    letter-spacing: .03em;
+    transition: border-color .2s, color .2s;
+  }
+  @media (hover: hover) {
+    .chip:hover { border-color: var(--accent); color: var(--ink); }
+  }
+
+  /* ---------- Yetkinlikler ---------- */
+  .skill-groups {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin-top: 34px;
+    border-top: 1px solid var(--line);
+  }
+
+  .skill-group { padding: 32px 32px 8px 32px; border-left: 1px solid var(--line-soft); }
+  .skill-group:first-child { border-left: none; padding-left: 0; }
+
+  .skill-group h4 {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--ink);
+    font-weight: 700;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .skill-group h4::before { content: ''; width: 8px; height: 8px; background: var(--accent); flex: none; }
+
+  .skill-group .chips { margin-top: 0; }
+  .skill-group .chip { padding: 7px 14px; font-size: 12.5px; }
+
+  /* ---------- İletişim ---------- */
+  .contact-wrap { max-width: 760px; }
+
+  .contact-wrap > p.lead { color: var(--muted); line-height: 1.78; font-size: 16px; max-width: 52ch; margin-bottom: 34px; }
+
+  .status {
+    margin-top: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .12em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .dot {
+    width: 8px; height: 8px;
+    background: var(--green);
+    box-shadow: 0 0 0 0 rgba(20, 83, 45, .4);
+    animation: pulse 2.2s ease-out infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(20, 83, 45, .4); }
+    70%  { box-shadow: 0 0 0 11px rgba(20, 83, 45, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(20, 83, 45, 0); }
+  }
+
+  footer { border-top: 3px double var(--line); padding: 26px 0; }
+  .footer-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--muted);
+  }
+  .footer-inner .mono { font-family: var(--mono); }
+
+  /* ---------- Scroll reveal ---------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .6s cubic-bezier(.2, .7, .3, 1), transform .6s cubic-bezier(.2, .7, .3, 1);
+    transition-delay: var(--d, 0s);
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  /* ---------- Mobil ---------- */
+  @media (max-width: 1080px) {
+    .container, .nav-inner, .footer-inner { max-width: 920px; }
+    .card { grid-template-columns: 132px 1fr; gap: 24px; }
+  }
+
+  @media (max-width: 880px) {
+    .about-grid { grid-template-columns: 1fr; gap: 40px; }
+    .skill-groups { grid-template-columns: 1fr; }
+    .skill-group { border-left: none; border-top: 1px solid var(--line-soft); padding: 28px 0 8px 0; }
+    .skill-group:first-child { border-top: none; }
+    .section-index { font-size: clamp(90px, 22vw, 150px); }
+  }
+
+  @media (max-width: 720px) {
+    .card { grid-template-columns: 1fr; gap: 12px; }
+    .card-side { flex-direction: row; align-items: baseline; gap: 16px; }
+    .stat { padding: 6px 18px; }
+  }
+
+  @media (max-width: 640px) {
+    .nav-links a { display: none; }
+    .nav-links a.nav-cta { display: inline-block; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); row-gap: 36px; }
+    .stat { border-left: none; padding: 0 12px 0 0; }
+    .stat:nth-child(even) { border-left: 1px solid var(--line-soft); padding-left: 18px; }
+    .hero-desc { border-left: none; padding-left: 0; }
+    .fig-cap { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .hero-content { animation: none; }
+    .dot, .scroll-cue svg { animation: none; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .card-no, .card h3, .pill, .chip { transition: none; }
+  }
+</style>
+<noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#" aria-label="sersoz.com">
+      <span class="mark" aria-hidden="true">S</span>
+      <span class="host">sersoz.com</span>
+    </a>
+    <div class="nav-links">
+      <a href="#hakkimda">Hakkımda</a>
+      <a href="#projeler">Projeler</a>
+      <a href="#yetkinlikler">Yetkinlikler</a>
+      <a class="nav-cta" href="#iletisim">İletişim</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="hero">
+  <canvas id="bg"></canvas>
+  <div class="veil"></div>
+  <div class="container">
+    <div class="hero-content">
+      <p class="eyebrow">sersoz.com</p>
+      <h1>Sercan Sözer</h1>
+      <p class="tagline"><b>3D makine görüşü</b> · <b>Robotik algılama</b> · <b>Endüstriyel otomasyon</b></p>
+      <p class="hero-desc">3D kamera sistemleri, derin öğrenmeyle görsel denetim ve PLC haberleşmesi
+        üzerine fabrika sahası için uçtan uca çözümler geliştiriyorum.</p>
+      <div class="links">
+        <a class="pill primary" href="#projeler">Projeler
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 12.5a.7.7 0 0 1-.5-.2L2.9 7.7a.7.7 0 1 1 1-1L8 10.8l4.1-4.1a.7.7 0 1 1 1 1l-4.6 4.6a.7.7 0 0 1-.5.2z"/></svg>
+        </a>
+        <a class="pill" href="https://github.com/sercansozer20-dot" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+        <a class="pill" href="mailto:sercan@sersoz.com">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M.05 3.56A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.56L8 7.41.05 3.56zM0 4.7v6.8A2 2 0 0 0 2 13.5h12a2 2 0 0 0 2-2V4.7L8.35 8.42a.8.8 0 0 1-.7 0L0 4.7z"/></svg>
+          E-posta
+        </a>
+      </div>
+    </div>
+  </div>
+  <a class="scroll-cue" href="#hakkimda" aria-label="Aşağı kaydır">
+    KAYDIR
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 12.5a.7.7 0 0 1-.5-.2L2.9 7.7a.7.7 0 1 1 1-1L8 10.8l4.1-4.1a.7.7 0 1 1 1 1l-4.6 4.6a.7.7 0 0 1-.5.2z"/></svg>
+  </a>
+  <div class="fig-cap" aria-hidden="true">Şekil 1 — Profil kesiti · Tarama hattı</div>
+</header>
+
+<main>
+  <!-- Hakkımda -->
+  <section class="section" id="hakkimda">
+    <span class="section-index" aria-hidden="true">01</span>
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-text reveal">
+          <p class="kicker"><span class="idx">01</span>Hakkımda</p>
+          <h2>Sahadan gelen yazılım</h2>
+          <p class="dropcap">Endüstriyel otomasyon ve makine görüşü üzerine çalışan bir yazılım mühendisiyim.
+            Fabrika sahası için 3D nokta bulutu metrolojisini, derin öğrenme tabanlı görsel denetimi
+            ve çok protokollü PLC haberleşmesini tek bir istasyonda birleştiren sistemler geliştiriyorum.</p>
+          <p>Sensör sürücüsünden operatör arayüzüne, ONNX çıkarım motorundan robot entegrasyonuna kadar
+            tüm katmanları uçtan uca tasarlayıp kodluyorum. Her özelliği ölçülebilir kabul kriterleriyle,
+            deterministik ve sahada kanıtlanabilir biçimde teslim etmeyi ilke edindim.</p>
+        </div>
+        <div class="spec-card reveal" style="--d:.1s">
+          <div class="spec-row"><span class="k">Konum</span><span class="v">Türkiye</span></div>
+          <div class="spec-row"><span class="k">Odak</span><span class="v">Makine görüşü · Robotik</span></div>
+          <div class="spec-row"><span class="k">Yığın</span><span class="v">C# / .NET · ONNX · PLC</span></div>
+          <div class="spec-row"><span class="k">Arayüz</span><span class="v">WinUI 3 · three.js</span></div>
+          <div class="spec-row"><span class="k">Durum</span><span class="v">Yeni projelere açık</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- İstatistik şeridi -->
+  <section class="stats" id="istatistik">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat reveal">
+          <div class="stat-value"><span class="num" data-target="30">30</span><span class="suffix">+</span></div>
+          <div class="stat-label">3D ölçüm ve analiz aracı</div>
+        </div>
+        <div class="stat reveal" style="--d:.08s">
+          <div class="stat-value"><span class="num" data-target="5">5</span></div>
+          <div class="stat-label">YOLO26 görüntü işleme görevi</div>
+        </div>
+        <div class="stat reveal" style="--d:.16s">
+          <div class="stat-value"><span class="num" data-target="4">4</span></div>
+          <div class="stat-label">Endüstriyel PLC protokolü</div>
+        </div>
+        <div class="stat reveal" style="--d:.24s">
+          <div class="stat-value"><span class="num" data-target="41">41</span><span class="suffix">/41</span></div>
+          <div class="stat-label">Gerçek taramada kaynak noktası</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projeler -->
+  <section class="section" id="projeler">
+    <span class="section-index" aria-hidden="true">02</span>
+    <div class="container">
+      <p class="kicker reveal"><span class="idx">02</span>Projeler</p>
+      <h2 class="reveal">Projeler</h2>
+
+      <div class="cards">
+        <article class="card featured reveal">
+          <div class="card-side">
+            <p class="card-no">01</p>
+            <p class="card-tag">3D Vizyon</p>
+          </div>
+          <div class="card-body">
+            <h3>3D Makine Görüşü İstasyonu</h3>
+            <p class="card-sub">Nokta bulutu metrolojisi ve araç zinciri motoru</p>
+            <p>Wenglor MLBS115 3D profil sensöründen alınan milyonlarca noktalık bulutları gerçek zamanlı
+              görselleştiren, ölçen ve denetleyen eksiksiz bir istasyon yazılımı. Sürükle-bırak araç zinciri,
+              iş (job) sistemi ve CAD karşılaştırmasıyla endüstriyel 3D metrolojiyi tek ekranda topluyor.
+              Tüm ölçümler deterministik: aynı bulut her seferinde bit-birebir aynı sonucu üretir.</p>
+            <ul>
+              <li><b>30'dan fazla 3D araç:</b> RANSAC zemin kaldırma, silindir/küre/daire uydurma, düzlemsellik,
+                paralellik/diklik, kaynak ağzı (V/U), gap &amp; flush, ICP hizalama, model karşılaştırma</li>
+              <li><b>1M+ noktalı bulutlarda</b> milisaniye ölçekli işlem — kenar tespiti ~82 ms, profil çıkarma ~8 ms</li>
+              <li>CAD modelinden voxel referans üretimi ve tarama–model sapma denetimi</li>
+              <li><b>Çapalama (anchoring):</b> parça kaysa bile ölçüm bölgeleri referans özelliğe kilitlenir</li>
+            </ul>
+            <div class="chips"><span class="chip">C# / .NET 8</span><span class="chip">WinUI 3</span><span class="chip">WebView2</span><span class="chip">three.js</span><span class="chip">PCL</span><span class="chip">SQLite</span></div>
+          </div>
+        </article>
+
+        <article class="card reveal">
+          <div class="card-side">
+            <p class="card-no">02</p>
+            <p class="card-tag">Derin Öğrenme</p>
+          </div>
+          <div class="card-body">
+            <h3>2D Derin Öğrenme ile Görsel Denetim</h3>
+            <p class="card-sub">YOLO26 · ürün öğretme · kusur tespiti</p>
+            <p>Tespit, segmentasyon, poz, döndürülmüş kutu ve sınıflandırma görevlerinin beşini de tamamen
+              çevrimdışı (ONNX Runtime) çalıştıran görsel denetim modülü.</p>
+            <ul>
+              <li><b>5 YOLO26 görevi</b> tek sayfada; arayüz ONNX metaverisinden kendini uyarlar</li>
+              <li>Ürün öğretme: embedding + kNN ile model eğitimi gerektirmeden dakikalar içinde yeni ürün</li>
+              <li><b>PatchCore anomali motoru:</b> yalnız sağlam örneklerle öğrenir, ~2 ms'de ısı haritalı kusur konumu</li>
+              <li>Çoklu nesne takibi, çizgi geçiş sayacı, bölge içi sayım, yoğunluk ısı haritası</li>
+            </ul>
+            <div class="chips"><span class="chip">YOLO26</span><span class="chip">ONNX Runtime</span><span class="chip">OpenCvSharp</span><span class="chip">PatchCore</span></div>
+          </div>
+        </article>
+
+        <article class="card reveal" style="--d:.06s">
+          <div class="card-side">
+            <p class="card-no">03</p>
+            <p class="card-tag">Robotik</p>
+          </div>
+          <div class="card-body">
+            <h3>Robot Kılavuzlama ve Kaynak Noktası Tespiti</h3>
+            <p class="card-sub">3D taramadan robot koordinatına</p>
+            <p>3D taramadan kaynak robotuna hedef nokta üreten uçtan uca hat: tespit araçları, el-göz
+              kalibrasyonu ve ölçüm noktalarını robota aktaran haberleşme sözleşmesi.</p>
+            <ul>
+              <li>Gerçek endüstriyel taramada <b>41/41 kaynak noktası tespiti</b> — periyodik kafes + robust hat uydurma</li>
+              <li><b>Tsai-Lenz el-göz kalibrasyonu:</b> sentetik doğrulamada ~1e-13 mm hassasiyet</li>
+              <li>RANSAC + Kabsch hizalama ve Hungarian eşleştirme ile referans karşılaştırma</li>
+              <li>Robot yolu önizlemesi; KUKA / ABB / Fanuc / Yaskawa poz sözleşmeleri incelendi</li>
+            </ul>
+            <div class="chips"><span class="chip">3D metroloji</span><span class="chip">Tsai-Lenz</span><span class="chip">RANSAC</span><span class="chip">Kabsch / Hungarian</span></div>
+          </div>
+        </article>
+
+        <article class="card reveal">
+          <div class="card-side">
+            <p class="card-no">04</p>
+            <p class="card-tag">Haberleşme</p>
+          </div>
+          <div class="card-body">
+            <h3>Çok Protokollü Endüstriyel Haberleşme</h3>
+            <p class="card-sub">PLC sürücüleri ve saha ağı keşfi</p>
+            <p>Görüntü işleme sonuçlarını fabrika otomasyonuna bağlayan katman: denetim kararları yaşam
+              sinyali ve el sıkışma bitleriyle PLC'ye güvenle aktarılıyor.</p>
+            <ul>
+              <li><b>4 protokol tek çatıda:</b> Mitsubishi MC/SLMP, Siemens S7, Modbus TCP, PROFINET DCP + GSDML</li>
+              <li>Heartbeat, geçerlilik biti ve sayaç kelimesiyle yarış durumsuz denetim→PLC köprüsü</li>
+              <li>Kopan bağlantıyı kendi kendine onaran sürücü zinciri</li>
+              <li>Sayfalı ölçüm aktarımı: izole simülatör sınavında <b>45/45</b> başarı</li>
+            </ul>
+            <div class="chips"><span class="chip">MC/SLMP</span><span class="chip">Siemens S7</span><span class="chip">Modbus TCP</span><span class="chip">PROFINET DCP</span></div>
+          </div>
+        </article>
+
+        <article class="card reveal" style="--d:.06s">
+          <div class="card-side">
+            <p class="card-no">05</p>
+            <p class="card-tag">Otonom Ajanlar</p>
+          </div>
+          <div class="card-body">
+            <h3>Otonom Ajan Katmanı</h3>
+            <p class="card-sub">Kendini izleyen istasyon</p>
+            <p>İstasyonun kendisini izleyip iyileştirme öneren görevliler: veri biriktikçe eğitim önerir,
+              kalite düştüğünde nedenleriyle uyarır, kopan cihazı yeniden bağlar.</p>
+            <ul>
+              <li><b>5 ajan:</b> Veri Toplama, Kalite Gözcüsü, Haberleşme Nöbetçisi, Model Doğrulama, Disk Bakımı</li>
+              <li>Kalite Gözcüsü: NOK oranı eşiği aşılırsa neden listesiyle uyarı</li>
+              <li><b>İnsan-onaylı otomasyon ilkesi:</b> model, eşik veya PLC yazımı asla otomatik değişmez</li>
+            </ul>
+            <div class="chips"><span class="chip">.NET 8</span><span class="chip">Arka plan servisleri</span><span class="chip">Olay günlükleme</span></div>
+          </div>
+        </article>
+
+        <article class="card reveal" style="--d:.12s">
+          <div class="card-side">
+            <p class="card-no">06</p>
+            <p class="card-tag">Platform</p>
+          </div>
+          <div class="card-body">
+            <h3>Endüstriyel Test İstasyonu Platformu</h3>
+            <p class="card-sub">Sızdırmazlık testinden makine görüşüne</p>
+            <p>Vizyon istasyonunun üzerinde yükseldiği taban: sahada çalışan bir sızdırmazlık (leak) test
+              istasyonu için geliştirdiğim tam ekran WinUI 3 operatör platformu.</p>
+            <ul>
+              <li><b>20+ sayfalık</b> gezinme mimarisi: test, izleme, ayar ve raporlama ekranları</li>
+              <li>Kendi kendine yeten dağıtım — hedef makinede kurulum bağımlılığı yok</li>
+              <li>SQLite tabanlı izlenebilirlik ve JSON kalıcı ayar deseni</li>
+            </ul>
+            <div class="chips"><span class="chip">WinUI 3</span><span class="chip">.NET 8</span><span class="chip">SQLite</span><span class="chip">XAML</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Yetkinlikler -->
+  <section class="section" id="yetkinlikler">
+    <span class="section-index" aria-hidden="true">03</span>
+    <div class="container">
+      <p class="kicker reveal"><span class="idx">03</span>Yetkinlikler</p>
+      <h2 class="reveal">Yetkinlikler</h2>
+      <div class="skill-groups">
+        <div class="skill-group reveal">
+          <h4>Makine Görüşü</h4>
+          <div class="chips">
+            <span class="chip">YOLO / ONNX Runtime</span><span class="chip">OpenCV</span>
+            <span class="chip">3D Nokta Bulutu</span><span class="chip">PCL</span>
+            <span class="chip">PatchCore</span><span class="chip">RANSAC / ICP</span>
+            <span class="chip">Tsai-Lenz</span><span class="chip">three.js / WebGL</span>
+          </div>
+        </div>
+        <div class="skill-group reveal" style="--d:.08s">
+          <h4>Otomasyon &amp; Haberleşme</h4>
+          <div class="chips">
+            <span class="chip">Mitsubishi MC/SLMP</span><span class="chip">Siemens S7</span>
+            <span class="chip">Modbus TCP</span><span class="chip">PROFINET / GSDML</span>
+            <span class="chip">Endüstriyel HMI</span><span class="chip">Robot Entegrasyonu</span>
+          </div>
+        </div>
+        <div class="skill-group reveal" style="--d:.16s">
+          <h4>Yazılım</h4>
+          <div class="chips">
+            <span class="chip">C# / .NET 8</span><span class="chip">WinUI 3 / XAML</span>
+            <span class="chip">SQLite</span><span class="chip">WebView2</span>
+            <span class="chip">P/Invoke</span><span class="chip">Git</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- İletişim -->
+  <section class="section" id="iletisim">
+    <span class="section-index" aria-hidden="true">04</span>
+    <div class="container">
+      <div class="contact-wrap">
+        <p class="kicker reveal"><span class="idx">04</span>İletişim</p>
+        <h2 class="reveal">Birlikte çalışalım</h2>
+        <p class="lead reveal">Makine görüşü, robotik algılama veya endüstriyel otomasyon projeniz mi var?
+          Fikir aşamasından sahada çalışan sisteme kadar birlikte yürüyelim.</p>
+        <div class="links reveal">
+          <a class="pill primary" href="mailto:sercan@sersoz.com">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M.05 3.56A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.56L8 7.41.05 3.56zM0 4.7v6.8A2 2 0 0 0 2 13.5h12a2 2 0 0 0 2-2V4.7L8.35 8.42a.8.8 0 0 1-.7 0L0 4.7z"/></svg>
+            E-posta gönder
+          </a>
+          <a class="pill" href="https://github.com/sercansozer20-dot" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+            GitHub
+          </a>
+        </div>
+        <div class="status reveal"><span class="dot"></span> Yeni projelere açığım</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 Sercan Sözer</span>
+    <span class="mono">sersoz.com</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Teknik şekil: tek çizgi profil kesiti + ölçü işaretleri ---------- */
+  var canvas = document.getElementById('bg');
+  var ctx = canvas.getContext('2d');
+  var W, H, dpr;
+  var running = false;
+  var rafId = null;
+
+  var INK = '26, 24, 21';
+  var BRICK = '194, 65, 12';
+  var GREEN = '20, 83, 45';
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = canvas.width = Math.floor(innerWidth * dpr);
+    H = canvas.height = Math.floor(innerHeight * dpr);
+    canvas.style.width = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
+    if (reduced) draw(1.35);
+  }
+
+  // Profil yüksekliği (u: 0..1 yatay konum, t: zaman) — tek çizgilik 3D kesit
+  function profileH(u, t) {
+    return 0.34 * Math.sin(3.1 * u * Math.PI + t * 0.35)
+         + 0.18 * Math.sin(7.3 * u * Math.PI - t * 0.22)
+         + 0.07 * Math.sin(13.0 * u * Math.PI + t * 0.5);
+  }
+
+  function profileY(u, t, rulerY, base, amp) {
+    return rulerY - base - profileH(u, t) * amp;
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+
+    var rulerY = H * 0.84;
+    var base = H * 0.115;
+    var amp = H * 0.06;
+    var M = 160;
+
+    // 1) Cetvel: taban çizgisi + tırtıklar + mm etiketleri
+    ctx.strokeStyle = 'rgba(' + INK + ', .3)';
+    ctx.lineWidth = 1 * dpr;
+    ctx.beginPath();
+    ctx.moveTo(0, rulerY);
+    ctx.lineTo(W, rulerY);
+    ctx.stroke();
+
+    var minor = 16 * dpr;
+    ctx.font = (10 * dpr) + 'px Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(' + INK + ', .4)';
+    var idx = 0;
+    for (var x = 0; x <= W; x += minor, idx++) {
+      var major = idx % 5 === 0;
+      ctx.strokeStyle = 'rgba(' + INK + ', ' + (major ? '.38' : '.2') + ')';
+      ctx.beginPath();
+      ctx.moveTo(x, rulerY);
+      ctx.lineTo(x, rulerY + (major ? 10 : 5) * dpr);
+      ctx.stroke();
+      if (major) ctx.fillText(String(idx * 2), x, rulerY + 24 * dpr);
+    }
+
+    // 2) Referans profil: kesikli, soluk koyu yeşil (statik)
+    ctx.setLineDash([6 * dpr, 5 * dpr]);
+    ctx.strokeStyle = 'rgba(' + GREEN + ', .34)';
+    ctx.lineWidth = 1 * dpr;
+    ctx.beginPath();
+    for (var k = 0; k <= M; k++) {
+      var u0 = k / M;
+      var y0 = profileY(u0, 0, rulerY, base, amp);
+      if (k === 0) ctx.moveTo(u0 * W, y0); else ctx.lineTo(u0 * W, y0);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 3) Ölçülen profil: tek ince kiremit çizgi
+    ctx.strokeStyle = 'rgba(' + BRICK + ', .9)';
+    ctx.lineWidth = 1.5 * dpr;
+    ctx.beginPath();
+    for (var j = 0; j <= M; j++) {
+      var u = j / M;
+      var y = profileY(u, t, rulerY, base, amp);
+      if (j === 0) ctx.moveTo(u * W, y); else ctx.lineTo(u * W, y);
+    }
+    ctx.stroke();
+
+    // 4) Ölçü işaretleri: cetvelden profile dikey ölçü çizgisi + değer
+    var marks = [0.24, 0.46, 0.68, 0.87];
+    for (var m = 0; m < marks.length; m++) {
+      var mu = marks[m];
+      var mx = mu * W;
+      var my = profileY(mu, t, rulerY, base, amp);
+
+      ctx.strokeStyle = 'rgba(' + INK + ', .42)';
+      ctx.lineWidth = 1 * dpr;
+      ctx.beginPath();
+      ctx.moveTo(mx, rulerY - 2 * dpr);
+      ctx.lineTo(mx, my + 4 * dpr);
+      ctx.stroke();
+
+      // uç kapakları
+      ctx.beginPath();
+      ctx.moveTo(mx - 4 * dpr, my + 4 * dpr);
+      ctx.lineTo(mx + 4 * dpr, my + 4 * dpr);
+      ctx.moveTo(mx - 4 * dpr, rulerY - 2 * dpr);
+      ctx.lineTo(mx + 4 * dpr, rulerY - 2 * dpr);
+      ctx.stroke();
+
+      // profil üstünde nokta işaretçisi
+      ctx.fillStyle = 'rgba(' + BRICK + ', .95)';
+      ctx.beginPath();
+      ctx.arc(mx, my, 2.4 * dpr, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ölçüm değeri (mm)
+      var mm = ((rulerY - my) / dpr) / 10;
+      ctx.fillStyle = 'rgba(' + INK + ', .55)';
+      ctx.fillText(mm.toFixed(1), mx, my - 10 * dpr);
+    }
+  }
+
+  function loop() {
+    if (!running) return;
+    draw(performance.now() / 1000);
+    rafId = requestAnimationFrame(loop);
+  }
+
+  resize();
+  addEventListener('resize', resize);
+
+  if (reduced) {
+    draw(1.35);
+  } else {
+    // Hero ekran dışındayken animasyonu durdur
+    new IntersectionObserver(function (entries) {
+      var visible = entries[0].isIntersecting;
+      if (visible && !running) { running = true; loop(); }
+      else if (!visible && running) { running = false; if (rafId) cancelAnimationFrame(rafId); }
+    }, { threshold: 0 }).observe(document.getElementById('hero'));
+  }
+
+  /* ---------- Nav: hero'dan çıkınca zemin ---------- */
+  var nav = document.getElementById('nav');
+  new IntersectionObserver(function (entries) {
+    nav.classList.toggle('scrolled', !entries[0].isIntersecting);
+  }, { rootMargin: '-72px 0px 0px 0px', threshold: 0 }).observe(document.getElementById('hero'));
+
+  /* ---------- Scroll reveal ---------- */
+  var revealEls = document.querySelectorAll('.reveal');
+  if (reduced) {
+    revealEls.forEach(function (el) { el.classList.add('visible'); });
+  } else {
+    var ro = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          ro.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
+    revealEls.forEach(function (el) { ro.observe(el); });
+  }
+
+  /* ---------- Sayaç animasyonu (JS yoksa hedef değer HTML'de hazır) ---------- */
+  var counters = document.querySelectorAll('.num');
+  function animateCounter(el) {
+    var target = parseInt(el.getAttribute('data-target'), 10);
+    var start = null, dur = 1200;
+    function step(ts) {
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased);
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  if (!reduced) {
+    counters.forEach(function (el) { el.textContent = '0'; });
+    var co = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          animateCounter(entry.target);
+          co.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.4 });
+    counters.forEach(function (el) { co.observe(el); });
+  }
+})();
+</script>
+</body>
+</html>
