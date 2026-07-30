@@ -7,24 +7,24 @@
 <meta name="description" content="Sercan Sözer — 3D makine görüşü, robotik algılama, derin öğrenme ile görsel denetim ve endüstriyel PLC haberleşmesi üzerine uçtan uca çözümler.">
 <meta property="og:title" content="Sercan Sözer">
 <meta property="og:description" content="3D makine görüşü · Robotik algılama · Endüstriyel otomasyon">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://sersoz.com/">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23060b16'/%3E%3Ctext x='32' y='44' font-family='Segoe UI,Arial' font-size='34' font-weight='700' fill='%234cc9f0' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23050807'/%3E%3Crect x='4' y='4' width='56' height='56' rx='7' fill='none' stroke='%233aff8c' stroke-opacity='.35' stroke-width='2'/%3E%3Ctext x='32' y='44' font-family='Consolas,Segoe UI,Arial' font-size='34' font-weight='700' fill='%233aff8c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   :root {
-    --bg: #05080f;
-    --bg-2: #0a1322;
-    --text: #e8edf5;
-    --muted: #8b98ab;
-    --accent: #4cc9f0;
-    --accent-soft: rgba(76, 201, 240, .14);
-    --line: rgba(139, 152, 171, .14);
-    --card-bg: rgba(10, 19, 34, .45);
-    --card-border: rgba(139, 152, 171, .18);
-    --line-strong: rgba(139, 152, 171, .26);
-    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+    --bg: #050807;
+    --bg-2: #0a120d;
+    --panel: rgba(10, 18, 13, .55);
+    --text: #dce8de;
+    --muted: #839487;
+    --green: #3aff8c;
+    --green-dim: rgba(58, 255, 140, .35);
+    --green-soft: rgba(58, 255, 140, .10);
+    --amber: #ffb347;
+    --amber-dim: rgba(255, 179, 71, .4);
+    --line: rgba(131, 148, 135, .16);
+    --card-border: rgba(131, 148, 135, .2);
+    --mono: 'Cascadia Code', 'Cascadia Mono', Consolas, 'SF Mono', monospace;
   }
 
   html { scroll-behavior: smooth; }
@@ -34,6 +34,20 @@
     color: var(--text);
     font-family: 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, 'Inter', sans-serif;
     overflow-x: hidden;
+  }
+
+  ::selection { background: rgba(58, 255, 140, .25); color: var(--text); }
+
+  /* Çok silik scanline dokusu — okunabilirliği bozmadan */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    background: repeating-linear-gradient(to bottom,
+      rgba(220, 232, 222, .022) 0px, rgba(220, 232, 222, .022) 1px,
+      transparent 1px, transparent 3px);
   }
 
   section { scroll-margin-top: 72px; }
@@ -51,10 +65,10 @@
   }
 
   nav.scrolled {
-    background: rgba(5, 8, 15, .72);
+    background: rgba(5, 8, 7, .8);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border-bottom-color: rgba(139, 152, 171, .12);
+    border-bottom-color: var(--line);
   }
 
   .nav-inner {
@@ -68,26 +82,44 @@
   }
 
   .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
-  .brand svg { width: 28px; height: 28px; }
-  .brand span { font-family: var(--mono); font-size: 13px; letter-spacing: .12em; color: var(--text); }
-
-  .nav-links { display: flex; gap: 26px; }
-  .nav-links a {
+  .brand .led { width: 7px; height: 7px; }
+  .brand span.t {
     font-family: var(--mono);
     font-size: 13px;
-    letter-spacing: .08em;
+    letter-spacing: .14em;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+
+  .led {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 1px;
+    background: var(--green);
+    box-shadow: 0 0 6px rgba(58, 255, 140, .8);
+    flex: none;
+  }
+  .led.amber { background: var(--amber); box-shadow: 0 0 6px rgba(255, 179, 71, .8); }
+
+  .nav-links { display: flex; gap: 24px; }
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
     color: var(--muted);
     text-decoration: none;
     padding: 10px 2px;
     transition: color .2s;
   }
-  .nav-links a:hover { color: var(--accent); }
+  .nav-links a:hover { color: var(--green); }
+  .nav-links a.nav-cta { color: var(--amber); }
+  .nav-links a.nav-cta:hover { color: var(--green); }
 
   /* ---------- Hero ---------- */
   .hero {
     position: relative;
-    min-height: 100vh;
-    min-height: 100svh;
+    min-height: 100dvh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -95,18 +127,18 @@
     justify-content: center;
     text-align: center;
     padding: 84px 24px 64px;
-    background: radial-gradient(1200px 700px at 50% 20%, var(--bg-2) 0%, var(--bg) 60%);
+    background: radial-gradient(1100px 700px at 50% 30%, var(--bg-2) 0%, var(--bg) 65%);
   }
 
-  #bg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; opacity: .95; }
+  #bg { position: absolute; inset: 0; z-index: 0; }
 
   .veil {
     position: absolute;
     inset: 0;
     z-index: 1;
     background:
-      radial-gradient(720px 420px at 50% 42%, rgba(5, 8, 15, .62) 0%, rgba(5, 8, 15, .18) 60%, transparent 100%),
-      linear-gradient(to bottom, rgba(5, 8, 15, .55) 0%, transparent 30%, transparent 62%, rgba(5, 8, 15, .78) 100%);
+      radial-gradient(680px 400px at 50% 46%, rgba(5, 8, 7, .74) 0%, rgba(5, 8, 7, .24) 62%, transparent 100%),
+      linear-gradient(to bottom, rgba(5, 8, 7, .6) 0%, transparent 28%, transparent 64%, rgba(5, 8, 7, .82) 100%);
     pointer-events: none;
   }
 
@@ -127,18 +159,21 @@
   .eyebrow {
     font-family: var(--mono);
     font-size: 13px;
-    letter-spacing: .35em;
+    letter-spacing: .3em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: var(--green);
     margin-bottom: 22px;
   }
+  .eyebrow::before { content: '[ '; color: var(--muted); }
+  .eyebrow::after  { content: ' ]'; color: var(--muted); }
 
   h1 {
-    font-size: clamp(42px, 8vw, 84px);
+    font-size: clamp(40px, 7.6vw, 80px);
     font-weight: 650;
-    letter-spacing: -.02em;
-    line-height: 1.05;
-    text-shadow: 0 2px 30px rgba(5, 8, 15, .9);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    line-height: 1.06;
+    text-shadow: 0 2px 30px rgba(5, 8, 7, .95);
   }
 
   .tagline {
@@ -163,26 +198,33 @@
     display: inline-flex;
     align-items: center;
     gap: 9px;
-    padding: 11px 22px;
-    border: 1px solid var(--line-strong);
-    border-radius: 999px;
+    padding: 12px 22px;
+    border: 1px solid rgba(131, 148, 135, .35);
+    border-radius: 4px;
     color: var(--text);
     text-decoration: none;
-    font-size: 14px;
-    letter-spacing: .02em;
-    background: var(--card-bg);
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    background: var(--panel);
     backdrop-filter: blur(6px);
-    transition: border-color .25s, background .25s, transform .25s, box-shadow .25s;
+    transition: border-color .25s, background .25s, color .25s, transform .25s, box-shadow .25s;
   }
-  .pill svg { width: 17px; height: 17px; fill: currentColor; }
-  .pill.primary { border-color: rgba(76, 201, 240, .6); }
+  .pill svg { width: 16px; height: 16px; fill: currentColor; }
+  .pill.primary {
+    border-color: var(--green-dim);
+    color: var(--green);
+    background: var(--green-soft);
+  }
 
   @media (hover: hover) {
     .pill:hover {
-      border-color: var(--accent);
-      background: var(--accent-soft);
+      border-color: var(--green);
+      background: var(--green-soft);
+      color: var(--green);
       transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(76, 201, 240, .18);
+      box-shadow: 0 6px 24px rgba(58, 255, 140, .14);
     }
   }
 
@@ -214,17 +256,27 @@
   .section-eyebrow {
     font-family: var(--mono);
     font-size: 13px;
-    letter-spacing: .3em;
+    letter-spacing: .28em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: var(--amber);
     margin-bottom: 16px;
   }
 
   h2 {
     font-size: clamp(28px, 4vw, 40px);
     font-weight: 650;
-    letter-spacing: -.02em;
+    letter-spacing: -.01em;
     margin-bottom: 22px;
+    position: relative;
+    padding-bottom: 16px;
+  }
+  h2::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: 0;
+    width: 52px; height: 2px;
+    background: var(--green);
+    box-shadow: 0 0 10px rgba(58, 255, 140, .5);
   }
 
   /* ---------- Hakkımda ---------- */
@@ -235,7 +287,7 @@
     align-items: start;
   }
 
-  .about-text p:not(.section-eyebrow) {
+  .about-text p {
     color: var(--muted);
     line-height: 1.7;
     font-size: 16px;
@@ -244,12 +296,34 @@
   .about-text p + p { margin-top: 16px; }
 
   .spec-card {
-    background: var(--card-bg);
+    position: relative;
+    background: var(--panel);
     border: 1px solid var(--card-border);
-    border-radius: 16px;
-    padding: 28px;
-    background-image: radial-gradient(circle, rgba(139, 152, 171, .08) 1px, transparent 1px);
+    border-radius: 6px;
+    padding: 24px 26px 26px;
+    background-image: radial-gradient(circle, rgba(58, 255, 140, .05) 1px, transparent 1px);
     background-size: 24px 24px;
+  }
+  .spec-card::before, .spec-card::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    pointer-events: none;
+  }
+  .spec-card::before { top: -1px; left: -1px; border-top: 2px solid var(--green-dim); border-left: 2px solid var(--green-dim); }
+  .spec-card::after { bottom: -1px; right: -1px; border-bottom: 2px solid var(--green-dim); border-right: 2px solid var(--green-dim); }
+
+  .spec-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--green);
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(131, 148, 135, .14);
   }
 
   .spec-row {
@@ -260,46 +334,64 @@
     font-family: var(--mono);
     font-size: 13px;
   }
-  .spec-row + .spec-row { border-top: 1px solid rgba(139, 152, 171, .1); }
+  .spec-row + .spec-row { border-top: 1px solid rgba(131, 148, 135, .1); }
   .spec-row .k { color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }
   .spec-row .v { color: var(--text); text-align: right; }
 
-  /* ---------- İstatistik şeridi ---------- */
+  /* ---------- İstatistik / telemetri panosu ---------- */
   .stats {
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
-    padding: 56px 0;
-    background-image: radial-gradient(circle, rgba(139, 152, 171, .06) 1px, transparent 1px);
-    background-size: 24px 24px;
+    padding: 0;
+    background: rgba(10, 18, 13, .3);
   }
 
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 32px;
+    gap: 1px;
+    background: var(--line);
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+  }
+
+  .stat {
+    background: var(--bg);
+    padding: 44px 20px 40px;
     text-align: center;
+    background-image: radial-gradient(circle, rgba(58, 255, 140, .04) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  .stat-ch {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .3em;
+    color: var(--amber-dim);
+    margin-bottom: 14px;
   }
 
   .stat-value {
     font-family: var(--mono);
     font-variant-numeric: tabular-nums;
-    font-size: clamp(36px, 5vw, 52px);
+    font-size: clamp(34px, 5vw, 50px);
     font-weight: 650;
-    color: var(--text);
+    color: var(--green);
+    text-shadow: 0 0 22px rgba(58, 255, 140, .28);
   }
-  .stat-value .suffix { color: var(--accent); }
+  .stat-value .suffix { color: var(--amber); text-shadow: 0 0 22px rgba(255, 179, 71, .25); }
 
   .stat-label {
-    margin-top: 8px;
+    margin-top: 10px;
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: 12.5px;
     letter-spacing: .08em;
     text-transform: uppercase;
     color: var(--muted);
   }
 
   /* ---------- Projeler ---------- */
-  #projeler { background: radial-gradient(900px 600px at 50% 0%, rgba(10, 19, 34, .55) 0%, transparent 70%); }
+  #projeler { background: radial-gradient(900px 600px at 50% 0%, rgba(10, 18, 13, .6) 0%, transparent 70%); }
 
   .cards {
     display: grid;
@@ -309,31 +401,53 @@
   }
 
   .card {
-    background: var(--card-bg);
+    position: relative;
+    background: var(--panel);
     border: 1px solid var(--card-border);
-    border-radius: 16px;
+    border-radius: 6px;
     padding: 28px;
     transition: border-color .25s ease, transform .25s ease, box-shadow .25s ease;
   }
+  .card::before, .card::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    pointer-events: none;
+    transition: border-color .25s ease;
+  }
+  .card::before { top: -1px; left: -1px; border-top: 2px solid var(--green-dim); border-left: 2px solid var(--green-dim); }
+  .card::after { bottom: -1px; right: -1px; border-bottom: 2px solid var(--green-dim); border-right: 2px solid var(--green-dim); }
+
   .card.featured { grid-column: span 2; }
+  .card.featured::before { border-color: var(--amber-dim); }
+  .card.featured::after { border-color: var(--amber-dim); }
 
   @media (hover: hover) {
     .card:hover {
-      border-color: rgba(76, 201, 240, .55);
+      border-color: rgba(58, 255, 140, .45);
       transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(76, 201, 240, .10);
+      box-shadow: 0 12px 32px rgba(58, 255, 140, .08);
     }
+    .card:hover::before, .card:hover::after { border-color: var(--green); }
+    .card.featured:hover { border-color: rgba(255, 179, 71, .45); box-shadow: 0 12px 32px rgba(255, 179, 71, .07); }
+    .card.featured:hover::before, .card.featured:hover::after { border-color: var(--amber); }
   }
-  .card:active { border-color: rgba(76, 201, 240, .55); }
+  .card:active { border-color: rgba(58, 255, 140, .45); }
 
   .card-tag {
+    display: flex;
+    align-items: center;
+    gap: 9px;
     font-family: var(--mono);
     font-size: 12px;
-    letter-spacing: .2em;
+    letter-spacing: .18em;
     text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 12px;
+    color: var(--green);
+    margin-bottom: 14px;
   }
+  .card-tag .sysid { color: var(--muted); letter-spacing: .12em; }
+  .card-tag .sysid::after { content: ' /'; color: rgba(131, 148, 135, .5); }
+  .card.featured .card-tag { color: var(--amber); }
 
   .card h3 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
   .card.featured h3 { font-size: 23px; }
@@ -346,14 +460,14 @@
     letter-spacing: .02em;
   }
 
-  .card p:not(.card-tag):not(.card-sub) { margin-top: 12px; color: var(--muted); line-height: 1.65; font-size: 14px; }
+  .card p { margin-top: 12px; color: var(--muted); line-height: 1.65; font-size: 14.5px; }
 
   .card ul { margin-top: 12px; list-style: none; }
   .card li {
     position: relative;
     padding-left: 18px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 13.5px;
     line-height: 1.6;
     margin-top: 7px;
   }
@@ -361,12 +475,13 @@
     content: '';
     position: absolute;
     left: 2px;
-    top: .62em;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: rgba(76, 201, 240, .55);
+    top: .58em;
+    width: 6px;
+    height: 6px;
+    border-radius: 1px;
+    background: rgba(58, 255, 140, .5);
   }
+  .card.featured li::before { background: rgba(255, 179, 71, .55); }
   .card li b { color: var(--text); font-weight: 500; }
 
   .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
@@ -374,11 +489,16 @@
   .chip {
     font-size: 12px;
     font-family: var(--mono);
+    letter-spacing: .04em;
     padding: 5px 12px;
-    border-radius: 999px;
-    border: 1px solid var(--line-strong);
-    background: var(--card-bg);
+    border-radius: 3px;
+    border: 1px solid rgba(131, 148, 135, .26);
+    background: rgba(10, 18, 13, .5);
     color: var(--muted);
+    transition: border-color .2s, background .2s, color .2s;
+  }
+  @media (hover: hover) {
+    .chip:hover { border-color: var(--green); background: var(--green-soft); color: var(--text); }
   }
 
   /* ---------- Yetkinlikler ---------- */
@@ -389,18 +509,23 @@
     margin-top: 34px;
   }
 
-  .skill-group h3 {
+  .skill-group h4 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
     font-family: var(--mono);
     font-size: 13px;
     letter-spacing: .2em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: var(--green);
     font-weight: 600;
     margin-bottom: 16px;
   }
+  .skill-group h4 .gid { color: var(--amber-dim); letter-spacing: .1em; }
+  .skill-group h4 .gid::after { content: ' /'; color: rgba(131, 148, 135, .5); }
 
   .skill-group .chips { margin-top: 0; }
-  .skill-group .chip { padding: 7px 14px; font-size: 13px; }
+  .skill-group .chip { padding: 7px 14px; font-size: 12.5px; }
 
   /* ---------- İletişim ---------- */
   .contact {
@@ -409,36 +534,42 @@
     padding: clamp(96px, 14vh, 160px) 24px;
     text-align: center;
   }
+  .contact h2 { padding-bottom: 0; }
+  .contact h2::after { display: none; }
 
-  .contact p:not(.section-eyebrow) { color: var(--muted); line-height: 1.7; font-size: 16px; margin-bottom: 30px; }
+  .contact p { color: var(--muted); line-height: 1.7; font-size: 16px; margin-bottom: 30px; }
 
   .status {
     margin-top: 40px;
     display: inline-flex;
     align-items: center;
-    gap: 9px;
+    gap: 10px;
     font-family: var(--mono);
     font-size: 13px;
     letter-spacing: .08em;
     color: var(--muted);
     text-transform: uppercase;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px 18px;
+    background: var(--panel);
   }
 
   .dot {
     width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 0 0 rgba(76, 201, 240, .55);
-    animation: pulse 2.2s ease-out infinite;
+    border-radius: 2px;
+    background: var(--green);
+    box-shadow: 0 0 0 0 rgba(58, 255, 140, .55);
+    animation: pulse 2.4s ease-out infinite;
   }
   @keyframes pulse {
-    0%   { box-shadow: 0 0 0 0 rgba(76, 201, 240, .55); }
-    70%  { box-shadow: 0 0 0 11px rgba(76, 201, 240, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(76, 201, 240, 0); }
+    0%   { box-shadow: 0 0 0 0 rgba(58, 255, 140, .5); }
+    70%  { box-shadow: 0 0 0 10px rgba(58, 255, 140, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(58, 255, 140, 0); }
   }
 
   footer {
-    border-top: 1px solid rgba(139, 152, 171, .12);
+    border-top: 1px solid var(--line);
     padding: 24px;
   }
   .footer-inner {
@@ -449,9 +580,9 @@
     align-items: center;
     gap: 12px;
     flex-wrap: wrap;
-    font-size: 12px;
+    font-size: 12.5px;
     letter-spacing: .06em;
-    color: rgba(139, 152, 171, .85);
+    color: rgba(131, 148, 135, .65);
   }
   .footer-inner .mono { font-family: var(--mono); }
 
@@ -471,6 +602,7 @@
 
   @media (max-width: 880px) {
     .about-grid { grid-template-columns: 1fr; gap: 36px; }
+    .spec-row .v { text-align: left; }
     .skill-groups { grid-template-columns: 1fr; gap: 32px; }
   }
 
@@ -481,32 +613,28 @@
   }
 
   @media (max-width: 640px) {
-    .nav-links { gap: 16px; }
-    .nav-links a { font-size: 12px; }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 28px; }
-  }
-
-  @media (max-width: 560px) {
     .nav-links a { display: none; }
     .nav-links a.nav-cta { display: inline-block; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .stat { padding: 32px 14px 28px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
+    body::after { display: none; }          /* scanline kapalı */
     .hero-content { animation: none; }
     .dot, .scroll-cue svg { animation: none; }
     .reveal { opacity: 1; transform: none; transition: none; }
   }
 </style>
-<noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
 </head>
 <body>
 
 <nav id="nav">
   <div class="nav-inner">
     <a class="brand" href="#" aria-label="sersoz.com">
-      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0a1322"/><text x="32" y="44" font-family="Segoe UI,Arial" font-size="34" font-weight="700" fill="#4cc9f0" text-anchor="middle">S</text></svg>
-      <span>sersoz.com</span>
+      <span class="led" aria-hidden="true"></span>
+      <span class="t">sersoz.com</span>
     </a>
     <div class="nav-links">
       <a href="#hakkimda">Hakkımda</a>
@@ -562,9 +690,10 @@
             deterministik ve sahada kanıtlanabilir biçimde teslim etmeyi ilke edindim.</p>
         </div>
         <div class="spec-card reveal" style="--d:.1s">
+          <div class="spec-head"><span class="led" aria-hidden="true"></span>Künye</div>
           <div class="spec-row"><span class="k">Konum</span><span class="v">Türkiye</span></div>
           <div class="spec-row"><span class="k">Odak</span><span class="v">Makine görüşü · Robotik</span></div>
-          <div class="spec-row"><span class="k">Teknolojiler</span><span class="v">C# / .NET · ONNX · PLC</span></div>
+          <div class="spec-row"><span class="k">Yığın</span><span class="v">C# / .NET · ONNX · PLC</span></div>
           <div class="spec-row"><span class="k">Arayüz</span><span class="v">WinUI 3 · three.js</span></div>
           <div class="spec-row"><span class="k">Durum</span><span class="v">Yeni projelere açık</span></div>
         </div>
@@ -572,25 +701,29 @@
     </div>
   </section>
 
-  <!-- İstatistik şeridi -->
+  <!-- İstatistik / telemetri şeridi -->
   <section class="stats" id="istatistik">
     <div class="container">
       <div class="stats-grid">
-        <div class="reveal">
+        <div class="stat reveal">
+          <div class="stat-ch">CH-01</div>
           <div class="stat-value"><span class="num" data-target="30">0</span><span class="suffix">+</span></div>
           <div class="stat-label">3D ölçüm ve analiz aracı</div>
         </div>
-        <div class="reveal" style="--d:.08s">
+        <div class="stat reveal" style="--d:.08s">
+          <div class="stat-ch">CH-02</div>
           <div class="stat-value"><span class="num" data-target="5">0</span></div>
           <div class="stat-label">YOLO26 görüntü işleme görevi</div>
         </div>
-        <div class="reveal" style="--d:.16s">
+        <div class="stat reveal" style="--d:.16s">
+          <div class="stat-ch">CH-03</div>
           <div class="stat-value"><span class="num" data-target="4">0</span></div>
           <div class="stat-label">Endüstriyel PLC protokolü</div>
         </div>
-        <div class="reveal" style="--d:.24s">
+        <div class="stat reveal" style="--d:.24s">
+          <div class="stat-ch">CH-04</div>
           <div class="stat-value"><span class="num" data-target="41">0</span><span class="suffix">/41</span></div>
-          <div class="stat-label">Gerçek taramada kaynak noktası tespiti</div>
+          <div class="stat-label">Gerçek taramada kaynak noktası</div>
         </div>
       </div>
     </div>
@@ -600,17 +733,17 @@
   <section class="section" id="projeler">
     <div class="container">
       <p class="section-eyebrow reveal">// projeler</p>
-      <h2 class="reveal">Sahada çalışan sistemler</h2>
+      <h2 class="reveal">Projeler</h2>
 
       <div class="cards">
         <article class="card featured reveal">
-          <p class="card-tag">3D Vizyon</p>
+          <p class="card-tag"><span class="led amber" aria-hidden="true"></span><span class="sysid">SYS.01</span>3D Vizyon</p>
           <h3>3D Makine Görüşü İstasyonu</h3>
           <p class="card-sub">Nokta bulutu metrolojisi ve araç zinciri motoru</p>
           <p>Wenglor MLBS115 3D profil sensöründen alınan milyonlarca noktalık bulutları gerçek zamanlı
             görselleştiren, ölçen ve denetleyen eksiksiz bir istasyon yazılımı. Sürükle-bırak araç zinciri,
             iş (job) sistemi ve CAD karşılaştırmasıyla endüstriyel 3D metrolojiyi tek ekranda topluyor.
-            Tüm ölçümler deterministik: aynı bulut her seferinde bit düzeyinde birebir aynı sonucu üretir.</p>
+            Tüm ölçümler deterministik: aynı bulut her seferinde bit-birebir aynı sonucu üretir.</p>
           <ul>
             <li><b>30'dan fazla 3D araç:</b> RANSAC zemin kaldırma, silindir/küre/daire uydurma, düzlemsellik,
               paralellik/diklik, kaynak ağzı (V/U), gap &amp; flush, ICP hizalama, model karşılaştırma</li>
@@ -622,14 +755,14 @@
         </article>
 
         <article class="card reveal">
-          <p class="card-tag">Derin Öğrenme</p>
-          <h3>Derin Öğrenme ile 2D Görsel Denetim</h3>
+          <p class="card-tag"><span class="led" aria-hidden="true"></span><span class="sysid">SYS.02</span>Derin Öğrenme</p>
+          <h3>2D Derin Öğrenme ile Görsel Denetim</h3>
           <p class="card-sub">YOLO26 · ürün öğretme · kusur tespiti</p>
           <p>Tespit, segmentasyon, poz, döndürülmüş kutu ve sınıflandırma görevlerinin beşini de tamamen
             çevrimdışı (ONNX Runtime) çalıştıran görsel denetim modülü.</p>
           <ul>
             <li><b>5 YOLO26 görevi</b> tek sayfada; arayüz ONNX metaverisinden kendini uyarlar</li>
-            <li>Ürün öğretme: embedding + kNN ile model eğitimi gerektirmeden dakikalar içinde yeni ürün öğretimi</li>
+            <li>Ürün öğretme: embedding + kNN ile model eğitimi gerektirmeden dakikalar içinde yeni ürün</li>
             <li><b>PatchCore anomali motoru:</b> yalnız sağlam örneklerle öğrenir, ~2 ms'de ısı haritalı kusur konumu</li>
             <li>Çoklu nesne takibi, çizgi geçiş sayacı, bölge içi sayım, yoğunluk ısı haritası</li>
           </ul>
@@ -637,14 +770,14 @@
         </article>
 
         <article class="card reveal" style="--d:.08s">
-          <p class="card-tag">Robotik</p>
+          <p class="card-tag"><span class="led" aria-hidden="true"></span><span class="sysid">SYS.03</span>Robotik</p>
           <h3>Robot Kılavuzlama ve Kaynak Noktası Tespiti</h3>
           <p class="card-sub">3D taramadan robot koordinatına</p>
           <p>3D taramadan kaynak robotuna hedef nokta üreten uçtan uca hat: tespit araçları, el-göz
             kalibrasyonu ve ölçüm noktalarını robota aktaran haberleşme sözleşmesi.</p>
           <ul>
             <li>Gerçek endüstriyel taramada <b>41/41 kaynak noktası tespiti</b> — periyodik kafes + robust hat uydurma</li>
-            <li><b>Tsai-Lenz el-göz kalibrasyonu:</b> sentetik veride makine hassasiyeti düzeyinde doğrulanmış çözücü</li>
+            <li><b>Tsai-Lenz el-göz kalibrasyonu:</b> sentetik doğrulamada ~1e-13 mm hassasiyet</li>
             <li>RANSAC + Kabsch hizalama ve Hungarian eşleştirme ile referans karşılaştırma</li>
             <li>Robot yolu önizlemesi; KUKA / ABB / Fanuc / Yaskawa poz sözleşmeleri incelendi</li>
           </ul>
@@ -652,22 +785,22 @@
         </article>
 
         <article class="card reveal">
-          <p class="card-tag">Haberleşme</p>
+          <p class="card-tag"><span class="led" aria-hidden="true"></span><span class="sysid">SYS.04</span>Haberleşme</p>
           <h3>Çok Protokollü Endüstriyel Haberleşme</h3>
           <p class="card-sub">PLC sürücüleri ve saha ağı keşfi</p>
           <p>Görüntü işleme sonuçlarını fabrika otomasyonuna bağlayan katman: denetim kararları yaşam
             sinyali ve el sıkışma bitleriyle PLC'ye güvenle aktarılıyor.</p>
           <ul>
             <li><b>4 protokol tek çatıda:</b> Mitsubishi MC/SLMP, Siemens S7, Modbus TCP, PROFINET DCP + GSDML</li>
-            <li>Yaşam sinyali (heartbeat), geçerlilik biti ve sayaç kelimesiyle yarış durumu içermeyen denetim→PLC köprüsü</li>
+            <li>Heartbeat, geçerlilik biti ve sayaç kelimesiyle yarış durumsuz denetim→PLC köprüsü</li>
             <li>Kopan bağlantıyı kendi kendine onaran sürücü zinciri</li>
-            <li>Sayfalı ölçüm aktarımı: izole simülatör testinde <b>45/45</b> başarı</li>
+            <li>Sayfalı ölçüm aktarımı: izole simülatör sınavında <b>45/45</b> başarı</li>
           </ul>
           <div class="chips"><span class="chip">MC/SLMP</span><span class="chip">Siemens S7</span><span class="chip">Modbus TCP</span><span class="chip">PROFINET DCP</span></div>
         </article>
 
         <article class="card reveal" style="--d:.08s">
-          <p class="card-tag">Otonom Ajanlar</p>
+          <p class="card-tag"><span class="led" aria-hidden="true"></span><span class="sysid">SYS.05</span>Otonom Ajanlar</p>
           <h3>Otonom Ajan Katmanı</h3>
           <p class="card-sub">Kendini izleyen istasyon</p>
           <p>İstasyonun kendisini izleyip iyileştirme öneren görevliler: veri biriktikçe eğitim önerir,
@@ -681,7 +814,7 @@
         </article>
 
         <article class="card reveal" style="--d:.16s">
-          <p class="card-tag">Platform</p>
+          <p class="card-tag"><span class="led" aria-hidden="true"></span><span class="sysid">SYS.06</span>Platform</p>
           <h3>Endüstriyel Test İstasyonu Platformu</h3>
           <p class="card-sub">Sızdırmazlık testinden makine görüşüne</p>
           <p>Vizyon istasyonunun üzerinde yükseldiği taban: sahada çalışan bir sızdırmazlık (leak) test
@@ -701,10 +834,10 @@
   <section class="section" id="yetkinlikler">
     <div class="container narrow">
       <p class="section-eyebrow reveal">// yetkinlikler</p>
-      <h2 class="reveal">Sensörden arayüze tüm katman</h2>
+      <h2 class="reveal">Yetkinlikler</h2>
       <div class="skill-groups">
         <div class="skill-group reveal">
-          <h3>Makine Görüşü</h3>
+          <h4><span class="gid">A</span>Makine Görüşü</h4>
           <div class="chips">
             <span class="chip">YOLO / ONNX Runtime</span><span class="chip">OpenCV</span>
             <span class="chip">3D Nokta Bulutu</span><span class="chip">PCL</span>
@@ -713,7 +846,7 @@
           </div>
         </div>
         <div class="skill-group reveal" style="--d:.08s">
-          <h3>Otomasyon &amp; Haberleşme</h3>
+          <h4><span class="gid">B</span>Otomasyon &amp; Haberleşme</h4>
           <div class="chips">
             <span class="chip">Mitsubishi MC/SLMP</span><span class="chip">Siemens S7</span>
             <span class="chip">Modbus TCP</span><span class="chip">PROFINET / GSDML</span>
@@ -721,7 +854,7 @@
           </div>
         </div>
         <div class="skill-group reveal" style="--d:.16s">
-          <h3>Yazılım</h3>
+          <h4><span class="gid">C</span>Yazılım</h4>
           <div class="chips">
             <span class="chip">C# / .NET 8</span><span class="chip">WinUI 3 / XAML</span>
             <span class="chip">SQLite</span><span class="chip">WebView2</span>
@@ -764,74 +897,178 @@
 <script>
 (function () {
   var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var hasIO = 'IntersectionObserver' in window;
 
-  /* ---------- Nokta bulutu animasyonu ---------- */
+  /* ---------- Radar / lidar tarama animasyonu ---------- */
   var canvas = document.getElementById('bg');
   var ctx = canvas.getContext('2d');
-  var W, H, dpr, N;
+  var W, H, dpr, R, CX, CY;
   var running = false;
   var rafId = null;
+  var TWO = Math.PI * 2;
 
-  var hero = document.getElementById('hero');
+  // Deterministik nokta kümeleri (tohumlu RNG)
+  function mulberry(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  var rand = mulberry(1907);
+  var points = [];
+  var ci, pi;
+  for (ci = 0; ci < 6; ci++) {                 // kümeler
+    var ca = rand() * TWO;
+    var cr = 0.25 + rand() * 0.6;
+    var n = 7 + Math.floor(rand() * 8);
+    for (pi = 0; pi < n; pi++) {
+      var pa = ca + (rand() - 0.5) * 0.5;
+      var pr = cr + (rand() - 0.5) * 0.16;
+      if (pr > 0.08 && pr < 0.95) points.push({ a: pa, r: pr, amber: false, s: 0.8 + rand() * 0.8 });
+    }
+  }
+  for (pi = 0; pi < 26; pi++) {                // dağınık hedefler
+    points.push({ a: rand() * TWO, r: 0.12 + rand() * 0.82, amber: rand() > 0.86, s: 0.8 + rand() * 0.9 });
+  }
 
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = canvas.width = Math.floor(hero.clientWidth * dpr);
-    H = canvas.height = Math.floor(hero.clientHeight * dpr);
-    N = innerWidth < 640 ? 32 : 46;   // mobilde daha az nokta
-    if (reduced) draw(1.7);
+    W = canvas.width = Math.floor(innerWidth * dpr);
+    H = canvas.height = Math.floor(innerHeight * dpr);
+    canvas.style.width = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
+    CX = W / 2;
+    CY = H * 0.54;
+    R = Math.min(W, H) * (innerWidth < 640 ? 0.52 : 0.44);
+    if (reduced) draw(2.2, true);
   }
 
-  var TILT = -1.02;
+  function fmt(v) {
+    var s = v < 0 ? '-' : '+';
+    v = Math.abs(v);
+    var pad = v < 10 ? '00' : (v < 100 ? '0' : '');
+    return s + pad + v.toFixed(3);
+  }
 
-  function draw(t) {
+  function wedge(a0, a1, alpha) {
+    ctx.beginPath();
+    ctx.moveTo(CX, CY);
+    ctx.arc(CX, CY, R, a0, a1);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(58, 255, 140, ' + alpha + ')';
+    ctx.fill();
+  }
+
+  function draw(t, staticFrame) {
     ctx.clearRect(0, 0, W, H);
+    var lw = Math.max(1, dpr * 0.75);
+    var k, x1, y1, x2, y2;
 
-    var ry = t * 0.10;
-    var cosY = Math.cos(ry), sinY = Math.sin(ry);
-    var cosX = Math.cos(TILT), sinX = Math.sin(TILT);
-    var scale = Math.min(W, H) * 0.46;
-    var fov = 3.2;
-    var cx = W / 2, cy = H * 0.60;
-    var sweep = ((t * 0.30) % 2.6) - 1.3;
-
-    for (var i = 0; i < N; i++) {
-      var x = (i / (N - 1) - 0.5) * 2;
-      for (var j = 0; j < N; j++) {
-        var z = (j / (N - 1) - 0.5) * 2;
-
-        var y = 0.16 * Math.sin(2.6 * x + t * 0.9) * Math.cos(2.0 * z - t * 0.7)
-              + 0.06 * Math.sin(4.5 * (0.8 * x + z) + t * 1.4);
-
-        var xr = x * cosY + z * sinY;
-        var zr = -x * sinY + z * cosY;
-        var yr = y * cosX - zr * sinX;
-        var zd = y * sinX + zr * cosX;
-
-        var s = fov / (fov + zd);
-        var px = cx + xr * s * scale;
-        var py = cy + yr * s * scale;
-
-        var onLaser = Math.abs(x - sweep) < 0.05;
-        var size = (onLaser ? 2.6 : 1.7) * dpr * s;
-
-        if (onLaser) {
-          ctx.fillStyle = 'rgba(190, 233, 255, 0.95)';
-        } else {
-          var yn = Math.max(0, Math.min(1, (y + 0.24) / 0.48));
-          var hue = 212 - yn * 150;
-          var alpha = Math.max(0.12, 0.66 - (zd + 1.0) * 0.22);
-          ctx.fillStyle = 'hsla(' + hue + ', 85%, ' + (48 + yn * 14) + '%, ' + alpha + ')';
-        }
-        ctx.fillRect(px - size / 2, py - size / 2, size, size);
-      }
+    // Menzil halkaları
+    ctx.lineWidth = lw;
+    for (k = 1; k <= 4; k++) {
+      ctx.beginPath();
+      ctx.arc(CX, CY, R * k / 4, 0, TWO);
+      ctx.strokeStyle = 'rgba(58, 255, 140, ' + (k === 4 ? 0.12 : 0.06) + ')';
+      ctx.stroke();
     }
+
+    // Artı çizgiler
+    ctx.strokeStyle = 'rgba(58, 255, 140, 0.05)';
+    ctx.beginPath(); ctx.moveTo(CX - R, CY); ctx.lineTo(CX + R, CY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(CX, CY - R); ctx.lineTo(CX, CY + R); ctx.stroke();
+
+    // Dış halka kadran çentikleri
+    for (var deg = 0; deg < 360; deg += 15) {
+      var rr = deg * Math.PI / 180;
+      var len = (deg % 45 === 0 ? 12 : 6) * dpr;
+      x1 = CX + Math.cos(rr) * (R - len); y1 = CY + Math.sin(rr) * (R - len);
+      x2 = CX + Math.cos(rr) * R;         y2 = CY + Math.sin(rr) * R;
+      ctx.strokeStyle = 'rgba(58, 255, 140, ' + (deg % 45 === 0 ? 0.22 : 0.1) + ')';
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    }
+
+    // Kadran açı etiketleri
+    ctx.font = (10 * dpr) + 'px Consolas, "Cascadia Mono", monospace';
+    ctx.fillStyle = 'rgba(131, 148, 135, 0.4)';
+    ctx.textAlign = 'center';
+    ctx.fillText('000', CX + R + 20 * dpr, CY + 3 * dpr);
+    ctx.fillText('090', CX, CY + R + 16 * dpr);
+    ctx.fillText('180', CX - R - 20 * dpr, CY + 3 * dpr);
+    ctx.fillText('270', CX, CY - R - 10 * dpr);
+
+    // Tarama ışını + iz
+    var a = t * 0.55;
+    var SEG = 30, STEP = 0.028;
+    for (k = SEG - 1; k >= 0; k--) {
+      var f = 1 - k / SEG;
+      wedge(a - (k + 1) * STEP, a - k * STEP + 0.002, 0.07 * f * f);
+    }
+    // Işının ön kenarı
+    x2 = CX + Math.cos(a) * R; y2 = CY + Math.sin(a) * R;
+    ctx.strokeStyle = 'rgba(58, 255, 140, 0.16)';
+    ctx.lineWidth = 4 * dpr;
+    ctx.beginPath(); ctx.moveTo(CX, CY); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(170, 255, 205, 0.8)';
+    ctx.lineWidth = 1.4 * dpr;
+    ctx.beginPath(); ctx.moveTo(CX, CY); ctx.lineTo(x2, y2); ctx.stroke();
+
+    // Merkez işareti
+    ctx.fillStyle = 'rgba(58, 255, 140, 0.7)';
+    ctx.fillRect(CX - 2 * dpr, CY - 2 * dpr, 4 * dpr, 4 * dpr);
+
+    // Işın ardında beliren nokta kümeleri (radar ardıl parlaması)
+    for (k = 0; k < points.length; k++) {
+      var p = points[k];
+      var d = (a - p.a) % TWO;
+      if (d < 0) d += TWO;
+      var glow = staticFrame ? 0.8 : Math.exp(-d * 1.15);
+      var alpha = 0.12 + 0.78 * glow;
+      if (alpha < 0.13 && !staticFrame) continue;
+      var size = (1.6 + 1.6 * glow) * p.s * dpr;
+      var px = CX + Math.cos(p.a) * p.r * R;
+      var py = CY + Math.sin(p.a) * p.r * R;
+      ctx.fillStyle = p.amber
+        ? 'rgba(255, 179, 71, ' + alpha + ')'
+        : 'rgba(58, 255, 140, ' + alpha + ')';
+      ctx.fillRect(px - size / 2, py - size / 2, size, size);
+    }
+
+    // Köşe telemetri okumaları
+    var small = innerWidth < 720;
+    var fs = (small ? 10 : 11) * dpr;
+    var lh = fs * 1.5;
+    var m = 24 * dpr;
+    var topY = 92 * dpr;
+    ctx.font = fs + 'px Consolas, "Cascadia Mono", monospace';
+    ctx.fillStyle = 'rgba(141, 183, 155, 0.75)';
+
+    ctx.textAlign = 'left';
+    ctx.fillText('X ' + fmt(142.031 + Math.sin(t * 0.9) * 38), m, topY);
+    ctx.fillText('Y ' + fmt(-38.442 + Math.cos(t * 0.7) * 24), m, topY + lh);
+    ctx.fillText('Z ' + fmt(7.115 + Math.sin(t * 1.3) * 4), m, topY + lh * 2);
+
+    ctx.textAlign = 'right';
+    var sweepDeg = ((a * 180 / Math.PI) % 360).toFixed(1);
+    ctx.fillText('SWEEP ' + sweepDeg + '°', W - m, topY);
+    ctx.fillText('PTS ' + points.length, W - m, topY + lh);
+    ctx.fillText('DPR ' + dpr.toFixed(1), W - m, topY + lh * 2);
+
+    if (!small) {
+      ctx.textAlign = 'left';
+      ctx.fillText('MOD TARAMA', m, H - m - lh);
+      ctx.fillText('GRID 0.50m', m, H - m);
+      ctx.textAlign = 'right';
+      ctx.fillText('LAT ' + (3.6 + Math.sin(t * 2.1) * 0.9).toFixed(1) + 'ms', W - m, H - m - lh);
+      ctx.fillText('SYS OK', W - m, H - m);
+    }
+    ctx.textAlign = 'left';
   }
 
   function loop() {
     if (!running) return;
-    draw(performance.now() / 1000);
+    draw(performance.now() / 1000, false);
     rafId = requestAnimationFrame(loop);
   }
 
@@ -839,33 +1076,25 @@
   addEventListener('resize', resize);
 
   if (reduced) {
-    draw(1.7);
-  } else if (hasIO) {
+    draw(2.2, true);
+  } else {
     // Hero ekran dışındayken animasyonu durdur
     new IntersectionObserver(function (entries) {
-      var visible = entries[entries.length - 1].isIntersecting;
+      var visible = entries[0].isIntersecting;
       if (visible && !running) { running = true; loop(); }
       else if (!visible && running) { running = false; if (rafId) cancelAnimationFrame(rafId); }
-    }, { threshold: 0 }).observe(hero);
-  } else {
-    running = true; loop();
+    }, { threshold: 0 }).observe(document.getElementById('hero'));
   }
 
   /* ---------- Nav: hero'dan çıkınca zemin ---------- */
   var nav = document.getElementById('nav');
-  if (hasIO) {
-    new IntersectionObserver(function (entries) {
-      nav.classList.toggle('scrolled', !entries[entries.length - 1].isIntersecting);
-    }, { rootMargin: '-72px 0px 0px 0px', threshold: 0 }).observe(hero);
-  } else {
-    addEventListener('scroll', function () {
-      nav.classList.toggle('scrolled', scrollY > innerHeight - 72);
-    }, { passive: true });
-  }
+  new IntersectionObserver(function (entries) {
+    nav.classList.toggle('scrolled', !entries[0].isIntersecting);
+  }, { rootMargin: '-72px 0px 0px 0px', threshold: 0 }).observe(document.getElementById('hero'));
 
   /* ---------- Scroll reveal ---------- */
   var revealEls = document.querySelectorAll('.reveal');
-  if (reduced || !hasIO) {
+  if (reduced) {
     revealEls.forEach(function (el) { el.classList.add('visible'); });
   } else {
     var ro = new IntersectionObserver(function (entries) {
@@ -894,7 +1123,7 @@
     }
     requestAnimationFrame(step);
   }
-  if (reduced || !hasIO) {
+  if (reduced) {
     counters.forEach(animateCounter);
   } else {
     var co = new IntersectionObserver(function (entries) {
