@@ -370,6 +370,80 @@
   }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+  /* ---------- Yüzen sepet + hızlı ödeme ---------- */
+  .fab-wrap {
+    position: fixed; right: 24px; bottom: 24px; z-index: 45;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 12px;
+  }
+
+  .fab {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 14px 20px;
+    background: var(--ink); color: var(--bg);
+    border: 1px solid var(--ink); cursor: pointer;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+    box-shadow: 0 12px 32px rgba(26, 24, 21, .28);
+    transform: translateY(24px) scale(.92); opacity: 0; pointer-events: none;
+    transition: transform .38s cubic-bezier(.2, .7, .3, 1), opacity .3s ease,
+                background .22s ease, border-color .22s ease;
+  }
+  .fab.show { transform: none; opacity: 1; pointer-events: auto; }
+  .fab:hover { background: var(--accent); border-color: var(--accent); }
+  .fab svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .fab .tutar { font-size: 13px; font-weight: 600; letter-spacing: .04em; }
+  .fab .adet {
+    min-width: 21px; height: 21px; padding: 0 6px;
+    background: var(--accent); color: #fff; border-radius: 999px;
+    font-size: 11px; line-height: 21px; text-align: center;
+  }
+  .fab.bump { animation: fabBump .5s cubic-bezier(.2, .7, .3, 1); }
+  @keyframes fabBump {
+    0%, 100% { transform: none; }
+    35% { transform: scale(1.09) translateY(-3px); }
+  }
+
+  .quick {
+    width: min(340px, calc(100vw - 40px));
+    background: var(--bg); border: 1px solid var(--line);
+    box-shadow: 0 20px 54px rgba(26, 24, 21, .24);
+    transform-origin: bottom right;
+    transform: translateY(14px) scale(.95); opacity: 0; pointer-events: none;
+    transition: transform .32s cubic-bezier(.2, .7, .3, 1), opacity .26s ease;
+  }
+  .quick.open { transform: none; opacity: 1; pointer-events: auto; }
+
+  .quick-head {
+    padding: 15px 18px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .quick-head h3 { font-family: var(--serif); font-size: 17px; font-weight: 700; }
+  .quick-head h3::after { content: '.'; color: var(--accent); }
+  .quick-head .adet-yazi { font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+
+  .quick-list { max-height: 208px; overflow-y: auto; padding: 6px 18px; }
+  .q-row { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line-soft); }
+  .q-row:last-child { border-bottom: none; }
+  .q-row .ad { font-size: 13px; line-height: 1.4; }
+  .q-row .ad small { display: block; margin-top: 3px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .q-row .tut { font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+
+  .quick-foot { padding: 15px 18px 18px; border-top: 1px solid var(--line); }
+  .quick-total { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 13px; }
+  .quick-total span { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .quick-total b { font-family: var(--mono); font-size: 19px; }
+
+  .quick-btn {
+    width: 100%; padding: 14px; cursor: pointer;
+    border: 1px solid var(--ink); background: var(--ink); color: var(--bg);
+    font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    transition: background .22s, border-color .22s;
+  }
+  .quick-btn:hover { background: var(--accent); border-color: var(--accent); }
+  .quick-btn.ghost {
+    margin-top: 8px; background: transparent; color: var(--ink); border-color: var(--line);
+  }
+  .quick-btn.ghost:hover { background: transparent; border-color: var(--accent); color: var(--accent); }
+
   /* ---------- Footer ---------- */
   footer { margin-top: 60px; border-top: 3px double var(--line); padding: 26px 0 34px; }
   .footer-inner {
@@ -399,12 +473,16 @@
     .lead { border-left: none; padding-left: 0; }
     .page-hero { padding-top: 110px; }
     .icon-btn span.lbl { display: none; }
+    .fab-wrap { right: 16px; bottom: 16px; }
+    .fab { padding: 12px 16px; gap: 9px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     .p-card { opacity: 1; transform: none; animation: none; }
     .p-card, .p-card::after, .drawer, .modal, .scrim, .toast, .badge { transition: none; }
+    .fab, .quick { transition: opacity .2s ease; }
+    .fab.bump { animation: none; }
   }
 </style>
 <noscript><style>.p-card { opacity: 1; transform: none; animation: none; }</style></noscript>
@@ -582,6 +660,28 @@
   </div>
 </div>
 
+<!-- Yüzen sepet + hızlı ödeme -->
+<div class="fab-wrap">
+  <div class="quick" id="quick" role="dialog" aria-label="Hızlı sepet">
+    <div class="quick-head">
+      <h3>Sepetim</h3>
+      <span class="adet-yazi" id="quickCount"></span>
+    </div>
+    <div class="quick-list" id="quickList"></div>
+    <div class="quick-foot">
+      <div class="quick-total"><span>Toplam (KDV dahil)</span><b id="quickTotal">—</b></div>
+      <button class="quick-btn" id="quickPay" type="button">Hızlı ödemeye geç</button>
+      <button class="quick-btn ghost" id="quickEdit" type="button">Sepeti düzenle</button>
+    </div>
+  </div>
+  <button class="fab" id="fab" type="button" aria-label="Sepetim">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/></svg>
+    <span>Sepetim</span>
+    <span class="tutar" id="fabTotal"></span>
+    <span class="adet" id="fabCount">0</span>
+  </button>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -752,11 +852,42 @@ const ODEME = {
     $('grandTotal').textContent = lines.length ? TRY.format(t.grand) : '—';
     $('checkoutBtn').disabled = !lines.length;
     save(LS_CART, cart);
+    renderQuick(lines, count, t);
+  }
+
+  /* --------------------------------------------------- yüzen sepet (hızlı) */
+  function renderQuick(lines, count, t) {
+    var fab = $('fab');
+    fab.classList.toggle('show', count > 0);
+    $('fabCount').textContent = count;
+    $('fabTotal').textContent = count ? TRY.format(t.grand) : '';
+
+    if (!count) { $('quick').classList.remove('open'); return; }
+
+    $('quickCount').textContent = count + ' kalem';
+    $('quickTotal').textContent = TRY.format(t.grand);
+    $('quickList').innerHTML = lines.map(function (l) {
+      return '<div class="q-row">' +
+        '<span class="ad">' + esc(l.p.title) +
+          '<small>' + TYPE_LABEL[l.p.type] + ' · ' + l.qty + ' adet</small></span>' +
+        '<span class="tut">' + TRY.format(l.p.price * l.qty) + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  function quickAc(open) {
+    $('quick').classList.toggle('open', open);
   }
 
   function addToCart(id) {
     cart[id] = (cart[id] || 0) + 1;
     renderCart();
+
+    var fab = $('fab');
+    fab.classList.remove('bump');
+    void fab.offsetWidth;          /* animasyonu yeniden tetikle */
+    fab.classList.add('bump');
+
     var btn = document.querySelector('[data-add="' + id + '"]');
     if (btn) {
       btn.classList.add('added');
@@ -777,6 +908,7 @@ const ODEME = {
 
   function closeAll() {
     openDrawer(false);
+    quickAc(false);
     $('productModal').classList.remove('open');
     $('orderModal').classList.remove('open');
     $('scrim').classList.remove('open');
@@ -964,8 +1096,30 @@ const ODEME = {
     };
 
     $('productForm').onsubmit = addProduct;
-    $('checkoutBtn').onclick = function () {
+    /* yüzen sepet */
+    $('fab').onclick = function (e) {
+      e.stopPropagation();
+      quickAc(!$('quick').classList.contains('open'));
+    };
+    $('quickEdit').onclick = function () { quickAc(false); openDrawer(true); };
+    $('quickPay').onclick = siparisAc;
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.fab-wrap')) quickAc(false);
+    });
+
+    $('checkoutBtn').onclick = siparisAc;
+    $('orderForm').onsubmit = submitOrder;
+
+    if (mode === 'local') {
+      $('loginBtn').onclick = function () {
+        toast('Google girişi için Firebase yapılandırması gerekiyor.');
+      };
+    }
+  }
+
+  function siparisAc() {
       openDrawer(false);
+      quickAc(false);
       var t = totals();
       $('orderSummary').innerHTML = cartLines().map(function (l) {
         return '<div class="line"><span>' + esc(l.p.title) + ' × ' + l.qty + '</span><b>' +
@@ -980,14 +1134,6 @@ const ODEME = {
           '<b>e-posta uygulamanızda</b> hazırlanır ve tarafımıza iletilir.';
       $('orderSubmit').textContent = (ODEME.saglayici && ODEME.baslatUrl) ? 'Ödemeye geç' : 'Siparişi gönder';
       openModal($('orderModal'), true);
-    };
-    $('orderForm').onsubmit = submitOrder;
-
-    if (mode === 'local') {
-      $('loginBtn').onclick = function () {
-        toast('Google girişi için Firebase yapılandırması gerekiyor.');
-      };
-    }
   }
 
   function addProduct(e) {
