@@ -232,6 +232,13 @@
     flex: 1;
   }
 
+  .p-detay {
+    display: inline-block; margin-top: 12px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--accent); text-decoration: none; border-bottom: 1px solid currentColor;
+  }
+  .p-detay:hover { color: var(--ink); }
+
   .p-foot {
     margin-top: 18px; padding-top: 15px; border-top: 1px solid var(--line-soft);
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -757,6 +764,9 @@ const BILDIRIM = {
   var TYPE_LABEL = { urun: 'Ürün', hizmet: 'Hizmet', dijital: 'Dijital' };
 
   var SEED = [
+    { id: 'vd1', type: 'dijital', title: 'Vision Detection App — Tek Hat Lisansı', price: 64000,
+      desc: '3D tarama, ölçüm, kusur denetimi ve robot kılavuzlamayı tek uygulamada toplayan endüstriyel görüş yazılımı. Kurulum ve eğitim dahil.', seller: 'Sercan Sözer',
+      url: '/vision-detection.html' },
     { id: 's1', type: 'hizmet', title: '3D Tarama Fizibilite Analizi', price: 12500,
       desc: 'Parçanızın 3D taranabilirliğini ölçer, sensör ve ölçüm yöntemi önerisiyle raporlarım.', seller: 'Sercan Sözer' },
     { id: 's2', type: 'hizmet', title: 'Görsel Denetim Başlangıç Paketi', price: 45000,
@@ -826,6 +836,7 @@ const BILDIRIM = {
         '</div>' +
         '<h3>' + esc(p.title) + '</h3>' +
         '<p class="p-desc">' + esc(p.desc) + '</p>' +
+        (p.url ? '<a class="p-detay" href="' + p.url + '">Ürün sayfası →</a>' : '') +
         '<div class="p-foot">' +
           '<span class="p-price">' + TRY.format(p.price) + '<small>KDV hariç</small></span>' +
           '<button class="add-btn" data-add="' + p.id + '" type="button">Sepete ekle</button>' +
