@@ -473,6 +473,7 @@
   }
   @media (max-width: 640px) {
     .nav-links a { display: none; }
+    .nav-links a.nav-hep { display: inline-block; padding: 10px 8px; font-size: 10px; }
     .lead { border-left: none; padding-left: 0; }
     .page-hero { padding-top: 110px; }
     .icon-btn span.lbl { display: none; }
@@ -501,7 +502,7 @@
     <div class="nav-links">
       <a href="/">Ana Sayfa</a>
       <a class="active" href="/magaza.html" aria-current="page">Mağaza</a>
-      <a href="/hesabim.html">Hesabım</a>
+      <a class="nav-hep" href="/hesabim.html">Hesabım</a>
       <a href="/portfolyo.html">Portfolyo</a>
       <a href="/yazilar.html">Yazılar</a>
       <a href="/forum.html">Forum</a>
@@ -725,6 +726,15 @@ const FIREBASE_CONFIG = {
 const ODEME = {
   saglayici: null,      // 'iyzico' | 'paytr' | 'shopier' …
   baslatUrl: null       // ödeme oturumu açan sunucu adresi (https)
+};
+
+/* 3) Sipariş bildirimi. Web3Forms erişim anahtarı girilirse sipariş doğrudan
+      e-posta olarak iletilir (müşterinin posta uygulamasına bağlı olmadan,
+      telefonda da çalışır). Anahtar herkese açık olacak şekilde tasarlanmıştır,
+      gizli bilgi değildir. Boş bırakılırsa yedek olarak mailto kullanılır.     */
+const BILDIRIM = {
+  web3formsKey: null,             // "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  yedekAdres: 'sercan@sersoz.com' // anahtar yokken mailto ile açılacak adres
 };
 
 /* ==========================================================================*/
@@ -1017,8 +1027,54 @@ const ODEME = {
     var no = 'SRS-' + Date.now();
     siparisiKaydet(f, no);
 
-    var subject = 'Sipariş talebi ' + no + ' — ' + f.name + (f.company ? ' / ' + f.company : '');
-    location.href = 'mailto:sercan@sersoz.com?subject=' + encodeURIComponent(subject) +
+    var konu = 'Sipariş talebi ' + no + ' — ' + f.name + (f.company ? ' / ' + f.company : '');
+
+    if (BILDIRIM.web3formsKey) {
+      var btn = $('orderSubmit');
+      btn.disabled = true;
+      btn.textContent = 'Gönderiliyor…';
+
+      fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: BILDIRIM.web3formsKey,
+          subject: konu,
+          from_name: 'sersoz.com mağaza',
+          replyto: f.mail,
+          'Siparis no': no,
+          'Ad soyad': f.name,
+          'Firma': f.company || '-',
+          'E-posta': f.mail,
+          'Telefon': f.phone || '-',
+          'Adres': f.adres || '-',
+          'Not': f.note || '-',
+          'Ozet': buildOrderText(f)
+        })
+      }).then(function (r) { return r.json(); })
+        .then(function (d) {
+          btn.disabled = false;
+          btn.textContent = 'Siparişi gönder';
+          if (d && d.success) {
+            toast('Siparişiniz iletildi — en kısa sürede dönüş yapılacak.');
+            e.target.reset();
+            cart = {};
+            renderCart();
+            closeAll();
+          } else {
+            toast('Gönderilemedi — lütfen e-posta ile ulaşın.');
+          }
+        })
+        .catch(function () {
+          btn.disabled = false;
+          btn.textContent = 'Siparişi gönder';
+          toast('Bağlantı kurulamadı, lütfen tekrar deneyin.');
+        });
+      return;
+    }
+
+    /* Anahtar girilmemişse yedek: müşterinin posta uygulaması açılır */
+    location.href = 'mailto:' + BILDIRIM.yedekAdres + '?subject=' + encodeURIComponent(konu) +
                     '&body=' + encodeURIComponent(buildOrderText(f));
     toast(user ? 'Sipariş kaydedildi — Hesabım > Siparişlerim' : 'Sipariş özeti e-posta uygulamanızda açıldı.');
     closeAll();
@@ -1292,5 +1348,6 @@ const ODEME = {
   if (mode === 'firebase') initFirebase();
 })();
 </script>
+<script src="/iz.js" defer></script>
 </body>
 </html>

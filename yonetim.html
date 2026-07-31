@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yönetim — sersoz.com</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%231a1815'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f6f2ea;
+    --ink: #1a1815;
+    --muted: #5b564d;
+    --accent: #c2410c;
+    --green: #14532d;
+    --line: rgba(26, 24, 21, .2);
+    --line-soft: rgba(26, 24, 21, .1);
+    --paper: rgba(255, 253, 248, .6);
+    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  }
+
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--accent); color: var(--bg); }
+  .container { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+
+  nav#nav {
+    position: sticky; top: 0; z-index: 30; height: 58px;
+    display: flex; align-items: center;
+    background: rgba(246, 242, 234, .95); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand .mark {
+    width: 22px; height: 22px; background: var(--ink); color: var(--bg);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 14px; font-weight: 700;
+  }
+  .brand span { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .nav-right a, .nav-right button {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none; background: none; border: none; cursor: pointer; padding: 8px 6px;
+  }
+  .nav-right a:hover, .nav-right button:hover { color: var(--accent); }
+  .nav-right img { width: 26px; height: 26px; border-radius: 50%; }
+
+  .hero { padding: 40px 0 8px; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  h1 { font-family: var(--serif); font-size: clamp(28px, 4.4vw, 44px); font-weight: 700; letter-spacing: -.015em; }
+  h1 .nokta { color: var(--accent); }
+
+  /* kapı */
+  .kapi { max-width: 480px; margin: 60px auto 120px; padding: 40px 32px; border: 1px solid var(--line); background: var(--paper); text-align: center; }
+  .kapi h2 { font-family: var(--serif); font-size: 24px; margin-bottom: 12px; }
+  .kapi p { color: var(--muted); font-size: 14.5px; line-height: 1.7; margin-bottom: 24px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px; padding: 12px 20px; cursor: pointer;
+    border: 1px solid var(--ink); background: var(--ink); color: var(--bg);
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase;
+    text-decoration: none; transition: background .22s, border-color .22s;
+  }
+  .btn:hover { background: var(--accent); border-color: var(--accent); }
+  .btn.ghost { background: transparent; color: var(--ink); }
+  .btn.ghost:hover { background: transparent; border-color: var(--accent); color: var(--accent); }
+
+  /* aralık seçici */
+  .araliklar { display: flex; gap: 6px; margin: 24px 0 6px; flex-wrap: wrap; }
+  .aralik {
+    padding: 8px 15px; border: 1px solid var(--line); background: transparent; cursor: pointer;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+    transition: border-color .2s, color .2s, background .2s;
+  }
+  .aralik:hover { border-color: var(--accent); color: var(--accent); }
+  .aralik.active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+  /* özet kartları */
+  .ozet { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin: 22px 0 8px; }
+  .kart { padding: 18px 16px; border: 1px solid var(--line); background: var(--paper); }
+  .kart .v { font-family: var(--mono); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .kart .e { margin-top: 5px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); line-height: 1.4; }
+
+  .blok { margin-top: 34px; padding-top: 26px; border-top: 3px double var(--line); }
+  .blok h2 { font-family: var(--serif); font-size: 23px; font-weight: 700; margin-bottom: 4px; }
+  .blok h2::after { content: '.'; color: var(--accent); }
+  .blok .alt { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+  /* grafik */
+  .grafik { display: flex; align-items: flex-end; gap: 5px; height: 170px; padding-top: 10px; }
+  .cubuk { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; height: 100%; }
+  .cubuk .bar {
+    width: 100%; background: var(--ink); min-height: 2px;
+    transition: height .5s cubic-bezier(.2,.7,.3,1), background .2s;
+  }
+  .cubuk:hover .bar { background: var(--accent); }
+  .cubuk .gun { font-family: var(--mono); font-size: 9px; color: var(--muted); white-space: nowrap; }
+  .cubuk .sayi { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+
+  /* iki sütun */
+  .ikili { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+
+  .liste { border: 1px solid var(--line); background: var(--paper); }
+  .liste h3 {
+    padding: 13px 16px; border-bottom: 1px solid var(--line-soft);
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); font-weight: 400;
+  }
+  .satir { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line-soft); }
+  .satir:last-child { border-bottom: none; }
+  .satir .ad { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .satir .sayi { font-family: var(--mono); font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .satir .oran { position: relative; flex: 1; height: 4px; background: var(--line-soft); margin: 0 10px; }
+  .satir .oran i { position: absolute; inset: 0 auto 0 0; background: var(--accent); }
+
+  /* akış */
+  .akis { max-height: 340px; overflow-y: auto; border: 1px solid var(--line); background: var(--paper); }
+  .akis .satir { font-family: var(--mono); font-size: 11.5px; }
+  .akis .zaman { color: var(--muted); white-space: nowrap; }
+  .akis .olay { padding: 2px 7px; border: 1px solid var(--line); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+  .akis .olay.giris { border-color: rgba(20,83,45,.4); color: var(--green); }
+  .akis .olay.cikis { border-color: rgba(194,65,12,.4); color: var(--accent); }
+
+  /* siparişler */
+  .siparis { border: 1px solid var(--line); background: var(--paper); margin-bottom: 12px; }
+  .siparis-ust { padding: 13px 16px; border-bottom: 1px solid var(--line-soft); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .siparis-ust b { font-family: var(--mono); font-size: 12.5px; }
+  .siparis-ust .t { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .siparis-govde { padding: 12px 16px; font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .siparis-govde .kalem { display: flex; justify-content: space-between; gap: 12px; }
+  .siparis-govde .kalem b { color: var(--ink); font-family: var(--mono); font-size: 12.5px; }
+  .siparis-govde .mus { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line-soft); font-family: var(--mono); font-size: 11.5px; }
+
+  .bos { padding: 34px 0; text-align: center; font-family: var(--serif); font-style: italic; color: var(--muted); }
+
+  footer { margin-top: 50px; border-top: 1px solid var(--line); padding: 20px 0 40px; }
+  .footer-inner { max-width: 1180px; margin: 0 auto; padding: 0 28px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+  @media (max-width: 1080px) { .ozet { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 880px) { .ikili { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) {
+    .ozet { grid-template-columns: repeat(2, 1fr); }
+    .cubuk .sayi { display: none; }
+    .container, .nav-inner, .footer-inner { padding: 0 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .cubuk .bar { transition: none; } }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/"><span class="mark">S</span><span>sersoz.com / yönetim</span></a>
+    <div class="nav-right" id="navRight">
+      <a href="/">Siteye dön</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <header class="hero">
+    <p class="eyebrow">Yönetim paneli</p>
+    <h1>Site trafiği ve siparişler<span class="nokta">.</span></h1>
+  </header>
+
+  <div class="kapi" id="kapi" style="display:none">
+    <h2 id="kapiBaslik">Giriş gerekli</h2>
+    <p id="kapiMetin">Bu panel yalnız site sahibine açıktır. Devam etmek için yönetici
+      hesabınızla giriş yapın.</p>
+    <button class="btn" id="girisBtn" type="button">Google ile giriş yap</button>
+  </div>
+
+  <main id="panel" style="display:none">
+    <div class="araliklar" id="araliklar">
+      <button class="aralik" data-g="1" type="button">Bugün</button>
+      <button class="aralik active" data-g="7" type="button">7 gün</button>
+      <button class="aralik" data-g="30" type="button">30 gün</button>
+      <button class="aralik" data-g="90" type="button">90 gün</button>
+    </div>
+
+    <div class="ozet" id="ozet"></div>
+
+    <section class="blok">
+      <h2>Günlük ziyaret</h2>
+      <p class="alt" id="grafikAlt">Seçili dönemdeki sayfa görüntülenmeleri</p>
+      <div class="grafik" id="grafik"></div>
+    </section>
+
+    <section class="blok">
+      <h2>Sayfalar ve kaynaklar</h2>
+      <p class="alt">Hangi sayfalar geziliyor, ziyaretçiler nereden geliyor</p>
+      <div class="ikili">
+        <div class="liste" id="sayfaListe"><h3>En çok görüntülenen</h3></div>
+        <div class="liste" id="kaynakListe"><h3>Yönlendiren kaynak</h3></div>
+      </div>
+      <div class="ikili" style="margin-top:22px">
+        <div class="liste" id="girisListe"><h3>Giriş sayfaları (ilk açılan)</h3></div>
+        <div class="liste" id="cikisListe"><h3>Çıkış sayfaları (son görülen)</h3></div>
+      </div>
+      <div class="ikili" style="margin-top:22px">
+        <div class="liste" id="cihazListe"><h3>Cihaz</h3></div>
+        <div class="liste" id="dilListe"><h3>Dil</h3></div>
+      </div>
+    </section>
+
+    <section class="blok">
+      <h2>Canlı akış</h2>
+      <p class="alt">Son hareketler — sayfa açılışları ve çıkışlar</p>
+      <div class="akis" id="akis"></div>
+    </section>
+
+    <section class="blok">
+      <h2>Siparişler</h2>
+      <p class="alt" id="siparisAlt">Site üzerinden gelen tüm siparişler</p>
+      <div id="siparisListe"></div>
+    </section>
+
+    <section class="blok">
+      <h2>Katalog</h2>
+      <p class="alt">Mağazadaki kayıtlı ürünler</p>
+      <div class="liste" id="urunListe"><h3>Ürünler</h3></div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <span>sersoz.com yönetim</span>
+    <span id="durumBilgi">—</span>
+  </div>
+</footer>
+
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48",
+  authDomain: "sersoz-f93c3.firebaseapp.com",
+  projectId: "sersoz-f93c3",
+  storageBucket: "sersoz-f93c3.firebasestorage.app",
+  messagingSenderId: "173131115543",
+  appId: "1:173131115543:web:f0313dd00ac0f2d3f80052"
+};
+
+const YONETICI = 'sercansozer20@gmail.com';
+
+(function () {
+  'use strict';
+
+  var S = null, user = null;
+  var ziyaretler = [], siparisler = [], urunler = [];
+  var gun = 7;
+
+  var TRY = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 });
+  var SAAT = new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  var GUNAY = new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: '2-digit' });
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function ts(v) {
+    if (!v) return null;
+    if (v.seconds) return new Date(v.seconds * 1000);
+    if (v.toDate) return v.toDate();
+    return new Date(v);
+  }
+
+  function sinir() {
+    var d = new Date();
+    if (gun === 1) { d.setHours(0, 0, 0, 0); return d; }
+    d.setDate(d.getDate() - gun);
+    return d;
+  }
+
+  function seciliZiyaret() {
+    var s = sinir();
+    return ziyaretler.filter(function (z) { var t = ts(z.zaman); return t && t >= s; });
+  }
+
+  /* ------------------------------------------------------------- listeler */
+  function listeCiz(elId, baslik, sayac, toplam) {
+    var girdiler = Object.keys(sayac).map(function (k) { return { k: k, n: sayac[k] }; });
+    girdiler.sort(function (a, b) { return b.n - a.n; });
+    girdiler = girdiler.slice(0, 8);
+    var enBuyuk = girdiler.length ? girdiler[0].n : 1;
+
+    $(elId).innerHTML = '<h3>' + baslik + '</h3>' + (girdiler.length
+      ? girdiler.map(function (g) {
+          return '<div class="satir">' +
+            '<span class="ad" title="' + esc(g.k) + '">' + esc(g.k) + '</span>' +
+            '<span class="oran"><i style="width:' + Math.round(g.n / enBuyuk * 100) + '%"></i></span>' +
+            '<span class="sayi">' + g.n + (toplam ? ' · %' + Math.round(g.n / toplam * 100) : '') + '</span>' +
+          '</div>';
+        }).join('')
+      : '<p class="bos">Kayıt yok.</p>');
+  }
+
+  function say(dizi, alanFn) {
+    var m = {};
+    dizi.forEach(function (x) {
+      var k = alanFn(x);
+      if (!k) return;
+      m[k] = (m[k] || 0) + 1;
+    });
+    return m;
+  }
+
+  /* --------------------------------------------------------------- çizim */
+  function ciz() {
+    var z = seciliZiyaret();
+    var girisler = z.filter(function (x) { return x.olay === 'giris'; });
+    var oturumlar = {};
+    girisler.forEach(function (x) { oturumlar[x.oturum] = (oturumlar[x.oturum] || 0) + 1; });
+    var oturumSayisi = Object.keys(oturumlar).length;
+    var tekSayfa = Object.keys(oturumlar).filter(function (k) { return oturumlar[k] === 1; }).length;
+
+    var bugun = ziyaretler.filter(function (x) {
+      var t = ts(x.zaman); if (!t || x.olay !== 'giris') return false;
+      var b = new Date(); b.setHours(0, 0, 0, 0);
+      return t >= b;
+    }).length;
+
+    var ciro = siparisler.reduce(function (a, s) { return a + (s.toplam || 0); }, 0);
+
+    $('ozet').innerHTML =
+      kart(girisler.length, 'Sayfa görüntülenme') +
+      kart(oturumSayisi, 'Tekil ziyaret (oturum)') +
+      kart(bugun, 'Bugün görüntülenme') +
+      kart(oturumSayisi ? (girisler.length / oturumSayisi).toFixed(1) : '0', 'Oturum başına sayfa') +
+      kart(siparisler.length, 'Toplam sipariş') +
+      kart(urunler.length, 'Katalogdaki ürün');
+
+    /* günlük grafik */
+    var kova = {}, etiket = [];
+    var n = gun === 1 ? 1 : Math.min(gun, 30);
+    for (var i = n - 1; i >= 0; i--) {
+      var d = new Date(); d.setDate(d.getDate() - i); d.setHours(0, 0, 0, 0);
+      var k = d.toISOString().slice(0, 10);
+      kova[k] = 0;
+      etiket.push({ k: k, ad: GUNAY.format(d) });
+    }
+    girisler.forEach(function (x) {
+      var t = ts(x.zaman); if (!t) return;
+      var k = new Date(t.getFullYear(), t.getMonth(), t.getDate()).toISOString().slice(0, 10);
+      if (k in kova) kova[k]++;
+    });
+    var enCok = Math.max.apply(null, etiket.map(function (e) { return kova[e.k]; }).concat([1]));
+    $('grafik').innerHTML = etiket.map(function (e) {
+      var v = kova[e.k];
+      return '<div class="cubuk" title="' + e.ad + ': ' + v + '">' +
+        '<span class="sayi">' + (v || '') + '</span>' +
+        '<div class="bar" style="height:' + Math.max(2, Math.round(v / enCok * 100)) + '%"></div>' +
+        '<span class="gun">' + e.ad + '</span></div>';
+    }).join('');
+
+    /* listeler */
+    listeCiz('sayfaListe', 'En çok görüntülenen', say(girisler, function (x) { return x.sayfa; }), girisler.length);
+    listeCiz('kaynakListe', 'Yönlendiren kaynak', say(girisler, function (x) {
+      return x.kaynak === 'ic' ? 'site içi' : x.kaynak;
+    }), girisler.length);
+
+    /* oturum başına ilk ve son sayfa */
+    var ilk = {}, son = {};
+    var sirali = girisler.slice().sort(function (a, b) { return ts(a.zaman) - ts(b.zaman); });
+    sirali.forEach(function (x) {
+      if (!(x.oturum in ilk)) ilk[x.oturum] = x.sayfa;
+      son[x.oturum] = x.sayfa;
+    });
+    listeCiz('girisListe', 'Giriş sayfaları (ilk açılan)',
+      say(Object.keys(ilk), function (k) { return ilk[k]; }), oturumSayisi);
+    listeCiz('cikisListe', 'Çıkış sayfaları (son görülen)',
+      say(Object.keys(son), function (k) { return son[k]; }), oturumSayisi);
+
+    listeCiz('cihazListe', 'Cihaz', say(girisler, function (x) {
+      var w = Number(x.genislik) || 0;
+      return w < 640 ? 'Telefon' : w < 1024 ? 'Tablet' : 'Masaüstü';
+    }), girisler.length);
+    listeCiz('dilListe', 'Dil', say(girisler, function (x) { return x.dil || 'bilinmiyor'; }), girisler.length);
+
+    /* akış */
+    var sonHareket = z.slice().sort(function (a, b) { return ts(b.zaman) - ts(a.zaman); }).slice(0, 40);
+    $('akis').innerHTML = sonHareket.length ? sonHareket.map(function (x) {
+      var t = ts(x.zaman);
+      return '<div class="satir">' +
+        '<span class="zaman">' + (t ? SAAT.format(t) : '') + '</span>' +
+        '<span class="ad">' + esc(x.sayfa) + '</span>' +
+        '<span class="olay ' + (x.olay === 'cikis' ? 'cikis' : 'giris') + '">' +
+          (x.olay === 'cikis' ? 'çıkış' : 'giriş') + '</span>' +
+      '</div>';
+    }).join('') : '<p class="bos">Henüz hareket yok.</p>';
+
+    $('grafikAlt').textContent = 'Seçili dönemde ' + girisler.length + ' görüntülenme, ' +
+      oturumSayisi + ' tekil ziyaret' + (oturumSayisi ? ' (%' + Math.round(tekSayfa / oturumSayisi * 100) + ' tek sayfada ayrıldı)' : '');
+    $('siparisAlt').textContent = siparisler.length
+      ? siparisler.length + ' sipariş · toplam ' + TRY.format(ciro)
+      : 'Site üzerinden gelen tüm siparişler';
+  }
+
+  function kart(v, e) {
+    return '<div class="kart"><div class="v">' + v + '</div><div class="e">' + e + '</div></div>';
+  }
+
+  function siparisCiz() {
+    $('siparisListe').innerHTML = siparisler.length ? siparisler.map(function (s) {
+      var t = ts(s.tarih);
+      return '<article class="siparis">' +
+        '<div class="siparis-ust">' +
+          '<b>' + esc(s.no || s.id) + '</b>' +
+          '<span class="t">' + (t ? SAAT.format(t) : '') + ' · ' + TRY.format(s.toplam || 0) + '</span>' +
+        '</div>' +
+        '<div class="siparis-govde">' +
+          (s.kalemler || []).map(function (k) {
+            return '<div class="kalem"><span>' + esc(k.ad) + ' × ' + (k.adet || 1) + '</span>' +
+              '<b>' + TRY.format((k.birimFiyat || 0) * (k.adet || 1)) + '</b></div>';
+          }).join('') +
+          '<div class="mus">' + esc((s.musteri && s.musteri.ad) || '') +
+            (s.musteri && s.musteri.firma ? ' · ' + esc(s.musteri.firma) : '') +
+            (s.musteri && s.musteri.mail ? ' · ' + esc(s.musteri.mail) : '') +
+            (s.musteri && s.musteri.telefon ? ' · ' + esc(s.musteri.telefon) : '') +
+            (s.adres ? '<br>' + esc(s.adres) : '') +
+            (s.not ? '<br>Not: ' + esc(s.not) : '') +
+          '</div>' +
+        '</div></article>';
+    }).join('') : '<p class="bos">Henüz sipariş yok.</p>';
+  }
+
+  function urunCiz() {
+    $('urunListe').innerHTML = '<h3>Ürünler</h3>' + (urunler.length ? urunler.map(function (u) {
+      return '<div class="satir"><span class="ad">' + esc(u.title) + '</span>' +
+             '<span class="sayi">' + TRY.format(u.price || 0) + '</span></div>';
+    }).join('') : '<p class="bos">Katalog boş.</p>');
+  }
+
+  /* --------------------------------------------------------------- veri */
+  function dinle() {
+    var f = S.fsMod;
+
+    f.onSnapshot(f.query(f.collection(S.db, 'ziyaretler'), f.orderBy('zaman', 'desc'), f.limit(4000)),
+      function (snap) {
+        ziyaretler = snap.docs.map(function (d) { return d.data(); });
+        $('durumBilgi').textContent = ziyaretler.length + ' kayıt okundu';
+        ciz();
+      },
+      function (e) { $('durumBilgi').textContent = 'Ziyaretler okunamadı: ' + e.code; });
+
+    f.onSnapshot(f.collection(S.db, 'siparisler'), function (snap) {
+      siparisler = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+      siparisler.sort(function (a, b) { return (ts(b.tarih) || 0) - (ts(a.tarih) || 0); });
+      siparisCiz(); ciz();
+    }, function () {});
+
+    f.onSnapshot(f.collection(S.db, 'urunler'), function (snap) {
+      urunler = snap.docs.map(function (d) { return d.data(); });
+      urunCiz(); ciz();
+    }, function () {});
+  }
+
+  function oturum(u) {
+    user = u;
+    var yetkili = u && u.email === YONETICI;
+    $('kapi').style.display = yetkili ? 'none' : 'block';
+    $('panel').style.display = yetkili ? 'block' : 'none';
+
+    if (u && !yetkili) {
+      $('kapiBaslik').textContent = 'Yetkiniz yok';
+      $('kapiMetin').innerHTML = '<b>' + esc(u.email) + '</b> ile giriş yaptınız, ancak bu panel ' +
+        'yalnız site sahibine açıktır.';
+      $('girisBtn').textContent = 'Farklı hesapla dene';
+    }
+
+    $('navRight').innerHTML = u
+      ? (u.photoURL ? '<img src="' + esc(u.photoURL) + '" alt="">' : '') +
+        '<a href="/">Siteye dön</a><button id="cikisBtn" type="button">Çıkış</button>'
+      : '<a href="/">Siteye dön</a>';
+    if ($('cikisBtn')) $('cikisBtn').onclick = function () { S.authMod.signOut(S.auth); };
+
+    if (yetkili) dinle();
+  }
+
+  /* ------------------------------------------------------------- kurulum */
+  var base = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  import(base + 'firebase-app.js').then(function (appMod) {
+    return Promise.all([
+      appMod.initializeApp(FIREBASE_CONFIG),
+      import(base + 'firebase-auth.js'),
+      import(base + 'firebase-firestore.js')
+    ]);
+  }).then(function (r) {
+    var app = r[0], authMod = r[1], fsMod = r[2];
+    S = { auth: authMod.getAuth(app), db: fsMod.getFirestore(app), authMod: authMod, fsMod: fsMod,
+          provider: new authMod.GoogleAuthProvider() };
+    authMod.onAuthStateChanged(S.auth, oturum);
+    $('girisBtn').onclick = function () {
+      authMod.signInWithPopup(S.auth, S.provider).catch(function (e) {
+        $('durumBilgi').textContent = 'Giriş yapılamadı: ' + e.code;
+      });
+    };
+  }).catch(function () {
+    $('kapi').style.display = 'block';
+    $('durumBilgi').textContent = 'Bağlantı kurulamadı.';
+  });
+
+  $('araliklar').addEventListener('click', function (e) {
+    var b = e.target.closest('.aralik');
+    if (!b) return;
+    Array.prototype.forEach.call(this.querySelectorAll('.aralik'), function (x) { x.classList.remove('active'); });
+    b.classList.add('active');
+    gun = Number(b.getAttribute('data-g'));
+    ciz();
+  });
+})();
+</script>
+</body>
+</html>
