@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hesabım — Sercan Sözer</title>
+<meta name="description" content="Kayıtlı adresleriniz ve sipariş geçmişiniz.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f6f2ea;
+    --ink: #1a1815;
+    --muted: #5b564d;
+    --accent: #c2410c;
+    --green: #14532d;
+    --line: rgba(26, 24, 21, .2);
+    --line-soft: rgba(26, 24, 21, .1);
+    --paper: rgba(255, 253, 248, .6);
+    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--sans);
+    overflow-x: hidden; -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  .container { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+  /* Nav */
+  nav#nav {
+    position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 40;
+    display: flex; align-items: center;
+    background: rgba(246, 242, 234, .92);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand .mark {
+    width: 22px; height: 22px; background: var(--accent); color: var(--bg);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 14px; font-weight: 700; line-height: 1;
+  }
+  .brand span.host { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink); text-decoration: none; padding: 10px 12px; transition: color .2s;
+  }
+  .nav-links a:hover, .nav-links a.active { color: var(--accent); }
+
+  /* Başlık */
+  .page-hero { padding: 128px 0 40px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 14px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .3em;
+    text-transform: uppercase; margin-bottom: 20px;
+  }
+  .eyebrow::before { content: ''; width: 42px; height: 2px; background: var(--accent); }
+  h1 { font-family: var(--serif); font-size: clamp(32px, 5.4vw, 54px); font-weight: 700; letter-spacing: -.015em; line-height: 1.06; }
+  h1 .nokta { color: var(--accent); }
+
+  .kimlik {
+    margin-top: 22px; display: inline-flex; align-items: center; gap: 12px;
+    padding: 10px 16px 10px 10px; border: 1px solid var(--line); background: var(--paper);
+  }
+  .kimlik img { width: 34px; height: 34px; border-radius: 50%; }
+  .kimlik .ad { font-size: 14px; font-weight: 600; }
+  .kimlik .mail { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .kimlik button {
+    margin-left: 10px; background: none; border: none; cursor: pointer;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  }
+  .kimlik button:hover { color: var(--accent); }
+
+  /* Giriş gerekli */
+  .giris-kutu {
+    max-width: 520px; margin: 40px 0 90px; padding: 40px 34px;
+    border: 1px solid var(--line); background: var(--paper); text-align: center;
+  }
+  .giris-kutu h2 { font-family: var(--serif); font-size: 25px; font-weight: 700; margin-bottom: 12px; }
+  .giris-kutu p { color: var(--muted); line-height: 1.7; font-size: 15px; margin-bottom: 26px; }
+
+  /* Bölümler */
+  .section { padding: 46px 0; border-top: 3px double var(--line); }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; }
+  h2.blok { font-family: var(--serif); font-size: clamp(24px, 3.4vw, 34px); font-weight: 700; letter-spacing: -.012em; }
+  h2.blok::after { content: '.'; color: var(--accent); }
+  .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px; padding: 12px 20px; cursor: pointer;
+    border: 1px solid var(--ink); background: transparent; color: var(--ink);
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase;
+    text-decoration: none; transition: border-color .22s, background .22s, color .22s;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--ink); color: var(--bg); }
+  .btn.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Adres kartları */
+  .adres-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .adres {
+    position: relative; padding: 22px 20px; border: 1px solid var(--line); background: var(--paper);
+    transition: border-color .25s, transform .25s cubic-bezier(.2,.7,.3,1), box-shadow .25s;
+  }
+  .adres:hover { border-color: rgba(194,65,12,.4); transform: translateY(-3px); box-shadow: 0 10px 26px rgba(26,24,21,.07); }
+  .adres h3 { font-family: var(--serif); font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .adres .vars {
+    display: inline-block; margin-left: 8px; padding: 2px 8px; vertical-align: middle;
+    border: 1px solid rgba(20,83,45,.4); color: var(--green);
+    font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+  }
+  .adres p { margin-top: 8px; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+  .adres .tel { margin-top: 8px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .adres-ops { margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--line-soft); display: flex; gap: 14px; }
+  .adres-ops button {
+    background: none; border: none; padding: 0; cursor: pointer;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  }
+  .adres-ops button:hover { color: var(--accent); }
+
+  /* Sipariş satırları */
+  .siparis {
+    border: 1px solid var(--line); background: var(--paper); margin-bottom: 16px;
+  }
+  .siparis-ust {
+    padding: 16px 20px; border-bottom: 1px solid var(--line-soft);
+    display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  }
+  .siparis-no { font-family: var(--mono); font-size: 12.5px; font-weight: 600; }
+  .siparis-tarih { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .06em; }
+  .rozet {
+    padding: 4px 11px; border: 1px solid var(--line);
+    font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  }
+  .rozet.odendi { border-color: rgba(20,83,45,.45); color: var(--green); }
+  .rozet.beklemede { border-color: rgba(194,65,12,.45); color: var(--accent); }
+  .siparis-govde { padding: 14px 20px 18px; }
+  .s-kalem { display: flex; justify-content: space-between; gap: 14px; padding: 7px 0; font-size: 13.5px; color: var(--muted); }
+  .s-kalem b { color: var(--ink); font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+  .s-toplam {
+    margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--line-soft);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .s-toplam span { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .s-toplam b { font-family: var(--mono); font-size: 18px; }
+
+  .bos {
+    padding: 44px 0; text-align: center;
+    font-family: var(--serif); font-style: italic; font-size: 16px; color: var(--muted);
+  }
+
+  /* Modal */
+  .scrim { position: fixed; inset: 0; z-index: 50; background: rgba(26,24,21,.45); opacity: 0; pointer-events: none; transition: opacity .3s; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .modal {
+    position: fixed; z-index: 51; top: 50%; left: 50%;
+    width: min(560px, calc(100% - 32px)); max-height: 88vh; overflow-y: auto;
+    background: var(--bg); border: 1px solid var(--line);
+    transform: translate(-50%, -46%) scale(.97); opacity: 0; pointer-events: none;
+    transition: opacity .28s, transform .28s cubic-bezier(.2,.7,.3,1);
+  }
+  .modal.open { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+  .modal-head { padding: 20px 24px; border-bottom: 3px double var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .modal-head h2 { font-family: var(--serif); font-size: 22px; font-weight: 700; }
+  .modal-head h2::after { content: '.'; color: var(--accent); }
+  .x-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 22px; line-height: 1; padding: 4px; }
+  .x-btn:hover { color: var(--accent); }
+  .modal-body { padding: 20px 24px 24px; }
+
+  .field { margin-bottom: 15px; }
+  .field label { display: block; margin-bottom: 6px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .field input, .field textarea {
+    width: 100%; padding: 11px 13px; border: 1px solid var(--line); background: var(--paper);
+    font-family: var(--sans); font-size: 14.5px; color: var(--ink);
+  }
+  .field input:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
+  .field textarea { resize: vertical; min-height: 74px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+  .onay { display: flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--muted); margin: 4px 0 16px; }
+  .onay input { width: 16px; height: 16px; accent-color: var(--accent); }
+  .wide-btn {
+    width: 100%; padding: 14px; cursor: pointer;
+    border: 1px solid var(--ink); background: var(--ink); color: var(--bg);
+    font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    transition: background .22s, border-color .22s;
+  }
+  .wide-btn:hover { background: var(--accent); border-color: var(--accent); }
+
+  .toast {
+    position: fixed; z-index: 60; left: 50%; bottom: 26px;
+    transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+    padding: 13px 22px; background: var(--ink); color: var(--bg);
+    font-family: var(--mono); font-size: 12px; letter-spacing: .08em;
+    transition: opacity .3s, transform .3s cubic-bezier(.2,.7,.3,1);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  footer { margin-top: 40px; border-top: 3px double var(--line); padding: 24px 0 32px; }
+  .footer-inner {
+    max-width: 1120px; margin: 0 auto; padding: 0 28px;
+    display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap;
+    font-size: 12.5px; color: var(--muted);
+  }
+  .footer-links { display: flex; gap: 4px 16px; flex-wrap: wrap; }
+  .footer-links a { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+  .footer-links a:hover { color: var(--accent); }
+  .footer-inner .mono { font-family: var(--mono); }
+
+  @media (max-width: 1080px) { .adres-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 720px) { .adres-grid { grid-template-columns: 1fr; } .field-row { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .nav-links a { display: none; } .nav-links a.nav-hep { display: inline-block; } .page-hero { padding-top: 108px; } }
+  @media (prefers-reduced-motion: reduce) {
+    .adres, .modal, .scrim, .toast { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/" aria-label="sersoz.com">
+      <span class="mark" aria-hidden="true">S</span>
+      <span class="host">sersoz.com</span>
+    </a>
+    <div class="nav-links">
+      <a href="/">Ana Sayfa</a>
+      <a class="nav-hep" href="/magaza.html">Mağaza</a>
+      <a class="active nav-hep" href="/hesabim.html" aria-current="page">Hesabım</a>
+      <a href="/portfolyo.html">Portfolyo</a>
+      <a href="/yazilar.html">Yazılar</a>
+      <a href="/forum.html">Forum</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-hero">
+  <div class="container">
+    <p class="eyebrow">Hesabım</p>
+    <h1>Adreslerim ve siparişlerim<span class="nokta">.</span></h1>
+    <div id="kimlik"></div>
+  </div>
+</header>
+
+<main class="container" id="icerik">
+  <div class="giris-kutu" id="girisKutu" style="display:none">
+    <h2>Giriş yapın</h2>
+    <p>Kayıtlı adreslerinizi ve sipariş geçmişinizi görmek için Google hesabınızla
+      giriş yapmanız gerekiyor.</p>
+    <button class="btn primary" id="girisBtn" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg>
+      Google ile giriş yap
+    </button>
+  </div>
+
+  <div id="panel" style="display:none">
+    <section class="section" id="adresler">
+      <div class="section-head">
+        <div>
+          <p class="kicker">01 — Kayıtlı adresler</p>
+          <h2 class="blok">Adreslerim</h2>
+        </div>
+        <button class="btn" id="yeniAdres" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Yeni adres
+        </button>
+      </div>
+      <div class="adres-grid" id="adresGrid"></div>
+      <p class="bos" id="adresBos" style="display:none">Henüz kayıtlı adresiniz yok.</p>
+    </section>
+
+    <section class="section" id="siparisler">
+      <div class="section-head">
+        <div>
+          <p class="kicker">02 — Geçmiş</p>
+          <h2 class="blok">Siparişlerim</h2>
+        </div>
+        <a class="btn" href="/magaza.html">Mağazaya git</a>
+      </div>
+      <div id="siparisListe"></div>
+      <p class="bos" id="siparisBos" style="display:none">Henüz siparişiniz yok.</p>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 Sercan Sözer</span>
+    <nav class="footer-links" aria-label="Alt gezinme">
+      <a href="/">Ana Sayfa</a>
+      <a href="/magaza.html">Mağaza</a>
+      <a href="/portfolyo.html">Portfolyo</a>
+      <a href="/yazilar.html">Yazılar</a>
+      <a href="/forum.html">Forum</a>
+      <a href="/#iletisim">İletişim</a>
+    </nav>
+    <span class="mono">sersoz.com</span>
+  </div>
+</footer>
+
+<div class="scrim" id="scrim"></div>
+<div class="modal" id="adresModal" role="dialog" aria-modal="true" aria-labelledby="amTitle">
+  <div class="modal-head">
+    <h2 id="amTitle">Yeni adres</h2>
+    <button class="x-btn" data-close type="button" aria-label="Kapat">×</button>
+  </div>
+  <div class="modal-body">
+    <form id="adresForm">
+      <input type="hidden" name="id" id="aId">
+      <div class="field">
+        <label for="aBaslik">Adres başlığı</label>
+        <input id="aBaslik" name="baslik" required maxlength="40" placeholder="Örn. Fabrika, Ofis, Ev">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="aAd">Ad soyad</label>
+          <input id="aAd" name="adSoyad" required maxlength="60">
+        </div>
+        <div class="field">
+          <label for="aFirma">Firma (isteğe bağlı)</label>
+          <input id="aFirma" name="firma" maxlength="60">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="aTel">Telefon</label>
+          <input id="aTel" name="telefon" maxlength="24">
+        </div>
+        <div class="field">
+          <label for="aPk">Posta kodu</label>
+          <input id="aPk" name="postaKodu" maxlength="10">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="aIl">İl</label>
+          <input id="aIl" name="il" maxlength="30">
+        </div>
+        <div class="field">
+          <label for="aIlce">İlçe</label>
+          <input id="aIlce" name="ilce" maxlength="30">
+        </div>
+      </div>
+      <div class="field">
+        <label for="aAdres">Açık adres</label>
+        <textarea id="aAdres" name="adres" required maxlength="300"></textarea>
+      </div>
+      <label class="onay"><input type="checkbox" name="varsayilan" id="aVars"> Varsayılan adresim olsun</label>
+      <button class="wide-btn" type="submit">Kaydet</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48",
+  authDomain: "sersoz-f93c3.firebaseapp.com",
+  projectId: "sersoz-f93c3",
+  storageBucket: "sersoz-f93c3.firebasestorage.app",
+  messagingSenderId: "173131115543",
+  appId: "1:173131115543:web:f0313dd00ac0f2d3f80052"
+};
+
+(function () {
+  'use strict';
+
+  var S = null, user = null, adresler = [];
+  var TRY = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 });
+  var TARIH = new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var tTimer;
+  function toast(m) {
+    var t = $('toast'); t.textContent = m; t.classList.add('show');
+    clearTimeout(tTimer); tTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+  }
+  function kapat() {
+    $('adresModal').classList.remove('open');
+    $('scrim').classList.remove('open');
+  }
+  function ac() {
+    $('adresModal').classList.add('open');
+    $('scrim').classList.add('open');
+  }
+
+  /* ------------------------------------------------------------- adresler */
+  function adresCiz() {
+    var g = $('adresGrid');
+    $('adresBos').style.display = adresler.length ? 'none' : 'block';
+    g.innerHTML = adresler.map(function (a) {
+      return '<article class="adres">' +
+        '<h3>' + esc(a.baslik) + (a.varsayilan ? '<span class="vars">Varsayılan</span>' : '') + '</h3>' +
+        '<p>' + esc(a.adSoyad) + (a.firma ? ' · ' + esc(a.firma) : '') + '<br>' +
+          esc(a.adres) + '<br>' + esc([a.ilce, a.il, a.postaKodu].filter(Boolean).join(' / ')) + '</p>' +
+        (a.telefon ? '<p class="tel">' + esc(a.telefon) + '</p>' : '') +
+        '<div class="adres-ops">' +
+          '<button data-duzenle="' + a.id + '" type="button">Düzenle</button>' +
+          '<button data-sil="' + a.id + '" type="button">Sil</button>' +
+        '</div></article>';
+    }).join('');
+  }
+
+  function adresDinle() {
+    var col = S.fsMod.collection(S.db, 'kullanicilar', user.uid, 'adresler');
+    S.fsMod.onSnapshot(col, function (snap) {
+      adresler = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+      adresler.sort(function (a, b) { return (b.varsayilan ? 1 : 0) - (a.varsayilan ? 1 : 0); });
+      adresCiz();
+      try { localStorage.setItem('sersoz_adresler', JSON.stringify(adresler)); } catch (e) {}
+    }, function () { toast('Adresler okunamadı.'); });
+  }
+
+  function adresKaydet(e) {
+    e.preventDefault();
+    var fd = new FormData(e.target);
+    var veri = {
+      baslik: String(fd.get('baslik')).trim(),
+      adSoyad: String(fd.get('adSoyad')).trim(),
+      firma: String(fd.get('firma') || '').trim(),
+      telefon: String(fd.get('telefon') || '').trim(),
+      il: String(fd.get('il') || '').trim(),
+      ilce: String(fd.get('ilce') || '').trim(),
+      postaKodu: String(fd.get('postaKodu') || '').trim(),
+      adres: String(fd.get('adres')).trim(),
+      varsayilan: !!fd.get('varsayilan')
+    };
+    var id = fd.get('id');
+    var col = S.fsMod.collection(S.db, 'kullanicilar', user.uid, 'adresler');
+
+    var oncekiler = veri.varsayilan
+      ? Promise.all(adresler.filter(function (a) { return a.varsayilan && a.id !== id; })
+          .map(function (a) {
+            return S.fsMod.updateDoc(S.fsMod.doc(S.db, 'kullanicilar', user.uid, 'adresler', a.id),
+              { varsayilan: false });
+          }))
+      : Promise.resolve();
+
+    oncekiler.then(function () {
+      return id
+        ? S.fsMod.setDoc(S.fsMod.doc(S.db, 'kullanicilar', user.uid, 'adresler', id), veri)
+        : S.fsMod.addDoc(col, veri);
+    }).then(function () {
+      toast(id ? 'Adres güncellendi.' : 'Adres kaydedildi.');
+      e.target.reset(); $('aId').value = '';
+      kapat();
+    }).catch(function () { toast('Kaydedilemedi.'); });
+  }
+
+  function adresSil(id) {
+    S.fsMod.deleteDoc(S.fsMod.doc(S.db, 'kullanicilar', user.uid, 'adresler', id))
+      .then(function () { toast('Adres silindi.'); })
+      .catch(function () { toast('Silinemedi.'); });
+  }
+
+  function adresDuzenle(id) {
+    var a = adresler.filter(function (x) { return x.id === id; })[0];
+    if (!a) return;
+    $('amTitle').textContent = 'Adresi düzenle';
+    $('aId').value = a.id;
+    $('aBaslik').value = a.baslik || '';
+    $('aAd').value = a.adSoyad || '';
+    $('aFirma').value = a.firma || '';
+    $('aTel').value = a.telefon || '';
+    $('aPk').value = a.postaKodu || '';
+    $('aIl').value = a.il || '';
+    $('aIlce').value = a.ilce || '';
+    $('aAdres').value = a.adres || '';
+    $('aVars').checked = !!a.varsayilan;
+    ac();
+  }
+
+  /* ----------------------------------------------------------- siparisler */
+  function siparisDinle() {
+    var q = S.fsMod.query(
+      S.fsMod.collection(S.db, 'siparisler'),
+      S.fsMod.where('ownerId', '==', user.uid)
+    );
+    S.fsMod.onSnapshot(q, function (snap) {
+      var list = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+      list.sort(function (a, b) {
+        var ta = a.tarih && a.tarih.seconds ? a.tarih.seconds : 0;
+        var tb = b.tarih && b.tarih.seconds ? b.tarih.seconds : 0;
+        return tb - ta;
+      });
+      siparisCiz(list);
+    }, function () { toast('Siparişler okunamadı.'); });
+  }
+
+  function siparisCiz(list) {
+    $('siparisBos').style.display = list.length ? 'none' : 'block';
+    $('siparisListe').innerHTML = list.map(function (s) {
+      var d = s.tarih && s.tarih.seconds ? TARIH.format(new Date(s.tarih.seconds * 1000)) : '';
+      var durum = s.durum === 'odendi' ? 'odendi' : 'beklemede';
+      var durumYazi = s.durum === 'odendi' ? 'Ödendi' : 'Beklemede';
+      return '<article class="siparis">' +
+        '<div class="siparis-ust">' +
+          '<div><span class="siparis-no">' + esc(s.no || s.id) + '</span>' +
+            (d ? ' <span class="siparis-tarih">· ' + d + '</span>' : '') + '</div>' +
+          '<span class="rozet ' + durum + '">' + durumYazi + '</span>' +
+        '</div>' +
+        '<div class="siparis-govde">' +
+          (s.kalemler || []).map(function (k) {
+            return '<div class="s-kalem"><span>' + esc(k.ad) + ' × ' + (k.adet || 1) + '</span>' +
+                   '<b>' + TRY.format((k.birimFiyat || 0) * (k.adet || 1)) + '</b></div>';
+          }).join('') +
+          '<div class="s-toplam"><span>Toplam (KDV dahil)</span><b>' + TRY.format(s.toplam || 0) + '</b></div>' +
+        '</div></article>';
+    }).join('');
+  }
+
+  /* ---------------------------------------------------------------- oturum */
+  function oturum(u) {
+    user = u;
+    $('girisKutu').style.display = u ? 'none' : 'block';
+    $('panel').style.display = u ? 'block' : 'none';
+
+    if (!u) { $('kimlik').innerHTML = ''; return; }
+
+    $('kimlik').innerHTML =
+      '<div class="kimlik">' +
+        (u.photoURL ? '<img src="' + esc(u.photoURL) + '" alt="">' : '') +
+        '<span><span class="ad">' + esc(u.displayName || 'Kullanıcı') + '</span><br>' +
+        '<span class="mail">' + esc(u.email || '') + '</span></span>' +
+        '<button id="cikisBtn" type="button">Çıkış</button>' +
+      '</div>';
+    $('cikisBtn').onclick = function () { S.authMod.signOut(S.auth); };
+
+    adresDinle();
+    siparisDinle();
+  }
+
+  /* ---------------------------------------------------------------- kurulum */
+  var base = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  import(base + 'firebase-app.js').then(function (appMod) {
+    return Promise.all([
+      appMod.initializeApp(FIREBASE_CONFIG),
+      import(base + 'firebase-auth.js'),
+      import(base + 'firebase-firestore.js')
+    ]);
+  }).then(function (r) {
+    var app = r[0], authMod = r[1], fsMod = r[2];
+    S = {
+      auth: authMod.getAuth(app), db: fsMod.getFirestore(app),
+      authMod: authMod, fsMod: fsMod, provider: new authMod.GoogleAuthProvider()
+    };
+    authMod.onAuthStateChanged(S.auth, oturum);
+    $('girisBtn').onclick = function () {
+      authMod.signInWithPopup(S.auth, S.provider).catch(function (e) { toast('Giriş yapılamadı: ' + e.code); });
+    };
+  }).catch(function () {
+    $('girisKutu').style.display = 'block';
+    toast('Bağlantı kurulamadı.');
+  });
+
+  /* etkileşimler */
+  $('yeniAdres').onclick = function () {
+    $('amTitle').textContent = 'Yeni adres';
+    $('adresForm').reset();
+    $('aId').value = '';
+    if (user) $('aAd').value = user.displayName || '';
+    ac();
+  };
+  $('adresForm').onsubmit = adresKaydet;
+  $('scrim').onclick = kapat;
+  document.querySelector('[data-close]').onclick = kapat;
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') kapat(); });
+
+  $('adresGrid').addEventListener('click', function (e) {
+    var d = e.target.closest('[data-duzenle]');
+    if (d) { adresDuzenle(d.getAttribute('data-duzenle')); return; }
+    var s = e.target.closest('[data-sil]');
+    if (s) adresSil(s.getAttribute('data-sil'));
+  });
+})();
+</script>
+</body>
+</html>

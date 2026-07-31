@@ -355,6 +355,9 @@
 
   .form-note { font-size: 12.5px; line-height: 1.6; color: var(--muted); margin-top: 4px; }
 
+  .onay { display: flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--muted); margin: 2px 0 14px; cursor: pointer; }
+  .onay input { width: 16px; height: 16px; accent-color: var(--accent); }
+
   .order-summary { border: 1px solid var(--line); background: var(--paper); padding: 16px 18px; margin-bottom: 18px; }
   .order-summary .line { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; color: var(--muted); }
   .order-summary .line b { color: var(--ink); font-family: var(--mono); }
@@ -498,6 +501,7 @@
     <div class="nav-links">
       <a href="/">Ana Sayfa</a>
       <a class="active" href="/magaza.html" aria-current="page">Mağaza</a>
+      <a href="/hesabim.html">Hesabım</a>
       <a href="/portfolyo.html">Portfolyo</a>
       <a href="/yazilar.html">Yazılar</a>
       <a href="/forum.html">Forum</a>
@@ -630,6 +634,12 @@
   <div class="modal-body">
     <div class="order-summary" id="orderSummary"></div>
     <form id="orderForm">
+      <div class="field" id="adresSecWrap" style="display:none">
+        <label for="adresSec">Kayıtlı adreslerim</label>
+        <select id="adresSec">
+          <option value="">— Bilgileri elle gireceğim —</option>
+        </select>
+      </div>
       <div class="field-row">
         <div class="field">
           <label for="oName">Ad soyad</label>
@@ -651,9 +661,16 @@
         </div>
       </div>
       <div class="field">
+        <label for="oAdres">Adres</label>
+        <textarea id="oAdres" name="adres" maxlength="300" placeholder="Teslimat / fatura adresi"></textarea>
+      </div>
+      <div class="field">
         <label for="oNote">Not (isteğe bağlı)</label>
         <textarea id="oNote" name="note" maxlength="400"></textarea>
       </div>
+      <label class="onay" id="adresKaydetWrap" style="display:none">
+        <input type="checkbox" id="adresKaydet"> Bu adresi hesabıma kaydet
+      </label>
       <p class="form-note" id="omNote"></p>
       <button class="wide-btn" type="submit" id="orderSubmit">Siparişi gönder</button>
     </form>
@@ -724,6 +741,7 @@ const ODEME = {
   var cart = load(LS_CART, {});
   var filter = 'all';
   var query = '';
+  var adresler = [];
 
   var TRY = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 });
   var TYPE_LABEL = { urun: 'Ürün', hizmet: 'Hizmet', dijital: 'Dijital' };
@@ -929,8 +947,41 @@ const ODEME = {
          '\nFirma: ' + (f.company || '-') +
          '\nE-posta: ' + f.mail +
          '\nTelefon: ' + (f.phone || '-') +
+         '\nAdres: ' + (f.adres || '-') +
          '\nNot: ' + (f.note || '-');
     return s;
+  }
+
+  /* Giriş yapan kullanıcının siparişini hesabına kaydeder (Hesabım > Siparişlerim) */
+  function siparisiKaydet(f, no) {
+    if (!user || !window.__sersoz) return Promise.resolve();
+    var S = window.__sersoz, t = totals();
+
+    var kayit = S.fsMod.addDoc(S.fsMod.collection(S.db, 'siparisler'), {
+      ownerId: user.uid,
+      no: no,
+      tarih: S.fsMod.serverTimestamp(),
+      durum: (ODEME.saglayici && ODEME.baslatUrl) ? 'beklemede' : 'beklemede',
+      kalemler: cartLines().map(function (l) {
+        return { id: l.p.id, ad: l.p.title, adet: l.qty, birimFiyat: l.p.price };
+      }),
+      araToplam: t.sub,
+      kdv: t.vat,
+      toplam: t.grand,
+      musteri: { ad: f.name, firma: f.company || '', mail: f.mail, telefon: f.phone || '' },
+      adres: f.adres || '',
+      not: f.note || ''
+    }).catch(function () { /* sipariş akışını bloklamaz */ });
+
+    if ($('adresKaydet').checked && f.adres) {
+      S.fsMod.addDoc(S.fsMod.collection(S.db, 'kullanicilar', user.uid, 'adresler'), {
+        baslik: f.company ? String(f.company).slice(0, 40) : 'Adresim',
+        adSoyad: f.name, firma: f.company || '', telefon: f.phone || '',
+        il: '', ilce: '', postaKodu: '', adres: String(f.adres).slice(0, 300),
+        varsayilan: !adresler.length
+      }).catch(function () {});
+    }
+    return kayit;
   }
 
   function submitOrder(e) {
@@ -938,7 +989,7 @@ const ODEME = {
     var fd = new FormData(e.target);
     var f = {
       name: fd.get('name'), company: fd.get('company'), mail: fd.get('mail'),
-      phone: fd.get('phone'), note: fd.get('note')
+      phone: fd.get('phone'), note: fd.get('note'), adres: fd.get('adres')
     };
 
     if (ODEME.saglayici && ODEME.baslatUrl) {
@@ -963,14 +1014,58 @@ const ODEME = {
     }
 
     /* Ödeme altyapısı henüz bağlı değil: sipariş talebi e-posta ile iletilir. */
-    var subject = 'Sipariş talebi — ' + f.name + (f.company ? ' / ' + f.company : '');
+    var no = 'SRS-' + Date.now();
+    siparisiKaydet(f, no);
+
+    var subject = 'Sipariş talebi ' + no + ' — ' + f.name + (f.company ? ' / ' + f.company : '');
     location.href = 'mailto:sercan@sersoz.com?subject=' + encodeURIComponent(subject) +
                     '&body=' + encodeURIComponent(buildOrderText(f));
-    toast('Sipariş özeti e-posta uygulamanızda açıldı.');
+    toast(user ? 'Sipariş kaydedildi — Hesabım > Siparişlerim' : 'Sipariş özeti e-posta uygulamanızda açıldı.');
     closeAll();
   }
 
   /* --------------------------------------------------------------- giriş */
+  /* ------------------------------------------------- kayıtlı adresler */
+  function adresleriDinle() {
+    if (!user || !window.__sersoz) return;
+    var S = window.__sersoz;
+    S.fsMod.onSnapshot(
+      S.fsMod.collection(S.db, 'kullanicilar', user.uid, 'adresler'),
+      function (snap) {
+        adresler = snap.docs.map(function (d) {
+          var v = d.data(); v.id = d.id; return v;
+        });
+        adresler.sort(function (a, b) { return (b.varsayilan ? 1 : 0) - (a.varsayilan ? 1 : 0); });
+        adresSecimiDoldur();
+      },
+      function () { /* sessiz geç — sipariş elle de doldurulabilir */ }
+    );
+  }
+
+  function adresSecimiDoldur() {
+    var wrap = $('adresSecWrap'), sec = $('adresSec');
+    if (!user || !adresler.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    sec.innerHTML = '<option value="">— Bilgileri elle gireceğim —</option>' +
+      adresler.map(function (a) {
+        return '<option value="' + a.id + '">' + esc(a.baslik) +
+               (a.varsayilan ? ' (varsayılan)' : '') + '</option>';
+      }).join('');
+
+    var vars = adresler.filter(function (a) { return a.varsayilan; })[0];
+    if (vars) { sec.value = vars.id; adresDoldur(vars.id); }
+  }
+
+  function adresDoldur(id) {
+    var a = adresler.filter(function (x) { return x.id === id; })[0];
+    if (!a) return;
+    $('oName').value = a.adSoyad || '';
+    $('oCompany').value = a.firma || '';
+    $('oPhone').value = a.telefon || '';
+    $('oAdres').value = [a.adres, [a.ilce, a.il, a.postaKodu].filter(Boolean).join(' / ')]
+      .filter(Boolean).join('\n');
+  }
+
   function setUser(u) {
     user = u;
     var chip = $('userChip'), btn = $('loginBtn');
@@ -982,7 +1077,11 @@ const ODEME = {
     } else {
       chip.classList.remove('show');
       btn.style.display = '';
+      adresler = [];
     }
+    $('adresKaydetWrap').style.display = u ? 'flex' : 'none';
+    adresSecimiDoldur();
+    if (u) adresleriDinle();
     render();
   }
 
@@ -1109,6 +1208,9 @@ const ODEME = {
 
     $('checkoutBtn').onclick = siparisAc;
     $('orderForm').onsubmit = submitOrder;
+    $('adresSec').onchange = function () {
+      if (this.value) adresDoldur(this.value);
+    };
 
     if (mode === 'local') {
       $('loginBtn').onclick = function () {
