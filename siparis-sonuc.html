@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sipariş Sonucu — Sercan Sözer</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f6f2ea;
+    --ink: #1a1815;
+    --muted: #5b564d;
+    --accent: #c2410c;
+    --green: #14532d;
+    --line: rgba(26, 24, 21, .2);
+    --paper: rgba(255, 253, 248, .6);
+    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--sans);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 40px 24px; -webkit-font-smoothing: antialiased;
+  }
+
+  .box { max-width: 560px; width: 100%; text-align: center; }
+
+  .mark {
+    width: 62px; height: 62px; margin: 0 auto 28px;
+    border: 2px solid var(--line); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mark svg { width: 30px; height: 30px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .mark.ok { border-color: var(--green); } .mark.ok svg { stroke: var(--green); }
+  .mark.no { border-color: var(--accent); } .mark.no svg { stroke: var(--accent); }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .3em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 16px;
+  }
+
+  h1 {
+    font-family: var(--serif); font-size: clamp(30px, 5vw, 44px);
+    font-weight: 700; letter-spacing: -.015em; line-height: 1.1;
+  }
+  h1 .nokta { color: var(--accent); }
+
+  p.lead { margin-top: 18px; font-size: 16px; line-height: 1.75; color: var(--muted); }
+
+  .detay {
+    margin-top: 26px; padding: 18px 22px;
+    border: 1px solid var(--line); background: var(--paper);
+    font-family: var(--mono); font-size: 13px; color: var(--muted);
+    display: inline-block; text-align: left;
+  }
+  .detay b { color: var(--ink); }
+  .detay div + div { margin-top: 7px; }
+
+  .links { margin-top: 34px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .pill {
+    display: inline-flex; align-items: center; padding: 13px 24px;
+    border: 1px solid var(--ink); color: var(--ink); text-decoration: none;
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase;
+    transition: border-color .22s, background .22s, color .22s;
+  }
+  .pill.primary { background: var(--ink); color: var(--bg); }
+  .pill:hover { border-color: var(--accent); color: var(--accent); }
+  .pill.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="mark" id="mark"></div>
+  <p class="eyebrow" id="eyebrow">Sipariş</p>
+  <h1 id="baslik">İşleniyor<span class="nokta">.</span></h1>
+  <p class="lead" id="mesaj"></p>
+  <div class="detay" id="detay" style="display:none"></div>
+  <div class="links">
+    <a class="pill primary" href="/magaza.html">Mağazaya dön</a>
+    <a class="pill" href="/">Ana sayfa</a>
+  </div>
+</div>
+
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var durum = q.get('durum');
+  var no = q.get('no');
+  var tutar = q.get('tutar');
+  var mesaj = q.get('mesaj');
+
+  var mark = document.getElementById('mark');
+  var TIK = '<svg viewBox="0 0 24 24"><path d="M4 12.5l5.5 5.5L20 7"/></svg>';
+  var CARPI = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+  if (durum === 'basarili') {
+    mark.className = 'mark ok';
+    mark.innerHTML = TIK;
+    document.getElementById('eyebrow').textContent = 'Ödeme alındı';
+    document.getElementById('baslik').innerHTML = 'Siparişiniz alındı<span class="nokta">.</span>';
+    document.getElementById('mesaj').textContent =
+      'Teşekkürler. Siparişiniz tarafımıza ulaştı; en kısa sürede e-posta ile size dönüş yapılacak.';
+
+    if (no || tutar) {
+      var d = document.getElementById('detay');
+      d.style.display = 'inline-block';
+      d.innerHTML = (no ? '<div>Sipariş no: <b>' + no.replace(/[<>&"]/g, '') + '</b></div>' : '') +
+                    (tutar ? '<div>Tutar: <b>' + tutar.replace(/[<>&"]/g, '') + ' ₺</b></div>' : '');
+    }
+    try { localStorage.removeItem('sersoz_sepet_v1'); } catch (e) {}
+  } else {
+    mark.className = 'mark no';
+    mark.innerHTML = CARPI;
+    document.getElementById('eyebrow').textContent = 'Ödeme tamamlanmadı';
+    document.getElementById('baslik').innerHTML = 'Ödeme tamamlanamadı<span class="nokta">.</span>';
+    document.getElementById('mesaj').textContent =
+      (mesaj ? mesaj.replace(/[<>&"]/g, '') + ' ' : '') +
+      'Sepetiniz duruyor — mağazaya dönüp yeniden deneyebilir ya da bize e-posta yazabilirsiniz.';
+  }
+})();
+</script>
+</body>
+</html>
