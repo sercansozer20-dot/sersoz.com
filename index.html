@@ -241,81 +241,136 @@
     max-width: 56ch;
   }
 
-  /* ---------- Hizmet kartları ---------- */
-  .cards { margin-top: 30px; border-top: 1px solid var(--line); }
+  /* ---------- Hizmet kartlari ---------- */
+  .cards {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
 
   .card {
-    display: grid;
-    grid-template-columns: 168px 1fr;
-    gap: 32px;
-    padding: clamp(32px, 5vh, 48px) 0;
-    border-bottom: 1px solid var(--line);
-    transition: border-color .25s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 28px 26px 30px;
+    background: rgba(255, 253, 248, .55);
+    border: 1px solid var(--line);
+    transition: transform .3s cubic-bezier(.2, .7, .3, 1), border-color .3s ease,
+                background .3s ease, box-shadow .3s ease;
   }
 
-  .card-side { display: flex; flex-direction: column; gap: 10px; }
-
-  .card-no {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--accent);
-    letter-spacing: .1em;
-    transition: letter-spacing .25s ease;
+  .card::after {
+    content: '';
+    position: absolute;
+    left: -1px; right: -1px; top: -1px;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .38s cubic-bezier(.2, .7, .3, 1);
   }
 
+  @media (hover: hover) {
+    .card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(194, 65, 12, .4);
+      background: rgba(255, 253, 248, .95);
+      box-shadow: 0 14px 30px rgba(26, 24, 21, .09);
+    }
+    .card:hover::after { transform: scaleX(1); }
+    .card:hover h3 { color: var(--accent); }
+    .card:hover .ico { color: var(--accent); }
+  }
+  .card:active { border-color: rgba(194, 65, 12, .4); }
+
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .card-no { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: .18em; }
   .card-tag {
     font-family: var(--mono);
-    font-size: 11.5px;
+    font-size: 10.5px;
     letter-spacing: .2em;
     text-transform: uppercase;
     color: var(--muted);
   }
 
+  .ico {
+    width: 46px; height: 46px;
+    margin-bottom: 18px;
+    color: var(--ink);
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: color .3s ease;
+  }
+  .ico .solid { fill: currentColor; stroke: none; }
+  .ico g, .ico line, .ico rect, .ico path, .ico circle { transform-box: fill-box; }
+
   .card h3 {
     font-family: var(--serif);
-    font-size: clamp(22px, 2.7vw, 30px);
+    font-size: 21px;
     font-weight: 700;
     letter-spacing: -.008em;
-    line-height: 1.14;
+    line-height: 1.2;
     transition: color .22s ease;
-  }
-
-  @media (hover: hover) {
-    .card:hover h3 { color: var(--accent); }
-    .card:hover .card-no { letter-spacing: .3em; }
   }
 
   .card-sub {
     margin-top: 8px;
     font-family: var(--serif);
     font-style: italic;
-    font-size: 15px;
+    font-size: 14px;
     color: var(--muted);
-    letter-spacing: .01em;
   }
 
-  .card-body > p { margin-top: 16px; color: var(--muted); line-height: 1.72; font-size: 15px; max-width: 72ch; }
-  .card-body > p b { color: var(--ink); font-weight: 600; }
-
-  .card ul { margin-top: 14px; list-style: none; max-width: 72ch; }
+  .card ul {
+    margin-top: 18px;
+    padding-top: 15px;
+    border-top: 1px solid var(--line-soft);
+    list-style: none;
+  }
   .card li {
     position: relative;
-    padding-left: 22px;
+    padding-left: 18px;
     color: var(--muted);
-    font-size: 13.5px;
-    line-height: 1.65;
-    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.55;
+    margin-top: 9px;
   }
+  .card li:first-child { margin-top: 0; }
   .card li::before {
     content: '';
     position: absolute;
-    left: 0;
-    top: .72em;
-    width: 12px;
-    height: 1px;
+    left: 0; top: .62em;
+    width: 9px; height: 1px;
     background: var(--accent);
   }
-  .card li b { color: var(--ink); font-weight: 600; }
+
+  /* ikon animasyonlari */
+  @keyframes ico-sweep { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(28px); } }
+  @keyframes ico-dash  { to { stroke-dashoffset: -28; } }
+  @keyframes ico-arm   { 0%, 100% { transform: rotate(-13deg); } 50% { transform: rotate(11deg); } }
+  @keyframes ico-flow  { 0% { stroke-dashoffset: 46; } 100% { stroke-dashoffset: -46; } }
+  @keyframes ico-bar   { 0%, 100% { transform: scaleX(.35); } 50% { transform: scaleX(1); } }
+  @keyframes ico-blink { 0%, 100% { opacity: .28; } 50% { opacity: 1; } }
+
+  .ico-scan .sweep  { animation: ico-sweep 3.6s ease-in-out infinite; }
+  .ico-scan .blink  { animation: ico-blink 3.6s ease-in-out infinite; }
+  .ico-ai   .box    { stroke-dasharray: 7 5; animation: ico-dash 2.8s linear infinite; }
+  .ico-ai   .target { animation: ico-blink 2.2s ease-in-out infinite; }
+  .ico-robot .arm   { transform-origin: 0% 100%; animation: ico-arm 3.8s ease-in-out infinite; }
+  .ico-plc  .signal { stroke-dasharray: 9 37; animation: ico-flow 2.6s linear infinite; }
+  .ico-hmi  .bar    { transform-origin: left center; animation: ico-bar 3s ease-in-out infinite; }
+  .ico-hmi  .bar.b2 { animation-delay: .25s; }
+  .ico-hmi  .bar.b3 { animation-delay: .5s; }
 
   /* ---------- Süreç: dergi numaralı adımlar ---------- */
   .steps {
@@ -512,7 +567,7 @@
   /* ---------- Mobil ---------- */
   @media (max-width: 1080px) {
     .container, .nav-inner, .footer-inner { max-width: 920px; }
-    .card { grid-template-columns: 132px 1fr; gap: 24px; }
+    .cards { grid-template-columns: repeat(2, 1fr); }
     .step { grid-template-columns: 64px 1fr; gap: 20px; }
   }
 
@@ -528,8 +583,7 @@
   }
 
   @media (max-width: 720px) {
-    .card { grid-template-columns: 1fr; gap: 12px; }
-    .card-side { flex-direction: row; align-items: baseline; gap: 16px; }
+    .cards { grid-template-columns: 1fr; }
     .step { grid-template-columns: 52px 1fr; gap: 16px; }
   }
 
@@ -546,7 +600,8 @@
     .hero-content { animation: none; }
     .dot { animation: none; }
     .reveal { opacity: 1; transform: none; transition: none; }
-    .card-no, .card h3, .pill { transition: none; }
+    .card, .card::after, .card h3, .ico, .pill { transition: none; }
+    .ico * { animation: none !important; }
   }
 </style>
 <noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
@@ -600,109 +655,103 @@
     <div class="container">
       <p class="kicker reveal"><span class="idx">01</span>Hizmetler</p>
       <h2 class="reveal">Ne yapıyorum</h2>
-      <p class="section-lead reveal">Beş başlık, tek disiplin: ölçülebilir kabul kriteri, deterministik yazılım
-        ve sahada çalışan sistem. Her hizmet tek başına alınabilir; birlikte alındığında katmanlar arasında
-        sorumluluk boşluğu kalmaz.</p>
+      <p class="section-lead reveal">Beş başlık, tek disiplin: ölçülebilir kabul kriteri, deterministik yazılım, sahada çalışan sistem.</p>
 
       <div class="cards">
         <article class="card reveal">
-          <div class="card-side">
-            <p class="card-no">01</p>
-            <p class="card-tag">3D Vizyon</p>
-          </div>
-          <div class="card-body">
-            <h3>3D Makine Görüşü Sistemleri</h3>
-            <p class="card-sub">Nokta bulutundan ölçülebilir karara</p>
-            <p>Profil sensöründen gelen ham nokta bulutunu ölçüme, ölçümü denetim kararına çeviren sistemler
-              kuruyorum. Sensör seçiminden ölçüm araçlarının devreye alınmasına kadar zincirin tamamı tek elden
-              ilerler; her ölçüm tekrarlanabilir ve izlenebilirdir.</p>
-            <ul>
-              <li><b>Nokta bulutu metrolojisi:</b> düzlem/silindir/küre uydurma, profil kesitleri, gap &amp; flush,
-                düzlemsellik ve paralellik/diklik denetimleri</li>
-              <li><b>Profil sensörü entegrasyonu:</b> Wenglor, LMI Gocator ve benzeri 3D tarayıcılar</li>
-              <li>Tolerans tabanlı ölçüm-denetim araç zincirleri: OK/NOK kararı ve kayıt</li>
-              <li><b>CAD karşılaştırma:</b> tarama–model sapma analizi ve raporlama</li>
-            </ul>
-          </div>
-        </article>
-
-        <article class="card reveal">
-          <div class="card-side">
-            <p class="card-no">02</p>
-            <p class="card-tag">Derin Öğrenme</p>
-          </div>
-          <div class="card-body">
-            <h3>Derin Öğrenme ile Görsel Denetim</h3>
-            <p class="card-sub">Veri fabrikadan çıkmadan, hattın hızında</p>
-            <p>Klasik görüntü işlemenin yetmediği yerde derin öğrenme tabanlı denetim devreye girer.
-              Kurduğum sistemler tamamen çevrimdışı çalışır: modeller sahadaki bilgisayarda koşar,
-              <b>görüntüler ve üretim verisi fabrikadan çıkmaz</b>.</p>
-            <ul>
-              <li><b>YOLO tabanlı</b> tespit, sayım, bölge denetimi ve çoklu nesne takibi</li>
-              <li><b>Ürün öğretme:</b> model eğitimi gerektirmeden yeni ürünü kısa sürede sisteme tanıtma</li>
-              <li><b>Anomali (kusur) tespiti:</b> yalnız sağlam örneklerle öğrenen, kusuru konumuyla gösteren motor</li>
-              <li>Tamamen çevrimdışı ONNX çıkarım — bulut bağımlılığı yok</li>
-            </ul>
-          </div>
+          <div class="card-head"><span class="card-no">01</span><span class="card-tag">3D Vizyon</span></div>
+          <svg class="ico ico-scan" viewBox="0 0 48 48" aria-hidden="true">
+            <circle class="solid blink" cx="10" cy="14" r="1.6"/><circle class="solid" cx="20" cy="12" r="1.6"/>
+            <circle class="solid blink" cx="30" cy="15" r="1.6"/><circle class="solid" cx="39" cy="13" r="1.6"/>
+            <circle class="solid" cx="10" cy="24" r="1.6"/><circle class="solid blink" cx="20" cy="22" r="1.6"/>
+            <circle class="solid" cx="30" cy="25" r="1.6"/><circle class="solid blink" cx="39" cy="23" r="1.6"/>
+            <circle class="solid blink" cx="10" cy="34" r="1.6"/><circle class="solid" cx="20" cy="33" r="1.6"/>
+            <circle class="solid blink" cx="30" cy="35" r="1.6"/><circle class="solid" cx="39" cy="33" r="1.6"/>
+            <line class="sweep" x1="10" y1="7" x2="10" y2="41"/>
+          </svg>
+          <h3>3D Makine Görüşü</h3>
+          <p class="card-sub">Nokta bulutundan ölçülebilir karara</p>
+          <ul>
+            <li>Nokta bulutu metrolojisi ve profil ölçümü</li>
+            <li>Wenglor · LMI Gocator entegrasyonu</li>
+            <li>CAD karşılaştırma, OK/NOK kararı</li>
+          </ul>
         </article>
 
         <article class="card reveal" style="--d:.06s">
-          <div class="card-side">
-            <p class="card-no">03</p>
-            <p class="card-tag">Robotik</p>
-          </div>
-          <div class="card-body">
-            <h3>Robotik Hücre Entegrasyonu</h3>
-            <p class="card-sub">Görüşten robota kapalı çevrim</p>
-            <p>Robot hücresini görüş sistemiyle aynı dili konuşur hale getiriyorum: 3D taramadan üretilen
-              hedefler robot koordinatına çevrilir, kalibrasyonla doğrulanır ve hücre denetimli biçimde
-              devreye alınır.</p>
-            <ul>
-              <li><b>KUKA, Fanuc, Universal Robots ve ABB</b> robot programlama</li>
-              <li>3D taramadan robot koordinatına <b>kılavuzlama:</b> kaynak, dizme, ayıklama uygulamaları</li>
-              <li><b>El-göz kalibrasyonu</b> ve doğruluk doğrulaması</li>
-              <li>Hücre çevresi: PLC, güvenlik ve fikstür tarafıyla bütünleşik devreye alma</li>
-            </ul>
-          </div>
+          <div class="card-head"><span class="card-no">02</span><span class="card-tag">Derin Öğrenme</span></div>
+          <svg class="ico ico-ai" viewBox="0 0 48 48" aria-hidden="true">
+            <rect class="box" x="7" y="9" width="34" height="30"/>
+            <circle class="target" cx="24" cy="24" r="5"/>
+            <line class="target" x1="24" y1="14" x2="24" y2="17"/>
+            <line class="target" x1="24" y1="31" x2="24" y2="34"/>
+            <line class="target" x1="14" y1="24" x2="17" y2="24"/>
+            <line class="target" x1="31" y1="24" x2="34" y2="24"/>
+          </svg>
+          <h3>Görsel Denetim</h3>
+          <p class="card-sub">Veri fabrikadan çıkmadan</p>
+          <ul>
+            <li>YOLO ile tespit, sayım ve nesne takibi</li>
+            <li>Ürün öğretme, kusur (anomali) tespiti</li>
+            <li>Tamamen çevrimdışı — bulut bağımlılığı yok</li>
+          </ul>
+        </article>
+
+        <article class="card reveal" style="--d:.12s">
+          <div class="card-head"><span class="card-no">03</span><span class="card-tag">Robotik</span></div>
+          <svg class="ico ico-robot" viewBox="0 0 48 48" aria-hidden="true">
+            <line x1="6" y1="41" x2="24" y2="41"/>
+            <line x1="15" y1="41" x2="15" y2="29"/>
+            <g class="arm">
+              <line x1="15" y1="29" x2="35" y2="18"/>
+              <line x1="35" y1="18" x2="39" y2="14"/>
+              <line x1="35" y1="18" x2="39" y2="21"/>
+            </g>
+            <circle class="solid" cx="15" cy="29" r="2.2"/>
+          </svg>
+          <h3>Robotik Hücre Entegrasyonu</h3>
+          <p class="card-sub">Görüşten robota kapalı çevrim</p>
+          <ul>
+            <li>KUKA · Fanuc · UR · ABB programlama</li>
+            <li>3D taramadan robot koordinatına kılavuzlama</li>
+            <li>El-göz kalibrasyonu ve doğruluk doğrulaması</li>
+          </ul>
         </article>
 
         <article class="card reveal">
-          <div class="card-side">
-            <p class="card-no">04</p>
-            <p class="card-tag">Otomasyon</p>
-          </div>
-          <div class="card-body">
-            <h3>PLC &amp; SCADA Otomasyonu</h3>
-            <p class="card-sub">Sahanın omurgası</p>
-            <p>Yeni hat kurulumundan çalışan tesislerin revizyonuna kadar PLC ve SCADA tarafını üstleniyorum.
-              Farklı marka ekosistemlerinde aynı disiplinle çalışırım: okunabilir program, belgelenmiş sinyal
-              listesi, devreye almada sürpriz yok.</p>
-            <ul>
-              <li><b>Siemens, Beckhoff, Mitsubishi, CODESYS ve Delta</b> platformlarında geliştirme</li>
-              <li>Çalışan tesislerde <b>SCADA revizyonları</b> — üretimi durdurmadan planlı geçiş</li>
-              <li><b>Endüstriyel haberleşme:</b> MC/SLMP, Siemens S7, Modbus TCP, PROFINET</li>
-              <li><b>Atex</b> (patlayıcı ortam) projelerinde saha tecrübesi</li>
-            </ul>
-          </div>
+          <div class="card-head"><span class="card-no">04</span><span class="card-tag">Otomasyon</span></div>
+          <svg class="ico ico-plc" viewBox="0 0 48 48" aria-hidden="true">
+            <rect x="7" y="15" width="17" height="18"/>
+            <line x1="11" y1="15" x2="11" y2="11"/><line x1="16" y1="15" x2="16" y2="11"/>
+            <line x1="11" y1="33" x2="11" y2="37"/><line x1="16" y1="33" x2="16" y2="37"/>
+            <path class="signal" d="M24 24 h4 l2.5 -7 l3 14 l2.5 -7 H42"/>
+          </svg>
+          <h3>PLC &amp; SCADA Otomasyonu</h3>
+          <p class="card-sub">Sahanın omurgası</p>
+          <ul>
+            <li>Siemens · Beckhoff · Mitsubishi · CODESYS · Delta</li>
+            <li>SCADA revizyonu — üretimi durdurmadan</li>
+            <li>MC/SLMP · S7 · Modbus TCP · PROFINET</li>
+          </ul>
         </article>
 
         <article class="card reveal" style="--d:.06s">
-          <div class="card-side">
-            <p class="card-no">05</p>
-            <p class="card-tag">Yazılım</p>
-          </div>
-          <div class="card-body">
-            <h3>Özel Endüstriyel Yazılım</h3>
-            <p class="card-sub">Hattınıza göre dikilmiş</p>
-            <p>Hazır paketlerin kalıbına sığmayan ihtiyaçlar için sahada çalışacak masaüstü yazılımlar
-              geliştiriyorum. Operatörün bir bakışta anlayacağı arayüz, mühendisin güveneceği kayıt düzeni.</p>
-            <ul>
-              <li><b>WinUI tabanlı</b> masaüstü istasyon yazılımları — kendi kendine yeten dağıtım</li>
-              <li><b>Operatör HMI:</b> tam ekran, sade, vardiya koşullarına göre tasarlanmış ekranlar</li>
-              <li><b>İzlenebilirlik ve raporlama:</b> yerel veritabanı, ölçüm geçmişi, kayıt dışa aktarımı</li>
-              <li>Mevcut hatta entegrasyon: PLC, sensör ve kamera katmanlarıyla doğrudan konuşma</li>
-            </ul>
-          </div>
+          <div class="card-head"><span class="card-no">05</span><span class="card-tag">Yazılım</span></div>
+          <svg class="ico ico-hmi" viewBox="0 0 48 48" aria-hidden="true">
+            <rect x="6" y="10" width="36" height="28"/>
+            <line x1="6" y1="18" x2="42" y2="18"/>
+            <circle class="solid" cx="11" cy="14" r="1.4"/>
+            <rect class="bar solid" x="12" y="23" width="22" height="2.4"/>
+            <rect class="bar b2 solid" x="12" y="28" width="18" height="2.4"/>
+            <rect class="bar b3 solid" x="12" y="33" width="14" height="2.4"/>
+          </svg>
+          <h3>Özel Endüstriyel Yazılım</h3>
+          <p class="card-sub">Hattınıza göre dikilmiş</p>
+          <ul>
+            <li>WinUI masaüstü istasyon yazılımları</li>
+            <li>Sade, vardiyaya göre tasarlanmış operatör HMI</li>
+            <li>İzlenebilirlik, kayıt ve raporlama</li>
+          </ul>
         </article>
       </div>
     </div>
