@@ -241,6 +241,31 @@
     max-width: 56ch;
   }
 
+  /* ---------- 3D vitrin ---------- */
+  .vitrin { margin-top: 34px; border: 1px solid var(--line); background: #0b0f14; overflow: hidden; }
+  .vitrin-ust {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    padding: 11px 16px; border-bottom: 1px solid rgba(255,255,255,.09);
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+    color: rgba(255,255,255,.55);
+  }
+  .vitrin-sol { display: inline-flex; align-items: center; gap: 10px; }
+  .vitrin-nokta { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: vitrinNabiz 1.6s ease-in-out infinite; }
+  @keyframes vitrinNabiz { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+  .vitrin-asama { padding: 3px 10px; border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); font-size: 9.5px; letter-spacing: .12em; }
+  canvas#anaSahne { display: block; width: 100%; height: auto; background: #0b0f14; }
+  .vitrin-alt { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid rgba(255,255,255,.09); }
+  .vitrin-metrik { padding: 14px 16px; border-right: 1px solid rgba(255,255,255,.07); }
+  .vitrin-metrik:last-child { border-right: none; }
+  .vitrin-metrik .v { font-family: var(--mono); font-size: 20px; font-weight: 700; color: #e8edf5; font-variant-numeric: tabular-nums; }
+  .vitrin-metrik .v.ok { color: #4ade80; }
+  .vitrin-metrik .e { margin-top: 3px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.45); }
+  @media (max-width: 720px) {
+    .vitrin-alt { grid-template-columns: repeat(2, 1fr); }
+    .vitrin-metrik { border-bottom: 1px solid rgba(255,255,255,.07); }
+  }
+  @media (prefers-reduced-motion: reduce) { .vitrin-nokta { animation: none; } }
+
   /* ---------- Hizmet kartlari ---------- */
   .cards {
     margin-top: 40px;
@@ -658,6 +683,36 @@
       <h2 class="reveal">Ne yapıyorum</h2>
       <p class="section-lead reveal">Beş başlık, tek disiplin: ölçülebilir kabul kriteri, deterministik yazılım, sahada çalışan sistem.</p>
 
+    </div>
+  </section>
+
+  <!-- 3D vitrin -->
+  <section class="section" id="uc-boyut">
+    <div class="container">
+      <p class="kicker reveal"><span class="idx">◆</span>3D Görüş</p>
+      <h2 class="reveal">Parçayı ölçen, robota yol gösteren sistem</h2>
+      <p class="section-lead reveal">Lazer profil sensörü parçayı tarar, nokta bulutu milimetrik
+        ölçüye dönüşür, ölçüm kararı robot koordinatına iner. Aşağıdaki sahne bu zinciri canlandırıyor.</p>
+
+      <div class="vitrin reveal">
+        <div class="vitrin-ust">
+          <span class="vitrin-sol"><span class="vitrin-nokta"></span> 3D profil sensörü · canlı canlandırma</span>
+          <span class="vitrin-asama" id="anaAsama">TARAMA</span>
+        </div>
+        <canvas id="anaSahne" width="1120" height="400" aria-label="3D tarama canlandırması"></canvas>
+        <div class="vitrin-alt">
+          <div class="vitrin-metrik"><div class="v" id="anaNokta">0</div><div class="e">Nokta bulutu</div></div>
+          <div class="vitrin-metrik"><div class="v" id="anaOlcu">— mm</div><div class="e">Dikiş derinliği</div></div>
+          <div class="vitrin-metrik"><div class="v" id="anaDuzlem">— mm</div><div class="e">Düzlemsellik</div></div>
+          <div class="vitrin-metrik"><div class="v ok" id="anaKarar">—</div><div class="e">Karar</div></div>
+        </div>
+      </div>
+
+      <div class="links reveal" style="margin-top:26px">
+        <a class="pill primary" href="/vision-detection.html">Vision Detection App</a>
+        <a class="pill" href="/magaza.html">Mağaza</a>
+      </div>
+
       <p class="section-lead reveal" style="margin-top:22px">
         <b>Hazır ürün:</b> <a href="/vision-detection.html" style="color:var(--accent);text-decoration:none;border-bottom:1px solid currentColor">Vision Detection App</a> — 3D tarama, ölçüm, kusur denetimi ve robot kılavuzlamayı tek uygulamada toplayan endüstriyel görüş yazılımı.
       </p>
@@ -924,6 +979,14 @@
     revealEls.forEach(function (el) { ro.observe(el); });
   }
 })();
+</script>
+<script src="/sahne3d.js" defer></script>
+<script defer>
+  addEventListener("DOMContentLoaded", function () {
+    if (window.Sahne3D) window.__sahne = Sahne3D("anaSahne", { kompakt: true, metrik: {
+      nokta: "anaNokta", olcu: "anaOlcu", duzlem: "anaDuzlem",
+      karar: "anaKarar", asama: "anaAsama" } });
+  });
 </script>
 <script src="/iz.js" defer></script>
 </body>

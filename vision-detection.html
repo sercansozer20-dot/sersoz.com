@@ -256,6 +256,7 @@
   }
 </style>
 <noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
+<script src="/sahne3d.js" defer></script>
 </head>
 <body>
 
@@ -585,7 +586,7 @@
   </div>
 </footer>
 
-<script>
+<script defer>
 (function () {
   'use strict';
   var azalt = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -601,243 +602,18 @@
     Array.prototype.forEach.call(ogeler, function (e) { ro.observe(e); });
   }
 
-  /* ---------------------------------------------------- 3D sahne */
-  var c = document.getElementById('sahne3d');
-  var x = c.getContext('2d');
-  var W = c.width, H = c.height;
-
-  var N = 62;                    // ızgara çözünürlüğü
-  var TILT = -0.98;
-  var FOV = 3.4;
-  var OLCEK = Math.min(W, H) * 0.62;
-  var CX = W * 0.46, CY = H * 0.60;
-
-  /* parçanın yükseklik haritası: taban plaka + yükselti + kaynak ağzı oluğu */
-  function yukseklik(u, v) {
-    var y = 0;
-    if (Math.abs(u) < 0.86 && Math.abs(v) < 0.62) y = 0.10;         // taban plaka
-    if (u > -0.30 && u < 0.52 && Math.abs(v) < 0.34) y = 0.30;      // yükselti bloğu
-    var oluk = Math.exp(-Math.pow((u - 0.11) / 0.055, 2));          // V oluk (kaynak ağzı)
-    if (u > -0.30 && u < 0.52 && Math.abs(v) < 0.34) y -= 0.20 * oluk;
-    if (Math.abs(u) < 0.86 && Math.abs(v) < 0.62) {
-      y += 0.012 * Math.sin(u * 7.0) * Math.cos(v * 6.0);           // yüzey dokusu
-    }
-    return y;
+  /* ---------------------------------------------------- 3D sahne
+     sahne3d.js defer ile yüklendiği için DOMContentLoaded beklenir */
+  function sahneKur() {
+    if (!window.Sahne3D) return;
+    window.__sahne = Sahne3D('sahne3d', {
+      metrik: { nokta: 'mNokta', olcu: 'mOlcu', duzlem: 'mDuzlem', karar: 'mKarar', asama: 'asamaAdi' }
+    });
   }
-
-  function yansit(px, py, pz, aci) {
-    var ca = Math.cos(aci), sa = Math.sin(aci);
-    var xr = px * ca + pz * sa;
-    var zr = -px * sa + pz * ca;
-    var cx2 = Math.cos(TILT), sx2 = Math.sin(TILT);
-    var yr = py * cx2 - zr * sx2;
-    var zd = py * sx2 + zr * cx2;
-    var s = FOV / (FOV + zd);
-    return { X: CX + xr * s * OLCEK, Y: CY + yr * s * OLCEK, s: s, zd: zd };
-  }
-
-  var HEDEFLER = [-0.18, 0.02, 0.22, 0.40];    // kaynak noktaları (u ekseni)
-
-  var t0 = performance.now();
-  var DONGU = 13000;                            // ms — tam çevrim
-  var mNokta = document.getElementById('mNokta');
-  var mOlcu = document.getElementById('mOlcu');
-  var mDuzlem = document.getElementById('mDuzlem');
-  var mKarar = document.getElementById('mKarar');
-  var asamaAdi = document.getElementById('asamaAdi');
-  var sonAsama = '';
-
-  function asama(ad) {
-    if (ad !== sonAsama) { asamaAdi.textContent = ad; sonAsama = ad; }
-  }
-
-  function ciz(t) {
-    var p = (t % DONGU) / DONGU;                 /* 0..1 çevrim ilerlemesi */
-    var aci = 0.28 + Math.sin(t / 5200) * 0.16;  /* hafif salınım */
-
-    /* faz: 0-.42 tarama · .42-.62 ölçüm · .62-1 robot */
-    var tarama = Math.min(1, p / 0.42);
-    var olcumFaz = p > 0.42 ? Math.min(1, (p - 0.42) / 0.12) : 0;
-    var robotFaz = p > 0.62 ? Math.min(1, (p - 0.62) / 0.14) : 0;
-
-    x.fillStyle = '#0b0f14';
-    x.fillRect(0, 0, W, H);
-
-    /* zemin ızgarası */
-    x.strokeStyle = 'rgba(255,255,255,.045)';
-    x.lineWidth = 1;
-    for (var gi = -4; gi <= 4; gi++) {
-      var a1 = yansit(gi / 4 * 1.3, -0.02, -1.3, aci);
-      var a2 = yansit(gi / 4 * 1.3, -0.02, 1.3, aci);
-      x.beginPath(); x.moveTo(a1.X, a1.Y); x.lineTo(a2.X, a2.Y); x.stroke();
-      var b1 = yansit(-1.3, -0.02, gi / 4 * 1.3, aci);
-      var b2 = yansit(1.3, -0.02, gi / 4 * 1.3, aci);
-      x.beginPath(); x.moveTo(b1.X, b1.Y); x.lineTo(b2.X, b2.Y); x.stroke();
-    }
-
-    /* nokta bulutu */
-    var tarananU = -1 + tarama * 2;               /* lazerin u konumu */
-    var nokta = 0;
-
-    for (var i = 0; i < N; i++) {
-      var u = (i / (N - 1) - 0.5) * 2;
-      if (u > tarananU + 0.02) continue;           /* henüz taranmadı */
-      for (var j = 0; j < N; j++) {
-        var v = (j / (N - 1) - 0.5) * 2;
-        var y = yukseklik(u, v);
-        if (y === 0) continue;                     /* boş zemin */
-        var pr = yansit(u, -y, v, aci);
-        nokta++;
-
-        var lazerde = Math.abs(u - tarananU) < 0.035;
-        var yn = Math.max(0, Math.min(1, (y + 0.02) / 0.34));
-        var boy = (lazerde ? 3.0 : 2.0) * pr.s;
-
-        if (lazerde) {
-          x.fillStyle = 'rgba(210,240,255,.95)';
-        } else {
-          var ton = 214 - yn * 150;                /* mavi → yeşil/sarı */
-          var alfa = Math.max(0.25, 0.85 - (pr.zd + 1) * 0.2);
-          x.fillStyle = 'hsla(' + ton + ',88%,' + (50 + yn * 16) + '%,' + alfa + ')';
-        }
-        x.fillRect(pr.X - boy / 2, pr.Y - boy / 2, boy, boy);
-      }
-    }
-
-    /* lazer düzlemi çizgisi */
-    if (tarama < 1) {
-      asama('TARAMA');
-      var l1 = yansit(tarananU, -0.55, -0.75, aci);
-      var l2 = yansit(tarananU, -0.55, 0.75, aci);
-      var l3 = yansit(tarananU, 0.02, 0.75, aci);
-      var l4 = yansit(tarananU, 0.02, -0.75, aci);
-      var lg = x.createLinearGradient(l1.X, l1.Y, l3.X, l3.Y);
-      lg.addColorStop(0, 'rgba(120,200,255,.05)');
-      lg.addColorStop(1, 'rgba(120,200,255,.20)');
-      x.fillStyle = lg;
-      x.beginPath(); x.moveTo(l1.X, l1.Y); x.lineTo(l2.X, l2.Y); x.lineTo(l3.X, l3.Y); x.lineTo(l4.X, l4.Y);
-      x.closePath(); x.fill();
-      x.strokeStyle = 'rgba(190,235,255,.85)';
-      x.lineWidth = 1.6;
-      x.beginPath(); x.moveTo(l4.X, l4.Y); x.lineTo(l3.X, l3.Y); x.stroke();
-    }
-
-    mNokta.textContent = (nokta * 34).toLocaleString('tr-TR');
-
-    /* ölçüm çizgileri */
-    if (olcumFaz > 0) {
-      asama(robotFaz > 0 ? 'ROBOT KILAVUZLAMA' : 'ÖLÇÜM');
-      var solUst = yansit(-0.30, -0.30, -0.34, aci);
-      var sagUst = yansit(0.52, -0.30, -0.34, aci);
-      x.strokeStyle = 'rgba(255,180,120,' + (0.85 * olcumFaz) + ')';
-      x.lineWidth = 1.3;
-      x.setLineDash([5, 4]);
-      x.beginPath(); x.moveTo(solUst.X, solUst.Y - 26); x.lineTo(sagUst.X, sagUst.Y - 26); x.stroke();
-      x.setLineDash([]);
-      x.beginPath();
-      x.moveTo(solUst.X, solUst.Y - 32); x.lineTo(solUst.X, solUst.Y - 20);
-      x.moveTo(sagUst.X, sagUst.Y - 32); x.lineTo(sagUst.X, sagUst.Y - 20);
-      x.stroke();
-
-      x.fillStyle = 'rgba(255,196,140,' + olcumFaz + ')';
-      x.font = '600 12px Consolas, monospace';
-      x.fillText('82.4 mm', (solUst.X + sagUst.X) / 2 - 26, solUst.Y - 34);
-
-      /* oluk derinliği */
-      var olukUst = yansit(0.11, -0.30, 0.10, aci);
-      var olukAlt = yansit(0.11, -0.10, 0.10, aci);
-      x.strokeStyle = 'rgba(74,222,128,' + (0.9 * olcumFaz) + ')';
-      x.beginPath(); x.moveTo(olukUst.X, olukUst.Y); x.lineTo(olukAlt.X, olukAlt.Y); x.stroke();
-      x.fillStyle = 'rgba(120,240,170,' + olcumFaz + ')';
-      x.fillText('3.18 mm', olukAlt.X + 10, (olukUst.Y + olukAlt.Y) / 2 + 4);
-
-      mOlcu.textContent = '3.18 mm';
-      mDuzlem.textContent = '0.06 mm';
-      mKarar.textContent = 'OK';
-    } else {
-      mOlcu.textContent = '— mm';
-      mDuzlem.textContent = '— mm';
-      mKarar.textContent = '—';
-    }
-
-    /* robot hedef noktaları + kol */
-    if (robotFaz > 0) {
-      var gorunen = Math.floor(robotFaz * HEDEFLER.length * 1.4);
-      for (var k = 0; k < HEDEFLER.length; k++) {
-        if (k > gorunen) break;
-        var hu = HEDEFLER[k];
-        var hp = yansit(hu, -(yukseklik(hu, 0) + 0.012), 0, aci);
-        var pulse = 1 + Math.sin(t / 260 + k) * 0.14;
-        x.strokeStyle = 'rgba(194,65,12,.95)';
-        x.lineWidth = 1.6;
-        x.beginPath(); x.arc(hp.X, hp.Y, 8 * pulse, 0, Math.PI * 2); x.stroke();
-        x.beginPath();
-        x.moveTo(hp.X - 13, hp.Y); x.lineTo(hp.X - 4, hp.Y);
-        x.moveTo(hp.X + 4, hp.Y); x.lineTo(hp.X + 13, hp.Y);
-        x.moveTo(hp.X, hp.Y - 13); x.lineTo(hp.X, hp.Y - 4);
-        x.moveTo(hp.X, hp.Y + 4); x.lineTo(hp.X, hp.Y + 13);
-        x.stroke();
-        x.fillStyle = 'rgba(255,170,120,.9)';
-        x.font = '10px Consolas, monospace';
-        x.fillText('P' + (k + 1), hp.X + 15, hp.Y - 8);
-      }
-
-      /* basit robot kolu: sağ üstten hedefe uzanır */
-      var hedefIdx = Math.min(HEDEFLER.length - 1, Math.floor(robotFaz * 4));
-      var hh = HEDEFLER[hedefIdx];
-      var hd = yansit(hh, -(yukseklik(hh, 0) + 0.02), 0, aci);
-      var taban = { X: W - 90, Y: 70 };
-      var orta = { X: (taban.X + hd.X) / 2 + 40, Y: (taban.Y + hd.Y) / 2 - 46 };
-
-      x.strokeStyle = 'rgba(255,255,255,.34)';
-      x.lineWidth = 7; x.lineCap = 'round';
-      x.beginPath(); x.moveTo(taban.X, taban.Y); x.lineTo(orta.X, orta.Y); x.stroke();
-      x.lineWidth = 5;
-      x.beginPath(); x.moveTo(orta.X, orta.Y); x.lineTo(hd.X, hd.Y - 12); x.stroke();
-
-      x.fillStyle = 'rgba(255,255,255,.5)';
-      x.beginPath(); x.arc(taban.X, taban.Y, 9, 0, Math.PI * 2); x.fill();
-      x.beginPath(); x.arc(orta.X, orta.Y, 6, 0, Math.PI * 2); x.fill();
-
-      x.fillStyle = 'rgba(255,255,255,.42)';
-      x.font = '10px Consolas, monospace';
-      x.fillText('ROBOT', taban.X - 18, taban.Y - 16);
-    }
-
-    /* köşe telemetrisi */
-    x.font = '11px Consolas, monospace';
-    x.fillStyle = 'rgba(255,255,255,.40)';
-    x.fillText('profil 1280 px   z-çöz. 0.012 mm   ' + (Math.round(28 + Math.sin(t / 800) * 3)) + ' fps', 14, H - 14);
-  }
-
-  var rafId = null, calisiyor = false, ekranda = true, gozlemci = null;
-
-  function dongu() {
-    if (!calisiyor) return;
-    if (ekranda) {
-      try { ciz(performance.now() - t0); }
-      catch (e) { /* tek bir hatalı kare döngüyü durdurmasın */ }
-    }
-    rafId = requestAnimationFrame(dongu);
-  }
-  function baslat() {
-    if (calisiyor) return;
-    calisiyor = true;
-    rafId = requestAnimationFrame(dongu);
-  }
-
-  if (azalt) {
-    ciz(DONGU * 0.72);                 /* hareket azaltma: tek kare */
+  if (document.readyState === 'loading') {
+    addEventListener('DOMContentLoaded', sahneKur);
   } else {
-    ciz(DONGU * 0.5);                  /* ilk kare hemen hazır olsun */
-    baslat();                          /* döngü koşulsuz başlar */
-    if ('IntersectionObserver' in window) {
-      /* referans tutuluyor; yalnız ekran dışındayken çizimi atlar */
-      gozlemci = new IntersectionObserver(function (g) {
-        ekranda = g[g.length - 1].isIntersecting;
-      }, { threshold: 0 });
-      gozlemci.observe(c);
-    }
+    sahneKur();
   }
 })();
 </script>
