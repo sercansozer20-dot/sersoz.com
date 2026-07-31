@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mağaza — Sercan Sözer · Endüstriyel Ürün ve Hizmetler</title>
+<meta name="description" content="Endüstriyel ürün, hizmet ve dijital çözüm kataloğu — sepete ekleyin, sipariş talebinizi iletin.">
+<meta property="og:title" content="Mağaza — Sercan Sözer">
+<meta property="og:description" content="Endüstriyel ürün · Hizmet · Dijital çözüm kataloğu">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sersoz.com/magaza.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f6f2ea;
+    --ink: #1a1815;
+    --muted: #5b564d;
+    --accent: #c2410c;
+    --green: #14532d;
+    --line: rgba(26, 24, 21, .2);
+    --line-soft: rgba(26, 24, 21, .1);
+    --faint: rgba(26, 24, 21, .055);
+    --paper: rgba(255, 253, 248, .6);
+    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  .container { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- Nav ---------- */
+  nav#nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    background: rgba(246, 242, 234, .92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .nav-inner {
+    width: 100%; max-width: 1120px;
+    margin: 0 auto; padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand .mark {
+    width: 22px; height: 22px;
+    background: var(--accent); color: var(--bg);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 14px; font-weight: 700; line-height: 1;
+  }
+  .brand span.host { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--ink); }
+
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--ink); text-decoration: none;
+    padding: 10px 12px; transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.active { color: var(--accent); }
+
+  .nav-tools { display: flex; align-items: center; gap: 8px; margin-left: 10px; }
+
+  .icon-btn {
+    position: relative;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--ink);
+    background: transparent; color: var(--ink);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color .22s, color .22s, background .22s;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .icon-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-btn.primary { background: var(--ink); color: var(--bg); }
+  .icon-btn.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+  .badge {
+    position: absolute; top: -8px; right: -8px;
+    min-width: 19px; height: 19px; padding: 0 5px;
+    background: var(--accent); color: #fff;
+    border-radius: 999px;
+    font-family: var(--mono); font-size: 10.5px; line-height: 19px; text-align: center;
+    transform: scale(0); transition: transform .25s cubic-bezier(.2,.7,.3,1);
+  }
+  .badge.show { transform: scale(1); }
+
+  .user-chip {
+    display: none; align-items: center; gap: 8px;
+    padding: 6px 10px 6px 6px; border: 1px solid var(--line);
+    font-family: var(--mono); font-size: 11px;
+  }
+  .user-chip.show { display: inline-flex; }
+  .user-chip img { width: 22px; height: 22px; border-radius: 50%; }
+  .user-chip button {
+    background: none; border: none; color: var(--muted);
+    font-family: var(--mono); font-size: 10px; cursor: pointer; text-transform: uppercase;
+  }
+  .user-chip button:hover { color: var(--accent); }
+
+  /* ---------- Sayfa başlığı ---------- */
+  .page-hero { padding: 128px 0 44px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 14px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .3em;
+    text-transform: uppercase; margin-bottom: 22px;
+  }
+  .eyebrow::before { content: ''; width: 42px; height: 2px; background: var(--accent); }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(34px, 6vw, 60px);
+    font-weight: 700; letter-spacing: -.015em; line-height: 1.06;
+  }
+  h1 .nokta { color: var(--accent); }
+
+  .lead {
+    margin-top: 20px; max-width: 62ch;
+    font-size: 16px; line-height: 1.75; color: var(--muted);
+    border-left: 1px solid var(--line); padding-left: 18px;
+  }
+
+  /* ---------- Bilgi şeridi ---------- */
+  .notice {
+    margin: 26px 0 0;
+    padding: 16px 20px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    background: var(--paper);
+    font-size: 13.5px; line-height: 1.65; color: var(--muted);
+  }
+  .notice b { color: var(--ink); }
+  .notice code { font-family: var(--mono); font-size: 12.5px; background: var(--faint); padding: 1px 5px; }
+
+  /* ---------- Araç çubuğu ---------- */
+  .toolbar {
+    margin-top: 40px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding-bottom: 18px; border-bottom: 3px double var(--line);
+  }
+
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter {
+    padding: 8px 15px; border: 1px solid var(--line); background: transparent;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); cursor: pointer;
+    transition: border-color .2s, color .2s, background .2s;
+  }
+  .filter:hover { border-color: var(--accent); color: var(--accent); }
+  .filter.active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+  .search {
+    flex: 1; min-width: 180px;
+    padding: 9px 14px; border: 1px solid var(--line); background: var(--paper);
+    font-family: var(--sans); font-size: 14px; color: var(--ink);
+  }
+  .search:focus { outline: none; border-color: var(--accent); }
+
+  /* ---------- Ürün ızgarası ---------- */
+  .grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    margin: 34px 0 20px;
+  }
+
+  .p-card {
+    position: relative;
+    display: flex; flex-direction: column;
+    padding: 24px 22px 22px;
+    background: var(--paper); border: 1px solid var(--line);
+    opacity: 0; transform: translateY(14px);
+    animation: cardIn .5s cubic-bezier(.2,.7,.3,1) forwards;
+    transition: transform .3s cubic-bezier(.2,.7,.3,1), border-color .3s, background .3s, box-shadow .3s;
+  }
+  @keyframes cardIn { to { opacity: 1; transform: none; } }
+
+  .p-card::after {
+    content: ''; position: absolute; left: -1px; right: -1px; top: -1px; height: 2px;
+    background: var(--accent); transform: scaleX(0); transform-origin: left;
+    transition: transform .38s cubic-bezier(.2,.7,.3,1);
+  }
+
+  @media (hover: hover) {
+    .p-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(194, 65, 12, .4);
+      background: rgba(255, 253, 248, .95);
+      box-shadow: 0 14px 30px rgba(26, 24, 21, .09);
+    }
+    .p-card:hover::after { transform: scaleX(1); }
+    .p-card:hover h3 { color: var(--accent); }
+  }
+
+  .p-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
+  .p-type {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+    padding: 4px 9px; border: 1px solid var(--line); color: var(--muted);
+  }
+  .p-type.urun { border-color: rgba(194,65,12,.45); color: var(--accent); }
+  .p-type.hizmet { border-color: rgba(20,83,45,.4); color: var(--green); }
+  .p-type.dijital { border-color: var(--line); color: var(--muted); }
+
+  .p-seller { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: .08em; }
+
+  .p-card h3 {
+    font-family: var(--serif); font-size: 19px; font-weight: 700; line-height: 1.25;
+    transition: color .22s;
+  }
+  .p-desc {
+    margin-top: 10px; font-size: 13.5px; line-height: 1.6; color: var(--muted);
+    flex: 1;
+  }
+
+  .p-foot {
+    margin-top: 18px; padding-top: 15px; border-top: 1px solid var(--line-soft);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .p-price { font-family: var(--mono); font-size: 16px; font-weight: 600; color: var(--ink); }
+  .p-price small { display: block; font-size: 10px; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; font-weight: 400; }
+
+  .add-btn {
+    padding: 10px 16px; border: 1px solid var(--ink); background: var(--ink); color: var(--bg);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    cursor: pointer; transition: background .22s, border-color .22s, transform .18s;
+  }
+  .add-btn:hover { background: var(--accent); border-color: var(--accent); }
+  .add-btn:active { transform: scale(.96); }
+  .add-btn.added { background: var(--green); border-color: var(--green); }
+
+  .p-own {
+    margin-top: 10px; display: flex; gap: 10px;
+  }
+  .p-own button {
+    background: none; border: none; padding: 0;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); cursor: pointer;
+  }
+  .p-own button:hover { color: var(--accent); }
+
+  .empty {
+    grid-column: 1 / -1; padding: 60px 0; text-align: center;
+    font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--muted);
+  }
+
+  /* ---------- Sepet çekmecesi ---------- */
+  .scrim {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(26, 24, 21, .45);
+    opacity: 0; pointer-events: none; transition: opacity .3s;
+  }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 51;
+    width: min(420px, 100%);
+    background: var(--bg); border-left: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    transform: translateX(100%); transition: transform .35s cubic-bezier(.2,.7,.3,1);
+  }
+  .drawer.open { transform: none; }
+
+  .drawer-head {
+    padding: 22px 24px; border-bottom: 3px double var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .drawer-head h2 { font-family: var(--serif); font-size: 24px; font-weight: 700; }
+  .drawer-head h2::after { content: '.'; color: var(--accent); }
+  .x-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 22px; line-height: 1; padding: 4px; }
+  .x-btn:hover { color: var(--accent); }
+
+  .drawer-body { flex: 1; overflow-y: auto; padding: 8px 24px; }
+
+  .c-item { padding: 18px 0; border-bottom: 1px solid var(--line-soft); display: flex; gap: 14px; }
+  .c-item .info { flex: 1; }
+  .c-item h4 { font-family: var(--serif); font-size: 15.5px; font-weight: 700; line-height: 1.3; }
+  .c-item .meta { margin-top: 4px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }
+  .c-item .price { margin-top: 8px; font-family: var(--mono); font-size: 14px; }
+
+  .qty { display: flex; align-items: center; gap: 2px; margin-top: 10px; }
+  .qty button {
+    width: 26px; height: 26px; border: 1px solid var(--line); background: transparent;
+    color: var(--ink); font-family: var(--mono); font-size: 14px; line-height: 1; cursor: pointer;
+    transition: border-color .2s, color .2s;
+  }
+  .qty button:hover { border-color: var(--accent); color: var(--accent); }
+  .qty span { min-width: 34px; text-align: center; font-family: var(--mono); font-size: 13px; }
+  .c-rm { margin-left: 10px; background: none; border: none; color: var(--muted); font-family: var(--mono); font-size: 10px; text-transform: uppercase; cursor: pointer; }
+  .c-rm:hover { color: var(--accent); }
+
+  .drawer-foot { padding: 20px 24px 24px; border-top: 3px double var(--line); }
+  .total-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; font-size: 13.5px; color: var(--muted); }
+  .total-row.grand { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
+  .total-row.grand .v { font-family: var(--mono); font-size: 21px; font-weight: 700; color: var(--ink); }
+  .total-row .v { font-family: var(--mono); }
+
+  .wide-btn {
+    width: 100%; margin-top: 16px; padding: 15px;
+    border: 1px solid var(--ink); background: var(--ink); color: var(--bg);
+    font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    cursor: pointer; transition: background .22s, border-color .22s;
+  }
+  .wide-btn:hover { background: var(--accent); border-color: var(--accent); }
+  .wide-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .wide-btn.ghost { background: transparent; color: var(--ink); margin-top: 8px; }
+  .wide-btn.ghost:hover { background: transparent; border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- Kalıcı pencere (modal) ---------- */
+  .modal {
+    position: fixed; z-index: 51; top: 50%; left: 50%;
+    width: min(560px, calc(100% - 32px)); max-height: 86vh; overflow-y: auto;
+    background: var(--bg); border: 1px solid var(--line);
+    transform: translate(-50%, -46%) scale(.97); opacity: 0; pointer-events: none;
+    transition: opacity .28s, transform .28s cubic-bezier(.2,.7,.3,1);
+  }
+  .modal.open { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+  .modal-head { padding: 22px 26px; border-bottom: 3px double var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .modal-head h2 { font-family: var(--serif); font-size: 23px; font-weight: 700; }
+  .modal-head h2::after { content: '.'; color: var(--accent); }
+  .modal-body { padding: 22px 26px 26px; }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block; margin-bottom: 6px;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
+  }
+  .field input, .field textarea, .field select {
+    width: 100%; padding: 11px 13px;
+    border: 1px solid var(--line); background: var(--paper);
+    font-family: var(--sans); font-size: 14.5px; color: var(--ink);
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--accent); }
+  .field textarea { resize: vertical; min-height: 84px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .form-note { font-size: 12.5px; line-height: 1.6; color: var(--muted); margin-top: 4px; }
+
+  .order-summary { border: 1px solid var(--line); background: var(--paper); padding: 16px 18px; margin-bottom: 18px; }
+  .order-summary .line { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; color: var(--muted); }
+  .order-summary .line b { color: var(--ink); font-family: var(--mono); }
+  .order-summary .line.total { border-top: 1px solid var(--line-soft); margin-top: 6px; padding-top: 10px; font-size: 15px; color: var(--ink); }
+
+  /* ---------- Bildirim ---------- */
+  .toast {
+    position: fixed; z-index: 60; left: 50%; bottom: 26px;
+    transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+    padding: 13px 22px; background: var(--ink); color: var(--bg);
+    font-family: var(--mono); font-size: 12px; letter-spacing: .08em;
+    transition: opacity .3s, transform .3s cubic-bezier(.2,.7,.3,1);
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---------- Footer ---------- */
+  footer { margin-top: 60px; border-top: 3px double var(--line); padding: 26px 0 34px; }
+  .footer-inner {
+    max-width: 1120px; margin: 0 auto; padding: 0 28px;
+    display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap;
+    font-size: 12.5px; color: var(--muted);
+  }
+  .footer-links { display: flex; gap: 4px 16px; flex-wrap: wrap; }
+  .footer-links a {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+  }
+  .footer-links a:hover { color: var(--accent); }
+  .footer-inner .mono { font-family: var(--mono); }
+
+  /* ---------- Mobil ---------- */
+  @media (max-width: 1080px) {
+    .container, .nav-inner, .footer-inner { max-width: 920px; }
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 720px) {
+    .grid { grid-template-columns: 1fr; }
+    .field-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .nav-links a { display: none; }
+    .lead { border-left: none; padding-left: 0; }
+    .page-hero { padding-top: 110px; }
+    .icon-btn span.lbl { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .p-card { opacity: 1; transform: none; animation: none; }
+    .p-card, .p-card::after, .drawer, .modal, .scrim, .toast, .badge { transition: none; }
+  }
+</style>
+<noscript><style>.p-card { opacity: 1; transform: none; animation: none; }</style></noscript>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/" aria-label="sersoz.com">
+      <span class="mark" aria-hidden="true">S</span>
+      <span class="host">sersoz.com</span>
+    </a>
+    <div class="nav-links">
+      <a href="/">Ana Sayfa</a>
+      <a class="active" href="/magaza.html" aria-current="page">Mağaza</a>
+      <a href="/portfolyo.html">Portfolyo</a>
+      <a href="/yazilar.html">Yazılar</a>
+      <a href="/forum.html">Forum</a>
+      <div class="nav-tools">
+        <div class="user-chip" id="userChip">
+          <img id="userPic" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E">
+          <span id="userName"></span>
+          <button id="logoutBtn" type="button">Çıkış</button>
+        </div>
+        <button class="icon-btn" id="loginBtn" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg>
+          <span class="lbl">Giriş</span>
+        </button>
+        <button class="icon-btn primary" id="cartBtn" type="button" aria-label="Sepeti aç">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/></svg>
+          <span class="lbl">Sepet</span>
+          <span class="badge" id="cartBadge">0</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<header class="page-hero">
+  <div class="container">
+    <p class="eyebrow">Mağaza</p>
+    <h1>Ürün, hizmet ve dijital çözümler<span class="nokta">.</span></h1>
+    <p class="lead">Endüstriyel otomasyon ve makine görüşü için ürünler, hizmet paketleri ve dijital
+      çözümler. Sepetinize ekleyin, siparişinizi tek adımda iletin. Kendi ürününüzü de listeleyebilirsiniz.</p>
+    <div class="notice" id="modeNotice"></div>
+  </div>
+</header>
+
+<main class="container">
+  <div class="toolbar">
+    <div class="filters" id="filters">
+      <button class="filter active" data-f="all" type="button">Tümü</button>
+      <button class="filter" data-f="urun" type="button">Ürün</button>
+      <button class="filter" data-f="hizmet" type="button">Hizmet</button>
+      <button class="filter" data-f="dijital" type="button">Dijital</button>
+    </div>
+    <input class="search" id="search" type="search" placeholder="Katalogda ara…" aria-label="Katalogda ara">
+    <button class="icon-btn" id="newProductBtn" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span class="lbl">Ürün Ekle</span>
+    </button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 Sercan Sözer</span>
+    <nav class="footer-links" aria-label="Alt gezinme">
+      <a href="/">Ana Sayfa</a>
+      <a href="/magaza.html">Mağaza</a>
+      <a href="/portfolyo.html">Portfolyo</a>
+      <a href="/yazilar.html">Yazılar</a>
+      <a href="/forum.html">Forum</a>
+      <a href="/#iletisim">İletişim</a>
+    </nav>
+    <span class="mono">sersoz.com</span>
+  </div>
+</footer>
+
+<!-- Sepet çekmecesi -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Sepet">
+  <div class="drawer-head">
+    <h2>Sepet</h2>
+    <button class="x-btn" id="closeCart" type="button" aria-label="Kapat">×</button>
+  </div>
+  <div class="drawer-body" id="cartBody"></div>
+  <div class="drawer-foot">
+    <div class="total-row"><span>Ara toplam</span><span class="v" id="subTotal">—</span></div>
+    <div class="total-row"><span>KDV (%20)</span><span class="v" id="vat">—</span></div>
+    <div class="total-row grand"><span>Toplam</span><span class="v" id="grandTotal">—</span></div>
+    <button class="wide-btn" id="checkoutBtn" type="button" disabled>Siparişi tamamla</button>
+    <button class="wide-btn ghost" id="clearCart" type="button">Sepeti boşalt</button>
+  </div>
+</aside>
+
+<!-- Ürün ekleme -->
+<div class="modal" id="productModal" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
+  <div class="modal-head">
+    <h2 id="pmTitle">Ürün ekle</h2>
+    <button class="x-btn" data-close type="button" aria-label="Kapat">×</button>
+  </div>
+  <div class="modal-body">
+    <form id="productForm">
+      <div class="field">
+        <label for="pTitle">Başlık</label>
+        <input id="pTitle" name="title" required maxlength="80" placeholder="Örn. Kalibrasyon hedef plakası">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="pType">Tür</label>
+          <select id="pType" name="type">
+            <option value="urun">Ürün</option>
+            <option value="hizmet">Hizmet</option>
+            <option value="dijital">Dijital</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="pPrice">Fiyat (₺, KDV hariç)</label>
+          <input id="pPrice" name="price" type="number" min="0" step="1" required placeholder="0">
+        </div>
+      </div>
+      <div class="field">
+        <label for="pDesc">Kısa açıklama</label>
+        <textarea id="pDesc" name="desc" required maxlength="260" placeholder="Ürünü iki cümleyle anlatın."></textarea>
+      </div>
+      <div class="field">
+        <label for="pSeller">Satıcı adı</label>
+        <input id="pSeller" name="seller" required maxlength="40" placeholder="Firma veya ad">
+      </div>
+      <p class="form-note" id="pmNote"></p>
+      <button class="wide-btn" type="submit">Kataloga ekle</button>
+    </form>
+  </div>
+</div>
+
+<!-- Sipariş -->
+<div class="modal" id="orderModal" role="dialog" aria-modal="true" aria-labelledby="omTitle">
+  <div class="modal-head">
+    <h2 id="omTitle">Sipariş</h2>
+    <button class="x-btn" data-close type="button" aria-label="Kapat">×</button>
+  </div>
+  <div class="modal-body">
+    <div class="order-summary" id="orderSummary"></div>
+    <form id="orderForm">
+      <div class="field-row">
+        <div class="field">
+          <label for="oName">Ad soyad</label>
+          <input id="oName" name="name" required maxlength="60">
+        </div>
+        <div class="field">
+          <label for="oCompany">Firma</label>
+          <input id="oCompany" name="company" maxlength="60">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="oMail">E-posta</label>
+          <input id="oMail" name="mail" type="email" required maxlength="80">
+        </div>
+        <div class="field">
+          <label for="oPhone">Telefon</label>
+          <input id="oPhone" name="phone" maxlength="24">
+        </div>
+      </div>
+      <div class="field">
+        <label for="oNote">Not (isteğe bağlı)</label>
+        <textarea id="oNote" name="note" maxlength="400"></textarea>
+      </div>
+      <p class="form-note" id="omNote"></p>
+      <button class="wide-btn" type="submit" id="orderSubmit">Siparişi gönder</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================================
+   AYARLAR — kurulum tamamlandıkça bu iki bloğu doldurun
+   ==========================================================================*/
+
+/* 1) Google girişi + ortak katalog için Firebase.
+      Firebase konsolundan aldığınız firebaseConfig nesnesini buraya yapıştırın.
+      Boş kaldığı sürece site "yerel mod"da çalışır: ürünler ve sepet yalnız
+      ziyaretçinin kendi tarayıcısında saklanır, giriş yapılamaz.            */
+const FIREBASE_CONFIG = null;
+/* Örnek:
+const FIREBASE_CONFIG = {
+  apiKey: "…", authDomain: "sersoz-forum.firebaseapp.com",
+  projectId: "sersoz-forum", storageBucket: "…",
+  messagingSenderId: "…", appId: "…"
+};
+*/
+
+/* 2) Kartla ödeme sağlayıcısı. Üye işyeri hesabı açılıp sunucu tarafı hazır
+      olduğunda burayı doldurun; kart bilgileri ASLA bu sayfada toplanmaz,
+      sağlayıcının kendi güvenli ödeme ekranına devredilir.                  */
+const ODEME = {
+  saglayici: null,      // 'iyzico' | 'paytr' | 'shopier' …
+  baslatUrl: null       // ödeme oturumu açan sunucu adresi (https)
+};
+
+/* ==========================================================================*/
+
+(function () {
+  'use strict';
+
+  var LS_CART = 'sersoz_sepet_v1';
+  var LS_PRODUCTS = 'sersoz_urunler_v1';
+  var KDV = 0.20;
+  var mode = FIREBASE_CONFIG ? 'firebase' : 'local';
+  var user = null;
+  var products = [];
+  var cart = load(LS_CART, {});
+  var filter = 'all';
+  var query = '';
+
+  var TRY = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 });
+  var TYPE_LABEL = { urun: 'Ürün', hizmet: 'Hizmet', dijital: 'Dijital' };
+
+  var SEED = [
+    { id: 's1', type: 'hizmet', title: '3D Tarama Fizibilite Analizi', price: 12500,
+      desc: 'Parçanızın 3D taranabilirliğini ölçer, sensör ve ölçüm yöntemi önerisiyle raporlarım.', seller: 'Sercan Sözer' },
+    { id: 's2', type: 'hizmet', title: 'Görsel Denetim Başlangıç Paketi', price: 45000,
+      desc: 'Kamera seçimi, aydınlatma, model eğitimi ve hat üstünde devreye alma dahil kurulum.', seller: 'Sercan Sözer' },
+    { id: 's3', type: 'dijital', title: 'PLC–Vizyon Haberleşme Modülü', price: 8900,
+      desc: 'Denetim sonucunu heartbeat ve el sıkışma bitleriyle PLC’ye taşıyan hazır yazılım modülü.', seller: 'Sercan Sözer' },
+    { id: 's4', type: 'urun', title: 'Kalibrasyon Hedef Plakası 100×100', price: 3400,
+      desc: 'El-göz kalibrasyonu için işlenmiş, ölçüsü sertifikalı şahmerdan desenli hedef plaka.', seller: 'Sercan Sözer' },
+    { id: 's5', type: 'hizmet', title: 'Ürün Öğretme Eğitimi (2 gün)', price: 18000,
+      desc: 'Operatör ve bakım ekibine yeni ürün tanıtma, eşik ayarı ve kusur örnekleme eğitimi.', seller: 'Sercan Sözer' },
+    { id: 's6', type: 'dijital', title: 'Anomali Tespiti Lisansı — 1 Hat', price: 24000,
+      desc: 'Yalnız sağlam örneklerle öğrenen kusur tespiti motoru; tek üretim hattı için lisans.', seller: 'Sercan Sözer' }
+  ];
+
+  /* ---------------------------------------------------------- yardımcılar */
+  function load(k, d) {
+    try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; }
+  }
+  function save(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {}
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function $(id) { return document.getElementById(id); }
+
+  var toastTimer;
+  function toast(msg) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+  }
+
+  /* ------------------------------------------------------------- katalog */
+  function loadProducts() {
+    var stored = load(LS_PRODUCTS, null);
+    products = stored && stored.length ? stored : SEED.slice();
+    render();
+  }
+
+  function persistProducts() { save(LS_PRODUCTS, products); }
+
+  function render() {
+    var grid = $('grid');
+    var list = products.filter(function (p) {
+      if (filter !== 'all' && p.type !== filter) return false;
+      if (!query) return true;
+      var hay = (p.title + ' ' + p.desc + ' ' + p.seller).toLocaleLowerCase('tr');
+      return hay.indexOf(query) !== -1;
+    });
+
+    if (!list.length) {
+      grid.innerHTML = '<p class="empty">Bu ölçütlere uyan kayıt yok.</p>';
+      return;
+    }
+
+    grid.innerHTML = list.map(function (p, i) {
+      var own = p.ownerId === 'local' || (user && p.ownerId === user.uid);
+      return '<article class="p-card" style="animation-delay:' + (i * 60) + 'ms">' +
+        '<div class="p-head">' +
+          '<span class="p-type ' + p.type + '">' + TYPE_LABEL[p.type] + '</span>' +
+          '<span class="p-seller">' + esc(p.seller) + '</span>' +
+        '</div>' +
+        '<h3>' + esc(p.title) + '</h3>' +
+        '<p class="p-desc">' + esc(p.desc) + '</p>' +
+        '<div class="p-foot">' +
+          '<span class="p-price">' + TRY.format(p.price) + '<small>KDV hariç</small></span>' +
+          '<button class="add-btn" data-add="' + p.id + '" type="button">Sepete ekle</button>' +
+        '</div>' +
+        (own ? '<div class="p-own"><button data-del="' + p.id + '" type="button">Kaldır</button></div>' : '') +
+      '</article>';
+    }).join('');
+  }
+
+  /* --------------------------------------------------------------- sepet */
+  function cartLines() {
+    return Object.keys(cart).map(function (id) {
+      var p = products.filter(function (x) { return x.id === id; })[0];
+      return p ? { p: p, qty: cart[id] } : null;
+    }).filter(Boolean);
+  }
+
+  function totals() {
+    var sub = cartLines().reduce(function (a, l) { return a + l.p.price * l.qty; }, 0);
+    return { sub: sub, vat: sub * KDV, grand: sub * (1 + KDV) };
+  }
+
+  function renderCart() {
+    var lines = cartLines();
+    var body = $('cartBody');
+    var count = lines.reduce(function (a, l) { return a + l.qty; }, 0);
+
+    var badge = $('cartBadge');
+    badge.textContent = count;
+    badge.classList.toggle('show', count > 0);
+
+    if (!lines.length) {
+      body.innerHTML = '<p class="empty" style="padding:48px 0">Sepetiniz boş.</p>';
+    } else {
+      body.innerHTML = lines.map(function (l) {
+        return '<div class="c-item"><div class="info">' +
+          '<h4>' + esc(l.p.title) + '</h4>' +
+          '<p class="meta">' + TYPE_LABEL[l.p.type] + ' · ' + esc(l.p.seller) + '</p>' +
+          '<p class="price">' + TRY.format(l.p.price * l.qty) + '</p>' +
+          '<div class="qty">' +
+            '<button data-q="-" data-id="' + l.p.id + '" type="button" aria-label="Azalt">−</button>' +
+            '<span>' + l.qty + '</span>' +
+            '<button data-q="+" data-id="' + l.p.id + '" type="button" aria-label="Artır">+</button>' +
+            '<button class="c-rm" data-rm="' + l.p.id + '" type="button">Sil</button>' +
+          '</div></div></div>';
+      }).join('');
+    }
+
+    var t = totals();
+    $('subTotal').textContent = lines.length ? TRY.format(t.sub) : '—';
+    $('vat').textContent = lines.length ? TRY.format(t.vat) : '—';
+    $('grandTotal').textContent = lines.length ? TRY.format(t.grand) : '—';
+    $('checkoutBtn').disabled = !lines.length;
+    save(LS_CART, cart);
+  }
+
+  function addToCart(id) {
+    cart[id] = (cart[id] || 0) + 1;
+    renderCart();
+    var btn = document.querySelector('[data-add="' + id + '"]');
+    if (btn) {
+      btn.classList.add('added');
+      btn.textContent = 'Eklendi ✓';
+      setTimeout(function () { btn.classList.remove('added'); btn.textContent = 'Sepete ekle'; }, 1400);
+    }
+  }
+
+  function openDrawer(open) {
+    $('drawer').classList.toggle('open', open);
+    $('scrim').classList.toggle('open', open);
+  }
+
+  function openModal(el, open) {
+    el.classList.toggle('open', open);
+    $('scrim').classList.toggle('open', open || $('drawer').classList.contains('open'));
+  }
+
+  function closeAll() {
+    openDrawer(false);
+    $('productModal').classList.remove('open');
+    $('orderModal').classList.remove('open');
+    $('scrim').classList.remove('open');
+  }
+
+  /* ------------------------------------------------------------- sipariş */
+  function buildOrderText(f) {
+    var lines = cartLines(), t = totals();
+    var s = 'SİPARİŞ TALEBİ\n\n';
+    lines.forEach(function (l) {
+      s += '• ' + l.p.title + ' (' + TYPE_LABEL[l.p.type] + ') × ' + l.qty +
+           ' — ' + TRY.format(l.p.price * l.qty) + '\n';
+    });
+    s += '\nAra toplam: ' + TRY.format(t.sub) +
+         '\nKDV (%20): ' + TRY.format(t.vat) +
+         '\nToplam: ' + TRY.format(t.grand) +
+         '\n\nAd soyad: ' + f.name +
+         '\nFirma: ' + (f.company || '-') +
+         '\nE-posta: ' + f.mail +
+         '\nTelefon: ' + (f.phone || '-') +
+         '\nNot: ' + (f.note || '-');
+    return s;
+  }
+
+  function submitOrder(e) {
+    e.preventDefault();
+    var fd = new FormData(e.target);
+    var f = {
+      name: fd.get('name'), company: fd.get('company'), mail: fd.get('mail'),
+      phone: fd.get('phone'), note: fd.get('note')
+    };
+
+    if (ODEME.saglayici && ODEME.baslatUrl) {
+      /* Ödeme sağlayıcısı bağlı: sunucu tarafında ödeme oturumu açılır ve
+         kullanıcı sağlayıcının güvenli ekranına yönlendirilir. Kart bilgisi
+         bu sayfada hiçbir zaman toplanmaz. */
+      var payload = { musteri: f, kalemler: cartLines().map(function (l) {
+        return { id: l.p.id, ad: l.p.title, adet: l.qty, birimFiyat: l.p.price };
+      }), toplam: totals().grand };
+
+      fetch(ODEME.baslatUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.odemeUrl) { location.href = d.odemeUrl; }
+          else { toast('Ödeme başlatılamadı, lütfen tekrar deneyin.'); }
+        })
+        .catch(function () { toast('Ödeme sunucusuna ulaşılamadı.'); });
+      return;
+    }
+
+    /* Ödeme altyapısı henüz bağlı değil: sipariş talebi e-posta ile iletilir. */
+    var subject = 'Sipariş talebi — ' + f.name + (f.company ? ' / ' + f.company : '');
+    location.href = 'mailto:sercan@sersoz.com?subject=' + encodeURIComponent(subject) +
+                    '&body=' + encodeURIComponent(buildOrderText(f));
+    toast('Sipariş özeti e-posta uygulamanızda açıldı.');
+    closeAll();
+  }
+
+  /* --------------------------------------------------------------- giriş */
+  function setUser(u) {
+    user = u;
+    var chip = $('userChip'), btn = $('loginBtn');
+    if (u) {
+      chip.classList.add('show');
+      btn.style.display = 'none';
+      $('userName').textContent = (u.displayName || 'Kullanıcı').split(' ')[0];
+      if (u.photoURL) $('userPic').src = u.photoURL;
+    } else {
+      chip.classList.remove('show');
+      btn.style.display = '';
+    }
+    render();
+  }
+
+  function initFirebase() {
+    var base = 'https://www.gstatic.com/firebasejs/10.12.2/';
+    import(base + 'firebase-app.js').then(function (appMod) {
+      return Promise.all([
+        appMod.initializeApp(FIREBASE_CONFIG),
+        import(base + 'firebase-auth.js'),
+        import(base + 'firebase-firestore.js')
+      ]);
+    }).then(function (r) {
+      var app = r[0], authMod = r[1], fsMod = r[2];
+      var auth = authMod.getAuth(app);
+      var db = fsMod.getFirestore(app);
+      var provider = new authMod.GoogleAuthProvider();
+
+      window.__sersoz = { auth: auth, db: db, authMod: authMod, fsMod: fsMod, provider: provider };
+
+      authMod.onAuthStateChanged(auth, function (u) { setUser(u); });
+
+      $('loginBtn').onclick = function () {
+        authMod.signInWithPopup(auth, provider).catch(function (e) { toast('Giriş yapılamadı: ' + e.code); });
+      };
+      $('logoutBtn').onclick = function () { authMod.signOut(auth); };
+
+      /* katalog: canlı dinleme */
+      var col = fsMod.collection(db, 'urunler');
+      fsMod.onSnapshot(fsMod.query(col, fsMod.orderBy('createdAt', 'desc')), function (snap) {
+        products = snap.docs.map(function (d) {
+          var v = d.data();
+          return { id: d.id, type: v.type, title: v.title, price: v.price,
+                   desc: v.desc, seller: v.seller, ownerId: v.ownerId };
+        });
+        if (!products.length) products = SEED.slice();
+        render();
+        renderCart();
+      }, function () { toast('Katalog okunamadı — güvenlik kuralları?'); });
+    }).catch(function () {
+      toast('Firebase yüklenemedi; yerel modda devam ediliyor.');
+    });
+  }
+
+  /* -------------------------------------------------------------- kurulum */
+  function noticeText() {
+    var n = $('modeNotice');
+    if (mode === 'firebase') {
+      n.innerHTML = '<b>Ortak katalog etkin.</b> Google hesabınızla giriş yapıp kendi ürününüzü ' +
+        'listeleyebilirsiniz.' + (ODEME.saglayici ? '' :
+        ' Kart ile ödeme henüz bağlı değil; sipariş talebiniz e-posta ile iletilir.');
+    } else {
+      n.innerHTML = '<b>Kurulum bekleniyor.</b> Google girişi ve ortak katalog için Firebase ' +
+        'yapılandırması gerekiyor — bu sayfadaki <code>FIREBASE_CONFIG</code> alanı doldurulunca ' +
+        'devreye girer. Şu an eklediğiniz ürünler yalnız <b>kendi tarayıcınızda</b> saklanır; ' +
+        'sepet ve sipariş akışı çalışır, sipariş özeti e-posta ile iletilir.';
+    }
+  }
+
+  function bind() {
+    $('cartBtn').onclick = function () { openDrawer(true); };
+    $('closeCart').onclick = function () { openDrawer(false); };
+    $('scrim').onclick = closeAll;
+    $('clearCart').onclick = function () { cart = {}; renderCart(); toast('Sepet boşaltıldı.'); };
+
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
+
+    Array.prototype.forEach.call(document.querySelectorAll('[data-close]'), function (b) {
+      b.onclick = closeAll;
+    });
+
+    $('grid').addEventListener('click', function (e) {
+      var add = e.target.closest('[data-add]');
+      if (add) { addToCart(add.getAttribute('data-add')); return; }
+      var del = e.target.closest('[data-del]');
+      if (del) removeProduct(del.getAttribute('data-del'));
+    });
+
+    $('cartBody').addEventListener('click', function (e) {
+      var q = e.target.closest('[data-q]');
+      if (q) {
+        var id = q.getAttribute('data-id');
+        cart[id] += q.getAttribute('data-q') === '+' ? 1 : -1;
+        if (cart[id] <= 0) delete cart[id];
+        renderCart();
+        return;
+      }
+      var rm = e.target.closest('[data-rm]');
+      if (rm) { delete cart[rm.getAttribute('data-rm')]; renderCart(); }
+    });
+
+    $('filters').addEventListener('click', function (e) {
+      var b = e.target.closest('.filter');
+      if (!b) return;
+      Array.prototype.forEach.call(this.querySelectorAll('.filter'), function (x) { x.classList.remove('active'); });
+      b.classList.add('active');
+      filter = b.getAttribute('data-f');
+      render();
+    });
+
+    $('search').addEventListener('input', function () {
+      query = this.value.trim().toLocaleLowerCase('tr');
+      render();
+    });
+
+    $('newProductBtn').onclick = function () {
+      $('pmNote').innerHTML = mode === 'firebase'
+        ? (user ? 'Ürününüz katalogda <b>' + esc(user.displayName || 'hesabınız') + '</b> adıyla listelenecek.'
+                : 'Ortak kataloga eklemek için önce <b>Google ile giriş</b> yapın — aksi halde ürün yalnız sizin tarayıcınızda kalır.')
+        : 'Firebase bağlanana kadar bu ürün yalnız <b>sizin tarayıcınızda</b> görünür.';
+      openModal($('productModal'), true);
+    };
+
+    $('productForm').onsubmit = addProduct;
+    $('checkoutBtn').onclick = function () {
+      openDrawer(false);
+      var t = totals();
+      $('orderSummary').innerHTML = cartLines().map(function (l) {
+        return '<div class="line"><span>' + esc(l.p.title) + ' × ' + l.qty + '</span><b>' +
+               TRY.format(l.p.price * l.qty) + '</b></div>';
+      }).join('') +
+        '<div class="line"><span>KDV (%20)</span><b>' + TRY.format(t.vat) + '</b></div>' +
+        '<div class="line total"><span>Toplam</span><b>' + TRY.format(t.grand) + '</b></div>';
+      $('omNote').innerHTML = (ODEME.saglayici && ODEME.baslatUrl)
+        ? 'Devam ettiğinizde <b>' + esc(ODEME.saglayici) + '</b> güvenli ödeme ekranına yönlendirilirsiniz. ' +
+          'Kart bilgileriniz bu sitede saklanmaz.'
+        : 'Kart ile ödeme altyapısı henüz bağlı değil. Gönderdiğinizde sipariş özeti ' +
+          '<b>e-posta uygulamanızda</b> hazırlanır ve tarafımıza iletilir.';
+      $('orderSubmit').textContent = (ODEME.saglayici && ODEME.baslatUrl) ? 'Ödemeye geç' : 'Siparişi gönder';
+      openModal($('orderModal'), true);
+    };
+    $('orderForm').onsubmit = submitOrder;
+
+    if (mode === 'local') {
+      $('loginBtn').onclick = function () {
+        toast('Google girişi için Firebase yapılandırması gerekiyor.');
+      };
+    }
+  }
+
+  function addProduct(e) {
+    e.preventDefault();
+    var fd = new FormData(e.target);
+    var p = {
+      type: fd.get('type'),
+      title: String(fd.get('title')).trim(),
+      price: Math.max(0, parseInt(fd.get('price'), 10) || 0),
+      desc: String(fd.get('desc')).trim(),
+      seller: String(fd.get('seller')).trim()
+    };
+
+    if (mode === 'firebase' && user && window.__sersoz) {
+      var S = window.__sersoz;
+      p.ownerId = user.uid;
+      p.createdAt = S.fsMod.serverTimestamp();
+      S.fsMod.addDoc(S.fsMod.collection(S.db, 'urunler'), p)
+        .then(function () { toast('Ürün kataloga eklendi.'); })
+        .catch(function () { toast('Eklenemedi — güvenlik kuralları izin vermiyor olabilir.'); });
+    } else {
+      p.id = 'u' + Date.now();
+      p.ownerId = 'local';
+      products.unshift(p);
+      persistProducts();
+      render();
+      toast('Ürün eklendi (yalnız bu tarayıcıda).');
+    }
+
+    e.target.reset();
+    closeAll();
+  }
+
+  function removeProduct(id) {
+    if (mode === 'firebase' && window.__sersoz && user) {
+      var S = window.__sersoz;
+      S.fsMod.deleteDoc(S.fsMod.doc(S.db, 'urunler', id))
+        .then(function () { toast('Ürün kaldırıldı.'); })
+        .catch(function () { toast('Kaldırılamadı.'); });
+    } else {
+      products = products.filter(function (p) { return p.id !== id; });
+      delete cart[id];
+      persistProducts();
+      render();
+      renderCart();
+    }
+  }
+
+  /* ---------------------------------------------------------------- başlat */
+  noticeText();
+  bind();
+  loadProducts();
+  renderCart();
+  if (mode === 'firebase') initFirebase();
+})();
+</script>
+</body>
+</html>
