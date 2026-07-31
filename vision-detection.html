@@ -102,6 +102,23 @@
     font-size: 9.5px; letter-spacing: .12em;
   }
 
+  .senaryo-sekme {
+    display: flex; flex-wrap: wrap; gap: 0;
+    border-bottom: 1px solid rgba(255,255,255,.09);
+  }
+  .sekme {
+    flex: 1 1 auto; padding: 12px 14px; cursor: pointer;
+    background: transparent; border: none; border-right: 1px solid rgba(255,255,255,.07);
+    color: rgba(255,255,255,.5);
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+    transition: color .2s, background .2s;
+  }
+  .sekme:last-child { border-right: none; }
+  .sekme:hover { color: rgba(255,255,255,.85); background: rgba(255,255,255,.04); }
+  .sekme.aktif { color: #ffb47a; background: rgba(194,65,12,.14); box-shadow: inset 0 -2px 0 #c2410c; }
+  .metrik .v.nok { color: #f87171; }
+  @media (max-width: 720px) { .sekme { flex: 1 1 50%; border-bottom: 1px solid rgba(255,255,255,.07); } }
+
   canvas#sahne3d { display: block; width: 100%; height: auto; background: #0b0f14; }
 
   .sahne-alt { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid rgba(255,255,255,.09); }
@@ -292,15 +309,21 @@
     </div>
 
     <div class="sahne">
+      <div class="senaryo-sekme" id="senaryoSekme" role="tablist" aria-label="Uygulama senaryoları">
+        <button class="sekme aktif" data-s="kaynak" type="button">Kaynak robotu</button>
+        <button class="sekme" data-s="palet" type="button">Paletleme · eksik ürün</button>
+        <button class="sekme" data-s="koli" type="button">Kolileme · adet</button>
+        <button class="sekme" data-s="kalite" type="button">Kalite kontrol</button>
+      </div>
       <div class="sahne-ust">
-        <span class="sol"><span class="kayit-nokta"></span> 3D profil sensörü · Hat 01</span>
+        <span class="sol"><span class="kayit-nokta"></span> <span id="ustBilgi">3D profil sensörü · kaynak hücresi</span></span>
         <span class="asama" id="asamaAdi">TARAMA</span>
       </div>
       <canvas id="sahne3d" width="1120" height="470" aria-label="3D tarama ve robot kılavuzlama canlandırması"></canvas>
       <div class="sahne-alt">
         <div class="metrik"><div class="v" id="mNokta">0</div><div class="e">Nokta bulutu</div></div>
-        <div class="metrik"><div class="v" id="mOlcu">— mm</div><div class="e">Dikiş derinliği</div></div>
-        <div class="metrik"><div class="v" id="mDuzlem">— mm</div><div class="e">Düzlemsellik</div></div>
+        <div class="metrik"><div class="v" id="mOlcu">— mm</div><div class="e" id="mEtiketA">Dikiş derinliği</div></div>
+        <div class="metrik"><div class="v" id="mDuzlem">— mm</div><div class="e" id="mEtiketB">Düzlemsellik</div></div>
         <div class="metrik"><div class="v ok" id="mKarar">—</div><div class="e">Karar</div></div>
       </div>
     </div>
@@ -606,9 +629,28 @@
      sahne3d.js defer ile yüklendiği için DOMContentLoaded beklenir */
   function sahneKur() {
     if (!window.Sahne3D) return;
-    window.__sahne = Sahne3D('sahne3d', {
-      metrik: { nokta: 'mNokta', olcu: 'mOlcu', duzlem: 'mDuzlem', karar: 'mKarar', asama: 'asamaAdi' }
+    var s = Sahne3D('sahne3d', {
+      senaryo: 'kaynak',
+      metrik: {
+        nokta: 'mNokta', olcu: 'mOlcu', duzlem: 'mDuzlem', karar: 'mKarar',
+        asama: 'asamaAdi', ustBilgi: 'ustBilgi', etiketA: 'mEtiketA', etiketB: 'mEtiketB'
+      }
     });
+    window.__sahne = s;
+    if (!s) return;
+
+    var sekmeler = document.getElementById('senaryoSekme');
+    if (sekmeler) {
+      sekmeler.addEventListener('click', function (e) {
+        var b = e.target.closest('.sekme');
+        if (!b) return;
+        Array.prototype.forEach.call(this.querySelectorAll('.sekme'), function (o) {
+          o.classList.remove('aktif');
+        });
+        b.classList.add('aktif');
+        s.senaryoDegistir(b.getAttribute('data-s'));
+      });
+    }
   }
   if (document.readyState === 'loading') {
     addEventListener('DOMContentLoaded', sahneKur);

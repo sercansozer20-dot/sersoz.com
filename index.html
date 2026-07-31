@@ -253,6 +253,12 @@
   .vitrin-nokta { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: vitrinNabiz 1.6s ease-in-out infinite; }
   @keyframes vitrinNabiz { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
   .vitrin-asama { padding: 3px 10px; border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); font-size: 9.5px; letter-spacing: .12em; }
+  .vitrin-senaryo {
+    padding: 3px 12px; border: 1px solid rgba(194,65,12,.5); background: rgba(194,65,12,.14);
+    color: #ffb47a; font-size: 9.5px; letter-spacing: .12em;
+  }
+  .vitrin-metrik .v.nok { color: #f87171; }
+
   canvas#anaSahne { display: block; width: 100%; height: auto; background: #0b0f14; }
   .vitrin-alt { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid rgba(255,255,255,.09); }
   .vitrin-metrik { padding: 14px 16px; border-right: 1px solid rgba(255,255,255,.07); }
@@ -692,18 +698,19 @@
       <p class="kicker reveal"><span class="idx">◆</span>3D Görüş</p>
       <h2 class="reveal">Parçayı ölçen, robota yol gösteren sistem</h2>
       <p class="section-lead reveal">Lazer profil sensörü parçayı tarar, nokta bulutu milimetrik
-        ölçüye dönüşür, ölçüm kararı robot koordinatına iner. Aşağıdaki sahne bu zinciri canlandırıyor.</p>
+        ölçüye dönüşür, ölçüm kararı robot koordinatına iner. Aşağıdaki sahne bu zinciri dört ayrı uygulamada canlandırıyor: kaynak robotu, paletlemede eksik ürün, kolilemede adet doğrulama ve yüzey kalite kontrolü.</p>
 
       <div class="vitrin reveal">
         <div class="vitrin-ust">
-          <span class="vitrin-sol"><span class="vitrin-nokta"></span> 3D profil sensörü · canlı canlandırma</span>
+          <span class="vitrin-sol"><span class="vitrin-nokta"></span> <span id="anaUst">3D profil sensörü · kaynak hücresi</span></span>
+          <span class="vitrin-senaryo" id="anaSenaryo">Kaynak robotu</span>
           <span class="vitrin-asama" id="anaAsama">TARAMA</span>
         </div>
         <canvas id="anaSahne" width="1120" height="400" aria-label="3D tarama canlandırması"></canvas>
         <div class="vitrin-alt">
           <div class="vitrin-metrik"><div class="v" id="anaNokta">0</div><div class="e">Nokta bulutu</div></div>
-          <div class="vitrin-metrik"><div class="v" id="anaOlcu">— mm</div><div class="e">Dikiş derinliği</div></div>
-          <div class="vitrin-metrik"><div class="v" id="anaDuzlem">— mm</div><div class="e">Düzlemsellik</div></div>
+          <div class="vitrin-metrik"><div class="v" id="anaOlcu">— mm</div><div class="e" id="anaEtiketA">Dikiş derinliği</div></div>
+          <div class="vitrin-metrik"><div class="v" id="anaDuzlem">— mm</div><div class="e" id="anaEtiketB">Düzlemsellik</div></div>
           <div class="vitrin-metrik"><div class="v ok" id="anaKarar">—</div><div class="e">Karar</div></div>
         </div>
       </div>
@@ -983,9 +990,22 @@
 <script src="/sahne3d.js" defer></script>
 <script defer>
   addEventListener("DOMContentLoaded", function () {
-    if (window.Sahne3D) window.__sahne = Sahne3D("anaSahne", { kompakt: true, metrik: {
-      nokta: "anaNokta", olcu: "anaOlcu", duzlem: "anaDuzlem",
-      karar: "anaKarar", asama: "anaAsama" } });
+    if (!window.Sahne3D) return;
+    var s = Sahne3D("anaSahne", { kompakt: true, senaryo: "kaynak", metrik: {
+      nokta: "anaNokta", olcu: "anaOlcu", duzlem: "anaDuzlem", karar: "anaKarar",
+      asama: "anaAsama", ustBilgi: "anaUst", etiketA: "anaEtiketA", etiketB: "anaEtiketB" } });
+    window.__sahne = s;
+    if (!s) return;
+
+    /* dort senaryoyu sirayla gosterir */
+    var sira = ["kaynak", "palet", "koli", "kalite"], n = 0;
+    var ad = document.getElementById("anaSenaryo");
+    if (ad) ad.textContent = s.aktifSenaryo();
+    setInterval(function () {
+      n = (n + 1) % sira.length;
+      var yeniAd = s.senaryoDegistir(sira[n]);
+      if (ad && yeniAd) ad.textContent = yeniAd;
+    }, 15000);
   });
 </script>
 <script src="/iz.js" defer></script>
