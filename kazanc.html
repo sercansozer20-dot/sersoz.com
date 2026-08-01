@@ -250,6 +250,8 @@
   svg.grafik .cubuk.p { fill: var(--green); }
   svg.grafik .cubuk.n { fill: var(--accent); }
   svg.grafik .deger { font-size: 15px; font-weight: 700; fill: var(--ink); }
+  /* negatif çubuk etiketi çubuğun içine yazılır — YIL satırıyla çakışmasın */
+  svg.grafik .deger.ic { fill: #fff; }
   svg.grafik .yil { font-size: 12px; letter-spacing: .14em; }
   svg.grafik .sifir { stroke: var(--line); stroke-width: 1; stroke-dasharray: 4 4; }
   svg.grafik .taban { stroke: var(--line); stroke-width: 1; }
@@ -390,6 +392,8 @@
       <a href="/vision-detection.html">Ürün</a>
       <a class="active" href="/kazanc.html" aria-current="page">Kazanç</a>
       <a href="/portfolyo.html">Portfolyo</a>
+      <a href="/yazilar.html">Yazılar</a>
+      <a href="/magaza.html">Mağaza</a>
       <a class="cta" href="#iletisim">İletişim</a>
     </div>
   </div>
@@ -545,7 +549,7 @@
                 </div>
                 <input type="range" data-hedef="saatTL" min="0" max="1200" step="5" value="240" aria-label="Personelin saatlik işveren maliyeti kaydırıcı">
                 <p class="ipucu">Net maaş değil, <b>işverene toplam maliyet</b> (SGK + işsizlik dahil).
-                  2026 asgari ücrette imalat için ≈ 39.223 ₺/ay ÷ 176 saat ≈ 223 ₺/saat.</p>
+                  2026 asgari ücrette imalat için ≈ 39.223 ₺/ay ÷ 176 saat ≈ 223 ₺/saat. (SGK işveren maliyeti, Ocak 2026; 176 saat = 22 gün × 8 saat. Her yıl güncellenmelidir.)</p>
               </div>
 
               <div class="girdi">
@@ -617,13 +621,13 @@
         </div>
 
         <!-- ---------------- Sonuç paneli ---------------- -->
-        <div class="sonuc-sar">
+        <div class="sonuc-sar" aria-live="polite" role="status">
           <div class="panel">
             <div class="panel-bas"><span class="canli" aria-hidden="true"></span> Sonuç · canlı</div>
 
             <div class="vurgu">
               <p class="e">Geri ödeme süresi</p>
-              <p class="v" id="oGeri" aria-live="polite">—</p>
+              <p class="v" id="oGeri">—</p>
               <p class="alt" id="oGeriAlt">Yatırım, aylık tasarrufla kendini bu sürede öder.</p>
             </div>
 
@@ -1176,10 +1180,20 @@
       gC[i].setAttribute('height', h);
       gC[i].setAttribute('class', 'cubuk ' + (v >= 0 ? 'p' : 'n'));
 
-      var etiketY = v >= 0 ? (y - 9) : (y + h + 19);
-      if (etiketY < 18) etiketY = 18;
-      if (etiketY > 282) etiketY = 282;
+      /* Etiket yerleşimi: pozitifte çubuğun üstünde, negatifte çubuğun İÇİNDE.
+         Negatif etiketi çubuğun altına yazmak "YIL n" satırıyla çakışıyordu. */
+      var etiketY, icerde = false;
+      if (v >= 0) {
+        etiketY = y - 9;
+        if (etiketY < 18) etiketY = 18;
+      } else if (h >= 26) {
+        etiketY = y + h - 9;          /* çubuk yeterince uzun: içine yaz */
+        icerde = true;
+      } else {
+        etiketY = Math.min(y + h + 15, 260);   /* kısa çubuk: altına ama YIL üstünde */
+      }
       gD[i].setAttribute('y', etiketY);
+      gD[i].setAttribute('class', 'deger' + (icerde ? ' ic' : ''));
       gD[i].textContent = tlKisa(v);
 
       tY[i].textContent = tl(yillikTasarruf);

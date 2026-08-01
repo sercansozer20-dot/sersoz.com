@@ -416,7 +416,11 @@
     color: rgba(255,255,255,.55);
   }
   .vitrin-sol { display: inline-flex; align-items: center; gap: 10px; }
-  .vitrin-nokta { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: vitrinNabiz 1.6s ease-in-out infinite; flex: none; }
+  .vitrin-sema {
+    padding: 2px 8px; border: 1px solid rgba(255,255,255,.3);
+    color: rgba(255,255,255,.75); font-size: 9px; letter-spacing: .16em;
+  }
+  .vitrin-nokta-eski { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: vitrinNabiz 1.6s ease-in-out infinite; flex: none; }
   @keyframes vitrinNabiz { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
   .vitrin-asama { padding: 3px 10px; border: 1px solid rgba(255,255,255,.2); color: rgba(255,255,255,.8); font-size: 9.5px; letter-spacing: .12em; }
   .vitrin-senaryo {
@@ -1210,7 +1214,7 @@
 
       <div class="vitrin reveal">
         <div class="vitrin-ust">
-          <span class="vitrin-sol"><span class="vitrin-nokta"></span> <span id="anaUst">3D profil sensörü · kaynak hücresi</span></span>
+          <span class="vitrin-sol"><span class="vitrin-sema">ŞEMA</span> <span id="anaUst">3D profil sensörü · kaynak hücresi</span></span>
           <span class="vitrin-senaryo" id="anaSenaryo">Kaynak robotu</span>
           <span class="vitrin-asama" id="anaAsama">TARAMA</span>
         </div>

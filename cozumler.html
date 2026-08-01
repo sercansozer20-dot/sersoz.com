@@ -112,6 +112,8 @@
   .fig-cap::before { content: ''; width: 8px; height: 8px; background: var(--accent); flex: none; }
 
   /* ---------- Ortak bölüm düzeni ---------- */
+  .panel:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
   .section { position: relative; padding: clamp(64px, 10vh, 116px) 0; border-top: 3px double var(--line); overflow: clip; }
   .section-index {
     position: absolute; top: clamp(20px, 4vh, 46px); right: -8px;
@@ -402,6 +404,7 @@
       <a href="/">Ana Sayfa</a>
       <a href="/cozumler.html" class="active" aria-current="page">Çözümler</a>
       <a href="/vision-detection.html">Ürün</a>
+      <a href="/kazanc.html">Kazanç</a>
       <a href="/portfolyo.html">Portfolyo</a>
       <a href="/yazilar.html">Yazılar</a>
       <a href="/magaza.html">Mağaza</a>
@@ -454,7 +457,7 @@
       <p class="secici-not">Sektörünüz listede yoksa da yazın — problem tarifi sektör adından daha belirleyicidir.</p>
 
       <!-- ---------- OTOMOTİV ---------- -->
-      <div class="panel" id="panel-otomotiv" role="tabpanel" aria-labelledby="sek-otomotiv" data-panel="otomotiv">
+      <div class="panel" id="panel-otomotiv" role="tabpanel" tabindex="0" aria-labelledby="sek-otomotiv" data-panel="otomotiv">
         <div class="panel-basi">
           <h3>Otomotiv yan sanayi</h3>
           <span class="etiket">Kaynak · Sac · Montaj</span>
@@ -543,7 +546,7 @@
       </div>
 
       <!-- ---------- BEYAZ EŞYA ---------- -->
-      <div class="panel" id="panel-beyaz" role="tabpanel" aria-labelledby="sek-beyaz" data-panel="beyaz" hidden>
+      <div class="panel" id="panel-beyaz" role="tabpanel" tabindex="0" aria-labelledby="sek-beyaz" data-panel="beyaz" hidden>
         <div class="panel-basi">
           <h3>Beyaz eşya ve iklimlendirme</h3>
           <span class="etiket">Yüzey · Montaj · Sızdırmazlık</span>
@@ -631,7 +634,7 @@
       </div>
 
       <!-- ---------- METAL İŞLEME ---------- -->
-      <div class="panel" id="panel-metal" role="tabpanel" aria-labelledby="sek-metal" data-panel="metal" hidden>
+      <div class="panel" id="panel-metal" role="tabpanel" tabindex="0" aria-labelledby="sek-metal" data-panel="metal" hidden>
         <div class="panel-basi">
           <h3>Metal işleme · talaşlı imalat · döküm</h3>
           <span class="etiket">Ölçü · Çapak · Yüzey</span>
@@ -719,7 +722,7 @@
       </div>
 
       <!-- ---------- GIDA VE AMBALAJ ---------- -->
-      <div class="panel" id="panel-gida" role="tabpanel" aria-labelledby="sek-gida" data-panel="gida" hidden>
+      <div class="panel" id="panel-gida" role="tabpanel" tabindex="0" aria-labelledby="sek-gida" data-panel="gida" hidden>
         <div class="panel-basi">
           <h3>Gıda ve ambalaj</h3>
           <span class="etiket">Dolum · Kapama · Adet</span>
@@ -807,7 +810,7 @@
       </div>
 
       <!-- ---------- LOJİSTİK ---------- -->
-      <div class="panel" id="panel-lojistik" role="tabpanel" aria-labelledby="sek-lojistik" data-panel="lojistik" hidden>
+      <div class="panel" id="panel-lojistik" role="tabpanel" tabindex="0" aria-labelledby="sek-lojistik" data-panel="lojistik" hidden>
         <div class="panel-basi">
           <h3>Lojistik ve depo</h3>
           <span class="etiket">Ölçü · İstif · Robot</span>
@@ -892,7 +895,7 @@
       </div>
 
       <!-- ---------- KİMYA · ATEX ---------- -->
-      <div class="panel" id="panel-kimya" role="tabpanel" aria-labelledby="sek-kimya" data-panel="kimya" hidden>
+      <div class="panel" id="panel-kimya" role="tabpanel" tabindex="0" aria-labelledby="sek-kimya" data-panel="kimya" hidden>
         <div class="panel-basi">
           <h3>Kimya ve Atex sahaları</h3>
           <span class="etiket">Ex bölgesi · Kaplama · İzlenebilirlik</span>
@@ -1003,7 +1006,7 @@
       <p class="secici-not">Her başlıkta: belirti, çözüm adımları, kullanılan araç ve hattınıza çıkan sonuç.</p>
 
       <!-- eksik parça -->
-      <div class="panel" id="panel-eksik" role="tabpanel" aria-labelledby="prb-eksik" data-panel="eksik">
+      <div class="panel" id="panel-eksik" role="tabpanel" tabindex="0" aria-labelledby="prb-eksik" data-panel="eksik">
         <div class="panel-basi">
           <h3>Eksik parça</h3>
           <span class="etiket">2D tespit + 3D doğrulama</span>
@@ -1036,7 +1039,7 @@
       </div>
 
       <!-- yanlış montaj -->
-      <div class="panel" id="panel-montaj" role="tabpanel" aria-labelledby="prb-montaj" data-panel="montaj" hidden>
+      <div class="panel" id="panel-montaj" role="tabpanel" tabindex="0" aria-labelledby="prb-montaj" data-panel="montaj" hidden>
         <div class="panel-basi">
           <h3>Yanlış montaj</h3>
           <span class="etiket">Yön · duruş · oturma</span>
@@ -1069,7 +1072,7 @@
       </div>
 
       <!-- yüzey kusuru -->
-      <div class="panel" id="panel-yuzey" role="tabpanel" aria-labelledby="prb-yuzey" data-panel="yuzey" hidden>
+      <div class="panel" id="panel-yuzey" role="tabpanel" tabindex="0" aria-labelledby="prb-yuzey" data-panel="yuzey" hidden>
         <div class="panel-basi">
           <h3>Yüzey kusuru</h3>
           <span class="etiket">Anomali motoru + yükseklik</span>
@@ -1102,7 +1105,7 @@
       </div>
 
       <!-- ölçü sapması -->
-      <div class="panel" id="panel-olcu" role="tabpanel" aria-labelledby="prb-olcu" data-panel="olcu" hidden>
+      <div class="panel" id="panel-olcu" role="tabpanel" tabindex="0" aria-labelledby="prb-olcu" data-panel="olcu" hidden>
         <div class="panel-basi">
           <h3>Ölçü sapması</h3>
           <span class="etiket">3D metroloji · CAD</span>
@@ -1135,7 +1138,7 @@
       </div>
 
       <!-- sayım hatası -->
-      <div class="panel" id="panel-sayim" role="tabpanel" aria-labelledby="prb-sayim" data-panel="sayim" hidden>
+      <div class="panel" id="panel-sayim" role="tabpanel" tabindex="0" aria-labelledby="prb-sayim" data-panel="sayim" hidden>
         <div class="panel-basi">
           <h3>Sayım hatası</h3>
           <span class="etiket">Tespit + iz takibi</span>
@@ -1167,7 +1170,7 @@
       </div>
 
       <!-- robot kılavuzlama -->
-      <div class="panel" id="panel-robot" role="tabpanel" aria-labelledby="prb-robot" data-panel="robot" hidden>
+      <div class="panel" id="panel-robot" role="tabpanel" tabindex="0" aria-labelledby="prb-robot" data-panel="robot" hidden>
         <div class="panel-basi">
           <h3>Robot kılavuzlama</h3>
           <span class="etiket">El-göz · koordinat aktarımı</span>
