@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taslaklar — Radikal Tasarım Denemeleri</title>
+<meta name="description" content="sersoz.com için üç radikal ana sayfa denemesi. Yayındaki siteye dokunulmadı.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f6f2ea;
+    --ink: #1a1815;
+    --muted: #5b564d;
+    --accent: #c2410c;
+    --green: #14532d;
+    --line: rgba(26, 24, 21, .2);
+    --line-soft: rgba(26, 24, 21, .1);
+    --paper: rgba(255, 253, 248, .6);
+    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--sans);
+    -webkit-font-smoothing: antialiased; line-height: 1.6;
+  }
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+  header { padding: 72px 0 34px; }
+
+  .rozet {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 6px 13px; margin-bottom: 22px;
+    border: 1px solid var(--accent); color: var(--accent);
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase;
+  }
+  .rozet::before {
+    content: ''; width: 6px; height: 6px; background: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--serif); font-size: clamp(30px, 6vw, 50px);
+    font-weight: 700; letter-spacing: -.015em; line-height: 1.07;
+  }
+  h1 .nokta { color: var(--accent); }
+
+  .giris {
+    margin-top: 20px; max-width: 620px; font-size: 16px; color: var(--muted);
+  }
+  .giris b { color: var(--ink); font-weight: 600; }
+
+  .uyari {
+    margin-top: 26px; padding: 14px 18px;
+    border-left: 3px solid var(--green); background: rgba(20, 83, 45, .05);
+    font-size: 14px; color: var(--muted);
+  }
+  .uyari b { color: var(--green); }
+
+  .kartlar {
+    padding: 34px 0 20px; border-top: 3px double var(--line);
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 20px;
+  }
+
+  .kart {
+    position: relative; display: flex; flex-direction: column;
+    border: 1px solid var(--line); background: var(--paper);
+    text-decoration: none; color: inherit;
+    transition: border-color .25s, transform .25s cubic-bezier(.2,.7,.3,1), box-shadow .25s;
+  }
+  .kart::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--accent); transform: scaleX(0); transform-origin: left;
+    transition: transform .3s cubic-bezier(.2,.7,.3,1);
+  }
+  .kart:hover, .kart:focus-visible {
+    border-color: rgba(194, 65, 12, .45); transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(26, 24, 21, .08); outline: none;
+  }
+  .kart:hover::before, .kart:focus-visible::before { transform: scaleX(1); }
+  .kart:focus-visible { box-shadow: 0 0 0 3px rgba(194, 65, 12, .3); }
+
+  .onizleme { display: block; width: 100%; height: auto; border-bottom: 1px solid var(--line-soft); }
+
+  .govde { padding: 20px 20px 22px; flex: 1; display: flex; flex-direction: column; }
+
+  .no {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+  }
+  .kart h2 { font-family: var(--serif); font-size: 23px; font-weight: 700; margin-bottom: 4px; }
+  .mekanik {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+    color: var(--accent); margin-bottom: 12px;
+  }
+  .kart p { font-size: 14.2px; color: var(--muted); flex: 1; }
+
+  .ac {
+    margin-top: 18px; display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink); border-bottom: 1px solid var(--accent); padding-bottom: 3px; align-self: flex-start;
+  }
+  .kart:hover .ac, .kart:focus-visible .ac { color: var(--accent); }
+
+  /* Henüz yazılmamış deneme: tıklanamaz, açıkça işaretli.
+     Dosya yayına düşünce betik bunu kendiliğinden kaldırır. */
+  .kart.yok { opacity: .62; pointer-events: none; }
+  .kart.yok .ac { display: none; }
+  .kart .bekliyor { display: none; }
+  .kart.yok .bekliyor {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; align-self: flex-start;
+    padding: 6px 11px; border: 1px dashed var(--muted); color: var(--muted);
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+  }
+  .kart.yok .bekliyor::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--muted);
+    animation: nabiz 1.4s ease-in-out infinite;
+  }
+  @keyframes nabiz { 0%, 100% { opacity: .25 } 50% { opacity: 1 } }
+  @media (prefers-reduced-motion: reduce) {
+    .kart.yok .bekliyor::before { animation: none; opacity: .7; }
+  }
+
+  .durum {
+    margin: 18px 0 0; font-family: var(--mono); font-size: 11.5px;
+    letter-spacing: .08em; color: var(--muted);
+  }
+
+  footer {
+    margin-top: 40px; padding: 26px 0 60px; border-top: 1px solid var(--line-soft);
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; color: var(--muted);
+    display: flex; gap: 22px; flex-wrap: wrap;
+  }
+  footer a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+  footer a:hover { color: var(--accent); border-color: var(--accent); }
+
+  @media (max-width: 640px) {
+    header { padding: 48px 0 26px; }
+    .wrap { padding: 0 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <span class="rozet">Taslak · yayında değil</span>
+    <h1>Üç radikal deneme<span class="nokta">.</span></h1>
+    <p class="giris">
+      Mevcut site 3D'yi <b>anlatıyor</b> ama 3D gibi <b>davranmıyor</b>: derinlik sayfaya
+      gömülü bir pencere, sayfanın kendisi hâlâ düz kâğıt. Ve merak yok — ilk ekranda her şey
+      görünüyor. Bu üç deneme aynı içeriği alıp <b>saklama ve failiyet</b> üzerine kuruyor:
+      ziyaretçi bir şeyin varlığını sezer, açacak kolun kendi elinde olduğunu fark eder.
+    </p>
+    <p class="uyari">
+      <b>Yayındaki site bozulmadı.</b> Bunlar ayrı adreslerde duran denemelerdir;
+      sersoz.com ana sayfası olduğu gibi çalışıyor. Beğenmediğiniz silinir, beğendiğiniz
+      ana sayfa olur.
+    </p>
+  </header>
+
+  <div class="kartlar">
+
+    <a class="kart" href="/taslak/yarik.html">
+      <svg class="onizleme" viewBox="0 0 320 150" aria-hidden="true">
+        <rect width="320" height="150" fill="#f6f2ea"/>
+        <rect x="168" width="152" height="150" fill="#0d1219"/>
+        <rect x="20" y="24" width="100" height="10" fill="#1a1815"/>
+        <rect x="20" y="42" width="126" height="10" fill="#1a1815"/>
+        <rect x="20" y="68" width="70" height="5" fill="#5b564d"/>
+        <rect x="20" y="80" width="112" height="5" fill="#5b564d"/>
+        <rect x="20" y="92" width="86" height="5" fill="#5b564d"/>
+        <rect x="20" y="112" width="60" height="20" fill="#c2410c"/>
+        <g fill="#5dcaa5"><circle cx="192" cy="36" r="2"/><circle cx="212" cy="30" r="2"/><circle cx="232" cy="42" r="2"/><circle cx="253" cy="33" r="2"/><circle cx="273" cy="46" r="2"/><circle cx="296" cy="38" r="2"/><circle cx="202" cy="54" r="2"/><circle cx="223" cy="62" r="2"/><circle cx="245" cy="57" r="2"/><circle cx="267" cy="68" r="2"/><circle cx="289" cy="60" r="2"/></g>
+        <g fill="#ef9f27"><circle cx="196" cy="78" r="2"/><circle cx="218" cy="86" r="2"/><circle cx="240" cy="81" r="2"/><circle cx="262" cy="92" r="2"/><circle cx="284" cy="84" r="2"/><circle cx="306" cy="95" r="2"/><circle cx="206" cy="104" r="2"/><circle cx="230" cy="112" r="2"/><circle cx="254" cy="106" r="2"/><circle cx="278" cy="116" r="2"/></g>
+        <rect x="210" y="68" width="84" height="46" fill="none" stroke="#c2410c" stroke-width="1.5"/>
+        <rect x="210" y="57" width="52" height="11" fill="#c2410c"/>
+        <line x1="168" y1="0" x2="168" y2="150" stroke="#c2410c" stroke-width="2"/>
+        <circle cx="168" cy="75" r="12" fill="#f6f2ea" stroke="#c2410c" stroke-width="2"/>
+        <path d="M163.5 70.5l-4.5 4.5 4.5 4.5M172.5 70.5l4.5 4.5-4.5 4.5" stroke="#c2410c" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="govde">
+        <div class="no">Deneme 01</div>
+        <h2>Yarık</h2>
+        <div class="mekanik">Tutamağı sürükle</div>
+        <p>
+          Ekranı dikey bir dikiş böler. Solda insanın gördüğü dünya, sağda makinenin gördüğü.
+          Aynı cümle iki dilde: "kaynak ağzı derinliği" ve <em>agiz_derinlik 3.18 mm OK</em>.
+          Dikiş sayfanın belkemiği — aşağı indikçe sizinle geliyor.
+        </p>
+        <span class="ac">Aç →</span>
+        <span class="bekliyor">Hazırlanıyor</span>
+      </div>
+    </a>
+
+    <a class="kart" href="/taslak/kokpit.html">
+      <svg class="onizleme" viewBox="0 0 320 150" aria-hidden="true">
+        <rect width="320" height="150" fill="#0d1219"/>
+        <rect x="0" y="0" width="320" height="18" fill="#11161d"/>
+        <rect x="10" y="6" width="46" height="7" fill="#c2410c"/>
+        <rect x="64" y="6" width="34" height="7" fill="#3d4652"/>
+        <rect x="106" y="6" width="34" height="7" fill="#3d4652"/>
+        <rect x="0" y="18" width="40" height="132" fill="#151b23"/>
+        <g fill="none" stroke="#5b6470" stroke-width="1.4"><rect x="12" y="30" width="16" height="16"/><rect x="12" y="54" width="16" height="16"/><rect x="12" y="102" width="16" height="16"/><rect x="12" y="126" width="16" height="16"/></g>
+        <rect x="12" y="78" width="16" height="16" fill="none" stroke="#c2410c" stroke-width="2"/>
+        <rect x="8" y="78" width="2.5" height="16" fill="#c2410c"/>
+        <rect x="238" y="18" width="82" height="132" fill="#151b23"/>
+        <g fill="#3d4652"><rect x="250" y="34" width="42" height="5"/><rect x="250" y="58" width="54" height="5"/><rect x="250" y="82" width="36" height="5"/><rect x="250" y="128" width="48" height="5"/></g>
+        <rect x="250" y="104" width="56" height="7" fill="#5dcaa5"/>
+        <g fill="#8a94a0"><rect x="250" y="46" width="26" height="4"/><rect x="250" y="70" width="32" height="4"/><rect x="250" y="94" width="22" height="4"/></g>
+        <g fill="#5dcaa5"><circle cx="66" cy="58" r="2"/><circle cx="88" cy="50" r="2"/><circle cx="110" cy="62" r="2"/><circle cx="132" cy="54" r="2"/><circle cx="154" cy="66" r="2"/><circle cx="176" cy="57" r="2"/><circle cx="200" cy="64" r="2"/><circle cx="220" cy="56" r="2"/></g>
+        <g fill="#ef9f27"><circle cx="70" cy="84" r="2"/><circle cx="94" cy="92" r="2"/><circle cx="118" cy="86" r="2"/><circle cx="142" cy="96" r="2"/><circle cx="166" cy="88" r="2"/><circle cx="190" cy="98" r="2"/><circle cx="212" cy="90" r="2"/></g>
+        <rect x="98" y="72" width="90" height="50" fill="none" stroke="#5dcaa5" stroke-width="1.5"/>
+        <line x1="52" y1="138" x2="226" y2="138" stroke="#c2410c" stroke-width="1.5"/>
+      </svg>
+      <div class="govde">
+        <div class="no">Deneme 02</div>
+        <h2>Kokpit</h2>
+        <div class="mekanik">Araca dokun, ne çıkacağını gör</div>
+        <p>
+          Site, ürünün kendi arayüzü olur. Sayfa gezilmez — iş seçilir. Soldaki araç zinciri
+          aynı zamanda menü, sağdaki çıktı panosu aynı zamanda içerik. Zincir kendi kendine
+          koşar; siz dokunduğunuz an kumanda sizde.
+        </p>
+        <span class="ac">Aç →</span>
+        <span class="bekliyor">Hazırlanıyor</span>
+      </div>
+    </a>
+
+    <a class="kart" href="/taslak/derinlik.html">
+      <svg class="onizleme" viewBox="0 0 320 150" aria-hidden="true">
+        <rect width="320" height="150" fill="#080b10"/>
+        <g fill="#1e2a38"><circle cx="52" cy="40" r="1"/><circle cx="88" cy="32" r="1"/><circle cx="124" cy="44" r="1"/><circle cx="160" cy="36" r="1"/><circle cx="196" cy="46" r="1"/><circle cx="232" cy="34" r="1"/><circle cx="268" cy="42" r="1"/></g>
+        <g fill="#2f4a5e"><circle cx="64" cy="62" r="1.5"/><circle cx="104" cy="54" r="1.5"/><circle cx="144" cy="66" r="1.5"/><circle cx="184" cy="58" r="1.5"/><circle cx="224" cy="68" r="1.5"/><circle cx="258" cy="56" r="1.5"/></g>
+        <rect x="118" y="26" width="84" height="34" fill="none" stroke="#243444" stroke-width="1"/>
+        <g fill="#5dcaa5"><circle cx="74" cy="92" r="2.4"/><circle cx="118" cy="82" r="2.4"/><circle cx="162" cy="96" r="2.4"/><circle cx="206" cy="86" r="2.4"/><circle cx="248" cy="98" r="2.4"/></g>
+        <g fill="#ef9f27"><circle cx="60" cy="122" r="3.4"/><circle cx="112" cy="112" r="3.4"/><circle cx="164" cy="128" r="3.4"/><circle cx="216" cy="116" r="3.4"/><circle cx="266" cy="130" r="3.4"/></g>
+        <rect x="82" y="70" width="132" height="42" fill="none" stroke="#c2410c" stroke-width="1.6"/>
+        <rect x="82" y="59" width="46" height="11" fill="#c2410c"/>
+        <line x1="300" y1="18" x2="300" y2="136" stroke="#2f3a48" stroke-width="1"/>
+        <g fill="#5b6470"><rect x="296" y="18" width="8" height="2"/><rect x="296" y="48" width="8" height="2"/><rect x="296" y="106" width="8" height="2"/><rect x="296" y="134" width="8" height="2"/></g>
+        <rect x="293" y="76" width="14" height="3" fill="#c2410c"/>
+        <path d="M160 8v10M156 14l4 4 4-4" stroke="#c2410c" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="govde">
+        <div class="no">Deneme 03</div>
+        <h2>Derinlik</h2>
+        <div class="mekanik">Kaydır, içine gir</div>
+        <p>
+          Sayfa aşağı kaymaz — kamera ileri gider. Bölümler tek bir taranmış mekânda farklı
+          derinliklerde durur. Sonraki bölümün silueti sisin içinde çok önce belirir ama ne
+          olduğu okunmaz. İnsan istemsizce kaydırır.
+        </p>
+        <span class="ac">Aç →</span>
+        <span class="bekliyor">Hazırlanıyor</span>
+      </div>
+    </a>
+
+  </div>
+
+  <p class="durum" id="durum">Denemeler denetleniyor…</p>
+
+  <footer>
+    <a href="/">← Yayındaki site</a>
+    <a href="/vision-detection.html">Vision Detection App</a>
+    <a href="/cozumler.html">Çözümler</a>
+    <span>Denemeler arama motorlarına kapalı</span>
+  </footer>
+
+</div>
+
+<script>
+/* Her kartın hedefi gerçekten yayında mı diye bakar. Yoksa kart tıklanamaz
+   ve "Hazırlanıyor" der. Dosya yayına düşünce kart kendiliğinden açılır —
+   sayfayı yenilemeye gerek yok. */
+(function () {
+  'use strict';
+
+  var kartlar = Array.prototype.slice.call(document.querySelectorAll('.kart'));
+  var durum = document.getElementById('durum');
+  if (!kartlar.length) return;
+
+  var tur = 0;
+
+  function bak(kart) {
+    var yol = kart.getAttribute('href');
+    return fetch(yol, { method: 'HEAD', cache: 'no-store' })
+      .then(function (y) { return y.ok; })
+      .catch(function () { return false; });
+  }
+
+  function tara() {
+    tur++;
+    Promise.all(kartlar.map(bak)).then(function (sonuc) {
+      var hazir = 0;
+      for (var i = 0; i < kartlar.length; i++) {
+        if (sonuc[i]) { kartlar[i].classList.remove('yok'); hazir++; }
+        else { kartlar[i].classList.add('yok'); }
+      }
+
+      if (durum) {
+        durum.textContent = hazir === kartlar.length
+          ? 'Üç deneme de hazır — kartlara dokunabilirsiniz.'
+          : hazir + '/' + kartlar.length + ' deneme hazır. Kalanlar yazılıyor; ' +
+            'bu sayfa kendiliğinden tazelenir.';
+      }
+
+      /* Hepsi hazırsa bakmayı bırak. Değilse 15 sn'de bir tekrar bak,
+         ama sonsuza kadar değil (~10 dakika). */
+      if (hazir < kartlar.length && tur < 40) setTimeout(tara, 15000);
+    });
+  }
+
+  if (window.fetch) {
+    kartlar.forEach(function (k) { k.classList.add('yok'); });
+    tara();
+  } else if (durum) {
+    durum.textContent = '';
+  }
+})();
+</script>
+
+</body>
+</html>
