@@ -77,6 +77,16 @@
   }
   .tani-not:empty { display: none; }
 
+  /* veri kalitesi uyarısı */
+  .veri-uyari {
+    margin: 16px 0 4px; padding: 14px 18px;
+    border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--paper);
+    font-size: 13px; line-height: 1.65; color: var(--muted);
+  }
+  .veri-uyari b { color: var(--ink); }
+  .veri-uyari .btn { margin: 10px 10px 0 0; }
+  .temizle-durum { font-family: var(--mono); font-size: 11.5px; color: var(--accent); }
+
   /* kapı */
   .kapi { max-width: 480px; margin: 60px auto 120px; padding: 40px 32px; border: 1px solid var(--line); background: var(--paper); text-align: center; }
   .kapi h2 { font-family: var(--serif); font-size: 24px; margin-bottom: 12px; }
@@ -223,6 +233,14 @@
     </div>
 
     <div class="ozet" id="ozet"></div>
+
+    <div class="veri-uyari" id="veriUyari">
+      <b>Veri kalitesi:</b> Bu kayıtların bir bölümü site kurulurken yapılan testlerden gelir
+      (yerel makinede açılan sayfalar, tarayıcı denemeleri). Yerel trafik <b>artık sayılmıyor</b>,
+      ama eski kayıtlar duruyor. Gerçek ziyaretçi sayısını temiz görmek için sayacı sıfırlayın.
+      <button class="btn ghost" id="temizleBtn" type="button">Ziyaret kayıtlarını sıfırla</button>
+      <span class="temizle-durum" id="temizleDurum"></span>
+    </div>
 
     <section class="blok">
       <h2>Günlük ziyaret</h2>
@@ -606,6 +624,36 @@ const YONETICI = 'sercansozer20@gmail.com';
     $('tNot').textContent = 'Firebase kütüphanesi yüklenemedi — ağ engeli veya reklam engelleyici ' +
       'olabilir. Ayrıntı: ' + ((e && e.message) || 'bilinmiyor');
   });
+
+  /* ------------------------------------------------- ziyaret kaydı temizleme */
+  $('temizleBtn').onclick = function () {
+    if (!S || !user) return;
+    var d = $('temizleDurum');
+    if (!confirm('Tüm ziyaret kayıtları silinecek ve sayaç sıfırlanacak.\n' +
+                 'Siparişler ve ürünler etkilenmez. Devam edilsin mi?')) return;
+
+    var f = S.fsMod;
+    d.textContent = 'siliniyor…';
+    $('temizleBtn').disabled = true;
+
+    f.getDocs(f.query(f.collection(S.db, 'ziyaretler'), f.limit(500))).then(function (snap) {
+      if (snap.empty) {
+        d.textContent = 'temizlendi';
+        $('temizleBtn').disabled = false;
+        return;
+      }
+      var isler = snap.docs.map(function (doc) {
+        return f.deleteDoc(f.doc(S.db, 'ziyaretler', doc.id));
+      });
+      return Promise.all(isler).then(function () {
+        d.textContent = snap.size + ' kayıt silindi — kalanlar için tekrar basın';
+        $('temizleBtn').disabled = false;
+      });
+    }).catch(function (e) {
+      d.textContent = 'silinemedi: ' + e.code;
+      $('temizleBtn').disabled = false;
+    });
+  };
 
   $('araliklar').addEventListener('click', function (e) {
     var b = e.target.closest('.aralik');

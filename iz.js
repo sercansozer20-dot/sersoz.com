@@ -10,6 +10,10 @@
 
   if (navigator.doNotTrack === '1' || window.doNotTrack === '1') return;
 
+  /* YEREL_ATLA — gelistirme trafigi istatistikleri kirletmesin */
+  var h = location.hostname;
+  if (h === 'localhost' || h === '127.0.0.1' || h === '' || h.indexOf('192.168.') === 0) return;
+
   var PROJE = 'sersoz-f93c3';
   var URL_ = 'https://firestore.googleapis.com/v1/projects/' + PROJE +
              '/databases/(default)/documents/ziyaretler';
