@@ -583,6 +583,9 @@ h1 .k, h2 .k { color: var(--kiremit-ac); }
     padding: 0 62px 96px 14px;
   }
   .ic { max-width: none; max-height: calc(100dvh - 210px); }
+  /* Dar ekranda yalnız ikincil ANLATIM gizlenir. Sayısal kanıt tablosu,
+     fiyata neyin dahil olduğu ve sınırlar paragrafı burada DEĞİLDİR —
+     karar verdiren içerik telefonda da görünür. .ic zaten kaydırılabilir. */
   .genis { display: none; }
   .olcek { width: 46px; top: 78px; bottom: 128px; }
   .olcek .ray { left: 14px; }
@@ -756,7 +759,7 @@ body.akis .kol { display: none; }
       <p class="metin">En pahalı hatalar gözle ayırt edilemeyenlerdir: yarım milimetrelik çökme, eksik
         yapıştırıcı, kaçık oturmuş parça. Bunlar renkte değil <b>yükseklikte</b> saklıdır. 3D profil
         sensörü kendi lazerini kullanır — ortam ışığından etkilenmez, parlak metalde ve koyu yüzeyde ölçer.</p>
-      <div class="veri genis">
+      <div class="veri">
         <div class="satir"><span class="ad">agiz_derinlik</span><span class="deg">3.18 mm</span><span class="lim">2.8 – 3.6</span><span class="g ok">✓</span></div>
         <div class="satir"><span class="ad">agiz_genislik</span><span class="deg">6.04 mm</span><span class="lim">5.5 – 6.5</span><span class="g ok">✓</span></div>
         <div class="satir"><span class="ad">duzlemsellik</span><span class="deg">0.06 mm</span><span class="lim">≤ 0.15</span><span class="g ok">✓</span></div>
@@ -830,7 +833,7 @@ body.akis .kol { display: none; }
         <span class="tutar">₺64.000</span>
         <span class="kos">Tek hat lisansı · KDV hariç · süresiz kullanım</span>
       </div>
-      <p class="metin genis">Kurulum, kalibrasyon ve operatör eğitimi dahildir; ilk yıl sürüm
+      <p class="metin">Kurulum, kalibrasyon ve operatör eğitimi dahildir; ilk yıl sürüm
         güncellemeleri ve uzaktan destek de öyle. Veriniz tesiste kalır, bulut aboneliği yoktur.</p>
       <div class="baglar">
         <a class="dugme ana" href="/vision-detection.html">Ürünü incele</a>
@@ -853,7 +856,7 @@ body.akis .kol { display: none; }
         <span class="cip">2D endüstriyel kamera · USB / GigE</span>
         <span class="cip">IP kamera</span>
       </div>
-      <p class="metin genis">Sınırları baştan yazıyorum: ayna gibi parlak ve saydam yüzeyler 3D taramada
+      <p class="metin">Sınırları baştan yazıyorum: ayna gibi parlak ve saydam yüzeyler 3D taramada
         zorlar, mikron altı tolerans koordinat ölçüm makinesinin alanıdır. Bunlar fizibilitede denenir,
         teklifin içine gizlenmez.</p>
       <div class="baglar">
