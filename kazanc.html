@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kazanç Hesabı — Görsel Denetim Yatırımının Geri Dönüşü | sersoz.com</title>
+<meta name="description" content="Kendi hattınızın rakamlarını girin: aylık hata maliyeti, yıllık tasarruf, geri ödeme süresi ve üç yıllık net kazanç anında hesaplansın. Varsayımlar açıkça yazılıdır.">
+<meta property="og:title" content="Kazanç Hesabı — Görsel Denetim Yatırımının Geri Dönüşü">
+<meta property="og:description" content="Kendi rakamlarınızla geri ödeme süresini hesaplayın. Varsayımlar açık, sonuç tahmindir.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://sersoz.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="sersoz.com">
+<meta property="og:locale" content="tr_TR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://sersoz.com/og.png">
+<meta property="og:url" content="https://sersoz.com/kazanc.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f6f2ea;
+    --ink: #1a1815;
+    --muted: #5b564d;
+    --accent: #c2410c;
+    --green: #14532d;
+    --line: rgba(26, 24, 21, .2);
+    --line-soft: rgba(26, 24, 21, .1);
+    --faint: rgba(26, 24, 21, .055);
+    --paper: rgba(255, 253, 248, .6);
+    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--accent); color: var(--bg); }
+  section { scroll-margin-top: 72px; }
+  .container { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- Nav ---------- */
+  nav#nav {
+    position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 40;
+    display: flex; align-items: center;
+    background: rgba(246, 242, 234, .92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; flex: 0 0 auto; }
+  .brand .mark {
+    width: 22px; height: 22px; background: var(--accent); color: var(--bg);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 14px; font-weight: 700; line-height: 1;
+  }
+  .brand span.host { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--ink); }
+  .nav-links { display: flex; align-items: center; gap: 2px; }
+  .nav-links a {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink); text-decoration: none; padding: 10px 11px; transition: color .2s; white-space: nowrap;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.active { color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+  .nav-links a.cta { border: 1px solid var(--ink); padding: 9px 14px; margin-left: 8px; transition: color .2s, border-color .2s; }
+  .nav-links a.cta:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 116px 0 10px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 14px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .3em; text-transform: uppercase; margin-bottom: 22px;
+  }
+  .eyebrow::before { content: ''; width: 42px; height: 2px; background: var(--accent); }
+
+  h1 { font-family: var(--serif); font-size: clamp(32px, 5.4vw, 56px); font-weight: 700; letter-spacing: -.018em; line-height: 1.06; max-width: 19ch; }
+  h1 .nokta { color: var(--accent); }
+
+  .lead {
+    margin-top: 22px; max-width: 64ch; font-size: clamp(15px, 2vw, 17px); line-height: 1.75;
+    color: var(--muted); border-left: 1px solid var(--line); padding-left: 18px;
+  }
+  .lead b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Dürüstlük şeridi ---------- */
+  .uyari {
+    margin-top: 30px; padding: 18px 22px; border: 1px solid rgba(194, 65, 12, .38);
+    background: rgba(194, 65, 12, .05); display: flex; gap: 16px; align-items: flex-start;
+  }
+  .uyari .im {
+    flex: 0 0 auto; width: 24px; height: 24px; border: 1px solid var(--accent); color: var(--accent);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 13px; font-weight: 700; line-height: 1;
+  }
+  .uyari p { font-size: 13.5px; line-height: 1.68; color: var(--muted); }
+  .uyari b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Bölümler ---------- */
+  .blok { padding: clamp(52px, 8vh, 88px) 0; border-top: 3px double var(--line); }
+  .blok.ilk { border-top: none; padding-top: clamp(34px, 5vh, 54px); }
+  .kicker { font-family: var(--mono); font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+  .kicker .idx { color: var(--accent); margin-right: 10px; }
+  h2 { font-family: var(--serif); font-size: clamp(26px, 4.2vw, 42px); font-weight: 700; letter-spacing: -.014em; line-height: 1.1; margin-bottom: 18px; }
+  h2::after { content: '.'; color: var(--accent); }
+  .blok-lead { max-width: 66ch; font-size: 15.5px; line-height: 1.75; color: var(--muted); }
+  .blok-lead b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Hesap düzeni ---------- */
+  .hesap { display: grid; grid-template-columns: minmax(0, 1.02fr) minmax(0, .98fr); gap: 34px; align-items: start; margin-top: 34px; }
+
+  .grup { border: 1px solid var(--line); background: var(--paper); margin-bottom: 22px; }
+  .grup > h3 {
+    padding: 15px 22px; border-bottom: 1px solid var(--line-soft);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .grup > h3 .rozet {
+    font-size: 9.5px; letter-spacing: .14em; padding: 3px 8px; border: 1px solid var(--line);
+    color: var(--muted); text-transform: uppercase;
+  }
+  .grup.tahmin > h3 { color: var(--accent); }
+  .grup.tahmin > h3 .rozet { border-color: rgba(194, 65, 12, .45); color: var(--accent); }
+  .grup .grup-not { padding: 14px 22px 0; font-size: 12.5px; line-height: 1.62; color: var(--muted); }
+  .grup .grup-not b { color: var(--ink); font-weight: 600; }
+  .grup-govde { padding: 6px 22px 22px; }
+
+  .girdi { padding: 16px 0; border-bottom: 1px solid var(--line-soft); }
+  .girdi:last-child { border-bottom: none; }
+  .girdi-ust { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
+  .girdi label { font-size: 13.5px; line-height: 1.45; font-weight: 600; color: var(--ink); }
+  .girdi-alan { display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto; }
+  .girdi input[type="number"] {
+    width: 108px; padding: 7px 9px; text-align: right;
+    font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--ink);
+    background: rgba(255, 253, 248, .9); border: 1px solid var(--line); border-radius: 0;
+    font-variant-numeric: tabular-nums; -moz-appearance: textfield;
+  }
+  .girdi input[type="number"]::-webkit-outer-spin-button,
+  .girdi input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .girdi input[type="number"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(194, 65, 12, .14); }
+  .girdi .birim { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); min-width: 52px; }
+  .girdi .ipucu { margin-top: 9px; font-size: 12px; line-height: 1.55; color: var(--muted); }
+
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 100%; margin-top: 13px;
+    background: transparent; cursor: pointer;
+  }
+  input[type="range"]:focus { outline: none; }
+  input[type="range"]::-webkit-slider-runnable-track { height: 3px; background: var(--line); }
+  input[type="range"]::-moz-range-track { height: 3px; background: var(--line); }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 16px; height: 16px; margin-top: -6.5px;
+    background: var(--accent); border: 2px solid var(--bg); box-shadow: 0 0 0 1px var(--accent);
+    transition: transform .18s;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px; border: 2px solid var(--bg); background: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent); border-radius: 0;
+  }
+  input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.14); }
+  input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 1px var(--accent), 0 0 0 4px rgba(194, 65, 12, .22); }
+  input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 1px var(--accent), 0 0 0 4px rgba(194, 65, 12, .22); }
+
+  /* ---------- Sonuç paneli ---------- */
+  /* Panel viewport'tan uzunsa kendi icinde kaysin — CTA hep ulasilabilir kalir.
+     Sayfa kaydirma zinciri varsayilan oldugu icin panel sonuna gelince sayfa devam eder. */
+  .sonuc-sar { position: sticky; top: 78px; max-height: calc(100vh - 96px); overflow-y: auto; }
+  .sonuc-sar::-webkit-scrollbar { width: 6px; }
+  .sonuc-sar::-webkit-scrollbar-thumb { background: var(--line); }
+  .panel { border: 1px solid var(--line); background: var(--paper); }
+  .panel-bas {
+    padding: 15px 22px; border-bottom: 1px solid var(--line-soft);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .canli { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: nabiz 2.2s ease-in-out infinite; }
+  @keyframes nabiz { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+
+  .vurgu { padding: 26px 22px; border-bottom: 1px solid var(--line-soft); background: rgba(194, 65, 12, .045); }
+  .vurgu .e { font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
+  .vurgu .v {
+    margin-top: 8px; font-family: var(--mono); font-size: clamp(38px, 6.4vw, 56px); font-weight: 700;
+    line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  }
+  .vurgu .v small { font-size: .38em; font-weight: 400; letter-spacing: .06em; margin-left: 8px; color: var(--muted); }
+  .vurgu .alt { margin-top: 10px; font-size: 12.5px; line-height: 1.6; color: var(--muted); }
+
+  .not-satiri {
+    padding: 13px 22px; border-bottom: 1px solid var(--line-soft);
+    font-size: 12.5px; line-height: 1.62; color: var(--muted);
+    background: rgba(194, 65, 12, .07); border-left: 2px solid var(--accent);
+  }
+  .not-satiri b { color: var(--ink); font-weight: 600; }
+  .not-satiri.gizli { display: none; }
+
+  .ozet { display: grid; grid-template-columns: 1fr 1fr; }
+  .ozet .h { padding: 18px 22px; border-right: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+  .ozet .h:nth-child(2n) { border-right: none; }
+  .ozet .h .e { font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .ozet .h .v { margin-top: 7px; font-family: var(--mono); font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .ozet .h .v.yesil { color: var(--green); }
+  .ozet .h .k { margin-top: 5px; font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+
+  /* karşılaştırma çubukları */
+  .kiyas-blok { padding: 22px; }
+  .kiyas-bas { font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+  .cubuk-satir { margin-top: 14px; }
+  .cubuk-satir:first-of-type { margin-top: 0; }
+  .cubuk-ust { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .cubuk-ust .ad { font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; }
+  .cubuk-ust .tut { font-family: var(--mono); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .cubuk-yol { height: 22px; background: var(--faint); border: 1px solid var(--line-soft); overflow: hidden; }
+  .cubuk-dolgu { height: 100%; width: 0; transition: width .5s cubic-bezier(.2, .7, .3, 1); }
+  .cubuk-dolgu.once { background: repeating-linear-gradient(135deg, rgba(194,65,12,.85) 0 7px, rgba(194,65,12,.6) 7px 14px); }
+  .cubuk-dolgu.sonra { background: repeating-linear-gradient(135deg, rgba(20,83,45,.85) 0 7px, rgba(20,83,45,.6) 7px 14px); }
+  .kiyas-fark {
+    margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line-soft);
+    font-family: var(--mono); font-size: 12px; line-height: 1.6; color: var(--green);
+  }
+  .kiyas-fark::before { content: '▸ '; }
+
+  .panel-cta { padding: 20px 22px 24px; border-top: 1px solid var(--line-soft); }
+  .panel-cta p { font-size: 12.5px; line-height: 1.62; color: var(--muted); margin-bottom: 14px; }
+
+  .pill {
+    display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 14px 22px;
+    border: 1px solid var(--ink); color: var(--ink); text-decoration: none; cursor: pointer;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+    background: transparent; transition: border-color .22s, background .22s, color .22s; text-align: center;
+  }
+  .pill.primary { background: var(--ink); color: var(--bg); }
+  .pill:hover { border-color: var(--accent); color: var(--accent); }
+  .pill.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .pill.tam { width: 100%; }
+  .pill svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+
+  /* ---------- 3 yıllık grafik ---------- */
+  .grafik-sar { margin-top: 32px; border: 1px solid var(--line); background: var(--paper); padding: 24px 22px 18px; }
+  .grafik-bas { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
+  .grafik-bas .t { font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .grafik-bas .lgnd { display: flex; gap: 16px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .grafik-bas .lgnd span { display: inline-flex; align-items: center; gap: 6px; }
+  .grafik-bas .lgnd i { width: 11px; height: 11px; display: inline-block; }
+  .grafik-bas .lgnd i.p { background: var(--green); }
+  .grafik-bas .lgnd i.n { background: var(--accent); }
+  svg.grafik { display: block; width: 100%; height: auto; }
+  svg.grafik text { font-family: var(--mono); fill: var(--muted); }
+  svg.grafik .cubuk { transition: y .5s cubic-bezier(.2, .7, .3, 1), height .5s cubic-bezier(.2, .7, .3, 1); }
+  svg.grafik .cubuk.p { fill: var(--green); }
+  svg.grafik .cubuk.n { fill: var(--accent); }
+  svg.grafik .deger { font-size: 15px; font-weight: 700; fill: var(--ink); }
+  svg.grafik .yil { font-size: 12px; letter-spacing: .14em; }
+  svg.grafik .sifir { stroke: var(--line); stroke-width: 1; stroke-dasharray: 4 4; }
+  svg.grafik .taban { stroke: var(--line); stroke-width: 1; }
+
+  /* tablo */
+  .tablo { margin-top: 26px; border: 1px solid var(--line); background: var(--paper); overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 520px; }
+  th, td { padding: 13px 18px; text-align: left; border-bottom: 1px solid var(--line-soft); font-size: 13.5px; }
+  th { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); font-weight: 400; }
+  td { font-variant-numeric: tabular-nums; }
+  td.say { font-family: var(--mono); font-weight: 700; }
+  tr:last-child td { border-bottom: none; }
+  td.arti { color: var(--green); }
+  td.eksi { color: var(--accent); }
+
+  /* ---------- Yöntem kartları ---------- */
+  .kartlar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 34px; }
+  .kart {
+    position: relative; padding: 24px 22px 26px; border: 1px solid var(--line); background: var(--paper);
+    transition: transform .3s cubic-bezier(.2, .7, .3, 1), border-color .3s, box-shadow .3s;
+  }
+  .kart::after {
+    content: ''; position: absolute; left: -1px; right: -1px; top: -1px; height: 2px; background: var(--accent);
+    transform: scaleX(0); transform-origin: left; transition: transform .38s cubic-bezier(.2, .7, .3, 1);
+  }
+  @media (hover: hover) {
+    .kart:hover { transform: translateY(-5px); border-color: rgba(194, 65, 12, .4); box-shadow: 0 14px 30px rgba(26, 24, 21, .09); }
+    .kart:hover::after { transform: scaleX(1); }
+    .kart:hover h3 { color: var(--accent); }
+  }
+  .kart .n { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
+  .kart h3 { margin-top: 11px; font-family: var(--serif); font-size: 19px; font-weight: 700; line-height: 1.22; transition: color .22s; }
+  .kart p { margin-top: 11px; font-size: 13px; line-height: 1.65; color: var(--muted); }
+  .kart .form {
+    margin-top: 14px; padding: 11px 12px; border: 1px solid var(--line-soft); background: rgba(26, 24, 21, .035);
+    font-family: var(--mono); font-size: 11.5px; line-height: 1.6; color: var(--ink); word-break: break-word;
+  }
+
+  .liste { margin-top: 30px; border: 1px solid var(--line); background: var(--paper); }
+  .liste h3 {
+    padding: 15px 22px; border-bottom: 1px solid var(--line-soft);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+  }
+  .liste ul { list-style: none; padding: 18px 22px 22px; }
+  .liste li { position: relative; padding-left: 20px; margin-top: 11px; font-size: 13.5px; line-height: 1.62; color: var(--muted); }
+  .liste li:first-child { margin-top: 0; }
+  .liste li::before { content: ''; position: absolute; left: 0; top: .68em; width: 11px; height: 1px; background: var(--accent); }
+  .liste li b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Kapanış CTA ---------- */
+  .kapanis { display: grid; grid-template-columns: 1.2fr 1fr; gap: 34px; align-items: start; margin-top: 32px; }
+  .kapanis .links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+  .iletisim-kart { padding: 26px 24px; border: 1px solid var(--line); background: var(--paper); }
+  .iletisim-kart .e { font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+  .iletisim-kart .satir { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line-soft); font-size: 13.5px; line-height: 1.6; }
+  .iletisim-kart .satir:first-of-type { border-top: none; padding-top: 0; margin-top: 14px; }
+  .iletisim-kart .satir .k { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 4px; }
+  .iletisim-kart a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); word-break: break-word; }
+  .iletisim-kart a:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ---------- Reveal ---------- */
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s cubic-bezier(.2, .7, .3, 1), transform .6s cubic-bezier(.2, .7, .3, 1); transition-delay: var(--d, 0s); }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  footer { border-top: 3px double var(--line); padding: 26px 0 34px; }
+  .footer-inner { max-width: 1120px; margin: 0 auto; padding: 0 28px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+  .footer-links { display: flex; gap: 4px 16px; flex-wrap: wrap; }
+  .footer-links a { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color .2s; }
+  .footer-links a:hover { color: var(--accent); }
+  .footer-inner .mono { font-family: var(--mono); }
+
+  .js-yok { display: none; margin-top: 26px; padding: 20px 22px; border: 1px solid var(--accent); background: rgba(194, 65, 12, .06); font-size: 13.5px; line-height: 1.68; }
+
+  /* ---------- Kırılmalar ---------- */
+  @media (max-width: 1080px) {
+    .hesap { grid-template-columns: 1fr; gap: 26px; }
+    .sonuc-sar { position: static; max-height: none; overflow-y: visible; }
+    .kartlar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kapanis { grid-template-columns: 1fr; gap: 26px; }
+  }
+  @media (max-width: 880px) {
+    .container, .nav-inner, .footer-inner { padding-left: 22px; padding-right: 22px; }
+    .vurgu .v { font-size: clamp(34px, 9vw, 46px); }
+    .grup-govde, .grup > h3, .grup .grup-not, .panel-bas, .vurgu, .kiyas-blok, .panel-cta, .not-satiri, .ozet .h { padding-left: 18px; padding-right: 18px; }
+  }
+  @media (max-width: 720px) {
+    .kartlar { grid-template-columns: 1fr; }
+    .ozet { grid-template-columns: 1fr; }
+    .ozet .h { border-right: none; }
+    .girdi-ust { flex-wrap: wrap; }
+    .girdi-alan { margin-top: 4px; }
+    .grafik-bas .lgnd { gap: 12px; }
+    svg.grafik .deger { font-size: 18px; }
+    svg.grafik .yil { font-size: 15px; }
+  }
+  @media (max-width: 640px) {
+    nav#nav { height: auto; padding-top: 7px; }
+    .nav-inner { flex-wrap: wrap; gap: 4px; padding: 0 16px; }
+    .brand { order: 1; }
+    .nav-links { order: 2; width: 100%; overflow-x: auto; gap: 0; padding-bottom: 3px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .nav-links::-webkit-scrollbar { display: none; }
+    .nav-links a { flex: 0 0 auto; padding: 8px 9px; font-size: 10px; letter-spacing: .1em; }
+    .nav-links a.cta { margin-left: 4px; padding: 7px 10px; }
+    .hero { padding-top: 120px; }
+    section { scroll-margin-top: 80px; }
+    .container, .nav-inner, .footer-inner { padding-left: 16px; padding-right: 16px; }
+    .lead { border-left: none; padding-left: 0; }
+    .grup-govde, .grup > h3, .grup .grup-not, .panel-bas, .vurgu, .kiyas-blok, .panel-cta, .not-satiri, .ozet .h { padding-left: 15px; padding-right: 15px; }
+    .grafik-sar { padding: 18px 14px 14px; }
+    .girdi input[type="number"] { width: 96px; }
+    .footer-inner { justify-content: flex-start; }
+    .uyari { padding: 15px 16px; gap: 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .canli { animation: none; }
+    .kart, .kart::after, .cubuk-dolgu, svg.grafik .cubuk, input[type="range"]::-webkit-slider-thumb { transition: none; }
+  }
+</style>
+<noscript><style>
+  .reveal { opacity: 1; transform: none; }
+  .js-yok { display: block; }
+  .hesap, .grafik-sar, .tablo { display: none; }
+</style></noscript>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/" aria-label="sersoz.com">
+      <span class="mark" aria-hidden="true">S</span>
+      <span class="host">sersoz.com</span>
+    </a>
+    <div class="nav-links">
+      <a href="/">Ana Sayfa</a>
+      <a href="/cozumler.html">Çözümler</a>
+      <a href="/vision-detection.html">Ürün</a>
+      <a class="active" href="/kazanc.html" aria-current="page">Kazanç</a>
+      <a href="/portfolyo.html">Portfolyo</a>
+      <a class="cta" href="#iletisim">İletişim</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <p class="eyebrow">Kazanç hesabı · Geri ödeme</p>
+    <h1>Kendi rakamlarınızı girin, hesabı birlikte yapalım<span class="nokta">.</span></h1>
+    <p class="lead">Görsel denetim bir maliyet kalemi değil, bir <b>maliyet önleme</b> kalemidir —
+      ama ne kadar önlediği hattan hatta değişir. Aşağıya kendi üretim adedinizi, hata oranınızı ve
+      kontrol personelinizin maliyetini yazın; aylık hata maliyeti, yıllık tasarruf, geri ödeme
+      süresi ve üç yıllık net kazanç <b>anında</b> hesaplansın.</p>
+
+    <div class="uyari">
+      <span class="im" aria-hidden="true">!</span>
+      <p><b>Bu bir tahmindir, teklif değildir.</b> Hesap, sizin girdiğiniz değerler ve aşağıda
+        açıkça yazılı varsayımlar üzerinden yapılır. Sistemin <b>yakalama oranı</b> dahil bütün
+        varsayımları siz değiştirebilirsiniz — hiçbiri sabitlenmiş bir vaat değildir.
+        Gerçek yakalama oranı, çevrim süresi ve ölçüm tekrarlanabilirliği ancak
+        <b>sizin parçanızla yapılan fizibilite</b> ile belirlenir. Bu sayfa satın alma kararı
+        için tek başına yeterli bir belge değildir; kararı fizibilite raporundaki ölçülmüş
+        rakamlara bakarak verin.</p>
+    </div>
+
+    <div class="js-yok">
+      <b>Hesaplayıcı JavaScript gerektiriyor.</b> Tarayıcınızda kapalı görünüyor.
+      Rakamlarınızı e-posta ile gönderin, hesabı sizin için çıkarıp geri dönelim:
+      <a href="mailto:sercansozer20@gmail.com?subject=Kazan%C3%A7%20hesab%C4%B1%20talebi">sercansozer20@gmail.com</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============================ HESAPLAYICI ============================ -->
+  <section class="blok ilk" id="hesap">
+    <div class="container">
+      <p class="kicker reveal"><span class="idx">01</span>Hesaplayıcı</p>
+      <h2 class="reveal">Hattınızın rakamları</h2>
+      <p class="blok-lead reveal">Soldaki alanlar <b>sizin bildiğiniz</b> rakamlardır — üretim adedi,
+        hata oranı, personel maliyeti. Alttaki turuncu kutu ise <b>tahmin</b> gerektiren üç değerdir;
+        onları da siz ayarlarsınız. Sağdaki panel her değişiklikte anında güncellenir.</p>
+
+      <div class="hesap">
+
+        <!-- ---------------- Girdiler ---------------- -->
+        <div class="girdiler">
+
+          <div class="grup">
+            <h3>Üretim ve hata <span class="rozet">Sizin verileriniz</span></h3>
+            <div class="grup-govde">
+
+              <div class="girdi">
+                <div class="girdi-ust">
+                  <label for="adet">Günlük üretim adedi</label>
+                  <span class="girdi-alan">
+                    <input type="number" id="adet" min="50" max="200000" step="50" value="2000" inputmode="numeric">
+                    <span class="birim">adet/gün</span>
+                  </span>
+                </div>
+                <input type="range" data-hedef="adet" min="50" max="20000" step="50" value="2000" aria-label="Günlük üretim adedi kaydırıcı">
+                <p class="ipucu">Bütün vardiyaların toplamı. Tek bir istasyondan geçen parça sayısını yazın.</p>
+              </div>
+
+              <div class="girdi">
+                <div class="girdi-ust">
+                  <label for="vardiya">Vardiya sayısı</label>
+                  <span class="girdi-alan">
+                    <input type="number" id="vardiya" min="1" max="3" step="1" value="2" inputmode="numeric">
+                    <span class="birim">vardiya</span>
+                  </span>
+                </div>
+                <input type="range" data-hedef="vardiya" min="1" max="3" step="1" value="2" aria-label="Vardiya sayısı kaydırıcı">
+                <p class="ipucu">Üretim adedini değil, işgücü maliyetini etkiler. Vardiya süresi 8 saat kabul edilir.</p>
+              </div>
+
+              <div class="girdi">
+                <div class="girdi-ust">
+                  <label for="gun">Çalışma günü</label>
+                  <span class="girdi-alan">
+                    <input type="number" id="gun" min="1" max="31" step="1" value="22" inputmode="numeric">
+                    <span class="birim">gün/ay</span>
+                  </span>
+                </div>
+                <input type="range" data-hedef="gun" min="1" max="31" step="1" value="22" aria-label="Aylık çalışma günü kaydırıcı">
+                <p class="ipucu">Planlı duruşlar ve tatiller düşülmüş, fiilen üretim yapılan gün sayısı.</p>
+              </div>
+
+              <div class="girdi">
+                <div class="girdi-ust">
+                  <label for="hataOran">Mevcut hata oranı</label>
+                  <span class="girdi-alan">
+                    <input type="number" id="hataOran" min="0" max="30" step="0.1" value="1.5" inputmode="decimal">
+                    <span class="birim">%</span>
+                  </span>
+                </div>
+                <input type="range" data-hedef="hataOran" min="0" max="15" step="0.1" value="1.5" aria-label="Mevcut hata oranı kaydırıcı">
+                <p class="ipucu">Üretilen 100 parçanın kaçı hatalı çıkıyor? Hurda + yeniden işleme + iade toplamı.</p>
+              </div>
+
+              <div class="girdi">
+                <div class="girdi-ust">
+                  <label for="hataTL">Hatalı ürünün <b>iç</b> maliyeti</label>
+                  <span class="girdi-alan">
+                    <input type="number" id="hataTL" min="0" max="500000" step="5" value="45" inputmode="numeric">
+                    <span class="birim">₺/adet</span>
+                  </span>
+                </div>
+                <input type="range" data-hedef="hataTL" min="0" max="3000" step="5" value="45" aria-label="Hatalı ürünün iç maliyeti kaydırıcı">
+                <p class="ipucu">Fabrikada yakalanan hatanın bedeli: hurda malzeme + harcanan işçilik + yeniden işleme.</p>
+              </div>
+
+              <div class="girdi">
+                <div class="girdi-ust">
+                  <label for="kacakTL">Müşteriye kaçan hatanın maliyeti</label>
+                  <span class="girdi-alan">
+                    <input type="number" id="kacakTL" min="0" max="5000000" step="100" value="1500" inputmode="numeric">
+                    <span class="birim">₺/adet</span>
+                  </span>
+                </div>
+                <input type="range" data-hedef="kacakTL" min="0" max="100000" step="100" value="1500" aria-label="Müşteriye kaçan hatanın maliyeti kaydırıcı">
+                <p class="ipucu">İade, nakliye, sıralama (sorting), 8D raporu, ceza ve müşteri nezdinde itibar kaybı.
+                  Genelde iç maliyetin katları olur.</p>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="grup">
+            <h3>Manuel kontrol ve yatırım <span class="rozet">Sizin verileriniz</span></h3>
+            <div class="grup-govde">
+
+              <div class="girdi">
+                <div class="girdi-ust">
+                  <label for="kisi">Kontrol personeli (vardiya başına)</label>
+                  <span class="girdi-alan">
+                    <input type="number" id="kisi" min="0" max="50" step="1" value="1" inputmode="numeric">
+                    <span class="birim">kişi</span>
+                  </span>
+                </div>
+                <input type="range" data-hedef="kisi" min="0" max="10" step="1" value="1" aria-label="Vardiya başına kontrol personeli kaydırıcı">
+                <p class="ipucu">Bu istasyonda gözle kontrol için ayrılan kişi sayısı. Toplam kişi = bu değer × vardiya sayısı.</p>
+              </div>
+
+              <div class="girdi">
+                <div class="girdi-ust">
+                  <label for="saatTL">Personelin saatlik işveren maliyeti</label>
+                  <span class="girdi-alan">
+                    <input type="number" id="saatTL" min="0" max="5000" step="5" value="240" inputmode="numeric">
+                    <span class="birim">₺/saat</span>
+                  </span>
+                </div>
+                <input type="range" data-hedef="saatTL" min="0" max="1200" step="5" value="240" aria-label="Personelin saatlik işveren maliyeti kaydırıcı">
+                <p class="ipucu">Net maaş değil, <b>işverene toplam maliyet</b> (SGK + işsizlik dahil).
+                  2026 asgari ücrette imalat için ≈ 39.223 ₺/ay ÷ 176 saat ≈ 223 ₺/saat.</p>
+              </div>
+
+              <div class="girdi">
+                <div class="girdi-ust">
+                  <label for="yatirim">Sistem yatırımı</label>
+                  <span class="girdi-alan">
+                    <input type="number" id="yatirim" min="0" max="20000000" step="1000" value="64000" inputmode="numeric">
+                    <span class="birim">₺</span>
+                  </span>
+                </div>
+                <input type="range" data-hedef="yatirim" min="0" max="2000000" step="1000" value="64000" aria-label="Sistem yatırımı kaydırıcı">
+                <p class="ipucu">Varsayılan 64.000 ₺ <b>yalnızca yazılım lisansıdır</b>. Kamera, optik, aydınlatma,
+                  endüstriyel PC, montaj aparatı ve devreye alma bu tutarın dışındadır — gerçekçi bir sonuç için
+                  toplam proje bedelinizi yazın.</p>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="grup tahmin">
+            <h3>Varsayımlar <span class="rozet">Tahmin · siz ayarlayın</span></h3>
+            <p class="grup-not">Aşağıdaki üç değer <b>ölçülmüş değil, tahmindir</b>. Gerçek değerleri
+              yalnız fizibilite belirler. İhtiyatlı bir tablo görmek için bunları düşürün — hesabın
+              güvenilirliği buradan gelir.</p>
+            <div class="grup-govde">
+
+              <div class="girdi">
+                <div class="girdi-ust">
+                  <label for="kacakOran">Bugün müşteriye kaçan hata oranı</label>
+                  <span class="girdi-alan">
+                    <input type="number" id="kacakOran" min="0" max="100" step="0.5" value="4" inputmode="decimal">
+                    <span class="birim">%</span>
+                  </span>
+                </div>
+                <input type="range" data-hedef="kacakOran" min="0" max="50" step="0.5" value="4" aria-label="Bugün müşteriye kaçan hata oranı kaydırıcı">
+                <p class="ipucu">Hatalı parçaların yüzde kaçı mevcut kontrolden sıyrılıp müşteriye ulaşıyor?
+                  Kalan kısım fabrikada yakalanıyor kabul edilir.</p>
+              </div>
+
+              <div class="girdi">
+                <div class="girdi-ust">
+                  <label for="yakalama">Sistemin yakalama oranı</label>
+                  <span class="girdi-alan">
+                    <input type="number" id="yakalama" min="0" max="100" step="1" value="80" inputmode="numeric">
+                    <span class="birim">%</span>
+                  </span>
+                </div>
+                <input type="range" data-hedef="yakalama" min="0" max="100" step="1" value="80" aria-label="Sistemin yakalama oranı kaydırıcı">
+                <p class="ipucu">Bugün kaçan hataların yüzde kaçını sistem durdurur? <b>%100 gerçekçi değildir</b>;
+                  hiçbir görsel denetim her kusuru göremez. Varsayılan %80 ihtiyatlı bir başlangıçtır.</p>
+              </div>
+
+              <div class="girdi">
+                <div class="girdi-ust">
+                  <label for="isgucuAzalma">Manuel kontrol yükünde azalma</label>
+                  <span class="girdi-alan">
+                    <input type="number" id="isgucuAzalma" min="0" max="100" step="5" value="40" inputmode="numeric">
+                    <span class="birim">%</span>
+                  </span>
+                </div>
+                <input type="range" data-hedef="isgucuAzalma" min="0" max="100" step="5" value="40" aria-label="Manuel kontrol yükünde azalma kaydırıcı">
+                <p class="ipucu">Personel çoğu hatta <b>tamamen kalkmaz</b>; NOK ayıklama, kurulum ve numune
+                  kontrolü insan ister. %40 çoğu kurulumda savunulabilir bir başlangıçtır.</p>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ---------------- Sonuç paneli ---------------- -->
+        <div class="sonuc-sar">
+          <div class="panel">
+            <div class="panel-bas"><span class="canli" aria-hidden="true"></span> Sonuç · canlı</div>
+
+            <div class="vurgu">
+              <p class="e">Geri ödeme süresi</p>
+              <p class="v" id="oGeri" aria-live="polite">—</p>
+              <p class="alt" id="oGeriAlt">Yatırım, aylık tasarrufla kendini bu sürede öder.</p>
+            </div>
+
+            <div class="not-satiri gizli" id="oNot"></div>
+
+            <div class="ozet">
+              <div class="h">
+                <p class="e">Aylık toplam tasarruf</p>
+                <p class="v yesil" id="oAylik">—</p>
+                <p class="k">Hata maliyeti + işgücü</p>
+              </div>
+              <div class="h">
+                <p class="e">Yıllık tasarruf tahmini</p>
+                <p class="v yesil" id="oYillik">—</p>
+                <p class="k">12 ay üzerinden</p>
+              </div>
+              <div class="h">
+                <p class="e">Manuel kontrol işgücü tasarrufu</p>
+                <p class="v" id="oIsgucu">—</p>
+                <p class="k" id="oIsgucuAlt">—</p>
+              </div>
+              <div class="h">
+                <p class="e">Müşteriye ulaşmayan hatalı parça</p>
+                <p class="v" id="oKacak">—</p>
+                <p class="k" id="oKacakAlt">—</p>
+              </div>
+            </div>
+
+            <div class="kiyas-blok">
+              <p class="kiyas-bas">Aylık hata maliyeti · önce / sonra</p>
+
+              <div class="cubuk-satir">
+                <div class="cubuk-ust"><span class="ad">Bugün</span><span class="tut" id="oOnce">—</span></div>
+                <div class="cubuk-yol"><div class="cubuk-dolgu once" id="cOnce"></div></div>
+              </div>
+
+              <div class="cubuk-satir">
+                <div class="cubuk-ust"><span class="ad">Sistemle</span><span class="tut" id="oSonra">—</span></div>
+                <div class="cubuk-yol"><div class="cubuk-dolgu sonra" id="cSonra"></div></div>
+              </div>
+
+              <p class="kiyas-fark" id="oFark">—</p>
+            </div>
+
+            <div class="panel-cta">
+              <p>Bu tablo sizin girdiğiniz rakamların aritmetiğidir. Gerçek olup olmadığını
+                <b>kendi parçanızla</b> ölçelim.</p>
+              <a class="pill primary tam" id="ctaFizibilite" href="mailto:sercansozer20@gmail.com">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3z"/><path d="M3 6l9 7 9-7"/></svg>
+                Bu hesabı fizibilite ile doğrulayalım
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 3 YILLIK TABLO ============================ -->
+  <section class="blok" id="ucyil">
+    <div class="container">
+      <p class="kicker reveal"><span class="idx">02</span>Üç yıllık görünüm</p>
+      <h2 class="reveal">Kümülatif net kazanç</h2>
+      <p class="blok-lead reveal">Yatırım bir kere yapılır, tasarruf her ay tekrar eder. Aşağıdaki çubuklar
+        <b>birikimli</b> nettir: o yılın sonuna kadarki toplam tasarruftan yatırım düşülmüştür.
+        Çubuk sıfırın altındaysa yatırım o yıl henüz kendini ödememiştir.</p>
+
+      <div class="grafik-sar reveal">
+        <div class="grafik-bas">
+          <span class="t">Kümülatif net · yatırım düşülmüş</span>
+          <span class="lgnd">
+            <span><i class="p" aria-hidden="true"></i> Kâra geçmiş</span>
+            <span><i class="n" aria-hidden="true"></i> Henüz zararda</span>
+          </span>
+        </div>
+        <svg class="grafik" id="grafik" viewBox="0 0 640 290" role="img" aria-labelledby="grafikBaslik">
+          <title id="grafikBaslik">Üç yıllık kümülatif net kazanç çubuk grafiği</title>
+          <line class="taban" id="gTaban" x1="24" y1="248" x2="616" y2="248"></line>
+          <line class="sifir" id="gSifir" x1="24" y1="248" x2="616" y2="248"></line>
+          <text class="sifir-etiket" id="gSifirEtiket" x="24" y="244" font-size="10" letter-spacing="1">0 ₺</text>
+
+          <rect class="cubuk p" id="gC1" x="80" y="248" width="110" height="0"></rect>
+          <rect class="cubuk p" id="gC2" x="265" y="248" width="110" height="0"></rect>
+          <rect class="cubuk p" id="gC3" x="450" y="248" width="110" height="0"></rect>
+
+          <text class="deger" id="gD1" x="135" y="240" text-anchor="middle">—</text>
+          <text class="deger" id="gD2" x="320" y="240" text-anchor="middle">—</text>
+          <text class="deger" id="gD3" x="505" y="240" text-anchor="middle">—</text>
+
+          <text class="yil" x="135" y="278" text-anchor="middle">YIL 1</text>
+          <text class="yil" x="320" y="278" text-anchor="middle">YIL 2</text>
+          <text class="yil" x="505" y="278" text-anchor="middle">YIL 3</text>
+        </svg>
+      </div>
+
+      <div class="tablo reveal">
+        <table>
+          <caption class="gizli-baslik" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">Üç yıllık tasarruf ve kümülatif net tablosu</caption>
+          <thead>
+            <tr>
+              <th scope="col">Dönem</th>
+              <th scope="col">Yıllık tasarruf</th>
+              <th scope="col">Yatırım</th>
+              <th scope="col">Kümülatif net</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row" style="font-family:var(--mono);font-size:11px">YIL 1</th><td class="say" id="tY1">—</td><td class="say" id="tYat">—</td><td class="say" id="tN1">—</td></tr>
+            <tr><th scope="row" style="font-family:var(--mono);font-size:11px">YIL 2</th><td class="say" id="tY2">—</td><td class="say">—</td><td class="say" id="tN2">—</td></tr>
+            <tr><th scope="row" style="font-family:var(--mono);font-size:11px">YIL 3</th><td class="say" id="tY3">—</td><td class="say">—</td><td class="say" id="tN3">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ YÖNTEM ============================ -->
+  <section class="blok" id="yontem">
+    <div class="container">
+      <p class="kicker reveal"><span class="idx">03</span>Nasıl hesaplandı</p>
+      <h2 class="reveal">Formüller açık</h2>
+      <p class="blok-lead reveal">Gizli katsayı, "sektör ortalaması" diye eklenmiş bir çarpan ya da
+        arka planda iyimserleştirilmiş bir varsayım yok. Hesabın tamamı aşağıdaki üç formülden ibarettir —
+        isterseniz aynı sayıları kendi tablonuzda doğrulayın.</p>
+
+      <div class="kartlar">
+        <div class="kart reveal">
+          <p class="n">Kalem 01</p>
+          <h3>Kaçak hatanın önlenmesi</h3>
+          <p>Sistem hata <em>üretmeyi</em> engellemez; hatalı parçanın <b>müşteriye ulaşmasını</b> engeller.
+            Kazanç, kaçan parçanın pahalı dış maliyeti ile fabrikada yakalanınca ödenen ucuz iç maliyeti
+            arasındaki farktır.</p>
+          <p class="form">Tasarruf = (önlenen kaçak adet) × (kaçak maliyeti − iç maliyet)</p>
+        </div>
+
+        <div class="kart reveal" style="--d:.08s">
+          <p class="n">Kalem 02</p>
+          <h3>İşgücü tasarrufu</h3>
+          <p>Vardiya başına kişi sayısı × vardiya × 8 saat × aylık çalışma günü × saatlik işveren maliyeti.
+            Bulunan aylık toplamın yalnız sizin belirlediğiniz <b>azalma yüzdesi</b> kadarı tasarruf sayılır.</p>
+          <p class="form">Tasarruf = kişi × vardiya × 8 × gün × ₺/saat × azalma%</p>
+        </div>
+
+        <div class="kart reveal" style="--d:.16s">
+          <p class="n">Kalem 03</p>
+          <h3>Geri ödeme ve net</h3>
+          <p>Geri ödeme, yatırımın aylık toplam tasarrufa bölünmesidir. Üç yıllık net ise o güne kadarki
+            birikimli tasarruftan yatırımın düşülmesiyle bulunur. Faiz, enflasyon ve iskonto <b>uygulanmaz</b>.</p>
+          <p class="form">Geri ödeme (ay) = yatırım ÷ aylık tasarruf</p>
+        </div>
+      </div>
+
+      <div class="liste reveal">
+        <h3>Hesaba dahil EDİLMEYENLER — bilerek</h3>
+        <ul>
+          <li><b>Donanım ve devreye alma.</b> Varsayılan 64.000 ₺ yalnız yazılım lisansıdır. Kamera, optik,
+            aydınlatma, endüstriyel PC, montaj aparatı, kablolama ve saha devreye alma ayrı kalemlerdir.
+            Gerçekçi bir sonuç için "Sistem yatırımı" alanına toplam proje bedelini yazın.</li>
+          <li><b>Yıllık bakım, destek ve model güncelleme.</b> Hesap sıfır işletme gideri varsayar;
+            gerçek tabloda bu kalem yıllık tasarrufu bir miktar düşürür.</li>
+          <li><b>Yanlış ret (false reject) maliyeti.</b> Hiçbir denetim sistemi sıfır yanlış ret vermez.
+            Sağlam parçanın hatalı sayılması hem hurda hem hat duruşu üretir; bu hesapta yer almaz ve
+            ancak fizibilitede ölçülebilir.</li>
+          <li><b>Çevrim süresine eklenen saniyeler.</b> Denetim istasyonu hattın darboğazına düşerse
+            üretim adedi azalabilir. Bu etki hatta özeldir, burada modellenmemiştir.</li>
+          <li><b>Eğitim, alışma dönemi ve kurulum sırasındaki duruş.</b> İlk haftalarda tasarruf tam
+            kapasiteyle başlamaz.</li>
+          <li><b>Para zamanı değeri.</b> Faiz, enflasyon, kur ve iskonto oranı uygulanmamıştır;
+            rakamlar bugünkü TL cinsindendir. Yatırım komitesi net bugünkü değer (NBD) isterse
+            bu tablo ham girdi olarak kullanılmalıdır.</li>
+        </ul>
+      </div>
+
+      <div class="liste reveal">
+        <h3>Bu sayılara nasıl güvenilir hale gelir</h3>
+        <ul>
+          <li><b>Yakalama oranı ölçülür, varsayılmaz.</b> Fizibilitede bilinen kusurlu parçalar sisteme
+            gösterilir; kaçının yakalandığı sayılır. Tahmin, ölçüme dönüşür.</li>
+          <li><b>Yanlış ret sayılır.</b> Sağlam parçalar da geçirilir; kaç tanesinin gereksiz yere
+            reddedildiği raporlanır. Üretim müdürünün ilk sorusu budur.</li>
+          <li><b>Tekrarlanabilirlik raporlanır.</b> Aynı parça defalarca ölçülür; ölçüm saçılımı
+            (±mm) yazılı olarak verilir — kalite müdürünün MSA/Gage R&amp;R dosyasına girecek veri budur.</li>
+          <li><b>Çevrim süresi ölçülür.</b> Denetimin hatta eklediği saniye, tahmin değil ölçüm olarak
+            raporlanır.</li>
+          <li><b>Sonuç olumsuzsa yazılı olarak söylenir.</b> Parçanız için görsel denetim uygun değilse
+            ya da 2D bir çözüm yeterliyse, rapor bunu belirtir. Uygun olmayan işi satmak iki tarafa da
+            zarar verir.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ İLETİŞİM ============================ -->
+  <section class="blok" id="iletisim">
+    <div class="container">
+      <p class="kicker reveal"><span class="idx">04</span>Sonraki adım</p>
+      <h2 class="reveal">Hesabı ölçüme çevirelim</h2>
+
+      <div class="kapanis">
+        <div class="reveal">
+          <p class="blok-lead">Yukarıdaki tablo bir <b>hipotez</b>. Bir sonraki adım onu sınamak:
+            birkaç sağlam ve birkaç bilinen kusurlu parça yeterli. Parçalarınızı tarayıp
+            ulaşılabilir ölçüm hassasiyetini, yakalanan kusurları, yanlış ret sayısını ve
+            çevrim süresini <b>fizibilite raporu</b> olarak yazılı sunuyorum. Kurulum kararını
+            tahminlere değil, o rapordaki ölçülmüş rakamlara bakarak verirsiniz.</p>
+
+          <p class="blok-lead" style="margin-top:16px">Aşağıdaki düğme, sayfada girdiğiniz bütün
+            değerleri ve hesaplanan sonuçları e-postanın gövdesine otomatik yazar — tekrar
+            anlatmanız gerekmez.</p>
+
+          <div class="links">
+            <a class="pill primary" id="ctaFizibilite2" href="mailto:sercansozer20@gmail.com">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3z"/><path d="M3 6l9 7 9-7"/></svg>
+              Bu hesabı fizibilite ile doğrulayalım
+            </a>
+            <a class="pill" href="/vision-detection.html">Ürünü incele</a>
+          </div>
+        </div>
+
+        <div class="iletisim-kart reveal" style="--d:.1s">
+          <p class="e">İletişim</p>
+          <div class="satir">
+            <span class="k">E-posta</span>
+            <a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a>
+          </div>
+          <div class="satir">
+            <span class="k">Kim</span>
+            Sercan Sözer · Mekatronik Mühendisi
+          </div>
+          <div class="satir">
+            <span class="k">Konum</span>
+            İzmir · Türkiye geneli saha çalışması
+          </div>
+          <div class="satir">
+            <span class="k">Fizibilite için gereken</span>
+            Birkaç sağlam parça, birkaç bilinen kusurlu parça ve hattın çevrim süresi.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 Sercan Sözer</span>
+    <nav class="footer-links" aria-label="Alt gezinme">
+      <a href="/">Ana Sayfa</a>
+      <a href="/cozumler.html">Çözümler</a>
+      <a href="/vision-detection.html">Ürün</a>
+      <a href="/kazanc.html">Kazanç</a>
+      <a href="/portfolyo.html">Portfolyo</a>
+      <a href="/magaza.html">Mağaza</a>
+      <a href="/yazilar.html">Yazılar</a>
+      <a href="#iletisim">İletişim</a>
+    </nav>
+    <span class="mono">sersoz.com</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var azalt = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ------------------------------------------------ scroll reveal */
+  var ogeler = document.querySelectorAll('.reveal');
+  if (azalt || !('IntersectionObserver' in window)) {
+    Array.prototype.forEach.call(ogeler, function (e) { e.classList.add('visible'); });
+  } else {
+    var ro = new IntersectionObserver(function (g) {
+      g.forEach(function (x) {
+        if (x.isIntersecting) { x.target.classList.add('visible'); ro.unobserve(x.target); }
+      });
+    }, { threshold: .15, rootMargin: '0px 0px -10% 0px' });
+    Array.prototype.forEach.call(ogeler, function (e) { ro.observe(e); });
+  }
+
+  /* ------------------------------------------------ biçimlendirme */
+  var nfTam, nfBir;
+  try {
+    nfTam = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
+    nfBir = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  } catch (e) {
+    nfTam = { format: function (v) { return String(Math.round(v)); } };
+    nfBir = { format: function (v) { return (Math.round(v * 10) / 10).toString().replace('.', ','); } };
+  }
+
+  function tl(v) {
+    if (!isFinite(v)) return '—';
+    var isaret = v < 0 ? '−' : '';
+    return isaret + '₺' + nfTam.format(Math.abs(Math.round(v)));
+  }
+  function say(v) { return nfTam.format(Math.round(v)); }
+  function say1(v) { return nfBir.format(v); }
+
+  /* kısa biçim: grafik etiketleri için — kısaltma değil tam sözcük (B/M karışmasın) */
+  function tlKisa(v) {
+    var a = Math.abs(v), i = v < 0 ? '−' : '';
+    if (a >= 1e9) return i + '₺' + nfBir.format(a / 1e9) + ' milyar';
+    if (a >= 1e6) return i + '₺' + nfBir.format(a / 1e6) + ' milyon';
+    if (a >= 1e4) return i + '₺' + nfTam.format(Math.round(a / 1000)) + ' bin';
+    return i + '₺' + nfTam.format(Math.round(a));
+  }
+
+  /* ------------------------------------------------ girdi bağlama */
+  var alanlar = ['adet', 'vardiya', 'gun', 'hataOran', 'hataTL', 'kacakTL',
+                 'kisi', 'saatTL', 'yatirim', 'kacakOran', 'yakalama', 'isgucuAzalma'];
+  var kutu = {};
+  alanlar.forEach(function (id) { kutu[id] = document.getElementById(id); });
+
+  var kaydiricilar = document.querySelectorAll('input[type="range"][data-hedef]');
+
+  function sayiOku(el) {
+    var v = parseFloat(String(el.value).replace(',', '.'));
+    if (!isFinite(v)) v = parseFloat(el.getAttribute('min')) || 0;
+    var mn = parseFloat(el.getAttribute('min'));
+    var mx = parseFloat(el.getAttribute('max'));
+    if (isFinite(mn) && v < mn) v = mn;
+    if (isFinite(mx) && v > mx) v = mx;
+    return v;
+  }
+
+  function kaydiriciSenkron() {
+    Array.prototype.forEach.call(kaydiricilar, function (k) {
+      var hedef = kutu[k.getAttribute('data-hedef')];
+      if (!hedef) return;
+      var v = sayiOku(hedef);
+      var mn = parseFloat(k.getAttribute('min'));
+      var mx = parseFloat(k.getAttribute('max'));
+      /* sayı kutusu kaydırıcı aralığının dışındaysa kaydırıcıyı uca yasla */
+      k.value = String(Math.min(Math.max(v, mn), mx));
+    });
+  }
+
+  Array.prototype.forEach.call(kaydiricilar, function (k) {
+    k.addEventListener('input', function () {
+      var hedef = kutu[k.getAttribute('data-hedef')];
+      if (!hedef) return;
+      hedef.value = k.value;
+      hesapla();
+    });
+  });
+
+  alanlar.forEach(function (id) {
+    var el = kutu[id];
+    if (!el) return;
+    el.addEventListener('input', function () { kaydiriciSenkron(); hesapla(); });
+    el.addEventListener('blur', function () {
+      el.value = String(sayiOku(el));
+      kaydiriciSenkron();
+      hesapla();
+    });
+  });
+
+  /* ------------------------------------------------ DOM kısayolları */
+  function $(id) { return document.getElementById(id); }
+  var oGeri = $('oGeri'), oGeriAlt = $('oGeriAlt'), oNot = $('oNot'),
+      oAylik = $('oAylik'), oYillik = $('oYillik'),
+      oIsgucu = $('oIsgucu'), oIsgucuAlt = $('oIsgucuAlt'),
+      oKacak = $('oKacak'), oKacakAlt = $('oKacakAlt'),
+      oOnce = $('oOnce'), oSonra = $('oSonra'), oFark = $('oFark'),
+      cOnce = $('cOnce'), cSonra = $('cSonra');
+
+  var gTaban = $('gTaban'), gSifir = $('gSifir'), gSifirEtiket = $('gSifirEtiket');
+  var gC = [$('gC1'), $('gC2'), $('gC3')];
+  var gD = [$('gD1'), $('gD2'), $('gD3')];
+  var tY = [$('tY1'), $('tY2'), $('tY3')];
+  var tN = [$('tN1'), $('tN2'), $('tN3')];
+  var tYat = $('tYat');
+  var cta1 = $('ctaFizibilite'), cta2 = $('ctaFizibilite2');
+
+  /* grafik geometrisi */
+  var UST = 40, ALT = 248, YUK = ALT - UST;
+
+  /* ------------------------------------------------ hesap */
+  function hesapla() {
+    var adet = sayiOku(kutu.adet),
+        vardiya = sayiOku(kutu.vardiya),
+        gun = sayiOku(kutu.gun),
+        hataOran = sayiOku(kutu.hataOran),
+        hataTL = sayiOku(kutu.hataTL),
+        kacakTL = sayiOku(kutu.kacakTL),
+        kisi = sayiOku(kutu.kisi),
+        saatTL = sayiOku(kutu.saatTL),
+        yatirim = sayiOku(kutu.yatirim),
+        kacakOran = sayiOku(kutu.kacakOran),
+        yakalama = sayiOku(kutu.yakalama),
+        isgucuAzalma = sayiOku(kutu.isgucuAzalma);
+
+    var aylikUretim = adet * gun;
+    var hataliAdet = aylikUretim * (hataOran / 100);
+
+    var kacak0 = hataliAdet * (kacakOran / 100);
+    var ic0 = hataliAdet - kacak0;
+    var maliyet0 = ic0 * hataTL + kacak0 * kacakTL;
+
+    var kacak1 = kacak0 * (1 - yakalama / 100);
+    var ic1 = hataliAdet - kacak1;
+    var maliyet1 = ic1 * hataTL + kacak1 * kacakTL;
+
+    var hataTasarruf = maliyet0 - maliyet1;
+    var onlenenKacak = kacak0 - kacak1;
+
+    var isgucuAylikToplam = kisi * vardiya * 8 * gun * saatTL;
+    var isgucuTasarruf = isgucuAylikToplam * (isgucuAzalma / 100);
+
+    var aylikTasarruf = hataTasarruf + isgucuTasarruf;
+    var yillikTasarruf = aylikTasarruf * 12;
+    var geriAy = aylikTasarruf > 0 ? (yatirim / aylikTasarruf) : Infinity;
+
+    /* ---- geri ödeme ---- */
+    var geriMetin;
+    if (!(aylikTasarruf > 0)) {
+      geriMetin = 'hesaplanamadi';
+      oGeri.textContent = '—';
+      oGeriAlt.textContent = 'Girilen değerlerle aylık tasarruf çıkmıyor; geri ödeme hesaplanamaz.';
+    } else if (yatirim <= 0) {
+      geriMetin = '0 ay';
+      oGeri.innerHTML = '0<small>ay</small>';
+      oGeriAlt.textContent = 'Yatırım tutarı sıfır girildi.';
+    } else if (geriAy < 1) {
+      geriMetin = say(Math.max(1, geriAy * 30)) + ' gun';
+      oGeri.innerHTML = say(Math.max(1, geriAy * 30)) + '<small>gün</small>';
+      oGeriAlt.textContent = 'Aylık tasarruf yatırımı bir aydan kısa sürede karşılıyor.';
+    } else {
+      geriMetin = say1(geriAy) + ' ay';
+      oGeri.innerHTML = say1(geriAy) + '<small>ay</small>';
+      oGeriAlt.textContent = 'Yatırım, aylık ' + tl(aylikTasarruf) + ' tasarrufla kendini bu sürede öder.';
+    }
+
+    /* ---- bağlama duyarlı dürüstlük notu ---- */
+    var not = '';
+    if (!(aylikTasarruf > 0)) {
+      not = '<b>Tasarruf çıkmıyor.</b> Bu rakamlarla görsel denetim yatırımı kendini ödemiyor. ' +
+            'Girdileri gözden geçirin — ya kaçak maliyeti iç maliyetin altında kalmış ya da ' +
+            'hata oranı ile işgücü kalemleri sıfıra yakın. Sonuç gerçekten böyleyse, bu hat için ' +
+            'yatırımı önermem.';
+    } else if (geriAy < 3 && yatirim > 0) {
+      not = '<b>Bu kadar kısa geri ödeme dikkatle okunmalı.</b> Varsayılan 64.000 ₺ yalnız yazılım ' +
+            'lisansıdır; kamera, aydınlatma, endüstriyel PC, montaj ve devreye alma dahil değildir. ' +
+            'Gerçekçi bir tablo için "Sistem yatırımı" alanına toplam proje bedelini yazın. ' +
+            'Sektörde yayımlanan görsel denetim kurulumlarında tipik geri ödeme <b>6-14 ay</b> bandındadır.';
+    } else if (geriAy > 36) {
+      not = '<b>Geri ödeme 3 yılı aşıyor.</b> Bu rakamlarla yatırım gerekçesi zayıf görünüyor. ' +
+            'Ya kapsamı daraltmak (tek istasyon, tek kusur tipi) ya da önce daha yüksek hacimli ' +
+            'bir hatta başlamak daha doğru olur.';
+    } else if (yakalama >= 95) {
+      not = '<b>%' + say(yakalama) + ' yakalama oranı iyimser.</b> Hiçbir görsel denetim sistemi ' +
+            'her kusuru göremez; kusur tipine, yüzeye ve aydınlatmaya göre değişir. İhtiyatlı bir ' +
+            'tablo için bu değeri %75-85 bandına çekip sonuca tekrar bakın.';
+    } else if (isgucuAzalma >= 90) {
+      not = '<b>İşgücünde %' + say(isgucuAzalma) + ' azalma nadir görülür.</b> NOK parçanın ' +
+            'ayıklanması, ürün değişiminde kurulum ve numune kontrolü çoğu hatta insan gerektirir. ' +
+            'Daha savunulabilir bir tablo için bu değeri %30-50 bandına çekin.';
+    }
+
+    if (not) { oNot.innerHTML = not; oNot.classList.remove('gizli'); }
+    else { oNot.classList.add('gizli'); oNot.innerHTML = ''; }
+
+    /* ---- özet kutuları ---- */
+    oAylik.textContent = tl(aylikTasarruf);
+    oYillik.textContent = tl(yillikTasarruf);
+
+    oIsgucu.textContent = tl(isgucuTasarruf);
+    oIsgucuAlt.textContent = kisi > 0
+      ? say(kisi * vardiya) + ' kişilik toplam yükün %' + say(isgucuAzalma) + ' kadarı · yılda ' + tl(isgucuTasarruf * 12)
+      : 'Kontrol personeli girilmedi.';
+
+    oKacak.textContent = say(onlenenKacak) + ' adet/ay';
+    oKacakAlt.textContent = 'Bugün ayda ' + say(kacak0) + ' adet kaçtığı varsayımıyla · yılda ' +
+      say(onlenenKacak * 12) + ' adet';
+
+    /* ---- önce / sonra çubukları ---- */
+    var enB = Math.max(maliyet0, maliyet1, 1);
+    oOnce.textContent = tl(maliyet0);
+    oSonra.textContent = tl(maliyet1);
+    cOnce.style.width = (maliyet0 / enB * 100) + '%';
+    cSonra.style.width = (maliyet1 / enB * 100) + '%';
+
+    if (hataTasarruf > 0) {
+      var yuzde = maliyet0 > 0 ? (hataTasarruf / maliyet0 * 100) : 0;
+      oFark.textContent = 'Aylık hata maliyetinde ' + tl(hataTasarruf) + ' azalma (%' + say1(yuzde) + ')';
+    } else if (hataTasarruf === 0) {
+      oFark.textContent = 'Hata maliyetinde değişim yok — kazanç yalnız işgücü kaleminden geliyor.';
+    } else {
+      oFark.textContent = 'Kaçak maliyeti iç maliyetin altında girildi; bu kalemde kazanç çıkmıyor.';
+    }
+
+    /* ---- 3 yıllık kümülatif ---- */
+    var netler = [
+      yillikTasarruf * 1 - yatirim,
+      yillikTasarruf * 2 - yatirim,
+      yillikTasarruf * 3 - yatirim
+    ];
+
+    var enBuyuk = Math.max.apply(null, netler.concat([0]));
+    var enKucuk = Math.min.apply(null, netler.concat([0]));
+    var aralik = enBuyuk - enKucuk;
+    /* her sey sifirsa sifir cizgisini tabana yasla */
+    if (!(aralik > 0)) { aralik = 1; enBuyuk = 1; }
+
+    var sifirY = UST + (enBuyuk / aralik) * YUK;
+    var olcek = YUK / aralik;
+
+    gSifir.setAttribute('y1', sifirY);
+    gSifir.setAttribute('y2', sifirY);
+    gSifirEtiket.setAttribute('y', sifirY - 5);
+
+    for (var i = 0; i < 3; i++) {
+      var v = netler[i];
+      var h = Math.abs(v) * olcek;
+      if (h < 1) h = 1;
+      var y = v >= 0 ? (sifirY - h) : sifirY;
+
+      gC[i].setAttribute('y', y);
+      gC[i].setAttribute('height', h);
+      gC[i].setAttribute('class', 'cubuk ' + (v >= 0 ? 'p' : 'n'));
+
+      var etiketY = v >= 0 ? (y - 9) : (y + h + 19);
+      if (etiketY < 18) etiketY = 18;
+      if (etiketY > 282) etiketY = 282;
+      gD[i].setAttribute('y', etiketY);
+      gD[i].textContent = tlKisa(v);
+
+      tY[i].textContent = tl(yillikTasarruf);
+      tN[i].textContent = tl(netler[i]);
+      tN[i].className = 'say ' + (netler[i] >= 0 ? 'arti' : 'eksi');
+    }
+    tYat.textContent = '− ' + tl(yatirim);
+
+    /* ---- CTA mailto ---- */
+    var g = [
+      'Merhaba Sercan Bey,',
+      '',
+      'sersoz.com/kazanc.html sayfasindaki hesaplayiciyi kendi hattimizin rakamlariyla doldurdum.',
+      'Bu tahmini fizibilite ile dogrulamak istiyorum.',
+      '',
+      '--- GIRDIGIM DEGERLER ---',
+      'Gunluk uretim adedi      : ' + say(adet) + ' adet/gun',
+      'Vardiya sayisi           : ' + say(vardiya),
+      'Calisma gunu             : ' + say(gun) + ' gun/ay',
+      'Mevcut hata orani        : %' + say1(hataOran),
+      'Hatali urunun ic maliyeti: ' + say(hataTL) + ' TL/adet',
+      'Kacak hatanin maliyeti   : ' + say(kacakTL) + ' TL/adet',
+      'Kontrol personeli        : ' + say(kisi) + ' kisi/vardiya',
+      'Saatlik isveren maliyeti : ' + say(saatTL) + ' TL/saat',
+      'Sistem yatirimi          : ' + say(yatirim) + ' TL',
+      '',
+      '--- VARSAYIMLAR (tahmin) ---',
+      'Bugun musteriye kacan    : %' + say1(kacakOran),
+      'Sistemin yakalama orani  : %' + say(yakalama),
+      'Isgucunde azalma         : %' + say(isgucuAzalma),
+      '',
+      '--- HESAPLANAN SONUC ---',
+      'Aylik hata maliyeti (bugun) : ' + say(maliyet0) + ' TL',
+      'Aylik hata maliyeti (sistem): ' + say(maliyet1) + ' TL',
+      'Isgucu tasarrufu            : ' + say(isgucuTasarruf) + ' TL/ay',
+      'Aylik toplam tasarruf       : ' + say(aylikTasarruf) + ' TL',
+      'Yillik tasarruf             : ' + say(yillikTasarruf) + ' TL',
+      'Geri odeme suresi           : ' + geriMetin,
+      '3. yil sonu kumulatif net   : ' + say(netler[2]) + ' TL',
+      '',
+      'Not: Bu rakamlar sayfadaki tahmin modelinden gelmektedir, olculmus degildir.',
+      '',
+      'Parca / hat bilgisi:',
+      '- Parca:',
+      '- Aranan kusur tipi:',
+      '- Hattin cevrim suresi:',
+      '- Tesis / sehir:',
+      '',
+      'Iyi calismalar.'
+    ].join('\n');
+
+    var konu = 'Fizibilite talebi - geri odeme ' + geriMetin +
+               ' / yillik ' + say(yillikTasarruf) + ' TL';
+
+    var href = 'mailto:sercansozer20@gmail.com?subject=' + encodeURIComponent(konu) +
+               '&body=' + encodeURIComponent(g);
+    if (cta1) cta1.setAttribute('href', href);
+    if (cta2) cta2.setAttribute('href', href);
+  }
+
+  kaydiriciSenkron();
+  hesapla();
+})();
+</script>
+<script src="/iz.js" defer></script>
+</body>
+</html>

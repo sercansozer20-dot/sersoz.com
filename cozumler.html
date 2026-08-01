@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sektörel Çözümler — Hangi hattı, hangi problemi denetliyoruz?</title>
+<meta name="description" content="Otomotiv yan sanayi, beyaz eşya, metal işleme, gıda-ambalaj, lojistik ve Atex sahaları için makine görüşü çözümleri. Sektörünüzü ve problemi seçin, hangi ölçüm aracıyla çözüldüğünü görün; hattınızın uygunluğunu 6 soruda ölçün.">
+<meta property="og:title" content="Sektörel Çözümler — Sercan Sözer">
+<meta property="og:description" content="Sektörünüzü seçin, tipik problemleri ve hangi ölçüm aracıyla çözüldüğünü görün. Hattınız uygun mu, 6 soruda değerlendirin.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://sersoz.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="sersoz.com">
+<meta property="og:locale" content="tr_TR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://sersoz.com/og.png">
+<meta property="og:url" content="https://sersoz.com/cozumler.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f6f2ea;
+    --ink: #1a1815;
+    --muted: #5b564d;
+    --accent: #c2410c;
+    --green: #14532d;
+    --line: rgba(26, 24, 21, .2);
+    --line-soft: rgba(26, 24, 21, .1);
+    --faint: rgba(26, 24, 21, .055);
+    --paper: rgba(255, 253, 248, .6);
+    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  ::selection { background: var(--accent); color: var(--bg); }
+  section { scroll-margin-top: 72px; }
+  .container { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- Nav ---------- */
+  nav#nav {
+    position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 40;
+    display: flex; align-items: center;
+    background: rgba(246, 242, 234, .92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; flex: none; }
+  .brand .mark {
+    width: 22px; height: 22px; background: var(--accent); color: var(--bg);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 14px; font-weight: 700; line-height: 1;
+  }
+  .brand span.host { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--ink); }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
+  .nav-links a {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink); text-decoration: none; padding: 10px 12px; white-space: nowrap; transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a.active { color: var(--accent); }
+  .nav-links a.nav-cta { border: 1px solid var(--ink); padding: 9px 14px; margin-left: 8px; transition: color .2s, border-color .2s; }
+  .nav-links a.nav-cta:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- Sayfa başlığı ---------- */
+  .page-hero { position: relative; padding: clamp(126px, 20vh, 176px) 0 clamp(56px, 8vh, 82px); overflow: hidden; }
+  .page-hero .container { position: relative; z-index: 2; }
+  .hero-content { max-width: 840px; animation: rise .9s cubic-bezier(.2, .7, .3, 1) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 14px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .3em; text-transform: uppercase;
+    color: var(--ink); margin-bottom: 26px;
+  }
+  .eyebrow::before { content: ''; width: 42px; height: 2px; background: var(--accent); }
+
+  h1 { font-family: var(--serif); font-size: clamp(34px, 6vw, 62px); font-weight: 700; letter-spacing: -.015em; line-height: 1.06; }
+  h1 .nokta { color: var(--accent); }
+
+  .hero-desc {
+    margin-top: 22px; max-width: 62ch; font-size: clamp(14px, 1.8vw, 16px); line-height: 1.75;
+    color: var(--muted); border-left: 1px solid var(--line); padding-left: 18px;
+  }
+  .hero-desc b { color: var(--ink); font-weight: 600; }
+
+  .links { margin-top: 34px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 9px; padding: 13px 24px;
+    border: 1px solid var(--ink); color: var(--ink); text-decoration: none; cursor: pointer;
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase;
+    background: transparent; transition: border-color .22s, background .22s, color .22s;
+  }
+  .pill svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .pill.primary { background: var(--ink); color: var(--bg); }
+  @media (hover: hover) {
+    .pill:hover { border-color: var(--accent); color: var(--accent); }
+    .pill.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  }
+  .pill:active { border-color: var(--accent); }
+
+  .fig-cap {
+    position: absolute; z-index: 2; bottom: 22px; right: 28px;
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; color: var(--muted);
+    text-transform: uppercase; pointer-events: none;
+  }
+  .fig-cap::before { content: ''; width: 8px; height: 8px; background: var(--accent); flex: none; }
+
+  /* ---------- Ortak bölüm düzeni ---------- */
+  .section { position: relative; padding: clamp(64px, 10vh, 116px) 0; border-top: 3px double var(--line); overflow: hidden; }
+  .section-index {
+    position: absolute; top: clamp(20px, 4vh, 46px); right: -8px;
+    font-family: var(--serif); font-size: clamp(100px, 16vw, 190px); font-weight: 700;
+    letter-spacing: -.02em; line-height: .8; color: var(--faint); pointer-events: none; user-select: none;
+  }
+  .kicker { font-family: var(--mono); font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+  .kicker .idx { color: var(--accent); margin-right: 10px; }
+  h2 { font-family: var(--serif); font-size: clamp(29px, 4.6vw, 50px); font-weight: 700; letter-spacing: -.012em; line-height: 1.07; margin-bottom: 22px; }
+  h2::after { content: '.'; color: var(--accent); }
+  .section-lead { color: var(--muted); line-height: 1.78; font-size: 16px; max-width: 62ch; }
+  .section-lead b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Seçici şerit ---------- */
+  .secici {
+    margin-top: 34px; display: flex; flex-wrap: wrap; gap: 0;
+    border: 1px solid var(--line); background: var(--paper);
+  }
+  .secici button {
+    flex: 1 1 auto; min-width: 0; padding: 15px 16px; cursor: pointer;
+    background: transparent; border: none; border-right: 1px solid var(--line-soft);
+    color: var(--muted); text-align: center;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    transition: color .2s, background .2s, box-shadow .2s;
+  }
+  .secici button:last-child { border-right: none; }
+  .secici button:hover { color: var(--ink); background: rgba(26, 24, 21, .035); }
+  .secici button[aria-selected="true"] {
+    color: var(--accent); background: rgba(194, 65, 12, .07);
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+  .secici button:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+
+  .secici-not { margin-top: 12px; font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: var(--muted); }
+  .secici-not::before { content: '▸ '; color: var(--accent); }
+
+  /* ---------- Panel ---------- */
+  .panel { margin-top: 34px; animation: panelIn .38s cubic-bezier(.2, .7, .3, 1) both; }
+  .panel[hidden] { display: none; }
+  @keyframes panelIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  .panel-basi {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 14px 24px; flex-wrap: wrap;
+    padding-bottom: 14px; border-bottom: 1px solid var(--line);
+  }
+  .panel-basi h3 { font-family: var(--serif); font-size: clamp(22px, 3vw, 30px); font-weight: 700; letter-spacing: -.01em; line-height: 1.15; }
+  .panel-basi .etiket { font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
+  .panel-ozet { margin-top: 16px; font-size: 15px; line-height: 1.75; color: var(--muted); max-width: 68ch; }
+  .panel-ozet b { color: var(--ink); font-weight: 600; }
+
+  .alt-baslik {
+    margin-top: 34px; display: flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--ink);
+  }
+  .alt-baslik::before { content: ''; width: 8px; height: 8px; background: var(--accent); flex: none; }
+
+  /* dert kartları */
+  .dertler { margin-top: 18px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  .dert {
+    position: relative; padding: 24px 22px 26px; border: 1px solid var(--line); background: var(--paper);
+    transition: transform .3s cubic-bezier(.2, .7, .3, 1), border-color .3s, box-shadow .3s;
+  }
+  .dert::after {
+    content: ''; position: absolute; left: -1px; right: -1px; top: -1px; height: 2px; background: var(--accent);
+    transform: scaleX(0); transform-origin: left; transition: transform .38s cubic-bezier(.2, .7, .3, 1);
+  }
+  @media (hover: hover) {
+    .dert:hover { transform: translateY(-5px); border-color: rgba(194, 65, 12, .4); box-shadow: 0 14px 30px rgba(26, 24, 21, .09); }
+    .dert:hover::after { transform: scaleX(1); }
+    .dert:hover h4 { color: var(--accent); }
+  }
+  .dert .no { font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; color: var(--accent); }
+  .dert h4 { margin-top: 10px; font-family: var(--serif); font-size: 19px; font-weight: 700; line-height: 1.24; transition: color .22s; }
+  .dert p { margin-top: 11px; font-size: 13.5px; line-height: 1.66; color: var(--muted); }
+  .dert p b { color: var(--ink); font-weight: 600; }
+
+  /* çözüm tablosu */
+  .cozum { margin-top: 18px; border: 1px solid var(--line); background: var(--paper); }
+  .csatir { display: grid; grid-template-columns: 260px 1fr; border-bottom: 1px solid var(--line-soft); }
+  .csatir:last-child { border-bottom: none; }
+  .csatir .k {
+    padding: 15px 18px; border-right: 1px solid var(--line-soft);
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  }
+  .csatir .v { padding: 15px 18px; font-size: 14px; line-height: 1.65; }
+  .csatir .v b { font-weight: 600; }
+  .csatir .v .arac {
+    display: inline-block; margin: 3px 6px 3px 0; padding: 3px 9px;
+    border: 1px solid var(--line); background: rgba(26, 24, 21, .03);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: var(--ink);
+  }
+
+  /* kazanç */
+  .kazanclar { margin-top: 18px; list-style: none; }
+  .kazanclar li {
+    position: relative; padding-left: 22px; margin-top: 10px;
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.65; color: var(--green);
+  }
+  .kazanclar li::before { content: '▸'; position: absolute; left: 0; top: 0; color: var(--green); }
+
+  /* saha notu */
+  .saha {
+    margin-top: 18px; padding: 20px 22px; border: 1px solid var(--line);
+    border-left: 3px solid var(--accent); background: var(--paper);
+  }
+  .saha .s-baslik { font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
+  .saha p { margin-top: 10px; font-size: 13.5px; line-height: 1.7; color: var(--muted); }
+  .saha p b { color: var(--ink); font-weight: 600; }
+  .saha p + p { margin-top: 8px; }
+  .saha .durust { margin-top: 12px; font-family: var(--serif); font-style: italic; font-size: 13px; color: var(--muted); }
+
+  /* ---------- Problem panelleri ---------- */
+  .prob-govde { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 22px; }
+  .prob-kutu { padding: 24px 22px 26px; border: 1px solid var(--line); background: var(--paper); }
+  .prob-kutu .p-baslik { font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+  .prob-kutu p { margin-top: 12px; font-size: 13.5px; line-height: 1.7; color: var(--muted); }
+  .prob-kutu p b { color: var(--ink); font-weight: 600; }
+  .prob-adim { margin-top: 12px; list-style: none; counter-reset: adim; }
+  .prob-adim li {
+    position: relative; padding-left: 30px; margin-top: 11px; font-size: 13.5px; line-height: 1.6; color: var(--muted);
+    counter-increment: adim;
+  }
+  .prob-adim li::before {
+    content: counter(adim, decimal-leading-zero); position: absolute; left: 0; top: .1em;
+    font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: .06em;
+  }
+  .prob-cikti {
+    margin-top: 22px; padding: 16px 20px; border: 1px solid var(--line); background: rgba(20, 83, 45, .05);
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.66; color: var(--green);
+  }
+  .prob-cikti .e { display: block; margin-bottom: 6px; font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--green); opacity: .8; }
+
+  /* ---------- Uygunluk testi ---------- */
+  .test { margin-top: 34px; display: grid; grid-template-columns: 1.35fr 1fr; gap: 30px; align-items: start; }
+  .sorular { border: 1px solid var(--line); background: var(--paper); }
+  .soru {
+    display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px; cursor: pointer;
+    border-bottom: 1px solid var(--line-soft); transition: background .2s;
+  }
+  .soru:last-child { border-bottom: none; }
+  .soru:hover { background: rgba(194, 65, 12, .045); }
+  .soru input {
+    flex: none; width: 17px; height: 17px; margin-top: 2px;
+    accent-color: var(--accent); cursor: pointer;
+  }
+  .soru input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .soru .metin { font-size: 14px; line-height: 1.6; }
+  .soru .metin small { display: block; margin-top: 5px; font-family: var(--mono); font-size: 11px; line-height: 1.55; color: var(--muted); }
+  .soru input:checked + .metin { color: var(--ink); }
+
+  .sonuc-kutu { position: sticky; top: 78px; border: 1px solid var(--line); background: var(--paper); padding: 26px 24px 28px; }
+  .sonuc-kutu .s-etiket { font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
+  .sonuc-skor { margin-top: 14px; font-family: var(--mono); font-size: 34px; font-weight: 700; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+  .sonuc-skor small { font-size: 15px; font-weight: 400; color: var(--muted); }
+  .sonuc-durum {
+    margin-top: 14px; display: inline-block; padding: 5px 12px; border: 1px solid var(--line);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
+  }
+  .sonuc-durum[data-durum="yuksek"] { color: var(--green); border-color: rgba(20, 83, 45, .45); background: rgba(20, 83, 45, .07); }
+  .sonuc-durum[data-durum="orta"] { color: var(--accent); border-color: rgba(194, 65, 12, .45); background: rgba(194, 65, 12, .07); }
+  .sonuc-durum[data-durum="dusuk"] { color: var(--muted); }
+  .sonuc-metin { margin-top: 16px; font-size: 13.5px; line-height: 1.7; color: var(--muted); }
+  .sonuc-kutu .pill { margin-top: 22px; width: 100%; justify-content: center; }
+  .sonuc-not { margin-top: 14px; font-family: var(--serif); font-style: italic; font-size: 12.5px; line-height: 1.6; color: var(--muted); }
+
+  .sinirlar { margin-top: 30px; border: 1px solid var(--line); border-left: 3px solid var(--ink); background: var(--paper); padding: 22px 24px 24px; }
+  .sinirlar .s-baslik { font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink); }
+  .sinirlar ul { margin-top: 14px; list-style: none; columns: 2; column-gap: 34px; }
+  .sinirlar li { position: relative; padding-left: 18px; margin-bottom: 10px; font-size: 13.5px; line-height: 1.6; color: var(--muted); break-inside: avoid; }
+  .sinirlar li::before { content: ''; position: absolute; left: 0; top: .62em; width: 9px; height: 1px; background: var(--accent); }
+
+  /* ---------- Kapanış ---------- */
+  .kapanis { max-width: 780px; }
+  .kapanis .lead { color: var(--muted); line-height: 1.78; font-size: 16px; max-width: 56ch; margin-bottom: 30px; }
+  .kapanis .lead b { color: var(--ink); font-weight: 600; }
+  .ne-getirin { margin-top: 30px; border-top: 1px solid var(--line); padding-top: 22px; }
+  .ne-getirin .e { font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+  .ne-getirin ul { margin-top: 14px; list-style: none; }
+  .ne-getirin li { position: relative; padding-left: 20px; margin-top: 9px; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+  .ne-getirin li::before { content: ''; position: absolute; left: 0; top: .62em; width: 10px; height: 1px; background: var(--accent); }
+
+  .status {
+    margin-top: 38px; display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase;
+  }
+  .dot { width: 8px; height: 8px; background: var(--green); box-shadow: 0 0 0 0 rgba(20, 83, 45, .4); animation: pulse 2.2s ease-out infinite; }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(20, 83, 45, .4); }
+    70% { box-shadow: 0 0 0 11px rgba(20, 83, 45, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(20, 83, 45, 0); }
+  }
+
+  footer { border-top: 3px double var(--line); padding: 26px 0 32px; }
+  .footer-inner {
+    max-width: 1120px; margin: 0 auto; padding: 0 28px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px 24px; flex-wrap: wrap;
+    font-size: 12px; letter-spacing: .08em; color: var(--muted);
+  }
+  .footer-inner .mono { font-family: var(--mono); }
+  .footer-links { display: flex; gap: 4px 18px; flex-wrap: wrap; }
+  .footer-links a {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none; transition: color .2s;
+  }
+  .footer-links a:hover { color: var(--accent); }
+
+  /* ---------- Scroll reveal ---------- */
+  .reveal {
+    opacity: 0; transform: translateY(18px);
+    transition: opacity .6s cubic-bezier(.2, .7, .3, 1), transform .6s cubic-bezier(.2, .7, .3, 1);
+    transition-delay: var(--d, 0s);
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  /* ---------- Mobil ---------- */
+  @media (max-width: 1080px) {
+    .container, .nav-inner, .footer-inner { max-width: 920px; }
+    .csatir { grid-template-columns: 210px 1fr; }
+    .test { grid-template-columns: 1fr; }
+    .sonuc-kutu { position: static; }
+  }
+
+  @media (max-width: 880px) {
+    /* 6 düğme = 2 satır x 3; son satırda alt çizgi kabın kenarlığıyla çakışmasın */
+    .secici button { flex: 1 1 33.333%; border-bottom: 1px solid var(--line-soft); }
+    .secici button:nth-child(3n) { border-right: none; }
+    .secici button:nth-last-child(-n+3) { border-bottom: none; }
+    .prob-govde { grid-template-columns: 1fr; }
+    .section-index { font-size: clamp(84px, 20vw, 140px); }
+    .sinirlar ul { columns: 1; }
+  }
+
+  @media (max-width: 720px) {
+    .dertler { grid-template-columns: 1fr; }
+    .csatir { grid-template-columns: 1fr; }
+    .csatir .k { border-right: none; border-bottom: 1px solid var(--line-soft); }
+    /* 6 düğme = 3 satır x 2 */
+    .secici button { flex: 1 1 50%; border-bottom: 1px solid var(--line-soft); }
+    .secici button:nth-child(3n) { border-right: 1px solid var(--line-soft); }
+    .secici button:nth-child(2n) { border-right: none; }
+    .secici button:nth-last-child(-n+3) { border-bottom: 1px solid var(--line-soft); }
+    .secici button:nth-last-child(-n+2) { border-bottom: none; }
+  }
+
+  @media (max-width: 640px) {
+    .container, .footer-inner { padding: 0 20px; }
+    .nav-inner { padding: 0 14px; gap: 8px; }
+    .brand span.host { display: none; }
+    .nav-links {
+      flex: 1 1 auto; min-width: 0; justify-content: flex-start;
+      overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
+    .nav-links a { padding: 10px 7px; font-size: 10px; letter-spacing: .1em; }
+    .nav-links a.nav-cta { margin-left: 5px; padding: 8px 10px; }
+    .hero-desc { border-left: none; padding-left: 0; }
+    .fig-cap { display: none; }
+    .panel-basi { display: block; }
+    .panel-basi .etiket { display: block; margin-bottom: 8px; }
+    .soru { padding: 16px 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .hero-content { animation: none; }
+    .panel { animation: none; }
+    .dot { animation: none; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .dert, .dert::after, .dert h4, .pill, .secici button { transition: none; }
+  }
+</style>
+<noscript><style>
+  .reveal { opacity: 1; transform: none; }
+  .secici, .secici-not, .js-only { display: none; }
+  /* JS kapalıyken tüm paneller alt alta okunur; ayraçla birbirinden ayrılır */
+  .panel { display: block !important; margin-top: 30px; padding-top: 30px; border-top: 1px solid rgba(26, 24, 21, .1); }
+</style></noscript>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/" aria-label="sersoz.com">
+      <span class="mark" aria-hidden="true">S</span>
+      <span class="host">sersoz.com</span>
+    </a>
+    <div class="nav-links">
+      <a href="/">Ana Sayfa</a>
+      <a href="/cozumler.html" class="active" aria-current="page">Çözümler</a>
+      <a href="/vision-detection.html">Ürün</a>
+      <a href="/portfolyo.html">Portfolyo</a>
+      <a href="/yazilar.html">Yazılar</a>
+      <a href="/magaza.html">Mağaza</a>
+      <a class="nav-cta" href="#fizibilite">İletişim</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-hero" id="ust">
+  <div class="container">
+    <div class="hero-content">
+      <p class="eyebrow">Sektörel çözümler</p>
+      <h1>Hangi sektördesiniz<span class="nokta">?</span></h1>
+      <p class="hero-desc">Makine görüşü genel bir vaat değildir; <b>belirli bir hattın belirli bir derdini</b>
+        çözer. Aşağıda altı sektörün tipik problemlerini, her birinin hangi ölçüm aracıyla çözüldüğünü ve
+        ne beklemeniz gerektiğini yazdım. Sektörünüzü seçin, kendi hattınızı tanıyıp tanımadığınıza bakın —
+        sonunda <b>hattınızın uygunluğunu altı soruda</b> değerlendirebilirsiniz.</p>
+      <div class="links">
+        <a class="pill primary" href="#sektorler">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
+          Sektörümü seç
+        </a>
+        <a class="pill" href="#uygunluk">Hattım uygun mu?</a>
+      </div>
+    </div>
+  </div>
+  <div class="fig-cap" aria-hidden="true">Şekil 1 — Sektör · Problem · Uygunluk</div>
+</header>
+
+<main>
+
+  <!-- ================= 01 SEKTÖR SEÇİCİ ================= -->
+  <section class="section" id="sektorler">
+    <span class="section-index" aria-hidden="true">01</span>
+    <div class="container">
+      <p class="kicker reveal"><span class="idx">01</span>Sektör seçici</p>
+      <h2 class="reveal">Hattınız hangisi</h2>
+      <p class="section-lead reveal">Her sektörün kendi kabul kriteri, kendi çevrim süresi ve kendi kâbusu var.
+        Seçin; o sektörde en sık karşılaştığım problemleri, önerdiğim çözümü ve hangi ölçüm aracının
+        devreye girdiğini görün.</p>
+
+      <div class="secici reveal" id="sektorSecici" role="tablist" aria-label="Sektör seçimi">
+        <button type="button" role="tab" id="sek-otomotiv" aria-controls="panel-otomotiv" aria-selected="true" data-sek="otomotiv">Otomotiv yan sanayi</button>
+        <button type="button" role="tab" id="sek-beyaz" aria-controls="panel-beyaz" aria-selected="false" data-sek="beyaz">Beyaz eşya</button>
+        <button type="button" role="tab" id="sek-metal" aria-controls="panel-metal" aria-selected="false" data-sek="metal">Metal işleme</button>
+        <button type="button" role="tab" id="sek-gida" aria-controls="panel-gida" aria-selected="false" data-sek="gida">Gıda ve ambalaj</button>
+        <button type="button" role="tab" id="sek-lojistik" aria-controls="panel-lojistik" aria-selected="false" data-sek="lojistik">Lojistik · depo</button>
+        <button type="button" role="tab" id="sek-kimya" aria-controls="panel-kimya" aria-selected="false" data-sek="kimya">Kimya · Atex</button>
+      </div>
+      <p class="secici-not">Sektörünüz listede yoksa da yazın — problem tarifi sektör adından daha belirleyicidir.</p>
+
+      <!-- ---------- OTOMOTİV ---------- -->
+      <div class="panel" id="panel-otomotiv" role="tabpanel" aria-labelledby="sek-otomotiv" data-panel="otomotiv">
+        <div class="panel-basi">
+          <h3>Otomotiv yan sanayi</h3>
+          <span class="etiket">Kaynak · Sac · Montaj</span>
+        </div>
+        <p class="panel-ozet">Bu sektörde denetimin sebebi genelde içeriden değil dışarıdan gelir:
+          OEM denetimi, PPAP dosyası, sahadan dönen bir şikâyet. İhtiyaç duyulan şey "kamera koymak" değil,
+          <b>her parçanın ölçüldüğünü belgeleyebilmek</b>. Bu yüzden burada kaydın ve tekrarlanabilirliğin
+          değeri, kusur yakalamanın kendisi kadar yüksektir.</p>
+
+        <p class="alt-baslik">Tipik problemler</p>
+        <div class="dertler">
+          <article class="dert">
+            <span class="no">01</span>
+            <h4>Kaynak dikişi gözle denetlenemiyor</h4>
+            <p>Parça başına düşen dikiş ve punta sayısı, insan gözüyle tam denetime izin vermez.
+              <b>Gözenek, çökme, eksik dolgu</b> ancak örnekleme ile yakalanır — yani bazen hiç yakalanmaz.</p>
+          </article>
+          <article class="dert">
+            <span class="no">02</span>
+            <h4>Kalıp aşındıkça ölçü kayıyor</h4>
+            <p>Sac şekillendirmede sapma bir anda değil, yavaşça gelir. Ölçüm odasına giden numune
+              sapmayı geç gösterir; arada <b>bütün bir parti</b> üretilmiş olur.</p>
+          </article>
+          <article class="dert">
+            <span class="no">03</span>
+            <h4>Eksik ya da yarım oturmuş parça</h4>
+            <p>Klips, somun, braket takıldı mı — 2D kamera "var" der ama <b>tam oturdu mu</b> diyemez.
+              Yarım oturmuş parça hattın ilerisinde, bazen müşterinin sahasında patlar.</p>
+          </article>
+          <article class="dert">
+            <span class="no">04</span>
+            <h4>Gap &amp; flush şablonla ölçülüyor</h4>
+            <p>Panel arası boşluk ve yüzey farkı operatörün elindeki şablonla, örnekleme ile kontrol edilir.
+              Sonuç <b>kişiye göre değişir</b> ve kayda geçmez.</p>
+          </article>
+        </div>
+
+        <p class="alt-baslik">Önerilen çözüm ve ölçüm aracı</p>
+        <div class="cozum">
+          <div class="csatir">
+            <div class="k">Kaynak dikişi</div>
+            <div class="v">3D profil taramasıyla dikişin yüksekliği, genişliği ve sürekliliği ölçülür; limit dışı bölge NOK verir.
+              <span class="arac">Kaynak ağzı ölçümü</span><span class="arac">Profil kesiti</span><span class="arac">Tolerans kararı</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Boyutsal sapma</div>
+            <div class="v">Taranan parça CAD modeliyle çakıştırılır, sapma haritası çıkarılır; ölçüler vardiya boyunca kaydedilir ve eğilim izlenir.
+              <span class="arac">ICP hizalama</span><span class="arac">CAD karşılaştırma</span><span class="arac">Düzlem/silindir uydurma</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Eksik / yarım parça</div>
+            <div class="v">2D tarafta öğretilmiş ürün reçetesiyle varlık kontrolü, 3D tarafta yükseklik farkıyla oturma kontrolü birlikte çalışır.
+              <span class="arac">Ürün öğretme</span><span class="arac">YOLO tespit</span><span class="arac">Yükseklik farkı</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Gap &amp; flush</div>
+            <div class="v">Panel kenarları boyunca boşluk ve yüzey farkı, tanımlı noktalarda otomatik ölçülür; her parça için kayıt kalır.
+              <span class="arac">Gap &amp; flush</span><span class="arac">Düzlemsellik</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">PLC / hat bağlantısı</div>
+            <div class="v">Karar üç durumludur (OK / NOK / belirsiz) ve el sıkışma bitleriyle PLC'ye yazılır.
+              <span class="arac">Siemens S7</span><span class="arac">MC / SLMP</span><span class="arac">Modbus TCP</span><span class="arac">PROFINET</span><span class="arac">OPC UA</span></div>
+          </div>
+        </div>
+
+        <p class="alt-baslik">Beklenen kazanç</p>
+        <ul class="kazanclar">
+          <li>Örnekleme yerine her parçanın ölçüsü kayda geçer — denetim ve 8D dosyasında gösterilecek veri oluşur</li>
+          <li>Kalıp/takım kaynaklı kayma, parti hurdasına dönüşmeden eğilim üzerinden görülür</li>
+          <li>Yarım oturmuş montajlar kaynağında durur; hattın ilerisine ve müşteriye kaçma ihtimali azalır</li>
+          <li>Şablonla ölçen operatörün yerini, kişiden bağımsız ve tekrarlanabilir bir ölçüm alır</li>
+        </ul>
+
+        <div class="saha">
+          <p class="s-baslik">İlgili saha deneyimi</p>
+          <p><b>Doğrudan bir otomotiv OEM/yan sanayi sahasında görüş sistemi devreye almadım</b> —
+            bunu baştan söylüyorum. En yakın deneyimlerim robotlu hücre ve 3D ölçüm tarafında:</p>
+          <p><b>Daikin robotlu gaz kaçak tespit hücresi</b> — KUKA robot, Mitsubishi PLC, LMI Gocator/GoPxL
+            3D sensör ve WinUI 3 masaüstü yazılımı; tarama, ölçüm ve robot-PLC el sıkışmasının tamamı.</p>
+          <p><b>E.C.A hidrolik çapak kesme robot hücresi</b> — Siemens PLC ve Beijer operatör paneli;
+            robotlu işleme hücresinin yazılımı ve devreye alması.</p>
+          <p class="durust">Otomotiv özelinde referans istiyorsanız dürüst cevap bu; buna karşılık fizibiliteyi
+            kendi parçanızla yapıp sonucu rakamla gösterebiliyorum.</p>
+        </div>
+      </div>
+
+      <!-- ---------- BEYAZ EŞYA ---------- -->
+      <div class="panel" id="panel-beyaz" role="tabpanel" aria-labelledby="sek-beyaz" data-panel="beyaz" hidden>
+        <div class="panel-basi">
+          <h3>Beyaz eşya ve iklimlendirme</h3>
+          <span class="etiket">Yüzey · Montaj · Sızdırmazlık</span>
+        </div>
+        <p class="panel-ozet">Burada ürün çeşidi çok, model değişimi sık ve kusurların bir kısmı
+          <b>görünür yüzeyde</b> olduğu için doğrudan müşteri şikâyetine dönüyor. Kritik kısıt genelde şu:
+          yeni model için binlerce etiketli kusur görüntüsü toplayacak vakit yok. Bu yüzden çözüm,
+          <b>sağlam örnekten öğrenen</b> bir denetim üzerine kurulur.</p>
+
+        <p class="alt-baslik">Tipik problemler</p>
+        <div class="dertler">
+          <article class="dert">
+            <span class="no">01</span>
+            <h4>Yüzeyde çizik, ezik, boya kusuru</h4>
+            <p>Kusur çeşidi sonsuz, örneği az. Klasik kural tabanlı denetim her yeni kusur tipinde
+              yeniden yazılmak zorunda kalır; <b>etiketli veri toplamak</b> aylar sürer.</p>
+          </article>
+          <article class="dert">
+            <span class="no">02</span>
+            <h4>Panel montajında boşluk ve yüzey farkı</h4>
+            <p>Kapak veya panel oturmuyor, boşluk gözle "biraz fazla" görünüyor.
+              <b>Ne kadar fazla</b> sorusunun sayısal cevabı yok.</p>
+          </article>
+          <article class="dert">
+            <span class="no">03</span>
+            <h4>Conta / yapıştırıcı izi kesintili</h4>
+            <p>Sızdırmazlık bandında kopukluk ya da ince kalan bölge, sızdırma ve garanti iadesi olarak
+              <b>aylar sonra</b> geri döner.</p>
+          </article>
+          <article class="dert">
+            <span class="no">04</span>
+            <h4>Kablo soketi, etiket, bağlantı elemanı eksik</h4>
+            <p>Model çeşitliliği arttıkça hangi üründe hangi parçanın olması gerektiği
+              <b>operatörün hafızasına</b> kalır.</p>
+          </article>
+        </div>
+
+        <p class="alt-baslik">Önerilen çözüm ve ölçüm aracı</p>
+        <div class="cozum">
+          <div class="csatir">
+            <div class="k">Yüzey kusuru</div>
+            <div class="v">Anomali (kusur) motoru sağlam örneklerden öğrenir; "normalden sapma" olarak işaretler. Her kusur sınıfı için yüzlerce etiketli görüntü toplama zorunluluğu yoktur.
+              <span class="arac">Anomali motoru</span><span class="arac">Ürün öğretme</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Derin çizik / ezik</div>
+            <div class="v">Yüzeydeki iz sadece renkte değil yükseklikte de aranır; 3D yükseklik haritası "boya lekesi mi, gerçek ezik mi" ayrımını yapar.
+              <span class="arac">Yükseklik haritası</span><span class="arac">Düzlemsellik</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Panel oturma / gap</div>
+            <div class="v">Panel arası boşluk ve yüzey farkı tanımlı noktalarda ölçülür, toleransla kıyaslanır.
+              <span class="arac">Gap &amp; flush</span><span class="arac">Profil kesiti</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Conta / yapıştırıcı</div>
+            <div class="v">İzin genişliği, sürekliliği ve kesit hacmi boyunca takip edilir; kopukluk ve incelme anında NOK üretir.
+              <span class="arac">İz sürekliliği</span><span class="arac">Kesit hacmi</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Eksik bileşen</div>
+            <div class="v">Model bazlı reçete: hangi üründe hangi bileşenin nerede olması gerektiği öğretilir, operatör ekranında eksik olan işaretlenir.
+              <span class="arac">Ürün öğretme</span><span class="arac">YOLO tespit</span><span class="arac">Reçete kilidi</span></div>
+          </div>
+        </div>
+
+        <p class="alt-baslik">Beklenen kazanç</p>
+        <ul class="kazanclar">
+          <li>Yeni model için denetim kurulumu, etiketli veri toplama beklemeden başlayabilir</li>
+          <li>Görünür yüzey kusurunun müşteriye ulaşma ihtimali azalır; iade ve garanti maruziyeti düşer</li>
+          <li>"Biraz fazla boşluk" tartışması, sayısal ölçü ve tolerans kaydına dönüşür</li>
+          <li>Sızdırmazlık izindeki kopukluk, sızdırma testinden önce yakalanır</li>
+        </ul>
+
+        <div class="saha">
+          <p class="s-baslik">İlgili saha deneyimi</p>
+          <p><b>Daikin robotlu gaz kaçak tespit hücresi</b> — iklimlendirme üretiminde, KUKA robot +
+            Mitsubishi PLC + LMI Gocator/GoPxL 3D sensör + WinUI 3 masaüstü yazılımı ile kurulan
+            görüş destekli test hücresi. Tarama, ölçüm, karar ve PLC el sıkışması aynı zincirde.</p>
+          <p><b>Satera elektrik sayacı montaj hattı</b> — Beckhoff TwinCAT ile montaj hattı otomasyonu;
+            çok istasyonlu montaj hattında izlenebilirlik ve istasyon senkronizasyonu deneyimi.</p>
+          <p class="durust">Bu iki saha görüş sisteminin değil, hücre ve hat otomasyonunun kurulduğu işlerdi;
+            görüş katmanı Daikin hücresinde 3D ölçüm tarafında yer aldı.</p>
+        </div>
+      </div>
+
+      <!-- ---------- METAL İŞLEME ---------- -->
+      <div class="panel" id="panel-metal" role="tabpanel" aria-labelledby="sek-metal" data-panel="metal" hidden>
+        <div class="panel-basi">
+          <h3>Metal işleme · talaşlı imalat · döküm</h3>
+          <span class="etiket">Ölçü · Çapak · Yüzey</span>
+        </div>
+        <p class="panel-ozet">Bu sektörde denetimin karşılığı doğrudan paradır: hurda, yeniden işleme ve
+          ölçüm odasında geçen süre. Asıl kayıp tek bir kötü parçada değil, <b>sapmanın fark edilmesi
+          gecikince üretilen partide</b> saklıdır. Amaç parçayı ölçüm odasına göndermeden, hat üstünde
+          ölçüp eğilimi görmektir.</p>
+
+        <p class="alt-baslik">Tipik problemler</p>
+        <div class="dertler">
+          <article class="dert">
+            <span class="no">01</span>
+            <h4>Ölçüm odası geri bildirimi geç geliyor</h4>
+            <p>Numune ölçülene kadar tezgâh üretmeye devam eder. Sapma öğrenildiğinde
+              <b>parti çoktan bitmiştir</b>.</p>
+          </article>
+          <article class="dert">
+            <span class="no">02</span>
+            <h4>Çapak ve eksik işleme</h4>
+            <p>Çapak, kaçık delik veya işlenmemiş cep, montajda ya da müşterinin hattında ortaya çıkar;
+              <b>geri dönüş maliyeti</b> parçanın kendisinden pahalıdır.</p>
+          </article>
+          <article class="dert">
+            <span class="no">03</span>
+            <h4>Döküm yüzeyinde gözenek ve çekinti</h4>
+            <p>Yüzey dokusu zaten düzensiz olduğu için kusuru dokudan ayırmak zor;
+              gözle denetim <b>operatöre ve vardiyaya göre</b> değişir.</p>
+          </article>
+          <article class="dert">
+            <span class="no">04</span>
+            <h4>Kaynaklı imalatta çarpılma</h4>
+            <p>Isıl çarpılma sonrası düzlemsellik ve diklik bozulur; sorun montaj aşamasında,
+              <b>parça birleşmeyince</b> anlaşılır.</p>
+          </article>
+        </div>
+
+        <p class="alt-baslik">Önerilen çözüm ve ölçüm aracı</p>
+        <div class="cozum">
+          <div class="csatir">
+            <div class="k">Hat üstü boyutsal ölçüm</div>
+            <div class="v">Delik konumu, cep derinliği, et kalınlığı ve yüzey geometrisi parça hattan çıkmadan ölçülür.
+              <span class="arac">Düzlem/silindir/küre uydurma</span><span class="arac">Düzlemsellik · paralellik · diklik</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Sapma eğilimi</div>
+            <div class="v">Ölçüler kaydedilir; değer henüz tolerans içindeyken kayma yönü görülür ve tezgâh/operatör uyarılabilir.
+              <span class="arac">Ölçüm kaydı</span><span class="arac">Eğilim izleme</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Çapak / eksik işleme</div>
+            <div class="v">Kenar profili taranır; beklenen profilden yukarı taşan malzeme çapak olarak, eksik kalan bölge işlenmemiş olarak işaretlenir.
+              <span class="arac">Profil kesiti</span><span class="arac">CAD karşılaştırma</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Döküm yüzeyi</div>
+            <div class="v">3D yükseklik haritası ile gözenek/çekinti derinliği ölçülür; ayrıca anomali motoru dokudan sapmayı işaretler.
+              <span class="arac">Yükseklik haritası</span><span class="arac">Anomali motoru</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Çarpılma</div>
+            <div class="v">Tarama CAD ile çakıştırılır, sapma haritası hangi bölgenin toleransı zorladığını renkle gösterir.
+              <span class="arac">ICP hizalama</span><span class="arac">Sapma haritası</span></div>
+          </div>
+        </div>
+
+        <p class="alt-baslik">Beklenen kazanç</p>
+        <ul class="kazanclar">
+          <li>Ölçüm odasına giden parça sayısı ve bekleme süresi azalır; geri bildirim hat üstünde oluşur</li>
+          <li>Takım/kalıp aşınması parti hurdasına dönüşmeden, eğilim üzerinden erken görülür</li>
+          <li>Çapak ve eksik işleme müşteriye değil, kaynağındaki istasyona geri döner</li>
+          <li>İlk numune onayı ve kalıp düzeltme döngüsü, sapma haritasıyla kısalır</li>
+        </ul>
+
+        <div class="saha">
+          <p class="s-baslik">İlgili saha deneyimi</p>
+          <p><b>E.C.A hidrolik çapak kesme robot hücresi</b> — Siemens PLC ve Beijer paneliyle kurulan
+            robotlu çapak alma hücresinin yazılımı ve devreye alması. Çapağın nerede oluştuğunu ve
+            hücrenin nasıl kurgulandığını sahadan biliyorum.</p>
+          <p><b>E.C.A dozajlama makinası (GMT)</b> ve <b>paralel SCARA ayıklama-dizme hücresi (CODESYS)</b> —
+            hızlı çevrimli besleme ve ayıklama uygulamalarında robot-PLC senkronizasyonu.</p>
+          <p class="durust">Bu hücrelerde denetim katmanı 3D görüşle değil, mekanik ve PLC tarafında kuruluydu;
+            görüş entegrasyonu bugün aynı hücrelere eklenebilecek bir katman.</p>
+        </div>
+      </div>
+
+      <!-- ---------- GIDA VE AMBALAJ ---------- -->
+      <div class="panel" id="panel-gida" role="tabpanel" aria-labelledby="sek-gida" data-panel="gida" hidden>
+        <div class="panel-basi">
+          <h3>Gıda ve ambalaj</h3>
+          <span class="etiket">Dolum · Kapama · Adet</span>
+        </div>
+        <p class="panel-ozet">Hızlı çevrim, ıslak-buharlı ortam ve mevzuat baskısı bir arada.
+          Buradaki denetim iki şeye hizmet eder: <b>ürün kaybını azaltmak</b> (fazla dolum, zayiat) ve
+          <b>geri çağırma riskini düşürmek</b> (eksik kapama, yanlış etiket, eksik adet). Ortam koşulları
+          sensör seçimini ve muhafazayı doğrudan belirler.</p>
+
+        <p class="alt-baslik">Tipik problemler</p>
+        <div class="dertler">
+          <article class="dert">
+            <span class="no">01</span>
+            <h4>Fazla dolum sessiz kayıp</h4>
+            <p>Eksik dolum şikâyet üretir, fazla dolum ise <b>hiç fark edilmez</b> —
+              her kapta biraz fazla, vardiya sonunda ciddi bir zayiat.</p>
+          </article>
+          <article class="dert">
+            <span class="no">02</span>
+            <h4>Kapak / kapama tam oturmuyor</h4>
+            <p>Yarım oturmuş kapak veya kaçık conta, raf ömrü ve sızdırma sorunu olarak
+              <b>çok sonra</b> ortaya çıkar.</p>
+          </article>
+          <article class="dert">
+            <span class="no">03</span>
+            <h4>Kolide adet eksik</h4>
+            <p>Elle sayım hızlı hatta güvenilmez; eksik adet müşteri şikâyeti ve
+              <b>yeniden sevkiyat</b> demektir.</p>
+          </article>
+          <article class="dert">
+            <span class="no">04</span>
+            <h4>Palet istifi bozuk</h4>
+            <p>Kaçık dizilmiş katman, sevkiyatta devrilme ve hasarlı ürün riski taşır;
+              sorun <b>forklift kaldırırken</b> anlaşılır.</p>
+          </article>
+        </div>
+
+        <p class="alt-baslik">Önerilen çözüm ve ölçüm aracı</p>
+        <div class="cozum">
+          <div class="csatir">
+            <div class="k">Dolum seviyesi / hacim</div>
+            <div class="v">Kaptaki ürünün yüzey profili taranır ve hacme çevrilir; eksik ve fazla dolum ayrı ayrı raporlanır.
+              <span class="arac">Yüzey profili</span><span class="arac">Hacim ölçümü</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Kapak oturma</div>
+            <div class="v">Kapak yüzeyi ile kap ağzı arasındaki yükseklik farkı ölçülür; yarım oturmuş kapak yükseklikten anlaşılır.
+              <span class="arac">Yükseklik farkı</span><span class="arac">Düzlemsellik</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Adet doğrulama</div>
+            <div class="v">Koli veya katman içindeki ürünler tespit edilir ve sayılır; hareket eden hatta iz takibi aynı ürünün iki kez sayılmasını önler.
+              <span class="arac">YOLO tespit</span><span class="arac">İz takip · sayım</span><span class="arac">Bölge/çizgi geçişi</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Etiket kontrolü</div>
+            <div class="v">Etiketin varlığı, konumu ve kaçıklığı denetlenir. <b>Not:</b> metin/tarih kodu okuma (OCR) bu kapsamda değildir; gerekiyorsa ayrı olarak konuşulur.
+              <span class="arac">Ürün öğretme</span><span class="arac">Konum sapması</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Palet istifi</div>
+            <div class="v">Palet yüksekliği, katman düzeni ve taşan koli 3D taramayla görülür; robotlu paletlemede karar PLC'ye yazılır.
+              <span class="arac">İstif haritası</span><span class="arac">Yükseklik profili</span></div>
+          </div>
+        </div>
+
+        <p class="alt-baslik">Beklenen kazanç</p>
+        <ul class="kazanclar">
+          <li>Fazla dolumdan doğan sessiz ürün kaybı ölçülebilir hale gelir</li>
+          <li>Eksik kapama ve yanlış etiket, paletlenmeden önce yakalanır</li>
+          <li>Adet hatası kaynaklı müşteri şikâyeti ve yeniden sevkiyat azalır</li>
+          <li>Her koli/palet için kayıt oluşur — geri çağırma durumunda izlenebilirlik doğar</li>
+        </ul>
+
+        <div class="saha">
+          <p class="s-baslik">İlgili saha deneyimi</p>
+          <p><b>Lipton paletleme hattı</b> — Fanuc ve Universal Robots robotları, Beckhoff TwinCAT PLC;
+            gıda hattı sonunda robotlu paletleme otomasyonu. Katman düzeni, çevrim süresi baskısı ve
+            hat sonunda yaşanan gerçek sorunlar bu hattan.</p>
+          <p><b>Döhler Gıda</b> — üretim/bakım mühendisi olarak hidrolik pres ve ön hatların bölüm
+            sorumluluğu. Gıda üretiminin vardiya, hijyen ve duruş gerçeklerini üretim tarafından biliyorum.</p>
+          <p class="durust">Bu hatlarda görüş sistemi kurmadım; katkım robot, PLC ve üretim tarafındaydı.
+            Gıda ortamının denetim kurulumuna getirdiği kısıtları bu yüzden abartmadan konuşabiliyorum.</p>
+        </div>
+      </div>
+
+      <!-- ---------- LOJİSTİK ---------- -->
+      <div class="panel" id="panel-lojistik" role="tabpanel" aria-labelledby="sek-lojistik" data-panel="lojistik" hidden>
+        <div class="panel-basi">
+          <h3>Lojistik ve depo</h3>
+          <span class="etiket">Ölçü · İstif · Robot</span>
+        </div>
+        <p class="panel-ozet">Depoda kayıp genelde kusurdan değil <b>bilinmeyen ölçüden</b> doğar:
+          hacimsel ağırlığı bilinmeyen koli, boş kalan palet hacmi, robotun nereden tutacağını bilmediği
+          kutu. Burada görüş sisteminin işi denetlemek değil, <b>ölçüyü ve konumu veriye çevirmek</b>.</p>
+
+        <p class="alt-baslik">Tipik problemler</p>
+        <div class="dertler">
+          <article class="dert">
+            <span class="no">01</span>
+            <h4>Koli ölçüsü bilinmiyor</h4>
+            <p>En-boy-yükseklik elle ölçülüyor ya da hiç ölçülmüyor; <b>hacimsel ağırlık</b>
+              faturalamasında sürekli kayıp doğuyor.</p>
+          </article>
+          <article class="dert">
+            <span class="no">02</span>
+            <h4>Palet hacmi verimsiz kullanılıyor</h4>
+            <p>İstif düzeni göz kararı yapılıyor; <b>boşta kalan hacim</b> ve devrilme riski
+              yükleme anına kadar görünmüyor.</p>
+          </article>
+          <article class="dert">
+            <span class="no">03</span>
+            <h4>Robot koliyi nereden tutacağını bilmiyor</h4>
+            <p>Sabit noktaya giden robot, koli 2 cm kaydığında hata üretir;
+              <b>karışık ürünlü palet</b> ise hiç ele alınamaz.</p>
+          </article>
+          <article class="dert">
+            <span class="no">04</span>
+            <h4>Sevkiyatta adet ve karışık ürün hatası</h4>
+            <p>Yanlış ürün ya da eksik adet, ancak müşteri tarafında fark edilir;
+              <b>geriye dönük kanıt</b> yoktur.</p>
+          </article>
+        </div>
+
+        <p class="alt-baslik">Önerilen çözüm ve ölçüm aracı</p>
+        <div class="cozum">
+          <div class="csatir">
+            <div class="k">Koli / palet ölçümü</div>
+            <div class="v">3D tarama ile koli boyutları ve palet yüksekliği ölçülür, kayıt altına alınır.
+              <span class="arac">Sınır kutusu ölçümü</span><span class="arac">Yükseklik profili</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">İstif düzeni</div>
+            <div class="v">Katman düzeni, taşan koli ve boşta kalan hacim görülür; devrilme riski yükleme öncesi uyarıya dönüşür.
+              <span class="arac">İstif haritası</span><span class="arac">Düzlemsellik</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Robot kılavuzlama</div>
+            <div class="v">Kolinin üst yüzeyi ve konumu bulunur, tutuş noktası robot koordinatına çevrilir ve el sıkışmalı protokolle aktarılır.
+              <span class="arac">El-göz kalibrasyonu</span><span class="arac">Koordinat dönüşümü</span><span class="arac">Sayfalı nokta aktarımı</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Adet / ürün doğrulama</div>
+            <div class="v">Katman katman tespit ve sayım; farklı ürünlerin karıştığı paletlerde ürün ayrımı öğretilebilir.
+              <span class="arac">YOLO tespit</span><span class="arac">İz takip · sayım</span><span class="arac">Ürün öğretme</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Kayıt</div>
+            <div class="v">Her palet için ölçü, görüntü ve karar yerelde saklanır; bulut bağlantısı gerekmez.
+              <span class="arac">Yerel kayıt</span><span class="arac">Çevrimdışı çalışma</span></div>
+          </div>
+        </div>
+
+        <p class="alt-baslik">Beklenen kazanç</p>
+        <ul class="kazanclar">
+          <li>Hacimsel ağırlık kaynaklı faturalama kaybı ölçülebilir ve savunulabilir hale gelir</li>
+          <li>Boşta kalan palet hacmi ve devrilme riski yükleme öncesinde görülür</li>
+          <li>Robotlu depalletizing için özel fikstür yerine ölçülmüş konum kullanılır</li>
+          <li>Sevkiyat itirazlarında geriye dönük görüntü ve ölçü kaydı bulunur</li>
+        </ul>
+
+        <div class="saha">
+          <p class="s-baslik">İlgili saha deneyimi</p>
+          <p><b>Lipton paletleme hattı</b> — Fanuc ve Universal Robots robotlarıyla, Beckhoff TwinCAT
+            üzerinde kurulmuş robotlu paletleme. Katman düzeni, palet değişimi ve robot-PLC el sıkışması
+            tarafında birebir çalıştım.</p>
+          <p class="durust">Bu hatta paletleme kararı görüş sistemiyle değil, reçete ve sensörlerle veriliyordu.
+            Aynı hatta 3D ölçüm eklendiğinde neyin değişeceğini bu yüzden somut konuşabiliyorum.</p>
+        </div>
+      </div>
+
+      <!-- ---------- KİMYA · ATEX ---------- -->
+      <div class="panel" id="panel-kimya" role="tabpanel" aria-labelledby="sek-kimya" data-panel="kimya" hidden>
+        <div class="panel-basi">
+          <h3>Kimya ve Atex sahaları</h3>
+          <span class="etiket">Ex bölgesi · Kaplama · İzlenebilirlik</span>
+        </div>
+        <p class="panel-ozet">Bu sahalarda ilk soru "hangi kamera" değil, <b>ekipmanın hangi bölgeye
+          konulabileceği</b>. Patlayıcı ortam sınıflandırması yerleşimi, muhafazayı ve kablolamayı belirler;
+          yazılım tarafı ancak bundan sonra konuşulur. İkinci belirleyici konu izlenebilirlik: parti bazlı
+          kayıt çoğu zaman zorunluluktur.</p>
+
+        <p class="alt-baslik">Tipik problemler</p>
+        <div class="dertler">
+          <article class="dert">
+            <span class="no">01</span>
+            <h4>Ex bölgesine ekipman konulamıyor</h4>
+            <p>Standart kamera ve endüstriyel PC bölgeye giremez. Çözümün <b>yerleşim ve muhafaza</b>
+              tarafı, görüntü işlemeden daha kritiktir.</p>
+          </article>
+          <article class="dert">
+            <span class="no">02</span>
+            <h4>Kaplama / dolum kalınlığı değişken</h4>
+            <p>Uygulanan kaplamanın kalınlığı ve kapsama alanı gözle kontrol ediliyor;
+              <b>eksik kapanan bölge</b> sonradan sorun çıkarıyor.</p>
+          </article>
+          <article class="dert">
+            <span class="no">03</span>
+            <h4>Toz, buhar, yağ sisi</h4>
+            <p>Ortam koşulu 2D denetimi güvenilmez kılar; aydınlatma değiştikçe sonuç değişir,
+              <b>yanlış ret</b> operatörü sistemden soğutur.</p>
+          </article>
+          <article class="dert">
+            <span class="no">04</span>
+            <h4>Reçete karışması ve parti kaydı</h4>
+            <p>Ürün değişiminde yanlış reçeteyle üretim, hem kalite hem mevzuat sorunu;
+              <b>parti bazlı kanıt</b> istenir.</p>
+          </article>
+        </div>
+
+        <p class="alt-baslik">Önerilen çözüm ve ölçüm aracı</p>
+        <div class="cozum">
+          <div class="csatir">
+            <div class="k">Yerleşim ve bölge</div>
+            <div class="v">Sensör bölge sınıfına uygun muhafaza/mesafeyle konumlanır, işlem bilgisayarı güvenli bölgede tutulur, sinyal Ethernet ile taşınır. Bu çözüm <b>proje bazında Ex sorumlusuyla birlikte doğrulanır</b>.
+              <span class="arac">Yerleşim etüdü</span><span class="arac">Uzak montaj</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Kaplama / dolum</div>
+            <div class="v">Yüzey profili taranır; kaplama kalınlığı ve kapsanmayan bölge yükseklik farkından çıkarılır.
+              <span class="arac">Yüzey profili</span><span class="arac">Kesit hacmi</span><span class="arac">Kapsama haritası</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Zorlu ortam</div>
+            <div class="v">3D lazer profil sensörü kendi ışığını kullandığı için ortam ışığından etkilenmez. Buhar/toz yoğunluğu ise <b>fizibilitede ölçülmesi gereken</b> bir sınırdır, baştan garanti edilmez.
+              <span class="arac">Kendi aydınlatması</span><span class="arac">Fizibilite ölçümü</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">Reçete ve izlenebilirlik</div>
+            <div class="v">Ürün reçetesi kilitlenir, yanlış reçeteyle üretim engellenir; her parti için ölçü, görüntü ve karar yerelde saklanır.
+              <span class="arac">Reçete kilidi</span><span class="arac">Parti kaydı</span><span class="arac">Çevrimdışı çalışma</span></div>
+          </div>
+          <div class="csatir">
+            <div class="k">PLC bağlantısı</div>
+            <div class="v">Karar ve yaşam sinyali mevcut PLC'ye yazılır; ayrı bir kontrol katmanı eklenmez.
+              <span class="arac">Siemens S7</span><span class="arac">Modbus TCP</span><span class="arac">OPC UA</span></div>
+          </div>
+        </div>
+
+        <p class="alt-baslik">Beklenen kazanç</p>
+        <ul class="kazanclar">
+          <li>Denetim, Ex bölgesine ekipman sokmadan uygulanabilir bir yerleşimle planlanır</li>
+          <li>Kaplama/dolumda eksik kapanan bölge, ürün sahaya çıkmadan görülür</li>
+          <li>Reçete karışması operatör dikkatine değil, sistem kilidine bağlanır</li>
+          <li>Parti bazlı ölçü ve görüntü kaydı, denetim dosyasında kullanılabilir hale gelir</li>
+        </ul>
+
+        <div class="saha">
+          <p class="s-baslik">İlgili saha deneyimi</p>
+          <p><b>KASTAŞ Atex boyama ve kauçuk kaplama makinası</b> — Delta PLC ile yazılım geliştirme ve
+            proje yöneticiliği. Atex sahasında ekipman yerleşimi, bölge kısıtları ve devreye alma
+            disiplinini bu projede birebir yaşadım.</p>
+          <p><b>Barlocher peletli kazan otomasyonu</b> — kimya tesisinde proses otomasyonu;
+            sürekli çalışan proses hattının duruş hassasiyeti ve emniyet zinciri tarafı.</p>
+          <p class="durust">Açık olalım: Ex sertifikalı bir ürün üretmiyor ve satmıyorum.
+            Bölgeye giren ekipmanın sertifikasyonu ayrı bir konudur; benim yaptığım, sistemi
+            <b>ekipmanın bölge dışında kalacağı</b> şekilde tasarlamak ve bunu sizin Ex sorumlunuzla doğrulamak.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 02 PROBLEM SEÇİCİ ================= -->
+  <section class="section" id="problemler">
+    <span class="section-index" aria-hidden="true">02</span>
+    <div class="container">
+      <p class="kicker reveal"><span class="idx">02</span>Problem seçici</p>
+      <h2 class="reveal">Probleminizi seçin</h2>
+      <p class="section-lead reveal">Sektör adı bazen yanıltır; asıl belirleyici olan <b>problemin şeklidir</b>.
+        Aşağıdaki altı başlık, hangi sektörde olursanız olun aynı yöntemle çözülür — değişen tarafı
+        ölçüm aracı, aydınlatma ve çevrim süresidir.</p>
+
+      <div class="secici reveal" id="problemSecici" role="tablist" aria-label="Problem seçimi">
+        <button type="button" role="tab" id="prb-eksik" aria-controls="panel-eksik" aria-selected="true" data-prb="eksik">Eksik parça</button>
+        <button type="button" role="tab" id="prb-montaj" aria-controls="panel-montaj" aria-selected="false" data-prb="montaj">Yanlış montaj</button>
+        <button type="button" role="tab" id="prb-yuzey" aria-controls="panel-yuzey" aria-selected="false" data-prb="yuzey">Yüzey kusuru</button>
+        <button type="button" role="tab" id="prb-olcu" aria-controls="panel-olcu" aria-selected="false" data-prb="olcu">Ölçü sapması</button>
+        <button type="button" role="tab" id="prb-sayim" aria-controls="panel-sayim" aria-selected="false" data-prb="sayim">Sayım hatası</button>
+        <button type="button" role="tab" id="prb-robot" aria-controls="panel-robot" aria-selected="false" data-prb="robot">Robot kılavuzlama</button>
+      </div>
+      <p class="secici-not">Her başlıkta: belirti, çözüm adımları, kullanılan araç ve hattınıza çıkan sonuç.</p>
+
+      <!-- eksik parça -->
+      <div class="panel" id="panel-eksik" role="tabpanel" aria-labelledby="prb-eksik" data-panel="eksik">
+        <div class="panel-basi">
+          <h3>Eksik parça</h3>
+          <span class="etiket">2D tespit + 3D doğrulama</span>
+        </div>
+        <div class="prob-govde">
+          <div class="prob-kutu">
+            <p class="p-baslik">Belirti</p>
+            <p>Montaj sonrası klips, somun, conta, kapak ya da bileşen eksik çıkıyor.
+              Hata çoğunlukla <b>hattın ilerisinde</b> ya da müşteride fark ediliyor; kim, hangi vardiyada
+              atladı sorusunun cevabı yok. Ürün çeşidi arttıkça operatörün hafızasına yük biniyor.</p>
+            <p>2D kamerayla kurulan basit çözümler "parça var" der ama parlama, gölge ve renk benzerliği
+              yüzünden <b>yanlış ret</b> üretir; operatör bir süre sonra sistemi baypas etmeye başlar.</p>
+          </div>
+          <div class="prob-kutu">
+            <p class="p-baslik">Nasıl çözülür</p>
+            <ol class="prob-adim">
+              <li>Ürün öğretilir: hangi modelde hangi bileşenin nerede olması gerektiği reçeteye yazılır — operatör kendi ekleyebilir, entegratör çağırmaya gerek yoktur.</li>
+              <li>2D tarafta tespit çalışır; her bileşen için beklenen konum ve sayı kontrol edilir.</li>
+              <li>Şüpheli durumlarda (parça var ama tam oturmamış) 3D yükseklik farkı ikinci kanıt olarak devreye girer.</li>
+              <li>Karar üç durumlu üretilir: OK / NOK / belirsiz. Belirsiz durum operatöre sorulur, sessizce geçilmez.</li>
+              <li>NOK kararı PLC'ye yazılır ve o karenin görüntüsü kayda alınır.</li>
+            </ol>
+            <div class="prob-cikti">
+              <span class="e">Hattınıza çıkan sonuç</span>
+              Eksik bileşen istasyonda durur · hangi bileşenin eksik olduğu ekranda görünür ·
+              her NOK için görüntü ve zaman damgası yerelde saklanır
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- yanlış montaj -->
+      <div class="panel" id="panel-montaj" role="tabpanel" aria-labelledby="prb-montaj" data-panel="montaj" hidden>
+        <div class="panel-basi">
+          <h3>Yanlış montaj</h3>
+          <span class="etiket">Yön · duruş · oturma</span>
+        </div>
+        <div class="prob-govde">
+          <div class="prob-kutu">
+            <p class="p-baslik">Belirti</p>
+            <p>Parça takılı ama <b>ters, çevrik ya da yarım oturmuş</b>. Benzer görünen iki varyanttan
+              yanlış olanı takılmış. Bu hata türü en sinsi olanıdır: parça sayısı doğru olduğu için
+              adet kontrolünden geçer, sorun montajın devamında ortaya çıkar.</p>
+            <p>Düz bir 2D denetim burada yetmez, çünkü ters takılmış parça yukarıdan bakınca çoğu zaman
+              <b>aynı görünür</b>; fark yükseklikte ve yöndedir.</p>
+          </div>
+          <div class="prob-kutu">
+            <p class="p-baslik">Nasıl çözülür</p>
+            <ol class="prob-adim">
+              <li>Doğru montajın referansı öğretilir: parçanın yönü, açısı ve beklenen yükseklik profili kaydedilir.</li>
+              <li>2D tarafta yönlü tespit (döndürülmüş sınır kutusu / duruş) ile parçanın açısı ve varyantı ayrılır.</li>
+              <li>3D tarafta yükseklik profili referansla karşılaştırılır; yarım oturmuş parça milimetrik fark olarak görünür.</li>
+              <li>Karar, hangi bileşenin neden hatalı olduğu bilgisiyle birlikte üretilir (yön hatası mı, oturma hatası mı).</li>
+              <li>PLC'ye hata kodu yazılır; istasyon durdurulur veya parça ayırma hattına yönlendirilir.</li>
+            </ol>
+            <div class="prob-cikti">
+              <span class="e">Hattınıza çıkan sonuç</span>
+              Ters/çevrik parça kaynağında yakalanır · hata tipi ayrıştırılır (yön · oturma · varyant) ·
+              montaj hatası hattın ilerisine taşınmaz
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- yüzey kusuru -->
+      <div class="panel" id="panel-yuzey" role="tabpanel" aria-labelledby="prb-yuzey" data-panel="yuzey" hidden>
+        <div class="panel-basi">
+          <h3>Yüzey kusuru</h3>
+          <span class="etiket">Anomali motoru + yükseklik</span>
+        </div>
+        <div class="prob-govde">
+          <div class="prob-kutu">
+            <p class="p-baslik">Belirti</p>
+            <p>Çizik, ezik, gözenek, leke, boya kusuru... Kusur çeşidi çok, örneği az.
+              Klasik yaklaşım <b>her kusur sınıfı için yüzlerce-binlerce etiketli görüntü</b> ister;
+              o veri sahada yoktur ve toplamak aylar sürer.</p>
+            <p>İkinci zorluk: kusurun bir kısmı gerçek bir çukurluk/tümsek iken bir kısmı sadece renk farkı.
+              İkisini aynı yöntemle aramak <b>yanlış ret oranını</b> yükseltir.</p>
+          </div>
+          <div class="prob-kutu">
+            <p class="p-baslik">Nasıl çözülür</p>
+            <ol class="prob-adim">
+              <li>Anomali motoru <b>sağlam</b> parçalardan öğrenir; "normal"i tarif eder, sapmayı işaretler. Kusur örneği toplama zorunluluğu ortadan kalkar.</li>
+              <li>Derinliği olan kusurlar (ezik, gözenek, çekinti) 3D yükseklik haritasında ayrıca ölçülür — böylece "leke mi, ezik mi" ayrılır.</li>
+              <li>Aydınlatma ve yerleşim kusur tipine göre tasarlanır; bu adım atlanırsa hiçbir algoritma sonucu kurtarmaz.</li>
+              <li>Eşik, pilot sırasında gerçek parçalarla ayarlanır; yanlış ret sayısı ölçülerek raporlanır.</li>
+              <li>NOK görüntüleri biriktikçe istenirse sınıflandırma katmanı eklenir (hangi kusur tipi).</li>
+            </ol>
+            <div class="prob-cikti">
+              <span class="e">Hattınıza çıkan sonuç</span>
+              Kusur örneği beklemeden başlanır · derinlikli kusur ile renk farkı ayrışır ·
+              yanlış ret oranı pilotta ölçülerek yazılı verilir
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ölçü sapması -->
+      <div class="panel" id="panel-olcu" role="tabpanel" aria-labelledby="prb-olcu" data-panel="olcu" hidden>
+        <div class="panel-basi">
+          <h3>Ölçü sapması</h3>
+          <span class="etiket">3D metroloji · CAD</span>
+        </div>
+        <div class="prob-govde">
+          <div class="prob-kutu">
+            <p class="p-baslik">Belirti</p>
+            <p>Delik konumu kayıyor, cep derinliği tutmuyor, parça düzlemsel değil, kaynak sonrası çarpılma var.
+              Ölçüm numune üzerinden ve <b>hattan uzakta</b> yapıldığı için geri bildirim geç geliyor;
+              arada üretilen parti riske giriyor.</p>
+            <p>Tolerans içinde kalan ama sürekli aynı yöne kayan ölçüler kimsenin dikkatini çekmiyor —
+              ta ki <b>sınırı aşana kadar</b>.</p>
+          </div>
+          <div class="prob-kutu">
+            <p class="p-baslik">Nasıl çözülür</p>
+            <ol class="prob-adim">
+              <li>Parça 3D taranır; nokta bulutu üzerinde ölçüm araçları koşar (düzlem/silindir/küre uydurma, düzlemsellik, paralellik, diklik).</li>
+              <li>Referans hizalaması ICP ile yapılır, ardından CAD modeliyle karşılaştırılır ve sapma haritası çıkarılır.</li>
+              <li>Her ölçüm limitiyle birlikte kaydedilir; ölçüler vardiya boyunca izlenir ve kayma yönü görülür.</li>
+              <li>Tolerans dışı parça NOK verir; tolerans içinde ama sınıra yaklaşan eğilim uyarı üretir.</li>
+              <li>Tekrarlanabilirlik, aynı parçanın tekrarlı taramasıyla pilotta ölçülür ve rapora yazılır.</li>
+            </ol>
+            <div class="prob-cikti">
+              <span class="e">Hattınıza çıkan sonuç</span>
+              Ölçüm hat üstüne iner · sapma eğilimi sınır aşılmadan görülür ·
+              tekrarlanabilirlik ölçülmüş rakamla belgelenir
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- sayım hatası -->
+      <div class="panel" id="panel-sayim" role="tabpanel" aria-labelledby="prb-sayim" data-panel="sayim" hidden>
+        <div class="panel-basi">
+          <h3>Sayım hatası</h3>
+          <span class="etiket">Tespit + iz takibi</span>
+        </div>
+        <div class="prob-govde">
+          <div class="prob-kutu">
+            <p class="p-baslik">Belirti</p>
+            <p>Kolide/katmanda adet eksik ya da fazla. Elle sayım hızlı hatta güvenilmez;
+              fotosel ile sayım ise birbirine değen, üst üste gelen ya da <b>duraklayan</b> ürünlerde şaşırır.</p>
+            <p>En sık görülen hata türü aynı ürünün <b>iki kez sayılması</b>: bant duruyor, ürün geri
+              kayıyor ya da titriyor, sayaç artmaya devam ediyor.</p>
+          </div>
+          <div class="prob-kutu">
+            <p class="p-baslik">Nasıl çözülür</p>
+            <ol class="prob-adim">
+              <li>Ürün öğretilir; benzer görünen varyantlar ayrı sınıflar olarak tanımlanabilir.</li>
+              <li>Tespit her karede çalışır, iz takibi her ürüne bir kimlik verir — aynı ürün duraklasa da bir kez sayılır.</li>
+              <li>Sayım bir bölge veya çizgi geçişine bağlanır; yön kontrolü ile geri kayan ürün tekrar sayılmaz.</li>
+              <li>Beklenen adet reçeteden gelir; eksik/fazla durumunda karar PLC'ye yazılır.</li>
+              <li>Katmanlı paletlerde 3D yükseklikle katman doğrulaması eklenebilir.</li>
+            </ol>
+            <div class="prob-cikti">
+              <span class="e">Hattınıza çıkan sonuç</span>
+              Duraklama ve geri kaymada mükerrer sayım engellenir · eksik adet koli kapanmadan yakalanır ·
+              her koli için sayım kaydı kalır
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- robot kılavuzlama -->
+      <div class="panel" id="panel-robot" role="tabpanel" aria-labelledby="prb-robot" data-panel="robot" hidden>
+        <div class="panel-basi">
+          <h3>Robot kılavuzlama</h3>
+          <span class="etiket">El-göz · koordinat aktarımı</span>
+        </div>
+        <div class="prob-govde">
+          <div class="prob-kutu">
+            <p class="p-baslik">Belirti</p>
+            <p>Robot sabit noktaya gidiyor; parça 2 mm kaydığında ya da fikstüre tam oturmadığında
+              hata üretiyor. Her yeni parça için <b>özel fikstür</b> yaptırmak gerekiyor;
+              karışık kutudan besleme ise hiç ele alınamıyor.</p>
+            <p>Alternatif olarak operatör robotu her seferinde yeniden öğretiyor —
+              bu da <b>duruş süresi</b> ve kişiye bağımlılık demek.</p>
+          </div>
+          <div class="prob-kutu">
+            <p class="p-baslik">Nasıl çözülür</p>
+            <ol class="prob-adim">
+              <li>Parça 3D taranır, nokta bulutu çıkarılır.</li>
+              <li>Hedef özellik bulunur: kaynak noktası, delik ekseni, tutuş yüzeyi ya da parçanın duruşu.</li>
+              <li>El-göz kalibrasyonuyla kamera koordinatı robot koordinatına çevrilir; dönüşümün doğruluğu ölçülerek doğrulanır.</li>
+              <li>Noktalar el sıkışmalı protokolle robota/PLC'ye sayfalı biçimde yazılır — yarım veri robota gitmez.</li>
+              <li>Yol önizlemesi operatör ekranında gösterilir; devreye alma sırasında robot körlemesine hareket etmez.</li>
+            </ol>
+            <div class="prob-cikti">
+              <span class="e">Hattınıza çıkan sonuç</span>
+              Fikstür toleransı yerine gerçek konum kullanılır · yeni parça için mekanik yatırım yerine öğretme ·
+              KUKA · FANUC · ABB · Universal Robots · Yaskawa tarafında uygulanabilir
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 03 UYGUNLUK TESTİ ================= -->
+  <section class="section" id="uygunluk">
+    <span class="section-index" aria-hidden="true">03</span>
+    <div class="container">
+      <p class="kicker reveal"><span class="idx">03</span>Uygunluk testi</p>
+      <h2 class="reveal">Hattınız uygun mu</h2>
+      <p class="section-lead reveal">Altı soru. Doğru cevap aramıyoruz — <b>hattın hazır olup olmadığını</b>
+        birlikte görüyoruz. Eksik çıkan maddeler projenin iptali değil, fizibilitede önce konuşulacak
+        başlıklardır.</p>
+
+      <div class="test reveal">
+        <div class="sorular" id="sorular">
+          <label class="soru">
+            <input type="checkbox" data-soru="1">
+            <span class="metin">Denetlenecek parça, istasyonda duruyor ya da bilinen bir hızla geçiyor.
+              <small>Sabit duruş en kolayı; sabit hızda geçiş de olur. Sorun, hem hızın hem konumun rastgele olmasıdır.</small></span>
+          </label>
+          <label class="soru">
+            <input type="checkbox" data-soru="2">
+            <span class="metin">Kabul sınırı tanımlı: tolerans yazılı veya elimde örnek OK/NOK parça var.
+              <small>"Kötü olanı ayıklayın" bir kabul kriteri değildir. Ölçü toleransı ya da fiziksel örnek gerekir.</small></span>
+          </label>
+          <label class="soru">
+            <input type="checkbox" data-soru="3">
+            <span class="metin">Çevrim süresinde denetim için pay var (yaklaşık bir saniye veya üzeri).
+              <small>Daha kısa çevrimler de mümkün ama bu, sensör seçimini ve maliyeti belirgin şekilde değiştirir.</small></span>
+          </label>
+          <label class="soru">
+            <input type="checkbox" data-soru="4">
+            <span class="metin">Hatta PLC var ve Ethernet üzerinden veri alışverişine açık.
+              <small>Siemens S7 · Mitsubishi MC/SLMP · Modbus TCP · PROFINET · OPC UA hazır gelir. PLC yoksa dijital çıkış da kurgulanabilir.</small></span>
+          </label>
+          <label class="soru">
+            <input type="checkbox" data-soru="5">
+            <span class="metin">Sensör ve endüstriyel PC için montaj yeri, kablo yolu ve enerji sağlanabilir.
+              <small>Genelde en çok gecikme buradan çıkar: yer var ama kablo yolu yok, ya da titreşimli bir konsola monte edilmek isteniyor.</small></span>
+          </label>
+          <label class="soru">
+            <input type="checkbox" data-soru="6">
+            <span class="metin">Ortam koşulları biliniyor ve paylaşılabiliyor (titreşim, buhar, toz, yağ sisi, Ex bölgesi).
+              <small>Bilinmiyor olması sorun değil; fizibilitede ölçeriz. Sorun, hiç konuşulmadan kurulum yapılmasıdır.</small></span>
+          </label>
+        </div>
+
+        <aside class="sonuc-kutu js-only" id="sonucKutu" aria-live="polite">
+          <span class="s-etiket">Değerlendirme</span>
+          <div class="sonuc-skor"><span id="skorSayi">0</span><small> / 6 madde</small></div>
+          <span class="sonuc-durum" id="sonucDurum" data-durum="dusuk">Henüz işaretlenmedi</span>
+          <p class="sonuc-metin" id="sonucMetin">Soruları işaretledikçe hattınızın uygunluk değerlendirmesi
+            burada güncellenir.</p>
+          <a class="pill primary" id="fizibiliteCta" href="mailto:sercansozer20@gmail.com?subject=Fizibilite%20talebi%20%E2%80%94%20sersoz.com%2Fcozumler">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3z"/><path d="M3 6l9 7 9-7"/></svg>
+            Fizibilite iste
+          </a>
+          <p class="sonuc-not">Bu değerlendirme yalnızca sizin işaretlediğiniz maddelerden hesaplanır;
+            saha ölçümü ya da taahhüt değildir.</p>
+        </aside>
+      </div>
+
+      <div class="sinirlar reveal">
+        <p class="s-baslik">Sınırlar — baştan yazıyorum</p>
+        <ul>
+          <li>Ayna gibi parlak ve saydam yüzeyler 3D taramada zorlar; bu durumda yerleşim ve yüzey hazırlığı fizibilitede denenmelidir.</li>
+          <li>Mikron altı tolerans isteyen işler koordinat ölçüm makinesinin (CMM) alanıdır; hat üstü 3D onun yerini almaz.</li>
+          <li>Çok yüksek hızlı hatlarda (yüzlerce parça/dakika) tarama yerine farklı bir denetim kurgusu gerekir.</li>
+          <li>Ex sertifikalı ekipman üretmiyorum; Atex sahalarında çözüm, ekipmanı bölge dışında tutacak şekilde tasarlanır.</li>
+          <li>Metin ve tarih kodu okuma (OCR) standart kapsamda değildir; gerekiyorsa ayrı olarak konuşulur.</li>
+          <li>Aydınlatma ve yerleşim tasarlanmadan hiçbir algoritma sonucu kurtarmaz — bu kalem projeye dahildir.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 04 KAPANIŞ ================= -->
+  <section class="section" id="fizibilite">
+    <span class="section-index" aria-hidden="true">04</span>
+    <div class="container">
+      <div class="kapanis">
+        <p class="kicker reveal"><span class="idx">04</span>Fizibilite</p>
+        <h2 class="reveal">Önce ölçelim, sonra konuşalım</h2>
+        <p class="lead reveal">Hattınıza uygun mu sorusunun cevabı sunumda değil, <b>sizin parçanızda</b>.
+          Birkaç örnek parça yeterli: taranabilirliğini, ulaşılabilir ölçüm hassasiyetini ve çevrim süresine
+          etkisini <b>fizibilite raporu</b> olarak sunuyorum. Kurulum kararını sunuma değil, rakamlara
+          bakarak verirsiniz.</p>
+
+        <div class="links reveal">
+          <a class="pill primary" href="mailto:sercansozer20@gmail.com?subject=Fizibilite%20talebi%20%E2%80%94%20sersoz.com%2Fcozumler&amp;body=Merhaba%20Sercan%2C%0A%0ASekt%C3%B6r%3A%20%0AHat%20%2F%20istasyon%3A%20%0AProblem%3A%20%0A%C3%87evrim%20s%C3%BCresi%3A%20%0APLC%20%2F%20haberle%C5%9Fme%3A%20%0A%0A">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3z"/><path d="M3 6l9 7 9-7"/></svg>
+            Fizibilite iste
+          </a>
+          <a class="pill" href="mailto:sercansozer20@gmail.com?subject=15%20dk%20teknik%20g%C3%B6r%C3%BC%C5%9Fme%20%E2%80%94%20sersoz.com%2Fcozumler">
+            15 dk teknik görüşme
+          </a>
+          <a class="pill" href="/vision-detection.html">Ürünü incele</a>
+        </div>
+
+        <div class="ne-getirin reveal">
+          <p class="e">Yazarken şunları eklerseniz ilk cevap çok daha isabetli olur</p>
+          <ul>
+            <li>Parçanın ne olduğu ve neyin denetleneceği (bir cümle yeterli)</li>
+            <li>Varsa tolerans ya da elinizdeki OK/NOK örnek durumu</li>
+            <li>Çevrim süresi ve hattın vardiya düzeni</li>
+            <li>Hattaki PLC markası ve haberleşme imkânı</li>
+            <li>Ortam koşulları: titreşim, buhar, toz, yağ sisi, Ex bölgesi</li>
+            <li>Birkaç fotoğraf — telefonla çekilmiş olması yeterli</li>
+          </ul>
+        </div>
+
+        <div class="status reveal"><span class="dot"></span> Yeni projelere açığım</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 Sercan Sözer · İzmir</span>
+    <nav class="footer-links" aria-label="Alt gezinme">
+      <a href="/">Ana Sayfa</a>
+      <a href="/cozumler.html">Çözümler</a>
+      <a href="/vision-detection.html">Ürün</a>
+      <a href="/portfolyo.html">Portfolyo</a>
+      <a href="/yazilar.html">Yazılar</a>
+      <a href="/magaza.html">Mağaza</a>
+      <a href="/forum.html">Forum</a>
+      <a href="#fizibilite">İletişim</a>
+    </nav>
+    <span class="mono">sersoz.com</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var azalt = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var qs  = function (s, k) { return (k || document).querySelector(s); };
+  var qsa = function (s, k) { return Array.prototype.slice.call((k || document).querySelectorAll(s)); };
+
+  /* ------------------------------------------------ scroll reveal */
+  var ogeler = qsa('.reveal');
+  if (azalt || !('IntersectionObserver' in window)) {
+    ogeler.forEach(function (e) { e.classList.add('visible'); });
+  } else {
+    var ro = new IntersectionObserver(function (g) {
+      g.forEach(function (x) {
+        if (x.isIntersecting) { x.target.classList.add('visible'); ro.unobserve(x.target); }
+      });
+    }, { threshold: .15, rootMargin: '0px 0px -10% 0px' });
+    ogeler.forEach(function (e) { ro.observe(e); });
+  }
+
+  /* ------------------------------------------------ sekmeli seçici
+     Panellerin tamamı HTML'de duruyor; JS yalnız görünürlüğü değiştirir.
+     JS kapalıysa (noscript) hepsi alt alta okunabilir kalır. */
+  function seciciKur(seciciId, veriAdi, geriCagri) {
+    var secici = document.getElementById(seciciId);
+    if (!secici) return null;
+    var dugmeler = qsa('button', secici);
+    var durum = { deger: null, ad: null };
+
+    function sec(dugme, odakla) {
+      if (!dugme) return;
+      dugmeler.forEach(function (d) {
+        var aktif = (d === dugme);
+        d.setAttribute('aria-selected', aktif ? 'true' : 'false');
+        d.tabIndex = aktif ? 0 : -1;
+        var panel = document.getElementById(d.getAttribute('aria-controls'));
+        if (panel) { if (aktif) { panel.removeAttribute('hidden'); } else { panel.setAttribute('hidden', ''); } }
+      });
+      durum.deger = dugme.getAttribute('data-' + veriAdi);
+      durum.ad = (dugme.textContent || '').trim();
+      if (odakla) dugme.focus();
+      if (geriCagri) geriCagri(durum);
+    }
+
+    secici.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button') : null;
+      if (b && dugmeler.indexOf(b) !== -1) sec(b, false);
+    });
+
+    secici.addEventListener('keydown', function (e) {
+      var i = dugmeler.indexOf(document.activeElement);
+      if (i === -1) return;
+      var y = -1;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') y = (i + 1) % dugmeler.length;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') y = (i - 1 + dugmeler.length) % dugmeler.length;
+      else if (e.key === 'Home') y = 0;
+      else if (e.key === 'End') y = dugmeler.length - 1;
+      if (y === -1) return;
+      e.preventDefault();
+      sec(dugmeler[y], true);
+    });
+
+    /* başlangıç: aria-selected="true" olan düğme */
+    var ilk = dugmeler.filter(function (d) { return d.getAttribute('aria-selected') === 'true'; })[0] || dugmeler[0];
+    sec(ilk, false);
+    return durum;
+  }
+
+  /* ------------------------------------------------ uygunluk testi
+     Not: seçiciler kurulurken ctaGuncelle() bir kez çağrılıyor; bu yüzden
+     test değişkenleri seçicilerden ÖNCE tanımlanmak zorunda. */
+  var kutular = qsa('#sorular input[type="checkbox"]');
+  var skorSayi = qs('#skorSayi');
+  var sonucDurum = qs('#sonucDurum');
+  var sonucMetin = qs('#sonucMetin');
+  var cta = qs('#fizibiliteCta');
+
+  var METIN = {
+    baslangic: 'Soruları işaretledikçe hattınızın uygunluk değerlendirmesi burada güncellenir.',
+    yuksek: 'Hattınız standart bir kurulum için hazır görünüyor. Bu noktadan sonrası ölçü işi: birkaç örnek parçayla fizibilite yapıp hassasiyet ve çevrim süresini rakamla koyalım.',
+    orta: 'Temel şartlar var, birkaç başlık netleşmeli. Eksik işaretlediğiniz maddeler kurulumun önünde engel değil ama fizibilitede önce konuşulmalı — genelde yerleşim, kabul kriteri ya da çevrim süresi çıkar.',
+    dusuk: 'Şu an eksik olan maddeler denetimin nasıl kurulacağını doğrudan belirliyor. Yine de yazın: çoğu zaman problem tarifi netleştiğinde soruların yarısı kendiliğinden cevaplanıyor.'
+  };
+
+  function degerlendir() {
+    var isaretli = kutular.filter(function (k) { return k.checked; });
+    var n = isaretli.length;
+    var durum = n >= 5 ? 'yuksek' : (n >= 3 ? 'orta' : 'dusuk');
+    var etiket = n === 0 ? 'Henüz işaretlenmedi'
+               : (durum === 'yuksek' ? 'Uygunluk yüksek' : (durum === 'orta' ? 'Uygunluk orta' : 'Uygunluk düşük'));
+
+    if (skorSayi) skorSayi.textContent = String(n);
+    if (sonucDurum) { sonucDurum.textContent = etiket; sonucDurum.setAttribute('data-durum', n === 0 ? 'dusuk' : durum); }
+    if (sonucMetin) sonucMetin.textContent = n === 0 ? METIN.baslangic : METIN[durum];
+    return { sayi: n, durum: etiket, isaretli: isaretli };
+  }
+
+  /* ------------------------------------------------ mailto gövdesini doldur */
+  function ctaGuncelle() {
+    var d = degerlendir();
+    if (!cta) return;
+    var satir = [];
+    satir.push('Merhaba Sercan,');
+    satir.push('');
+    satir.push('Sektör: ' + ((sektor && sektor.ad) || '-'));
+    satir.push('Problem: ' + ((problem && problem.ad) || '-'));
+    satir.push('Uygunluk testi: ' + d.sayi + '/6 — ' + d.durum);
+    satir.push('');
+    satir.push('İşaretlediğim maddeler:');
+    if (d.isaretli.length) {
+      d.isaretli.forEach(function (k) {
+        var m = qs('.metin', k.parentNode);
+        var t = m ? (m.childNodes[0].nodeValue || '').replace(/\s+/g, ' ').trim() : '';
+        satir.push('- ' + t);
+      });
+    } else {
+      satir.push('- (işaretlenmedi)');
+    }
+    satir.push('');
+    satir.push('Hat / istasyon: ');
+    satir.push('Parça ve denetlenecek özellik: ');
+    satir.push('Çevrim süresi: ');
+    satir.push('PLC / haberleşme: ');
+    satir.push('');
+
+    var konu = 'Fizibilite talebi — ' + ((sektor && sektor.ad) || 'sersoz.com/cozumler');
+    cta.href = 'mailto:sercansozer20@gmail.com'
+             + '?subject=' + encodeURIComponent(konu)
+             + '&body=' + encodeURIComponent(satir.join('\n'));
+  }
+
+  var sektor = seciciKur('sektorSecici', 'sek', function () { ctaGuncelle(); });
+  var problem = seciciKur('problemSecici', 'prb', function () { ctaGuncelle(); });
+
+  kutular.forEach(function (k) { k.addEventListener('change', ctaGuncelle); });
+  ctaGuncelle();
+})();
+</script>
+<script src="/iz.js" defer></script>
+</body>
+</html>
