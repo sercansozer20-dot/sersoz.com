@@ -724,10 +724,11 @@ details.katla .cevap { padding-bottom: 16px; font-size: 13.5px; line-height: 1.7
   .belir { opacity: 1; transform: none; transition: none; }
   .ipucu { transition: none; }
   .tutamak, #sahne { transition: none; }
+  details.katla summary::after { transition: none; }
 }
 
-/* --------------------------------------------------------- JS kapalıysa */
-.js-yok-blok { display: none; }
+/* JS kapalıysa: blok yalnız <noscript> içinde var olur, ayrıca gizlemeye gerek yok */
+.js-yok-blok { border-top: 1px solid var(--cizgi-ince); }
 
 /* Düzyazı: kelime kelime kırılır. */
 .metin, .cevap, .giris, .kelime-liste li, .fisilti, .uyari { overflow-wrap: break-word; }
@@ -742,9 +743,10 @@ details.katla .cevap { padding-bottom: 16px; font-size: 13.5px; line-height: 1.7
 
 <noscript>
 <style>
+  /* sürüklenecek bir şey yoksa tutamağı ve boş sahneyi gösterme;
+     dikiş yine de kalır — sayfanın belkemiği odur */
   #sahne, .band-ortu, .ipucu, .tutamak, .dikis-tut { display: none !important; }
   .sahne-bandi { min-height: 0; }
-  .js-yok-blok { display: grid; }
   .belir { opacity: 1; transform: none; }
 </style>
 </noscript>
@@ -835,7 +837,7 @@ details.katla .cevap { padding-bottom: 16px; font-size: 13.5px; line-height: 1.7
 
   <!-- parçanın oturduğu bant: kanvas buranın arkasında çizer -->
   <div class="sahne-bandi" id="sahneBandi">
-    <button class="band-ortu" id="bandOrtu" type="button" tabindex="-1" aria-hidden="true"></button>
+    <div class="band-ortu" id="bandOrtu" aria-hidden="true"></div>
     <p class="ipucu" id="ipucu" aria-hidden="true"><span id="ipucuMetin">↔ dikişi sürükleyin</span></p>
   </div>
 
@@ -844,21 +846,27 @@ details.katla .cevap { padding-bottom: 16px; font-size: 13.5px; line-height: 1.7
     <div class="yuz makine"><div class="ic">ŞEMA · ekran kaydı değildir · veri örnektir · ölçüm birimleri mm</div></div>
   </div>
 
-  <!-- JS kapalıyken anlamlı özet -->
-  <div class="ikili js-yok-blok">
-    <div class="yuz insan"><div class="ic">
-      <h3>JavaScript kapalı</h3>
-      <p class="metin">Bu sayfanın kalbi, ekranı ikiye bölen sürüklenebilir bir dikiş: solda insanın
-        gördüğü parça, sağda makinenin ölçtüğü nokta bulutu. Canlandırma çalışmıyor ama anlatılan iş aynı:
-        <b>3D tarama → ölçüm → OK/NOK kararı → PLC'ye yazma</b>. Aşağıdaki bölümlerin tamamı okunabilir.</p>
-    </div></div>
-    <div class="yuz makine"><div class="ic">
-      <p class="mono"><b>kamera</b> LMI Gocator · Wenglor MLBS115<br>
-        <b>uygulama</b> kaynak ağzı · paletlemede eksik ürün · kolileme adet/oturma · yüzey kalite<br>
-        <b>plc</b> Siemens S7 · Mitsubishi MC/SLMP · Modbus TCP · PROFINET DCP keşfi<br>
-        <b>iletişim</b> sercansozer20@gmail.com</p>
-    </div></div>
-  </div>
+  <!-- JS kapalıyken: sürüklenebilir dikiş yok, ama anlatılan iş eksiksiz okunur -->
+  <noscript>
+    <div class="ikili js-yok-blok">
+      <div class="yuz insan"><div class="ic">
+        <h3>JavaScript kapalı</h3>
+        <p class="metin">Bu sayfanın kalbi, ekranı ikiye bölen sürüklenebilir bir dikiştir: solda insanın
+          gördüğü parça, sağda makinenin ölçtüğü nokta bulutu. Canlandırma çalışmıyor; anlatılan iş aynı:
+          <b>3D tarama → ölçüm → tolerans → OK/NOK kararı → PLC'ye yazma</b>.
+          Aşağıdaki bölümlerin tamamı okunabilir durumda.</p>
+        <p class="metin">Fizibilite için iki örnek parça yeterli:
+          <a class="ic-bag" href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a></p>
+      </div></div>
+      <div class="yuz makine"><div class="ic">
+        <p class="mono"><b>kamera</b> LMI Gocator · Wenglor MLBS115<br>
+          <b>uygulama</b> kaynak ağzı · paletlemede eksik ürün · kolileme adet/oturma · yüzey kalite<br>
+          <b>plc hazır</b> Siemens S7 · Mitsubishi MC/SLMP · Modbus TCP · PROFINET DCP keşfi<br>
+          <b>plc yol haritası</b> OPC UA · PROFINET IO<br>
+          <b>ürün</b> Vision Detection App · tek hat lisansı ₺64.000 + KDV</p>
+      </div></div>
+    </div>
+  </noscript>
 </header>
 
 <!-- ====================================================== 2 · NE YAPIYORUZ -->
@@ -1497,9 +1505,10 @@ function yaz() {
 
 function yarikAyarla(v, kullanici) {
   HEDEF = kis(v);
-  if (kullanici) { etkilesim = true; nefesAktif = false; tweenAktif = false; ipucuGizle(); }
+  if (kullanici) { etkilesim = true; nefesAktif = false; tweenBitir(); ipucuGizle(); }
   yaz();
-  if (azalt) tekKare();
+  /* döngü durmuşsa (kahraman ekran dışı, hareket azaltma) elle bir kare çiz */
+  if (azalt || !kosuyor) tekKare();
 }
 
 /* ------------------------------------------------------------- ipucu */
@@ -1529,7 +1538,7 @@ function suruklemeBagla(el) {
   el.addEventListener('pointerdown', function (e) {
     if (dar()) return;                 /* dar ekranda sürükleme yok: dokunma = taraf geçişi */
     aktif = true; isaretci = e.pointerId;
-    etkilesim = true; nefesAktif = false; tweenAktif = false; ipucuGizle();
+    etkilesim = true; nefesAktif = false; tweenBitir(); ipucuGizle();
     if (el.setPointerCapture) { try { el.setPointerCapture(e.pointerId); } catch (x) {} }
     yarikAyarla(oranHesapla(e.clientX), true);
     e.preventDefault();
@@ -1557,13 +1566,47 @@ suruklemeBagla(tut);
 suruklemeBagla(serit);
 suruklemeBagla(ortu);
 
-/* dar ekran: dokunmayla iki taraf arasında geçiş */
+/* dar ekran: dokunmayla iki taraf arasında geçiş.
+   Geçiş KENDİ sürücüsüyle koşar — ana çizim döngüsü durmuş olsa bile
+   (kahraman ekrandan çıkınca durur) tutamağa dokunmak işini görür. */
+var tweenRaf = null, tweenSaat = null;
+
+function tweenBitir() {
+  tweenAktif = false;
+  if (tweenRaf) { cancelAnimationFrame(tweenRaf); tweenRaf = null; }
+  if (tweenSaat) { clearTimeout(tweenSaat); tweenSaat = null; }
+}
+
+function tweenSur() {
+  tweenRaf = null;
+  if (!tweenAktif) return;
+  var tp = (performance.now() - tweenT0) / 620;
+  if (tp >= 1) { tp = 1; tweenAktif = false; }
+  var yum = tp < 0.5 ? 2 * tp * tp : 1 - Math.pow(-2 * tp + 2, 2) / 2;
+  HEDEF = tweenBas + (tweenSon - tweenBas) * yum;
+  yaz();
+  if (!kosuyor) tekKare();
+  if (tweenAktif) tweenRaf = requestAnimationFrame(tweenSur);
+  else tweenBitir();
+}
+
 function tarafDegistir() {
   var s = sinirlar();
-  var hedef = HEDEF > 50 ? s[0] + 8 : s[1] - 8;
+  var hedef = kis(HEDEF > 50 ? s[0] + 8 : s[1] - 8);
   etkilesim = true; nefesAktif = false; ipucuGizle();
   if (azalt) { yarikAyarla(hedef, true); return; }
-  tweenAktif = true; tweenT0 = performance.now(); tweenBas = HEDEF; tweenSon = kis(hedef);
+
+  tweenBitir();
+  tweenAktif = true; tweenT0 = performance.now(); tweenBas = HEDEF; tweenSon = hedef;
+  tweenRaf = requestAnimationFrame(tweenSur);
+
+  /* rAF hiç ateşlemezse geçiş yarıda kalmasın: kesin iniş */
+  tweenSaat = setTimeout(function () {
+    if (!tweenAktif) return;
+    tweenBitir();
+    HEDEF = tweenSon; yaz();
+    if (!kosuyor) tekKare();
+  }, 720);
 }
 
 if (tut) {
@@ -1927,13 +1970,7 @@ function dongu(now) {
     }
   }
 
-  /* dokunmayla taraf geçişi */
-  if (tweenAktif) {
-    var tp = (now - tweenT0) / 620;
-    if (tp >= 1) { tp = 1; tweenAktif = false; }
-    var yum = tp < 0.5 ? 2 * tp * tp : 1 - Math.pow(-2 * tp + 2, 2) / 2;
-    HEDEF = tweenBas + (tweenSon - tweenBas) * yum;
-  }
+  /* taraf geçişi kendi sürücüsünde koşar (bkz. tweenSur) */
 
   yaz();
   saydamlik();
@@ -2011,8 +2048,15 @@ for (var gd = 0; gd < gitDugmeler.length; gd++) {
 
 /* ------------------------------------------------------------ olaylar */
 
+var sonDarMi = dar();
+
 function yenidenOlc() {
   olcekle();
+  /* geniş ↔ dar geçişinde, ziyaretçi henüz dokunmadıysa o kipin çerçevesine dön */
+  if (dar() !== sonDarMi) {
+    sonDarMi = dar();
+    if (!etkilesim) HEDEF = dar() ? 84 : 70;
+  }
   HEDEF = kis(HEDEF);
   if (ortu) ortu.classList.toggle('dokun', dar());
   yaz();
