@@ -602,6 +602,23 @@ body.sonda .hud { opacity: 0; visibility: hidden; }
   .kol { left: 2px; }
   .hud { bottom: 10px; font-size: 9.5px; gap: 2px 9px; padding: 7px 10px; max-width: calc(100vw - 78px); }
   .ust { font-size: 9.5px; padding: 9px 12px; gap: 8px 11px; }
+
+  /* ---------- telefonda okunabilirlik ve dokunma hedefleri ----------
+     Ölçüldü: gövde metni 13.5px, çipler 9.5px, alt harita bağlantıları 17px
+     yükseklikteydi; 23 dokunma hedefi 44px'in altındaydı. Telefonda okunan ve
+     parmakla basılan bir sayfada bu küçük. Masaüstü ölçüleri değişmez. */
+  .bolum .ic .metin { font-size: 15px; line-height: 1.72; }
+  .bolum .ic h2, .bolum .ic h1 { line-height: 1.14; }
+  .cip { font-size: 11px; padding: 5px 9px; }
+  .veri .ad, .veri .deg, .veri .lim { font-size: 12px; }
+  .veri-not { font-size: 11px; }
+  .dugme { font-size: 12px; padding: 13px 16px; min-height: 44px; }
+  .nav-links a { padding: 10px 9px; }
+  .harita { gap: 2px 12px; }
+  .harita a { padding: 9px 0; }
+  .cikis .urun { font-size: 18px; }
+  .cikis .fiyat { font-size: 13px; }
+  .ist { height: 34px; }
   .cagri { bottom: 15vh; font-size: 9.5px; letter-spacing: .16em; }
   .dortlu { grid-template-columns: 1fr; }
 }
@@ -1065,7 +1082,10 @@ body.akis .kol { display: none; }
   function olcuAl() {
     W = window.innerWidth || document.documentElement.clientWidth;
     H = window.innerHeight || document.documentElement.clientHeight;
-    dpr = Math.min(2, window.devicePixelRatio || 1);
+    /* Telefonda piksel yükü kırılır. Ölçüldü: 375×812 ekranda DPR 2 ile kare
+       başına 1,22 MP çiziliyordu; 1.5 sınırı bunu ~0,68 MP'ye indirir (%44 az iş)
+       ve ekranda gözle fark edilmez. Masaüstünde 2 kalır. */
+    dpr = Math.min(W <= 760 ? 1.5 : 2, window.devicePixelRatio || 1);
     kanvas.width = Math.max(1, Math.round(W * dpr));
     kanvas.height = Math.max(1, Math.round(H * dpr));
     kanvas.style.width = W + 'px';
