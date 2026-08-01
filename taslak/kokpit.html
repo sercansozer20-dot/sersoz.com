@@ -77,6 +77,13 @@ a { color: inherit; }
 }
 .atla:focus { left: 8px; top: 8px; }
 
+/* yalnız ekran okuyucu için — sayfa başlığı görsel düzeni bozmadan var olsun */
+.gizli-baslik {
+  position: absolute; width: 1px; height: 1px;
+  margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
 /* ---------------------------------------------------------- TASLAK şeridi */
 .taslak-serit {
   position: sticky; top: 0; z-index: 70;
@@ -687,6 +694,8 @@ tr[data-dolu="0"] td.deger.nok, td.deger.nok { color: var(--nok); }
 
 <!-- ==================================================================== KOKPİT -->
 <header class="kokpit" id="kokpit">
+
+  <h1 class="gizli-baslik">Vision Detection App — 3D tespit, ölçüm, karar ve PLC kokpiti</h1>
 
   <!-- üst çubuk: sayfa gezinmez, İŞ seçilir -->
   <div class="kp-ust">
@@ -1343,7 +1352,7 @@ tr[data-dolu="0"] td.deger.nok, td.deger.nok { color: var(--nok); }
     palet: {
       kod: 'palet_3x3_kutu', ad: 'Paletlemede eksik ürün',
       olcumAd: 'Bölge Sayım', olcumGlif: '▤',
-      ozet: '8/9 sayıldı · 1 NOK · 0 ölçülemedi',
+      ozet: '8/9 sayıldı · 2 NOK · 0 ölçülemedi',
       karar: 'NOK',
       ciktilar: [
         { ad: 'koli_adet',       deger: '8',       limit: '= 9',       durum: 'nok', plc: true },
@@ -1482,7 +1491,7 @@ tr[data-dolu="0"] td.deger.nok, td.deger.nok { color: var(--nok); }
     kalite: {
       kod: 'yuzey_denetim_a3', ad: 'Yüzey kalite kontrolü',
       olcumAd: 'Yüzey Sapma', olcumGlif: '◈',
-      ozet: '3/4 ölçüldü · 2 NOK · 1 ölçülemedi',
+      ozet: '3/4 ölçüldü · 3 NOK · 1 ölçülemedi',
       karar: 'NOK',
       ciktilar: [
         { ad: 'cukur_derinlik', deger: '−0.42 mm', limit: '≤ 0.15',    durum: 'nok',   plc: true },
@@ -1612,7 +1621,14 @@ tr[data-dolu="0"] td.deger.nok, td.deger.nok { color: var(--nok); }
     OLCEK = Math.min(W, H) * 0.86;
     CX = W * 0.5;
     CY = H * 0.56;
+    yonTazele();
     if (!kosuyor) ciz(performance.now());
+  }
+
+  /* ray dikey mi yatay mı — CSS 760px kırılmasıyla aynı eşik */
+  function yonTazele() {
+    var yatay = window.matchMedia ? matchMedia('(max-width: 760px)').matches : false;
+    rayListe.setAttribute('aria-orientation', yatay ? 'horizontal' : 'vertical');
   }
 
   function yansit(px, py, pz, aci) {
@@ -2068,6 +2084,15 @@ tr[data-dolu="0"] td.deger.nok, td.deger.nok { color: var(--nok); }
     c.addEventListener('pointerleave', birak);
   } else {
     hudSurukle.textContent = '↔ parmakla döndürün';
+  }
+
+  /* ray 760px altında yatay şeride iniyor — ekran okuyucuya doğru yönü bildir.
+     boyutla() her ölçü değişiminde çağırır; ayrıca mq olayına da bağlanır. */
+  yonTazele();
+  if (window.matchMedia) {
+    var yatayMq = matchMedia('(max-width: 760px)');
+    if (yatayMq.addEventListener) yatayMq.addEventListener('change', yonTazele);
+    else if (yatayMq.addListener) yatayMq.addListener(yonTazele);
   }
 
   /* ölçü değişimi */

@@ -729,10 +729,15 @@ details.katla .cevap { padding-bottom: 16px; font-size: 13.5px; line-height: 1.7
 /* --------------------------------------------------------- JS kapalıysa */
 .js-yok-blok { display: none; }
 
-/* uzun mono dizeler hiçbir genişlikte yatay taşma üretmez */
-.mono, .kod, .msatir, .senaryo-dugme, .mnot, .metin, .cevap, .giris, .kelime-liste li {
-  overflow-wrap: break-word;
-}
+/* Düzyazı: kelime kelime kırılır. */
+.metin, .cevap, .giris, .kelime-liste li, .fisilti, .uyari { overflow-wrap: break-word; }
+
+/* Mono içerik (adres, e-posta, protokol adı) her yerden kırılabilmeli — "anywhere"
+   "break-word"den farklı olarak min-content genişliğini de küçültür. */
+.mono, .kod, .msatir, .senaryo-dugme, .mnot { overflow-wrap: anywhere; }
+
+/* Esnek kutu çocuklarının otomatik en küçük boyutu, dar sütunda taşmaya yol açar. */
+.msatir > *, .mbaslik > *, .ray-ic > *, .mkarar > * { min-width: 0; }
 </style>
 
 <noscript>
@@ -1853,6 +1858,13 @@ function makineCiz(sx, aci, t) {
 
 /* ------------------------------------------------------------ çizim */
 function ciz(t) {
+  /* kendi kendini onaran ölçü: resize olayı ya da ResizeObserver ateşlemese bile
+     (gömülü önizleme, gizliyken açılan kap) kanvas doğru boyutta kalır */
+  if (kanvas.clientWidth && (kanvas.clientWidth !== W || kanvas.clientHeight !== H)) {
+    if (!olcekle()) return;
+  }
+  if (W < 2 || H < 2) return;
+
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
 
@@ -2004,7 +2016,9 @@ function yenidenOlc() {
   HEDEF = kis(HEDEF);
   if (ortu) ortu.classList.toggle('dokun', dar());
   yaz();
-  if (azalt || !kosuyor) tekKare();
+  /* kanvas boyutu değişince bitmap silinir; döngü koşuyor olsa bile hemen
+     yeniden çiz — aksi halde bir sonraki kareye kadar boş kalır */
+  tekKare();
 }
 
 var olcTimer = null;
@@ -2063,8 +2077,14 @@ if (window.IntersectionObserver && kahramanEl) {
 
 /* ----------------------------------------------------- belirme (reveal) */
 var belirenler = document.querySelectorAll('.belir');
+
+/* Güvenlik yolu: geçiş (transition) işlemeyen ortamlarda opacity:0 kalıcı olur.
+   Bu yüzden yedek açılışta geçişi kapatıp değeri anında uygularız. */
 function hepsiniAc() {
-  for (var i = 0; i < belirenler.length; i++) belirenler[i].classList.add('acik');
+  for (var i = 0; i < belirenler.length; i++) {
+    belirenler[i].style.transition = 'none';
+    belirenler[i].classList.add('acik');
+  }
 }
 if (azalt || !window.IntersectionObserver) {
   hepsiniAc();
@@ -2076,14 +2096,21 @@ if (azalt || !window.IntersectionObserver) {
   }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
   for (var bi = 0; bi < belirenler.length; bi++) bo.observe(belirenler[bi]);
   /* güvenlik yedeği: gözlemci ateşlemezse sayfa gizli kalmasın */
-  setTimeout(hepsiniAc, 4200);
+  setTimeout(hepsiniAc, 2600);
 }
 
 /* ------------------------------------------------------------- açılış */
-olcekle();
 if (ortu) ortu.classList.toggle('dokun', dar());
 ciktiYaz();
 yaz();
+
+/* İlk ölçüm bazen 0 döner (henüz yerleşmemiş kap, gizli sekme). setTimeout
+   çerçeve döngüsünden bağımsız çalıştığı için ölçü tutana kadar tekrar denenir. */
+var acilisDeneme = 0;
+(function acilisOlc() {
+  if (olcekle()) { yaz(); tekKare(); return; }
+  if (acilisDeneme++ < 40) setTimeout(acilisOlc, 120);
+})();
 
 if (azalt) {
   /* duragan ama DOLU kare: ölçüler, ROI, karar — hepsi görünür */
@@ -2091,10 +2118,8 @@ if (azalt) {
   ipucuGoster();
 } else {
   t0 = performance.now();
-  /* İLK KARE SENKRON çizilir — requestAnimationFrame gecikirse ya da hiç
-     çalışmazsa (arka plan sekmesi, düşük güç modu, bazı gömülü tarayıcılar)
-     ziyaretçi boş kanvas görmesin. Ölçüldü: rAF'ın hiç çalışmadığı ortamda
-     bu satır olmadan kanvas tek renk kalıyordu. */
+  /* ilk kare senkron: rAF gecikirse ya da hiç koşmazsa (arka plan sekmesi,
+     gömülü tarayıcı) ziyaretçi boş kanvas görmesin */
   tekKare();
   baslat();
 
