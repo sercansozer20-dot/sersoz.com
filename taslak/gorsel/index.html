@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3B Anlatım Biçimleri — Altı Örnek</title>
+<meta name="description" content="Aynı parça, aynı kamera, altı farklı üç boyutlu anlatım tekniği. Tek değişken teknik.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f6f2ea;
+    --ink: #1a1815;
+    --muted: #5b564d;
+    --accent: #c2410c;
+    --green: #14532d;
+    --line: rgba(26, 24, 21, .2);
+    --line-soft: rgba(26, 24, 21, .1);
+    --paper: rgba(255, 253, 248, .6);
+    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+    --serif: Georgia, 'Times New Roman', Times, serif;
+    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--sans);
+    -webkit-font-smoothing: antialiased; line-height: 1.6;
+  }
+  ::selection { background: var(--accent); color: var(--bg); }
+
+  .wrap { max-width: 1020px; margin: 0 auto; padding: 0 24px; }
+
+  header { padding: 64px 0 30px; }
+
+  .rozet {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 6px 13px; margin-bottom: 20px;
+    border: 1px solid var(--accent); color: var(--accent);
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase;
+  }
+  .rozet::before { content: ''; width: 6px; height: 6px; background: var(--accent); }
+
+  h1 {
+    font-family: var(--serif); font-size: clamp(28px, 5.4vw, 46px);
+    font-weight: 700; letter-spacing: -.015em; line-height: 1.08;
+  }
+  h1 .nokta { color: var(--accent); }
+
+  .giris { margin-top: 18px; max-width: 640px; font-size: 16px; color: var(--muted); }
+  .giris b { color: var(--ink); font-weight: 600; }
+
+  .zemin {
+    margin-top: 24px; padding: 15px 18px;
+    border-left: 3px solid var(--green); background: rgba(20, 83, 45, .05);
+    font-size: 14px; color: var(--muted);
+  }
+  .zemin b { color: var(--green); }
+  .zemin code {
+    font-family: var(--mono); font-size: 12.5px;
+    background: rgba(26,24,21,.06); padding: 1px 5px;
+  }
+
+  .kartlar {
+    padding: 30px 0 16px; border-top: 3px double var(--line);
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(288px, 1fr)); gap: 18px;
+  }
+
+  .kart {
+    position: relative; display: flex; flex-direction: column;
+    border: 1px solid var(--line); background: var(--paper);
+    text-decoration: none; color: inherit;
+    transition: border-color .25s, transform .25s cubic-bezier(.2,.7,.3,1), box-shadow .25s;
+  }
+  .kart::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--accent); transform: scaleX(0); transform-origin: left;
+    transition: transform .3s cubic-bezier(.2,.7,.3,1);
+  }
+  .kart:hover, .kart:focus-visible {
+    border-color: rgba(194, 65, 12, .45); transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(26, 24, 21, .08); outline: none;
+  }
+  .kart:hover::before, .kart:focus-visible::before { transform: scaleX(1); }
+  .kart:focus-visible { box-shadow: 0 0 0 3px rgba(194, 65, 12, .3); }
+
+  .onizleme { display: block; width: 100%; height: auto; border-bottom: 1px solid var(--line-soft); }
+  .govde { padding: 18px 18px 20px; flex: 1; display: flex; flex-direction: column; }
+  .no { font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+  .kart h2 { font-family: var(--serif); font-size: 21px; font-weight: 700; margin-bottom: 9px; }
+  .kart p { font-size: 14px; color: var(--muted); flex: 1; }
+  .kart .zayif { margin-top: 9px; font-size: 12.5px; color: var(--muted); opacity: .85; }
+  .kart .zayif b { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+
+  .ac {
+    margin-top: 16px; display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink); border-bottom: 1px solid var(--accent); padding-bottom: 3px; align-self: flex-start;
+  }
+  .kart:hover .ac, .kart:focus-visible .ac { color: var(--accent); }
+
+  /* Henüz yazılmamış örnek: tıklanamaz, açıkça işaretli.
+     Dosya yayına düşünce betik bunu kendiliğinden kaldırır. */
+  .kart.yok { opacity: .62; pointer-events: none; }
+  .kart.yok .ac { display: none; }
+  .kart .bekliyor { display: none; }
+  .kart.yok .bekliyor {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; align-self: flex-start;
+    padding: 6px 11px; border: 1px dashed var(--muted); color: var(--muted);
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+  }
+  .kart.yok .bekliyor::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--muted);
+    animation: nabiz 1.4s ease-in-out infinite;
+  }
+  @keyframes nabiz { 0%, 100% { opacity: .25 } 50% { opacity: 1 } }
+  @media (prefers-reduced-motion: reduce) { .kart.yok .bekliyor::before { animation: none; opacity: .7; } }
+
+  .durum { margin: 18px 0 0; font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; color: var(--muted); }
+
+  footer {
+    margin-top: 36px; padding: 24px 0 56px; border-top: 1px solid var(--line-soft);
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; color: var(--muted);
+    display: flex; gap: 20px; flex-wrap: wrap;
+  }
+  footer a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+  footer a:hover { color: var(--accent); border-color: var(--accent); }
+
+  @media (max-width: 640px) {
+    header { padding: 42px 0 22px; }
+    .wrap { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <span class="rozet">Taslak · yayında değil</span>
+    <h1>Altı 3B anlatım biçimi<span class="nokta">.</span></h1>
+    <p class="giris">
+      Nokta bulutu <b>veriyi</b> gösteriyor ama <b>parçayı</b> göstermiyor —
+      "sadece nokta ve değerlerin arasından akıyormuş gibi" duran şey bu.
+      Aşağıdaki altı teknik aynı sorunun altı farklı cevabı.
+    </p>
+    <p class="zemin">
+      <b>Ortak zemin:</b> altısı da <b>aynı parçayı</b> (kaynak gövdesi — V kanalı,
+      iki delik, kenar pahı), <b>aynı kameradan</b>, <b>aynı paletle</b> gösterir ve
+      aynı sekiz adımlı araç zincirini koşar. Tek değişken <b>anlatım tekniği</b> —
+      yoksa karşılaştırma anlamsız olurdu. Yükseklik alanı uygulamanın kendi
+      <code>sahne3d.js</code> dosyasından alındı, uydurulmadı.
+    </p>
+  </header>
+
+  <div class="kartlar">
+
+    <a class="kart" href="/taslak/gorsel/kati-malzeme.html">
+      <svg class="onizleme" viewBox="0 0 320 150" aria-hidden="true">
+        <rect width="320" height="150" fill="#0d1219"/>
+        <ellipse cx="164" cy="126" rx="96" ry="13" fill="#000" opacity="0.5"/>
+        <path d="M60 96 L160 44 L266 78 L166 130 Z" fill="#8d9aa8"/>
+        <path d="M60 96 L166 130 L166 142 L60 108 Z" fill="#4a545f"/>
+        <path d="M266 78 L166 130 L166 142 L266 90 Z" fill="#68737f"/>
+        <path d="M104 82 L150 56 L176 64 L130 90 Z" fill="#39424c"/>
+        <path d="M112 80 L152 58 L168 63 L128 86 Z" fill="#2a323a"/>
+        <path d="M60 96 L160 44 L186 52 L86 104 Z" fill="#aab6c2" opacity="0.55"/>
+        <path d="M196 62 L214 68 L182 86 L164 80 Z" fill="#d7dee6" opacity="0.65"/>
+      </svg>
+      <div class="govde">
+        <div class="no">Teknik 01</div>
+        <h2>Katı malzeme</h2>
+        <p>Yükseklik alanı ışık alan katı yüzey olur: Lambert gölge, speküler parlama, zemine temas gölgesi. Parça artık veri değil, parça.</p>
+        <p class="zayif"><b>Zayıf yanı</b> Tek başına ölçümü ve toleransı anlatmaz.</p>
+        <span class="ac">Aç →</span>
+        <span class="bekliyor">Hazırlanıyor</span>
+      </div>
+    </a>
+
+    <a class="kart" href="/taslak/gorsel/sapma-haritasi.html">
+      <svg class="onizleme" viewBox="0 0 320 150" aria-hidden="true">
+        <rect width="320" height="150" fill="#0d1219"/>
+        <ellipse cx="150" cy="126" rx="92" ry="12" fill="#000" opacity="0.5"/>
+        <path d="M48 96 L146 44 L250 78 L152 130 Z" fill="#1d9e75"/>
+        <path d="M48 96 L152 130 L152 142 L48 108 Z" fill="#0f6e56"/>
+        <path d="M250 78 L152 130 L152 142 L250 90 Z" fill="#14805f"/>
+        <ellipse cx="186" cy="79" rx="26" ry="14" fill="#e24b4a"/>
+        <ellipse cx="186" cy="79" rx="15" ry="8" fill="#f7c1c1"/>
+        <ellipse cx="106" cy="82" rx="18" ry="10" fill="#ef9f27"/>
+        <rect x="272" y="30" width="12" height="86" fill="#0d1219" stroke="#3d4652" stroke-width="0.8"/>
+        <rect x="272" y="30" width="12" height="22" fill="#e24b4a"/>
+        <rect x="272" y="52" width="12" height="22" fill="#ef9f27"/>
+        <rect x="272" y="74" width="12" height="21" fill="#1d9e75"/>
+        <rect x="272" y="95" width="12" height="21" fill="#378add"/>
+      </svg>
+      <div class="govde">
+        <div class="no">Teknik 02</div>
+        <h2>Sapma haritası</h2>
+        <p>CAD ile tarama farkı renge döner: tolerans içi yeşil, sınırda amber, dışı kırmızı, yanında sayısal ölçek. Kalite müdürünün zaten tanıdığı görüntü.</p>
+        <p class="zayif"><b>Zayıf yanı</b> Gerçek CAD referansı olduğunu ima eder — şema etiketi şart.</p>
+        <span class="ac">Aç →</span>
+        <span class="bekliyor">Hazırlanıyor</span>
+      </div>
+    </a>
+
+    <a class="kart" href="/taslak/gorsel/kesit-profili.html">
+      <svg class="onizleme" viewBox="0 0 320 150" aria-hidden="true">
+        <rect width="320" height="150" fill="#0d1219"/>
+        <path d="M28 100 L120 52 L206 80 L114 128 Z" fill="#4d5762"/>
+        <path d="M28 100 L114 128 L114 138 L28 110 Z" fill="#333b44"/>
+        <path d="M96 66 L148 84 L138 90 L86 72 Z" fill="#232a32"/>
+        <path d="M74 44 L166 92 L166 108 L74 60 Z" fill="#78cdff" opacity="0.12"/>
+        <path d="M74 44 L166 92" stroke="#78cdff" stroke-width="2"/>
+        <rect x="216" y="24" width="94" height="102" fill="#0a0e14" stroke="#2f3a48" stroke-width="1"/>
+        <path d="M224 92 L248 92 L256 66 L268 66 L276 92 L302 92" fill="none" stroke="#5dcaa5" stroke-width="2"/>
+        <g stroke="#ef9f27" stroke-width="1">
+          <line x1="256" y1="56" x2="268" y2="56"/><line x1="256" y1="51" x2="256" y2="61"/><line x1="268" y1="51" x2="268" y2="61"/>
+        </g>
+        <text x="238" y="46" font-family="Consolas,monospace" font-size="11" fill="#ef9f27">6.04 mm</text>
+      </svg>
+      <div class="govde">
+        <div class="no">Teknik 03</div>
+        <h2>Kesit profili</h2>
+        <p>Lazer düzlemi parçayı keser, yanda gerçek profil eğrisi çıkar ve ölçülür. Düzlem sürüklendikçe değerler değişir. Sensörün fiziği.</p>
+        <p class="zayif"><b>Zayıf yanı</b> Bütünü değil tek bir kesiti gösterir.</p>
+        <span class="ac">Aç →</span>
+        <span class="bekliyor">Hazırlanıyor</span>
+      </div>
+    </a>
+
+    <a class="kart" href="/taslak/gorsel/kafes-kati.html">
+      <svg class="onizleme" viewBox="0 0 320 150" aria-hidden="true">
+        <rect width="320" height="150" fill="#0d1219"/>
+        <ellipse cx="160" cy="126" rx="94" ry="12" fill="#000" opacity="0.45"/>
+        <path d="M160 46 L262 80 L162 130 L162 46 Z" fill="#7f8b98"/>
+        <path d="M262 80 L162 130 L162 142 L262 92 Z" fill="#5b6672"/>
+        <path d="M200 66 L232 76 L196 96 L176 88 Z" fill="#39424c"/>
+        <g stroke="#78cdff" stroke-width="0.8" fill="none" opacity="0.9">
+          <path d="M56 96 L158 44 L158 130 L56 108 Z"/>
+          <path d="M56 96 L158 44M56 108 L158 56M77 90 L158 48M98 84 L158 52"/>
+          <path d="M77 90 L77 102M98 84 L98 96M119 78 L119 90M138 68 L138 82"/>
+        </g>
+        <g fill="#78cdff"><circle cx="77" cy="90" r="1.6"/><circle cx="98" cy="84" r="1.6"/><circle cx="119" cy="78" r="1.6"/><circle cx="138" cy="68" r="1.6"/></g>
+        <line x1="160" y1="34" x2="160" y2="142" stroke="#c2410c" stroke-width="1.6" stroke-dasharray="5 4"/>
+      </svg>
+      <div class="govde">
+        <div class="no">Teknik 04</div>
+        <h2>Tel kafesten katıya</h2>
+        <p>Nokta → üçgen ağ → katı yüzey. Kaydıraçla üç hal arasında sürekli geçiş; üçü de aynı geometriden türer. Ham verinin gövdeye dönüşü.</p>
+        <p class="zayif"><b>Zayıf yanı</b> Süreci anlatır, sonucu değil.</p>
+        <span class="ac">Aç →</span>
+        <span class="bekliyor">Hazırlanıyor</span>
+      </div>
+    </a>
+
+    <a class="kart" href="/taslak/gorsel/patlatilmis.html">
+      <svg class="onizleme" viewBox="0 0 320 150" aria-hidden="true">
+        <rect width="320" height="150" fill="#0d1219"/>
+        <path d="M74 120 L166 92 L246 116 L154 144 Z" fill="#2a323b" stroke="#3d4854" stroke-width="0.8"/>
+        <path d="M74 96 L166 68 L246 92 L154 120 Z" fill="#33414f" stroke="#4a5a6b" stroke-width="0.8"/>
+        <path d="M74 72 L166 44 L246 68 L154 96 Z" fill="#2f4a5e" stroke="#5b7d97" stroke-width="0.8"/>
+        <path d="M74 48 L166 20 L246 44 L154 72 Z" fill="#3a2a20" stroke="#c2410c" stroke-width="1"/>
+        <g fill="#78cdff" opacity="0.9"><circle cx="120" cy="108" r="1.6"/><circle cx="150" cy="114" r="1.6"/><circle cx="180" cy="106" r="1.6"/></g>
+        <g fill="#5dcaa5"><circle cx="126" cy="84" r="1.8"/><circle cx="158" cy="90" r="1.8"/><circle cx="188" cy="82" r="1.8"/></g>
+        <rect x="132" y="52" width="52" height="14" fill="none" stroke="#c2410c" stroke-width="1.2"/>
+      </svg>
+      <div class="govde">
+        <div class="no">Teknik 05</div>
+        <h2>Patlatılmış katmanlar</h2>
+        <p>Sekiz adım üst üste ayrı düzlemler. Aralarındaki bağlantı çizgileri hangi noktanın geçtiğini, elenenlerin nerede kaldığını gösterir. Zincir tek ekranda.</p>
+        <p class="zayif"><b>Zayıf yanı</b> Kalabalıklaşma riski en yüksek olan.</p>
+        <span class="ac">Aç →</span>
+        <span class="bekliyor">Hazırlanıyor</span>
+      </div>
+    </a>
+
+    <a class="kart" href="/taslak/gorsel/hucre.html">
+      <svg class="onizleme" viewBox="0 0 320 150" aria-hidden="true">
+        <rect width="320" height="150" fill="#0d1219"/>
+        <path d="M0 118 L320 96 L320 122 L0 144 Z" fill="#232b34"/>
+        <g stroke="#39434e" stroke-width="1"><path d="M34 128 L36 105M84 125 L86 102M134 121 L136 99M184 118 L186 96M234 114 L236 92M284 111 L286 89"/></g>
+        <path d="M96 104 L134 98 L152 106 L114 113 Z" fill="#8a6a44"/>
+        <path d="M96 104 L114 113 L114 126 L96 118 Z" fill="#5f4a30"/>
+        <path d="M134 98 L152 106 L152 119 L114 126 L114 113 Z" fill="#75593a"/>
+        <rect x="104" y="18" width="46" height="17" fill="#2b333d" stroke="#4a5561" stroke-width="1"/>
+        <text x="110" y="30" font-family="Consolas,monospace" font-size="11" fill="#93a0b3">3D</text>
+        <path d="M114 35 L96 100 L152 92 Z" fill="#78cdff" opacity="0.16"/>
+        <path d="M96 100 L152 92" stroke="#cdeaff" stroke-width="2"/>
+        <path d="M262 26 L288 26 L288 60 L272 74" fill="none" stroke="#5f6b78" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M272 74 L262 86" fill="none" stroke="#c2410c" stroke-width="5" stroke-linecap="round"/>
+        <rect x="8" y="24" width="34" height="46" fill="#1b222a" stroke="#3d4854" stroke-width="1"/>
+        <g fill="#5dcaa5"><circle cx="17" cy="34" r="2.4"/><circle cx="17" cy="44" r="2.4"/></g>
+        <circle cx="17" cy="54" r="2.4" fill="#e24b4a"/>
+      </svg>
+      <div class="govde">
+        <div class="no">Teknik 06</div>
+        <h2>Hücre görünümü</h2>
+        <p>Parça değil sistem: konveyör, üstte sensör ve lazer perdesi, robot, PLC dolabı. Parçalar geçer, taranır, NOK olan ayrılır. Entegrasyonun cevabı.</p>
+        <p class="zayif"><b>Zayıf yanı</b> Ölçüm hassasiyetini hiç anlatmaz.</p>
+        <span class="ac">Aç →</span>
+        <span class="bekliyor">Hazırlanıyor</span>
+      </div>
+    </a>
+
+  </div>
+
+  <p class="durum" id="durum">Örnekler denetleniyor…</p>
+
+  <footer>
+    <a href="/taslak/">← Tasarım denemeleri</a>
+    <a href="/">Yayındaki site</a>
+    <a href="/taslak/butun.html">Derinlik + Yarık birleşimi</a>
+    <span>Arama motorlarına kapalı</span>
+  </footer>
+
+</div>
+
+<script>
+/* Her kartın hedefi gerçekten yayında mı diye bakar. Yoksa kart tıklanamaz
+   ve "Hazırlanıyor" der. Dosya yayına düşünce kart kendiliğinden açılır —
+   sayfayı yenilemeye gerek yok. */
+(function () {
+  'use strict';
+
+  var kartlar = Array.prototype.slice.call(document.querySelectorAll('.kart'));
+  var durum = document.getElementById('durum');
+  if (!kartlar.length) return;
+
+  var tur = 0;
+
+  function bak(kart) {
+    return fetch(kart.getAttribute('href'), { method: 'HEAD', cache: 'no-store' })
+      .then(function (y) { return y.ok; })
+      .catch(function () { return false; });
+  }
+
+  function tara() {
+    tur++;
+    Promise.all(kartlar.map(bak)).then(function (sonuc) {
+      var hazir = 0;
+      for (var i = 0; i < kartlar.length; i++) {
+        if (sonuc[i]) { kartlar[i].classList.remove('yok'); hazir++; }
+        else { kartlar[i].classList.add('yok'); }
+      }
+
+      if (durum) {
+        durum.textContent = hazir === kartlar.length
+          ? 'Altı örnek de hazır — kartlara dokunabilirsiniz.'
+          : hazir + '/' + kartlar.length + ' örnek hazır. Kalanlar yazılıyor; ' +
+            'bu sayfa kendiliğinden tazelenir.';
+      }
+
+      if (hazir < kartlar.length && tur < 60) setTimeout(tara, 15000);
+    });
+  }
+
+  if (window.fetch) {
+    kartlar.forEach(function (k) { k.classList.add('yok'); });
+    tara();
+  } else if (durum) {
+    durum.textContent = '';
+  }
+})();
+</script>
+
+</body>
+</html>
