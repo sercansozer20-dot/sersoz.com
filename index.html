@@ -1106,6 +1106,20 @@ body.akis .kol { display: none; }
     return { X: cx + x1 * s * birim, Y: cy - y2 * s * birim, s: s, d: z2 };
   }
 
+  /* Tahsissiz ikizi — ağ köşeleri kare başına binlerce kez yansıtılır, orada
+     nesne üretmek çöp toplayıcıyı boşuna çalıştırır. */
+  var _pX = 0, _pY = 0, _pS = 0, _pD = 0;
+  function yansit2(x, y, z) {
+    var rx = x - kayX, ry = y - camY, rz = z - camZ;
+    var x1 = rx * yawC + rz * yawS, z1 = -rx * yawS + rz * yawC;
+    var y2 = ry * kCos + z1 * kSin;
+    var z2 = -ry * kSin + z1 * kCos;
+    if (z2 < 0.19) return 0;
+    var s = FOV / z2;
+    _pX = cx + x1 * s * birim; _pY = cy - y2 * s * birim; _pS = s; _pD = z2;
+    return 1;
+  }
+
   /* sis: uzakta sönük, çok yakında da sönük (içinden geçerken) */
   function sis(d) {
     if (d > 8.4) return 0;
@@ -1135,6 +1149,70 @@ body.akis .kol { display: none; }
     }
   })();
   var BAYRAK = [null, SOLUK, KIRMIZI, LAZER, YESIL, MAVI];
+
+  /* ============================================================================
+     MALZEME KATMANI — "gözün gördüğü" (nokta bulutu = "sensörün ölçtüğü")
+     Yükseklik alanı, düz gölgelemeli bir DÖRTGEN AĞI olarak boyanır. Işık dünya
+     uzayında sabit olduğu için difüz+ambiyans+AO ÖN-HESAPLANIR; kare içinde
+     yalnız spekuler görüşe bağlıdır. Renkler önceden kurulmuş rampalardan okunur —
+     kare içinde tek bir dizge birleştirmesi yoktur.
+     ============================================================================ */
+  var MAT_CELIK = 0, MAT_MUKAVVA = 1, MAT_BOYA = 2, MAT_TABLA = 3, MAT_ATIK = 4, MAT_SAC = 5;
+  var N_MAT = 6, N_RAMP = 9;                 /* 6 malzeme + 3 "NOK" türevi */
+  var NOK_RAMP = [6, 7, 8, 3, 4, 5];         /* malzeme -> kırmızıya dönmüş rampası */
+
+  var MALZ = [
+    /* çelik   */ { c: [150, 166, 186], kd: .55, ks: .62, m: 42, ks2: .18, ao: .85, kb: 2.2, i0: .05, i1: 1.00 },
+    /* mukavva */ { c: [176, 124,  74], kd: .78, ks: .06, m:  6, ks2: .03, ao: 1.0, kb: 1.0, i0: .16, i1:  .62 },
+    /* boya    */ { c: [ 92, 116, 150], kd: .62, ks: .30, m: 16, ks2: .10, ao: .90, kb: 2.2, i0: .08, i1:  .86 },
+    /* tabla   */ { c: [ 66,  78,  94], kd: .35, ks: .20, m: 24, ks2: .06, ao: 1.0, kb: 1.0, i0: .06, i1:  .55 },
+    /* atık    */ { c: [ 96, 104, 116], kd: .10, ks: .00, m:  4, ks2: .00, ao: .00, kb: 1.0, i0: .10, i1:  .30 },
+    /* sac     */ { c: [ 74,  84, 100], kd: .50, ks: .14, m: 12, ks2: .05, ao: .90, kb: 1.4, i0: .07, i1:  .62 }
+  ];
+
+  var NB = 24, NA = 12, NBS = 5;             /* parlaklık · alfa · spekuler kademeleri */
+  var RAMPA = [], SPEKR = new Array(NA * NBS), SPEK_LUT = [], RIM_LUT = new Float32Array(66);
+  (function () {
+    var i, j, k, m, mm, c, I, nokC = [248, 113, 113];
+    for (k = 0; k < N_RAMP; k++) {
+      m = k < N_MAT ? k : (k === 6 ? MAT_CELIK : k === 7 ? MAT_MUKAVVA : MAT_BOYA);
+      mm = MALZ[m];
+      c = mm.c;
+      if (k >= N_MAT) c = [c[0] * .26 + nokC[0] * .74, c[1] * .26 + nokC[1] * .74, c[2] * .26 + nokC[2] * .74];
+      var sat = new Array(NA * NB);
+      for (i = 0; i < NA; i++) {
+        var al = ((i + 1) / NA).toFixed(3);
+        for (j = 0; j < NB; j++) {
+          I = mm.i0 + (mm.i1 - mm.i0) * ((j + 0.5) / NB);
+          sat[i * NB + j] = 'rgba(' + ((c[0] * I) | 0) + ',' + ((c[1] * I) | 0) + ',' + ((c[2] * I) | 0) + ',' + al + ')';
+        }
+      }
+      RAMPA.push(sat);
+    }
+    for (i = 0; i < NA; i++) for (j = 0; j < NBS; j++) {
+      SPEKR[i * NBS + j] = 'rgba(232,244,255,' + ((((i + 1) / NA) * ((j + 0.5) / NBS)) * 0.8).toFixed(3) + ')';
+    }
+    for (m = 0; m < N_MAT; m++) {
+      var lut = new Float32Array(66);
+      for (i = 0; i <= 65; i++) lut[i] = Math.pow(Math.min(1, i / 64), MALZ[m].m);
+      SPEK_LUT.push(lut);
+    }
+    for (i = 0; i <= 65; i++) RIM_LUT[i] = Math.pow(Math.min(1, i / 64), 4);
+  })();
+
+  /* Ana ışık üst-soldan ve kamera tarafından; dolgu ışığı sensörün kendi
+     aydınlatmasının sekmesi. Üçüncü ışık yok — bütçe. */
+  var LX = -0.418, LY = 0.857, LZ = -0.299;
+  var GX = 0.623, GY = 0.342, GZ = -0.703, KF = 0.22;
+
+  function isikBaz(nx, ny, nz, kd) {
+    var amb = 0.10 + 0.16 * (0.5 + 0.5 * ny);           /* yarımküre ambiyans */
+    var c = (nx * LX + ny * LY + nz * LZ + 0.25) / 1.25; /* sarmalı Lambert */
+    if (c < 0) c = 0;
+    var f = nx * GX + ny * GY + nz * GZ; if (f < 0) f = 0;
+    var v = amb + kd * c + KF * f;
+    return v < 0 ? 0 : v > 1 ? 1 : v;
+  }
 
   /* ---------------------------------------------------------- çizim yardımcıları */
   function rg(renk, a) { return 'rgba(' + renk + ',' + (a < 0 ? 0 : a > 1 ? 1 : a).toFixed(3) + ')'; }
@@ -1834,8 +1912,19 @@ body.akis .kol { display: none; }
     hedefZ = Math.max(0, Math.min(Z_MAX, (y / alan()) * Z_MAX));
   }
 
-  /* ---------------------------------------------------------- akış kipi (azaltılmış hareket) */
-  if (azalt) {
+  /* ---------------------------------------------------------- akış kipi
+     İki durumda kullanılır:
+       1) hareket azaltma isteği — sahne durur, dolu duruk kareler çizilir
+       2) DAR EKRAN (telefon) — sahne yaşamaya devam eder
+
+     Telefonda sabit panel modeli kaydırma çakışması üretiyordu: ölçüldü,
+     dokuz istasyonun YEDİSİ panele sığmıyor (İST-08'de taşma 524 px), yani
+     mağaza bandına ulaşmak için panelin İÇİNİ kaydırmak gerekiyordu — parmak
+     kamerayı mı paneli mi süreceğini bilemiyordu. Akışta içerik normal kayar,
+     kanvas arkada sabit durur, kamera görünen bölüme süzülür. */
+  var darEkran = (window.innerWidth || document.documentElement.clientWidth) <= 760;
+
+  if (azalt || darEkran) {
     document.body.classList.add('akis');
     document.body.classList.add('hazir');
     olcuAl();
@@ -1850,9 +1939,10 @@ body.akis .kol { display: none; }
           if (girdiler[i].isIntersecting) {
             var idx = panolar.indexOf(girdiler[i].target);
             if (idx >= 0) {
-              camZ = hedefZ = IST[idx].z;
-              ciz(2400);
-              arayuzTazele();
+              /* Telefonda yalnız hedef verilir; kamera döngüde süzülerek gider.
+                 Hareket azaltmada anında geçilir ve tek kare çizilir. */
+              hedefZ = IST[idx].z;
+              if (azalt) { camZ = hedefZ; ciz(2400); arayuzTazele(); }
             }
           }
         }
@@ -1861,7 +1951,8 @@ body.akis .kol { display: none; }
     }
 
     window.addEventListener('resize', function () {
-      olcuAl(); tabanTazele(); ciz(2400); arayuzTazele();
+      olcuAl(); tabanTazele();
+      if (azalt) { ciz(2400); arayuzTazele(); }
     });
 
     for (var bi = 0; bi < dugmeler.length; bi++) {
@@ -1882,6 +1973,17 @@ body.akis .kol { display: none; }
       })(gitler0[gi0]);
     }
     for (var ii = 0; ii < N_IST; ii++) if (IST[ii].dug) IST[ii].dug.classList.add('gorulmus');
+
+    /* Telefonda sahne YAŞAR: döngü çalışır, kamera hedefe süzülür.
+       Sekme arkaya alınınca durur — pil boşuna harcanmasın. */
+    if (!azalt) {
+      baslat();
+      if (typeof document.hidden !== 'undefined') {
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden) durdur(); else baslat();
+        });
+      }
+    }
     return;
   }
 
