@@ -54,6 +54,29 @@
   h1 { font-family: var(--serif); font-size: clamp(28px, 4.4vw, 44px); font-weight: 700; letter-spacing: -.015em; }
   h1 .nokta { color: var(--accent); }
 
+  /* tanı kutusu */
+  .tani {
+    max-width: 560px; margin: 22px 0 0; padding: 16px 20px;
+    border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--paper);
+  }
+  .tani-baslik {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 10px;
+  }
+  .tani-satir {
+    display: flex; justify-content: space-between; gap: 14px; padding: 5px 0;
+    font-family: var(--mono); font-size: 12px;
+  }
+  .tani-satir span { color: var(--muted); }
+  .tani-satir b { font-weight: 600; text-align: right; }
+  .tani-satir b.iyi { color: var(--green); }
+  .tani-satir b.kotu { color: var(--accent); }
+  .tani-not {
+    margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line-soft);
+    font-size: 12.5px; line-height: 1.6; color: var(--muted);
+  }
+  .tani-not:empty { display: none; }
+
   /* kapı */
   .kapi { max-width: 480px; margin: 60px auto 120px; padding: 40px 32px; border: 1px solid var(--line); background: var(--paper); text-align: center; }
   .kapi h2 { font-family: var(--serif); font-size: 24px; margin-bottom: 12px; }
@@ -172,6 +195,17 @@
     <p class="eyebrow">Yönetim paneli</p>
     <h1>Site trafiği ve siparişler<span class="nokta">.</span></h1>
   </header>
+
+  <div class="tani" id="tani">
+    <div class="tani-baslik">Bağlantı durumu</div>
+    <div class="tani-satir"><span>Firebase</span><b id="tFirebase">yükleniyor…</b></div>
+    <div class="tani-satir"><span>Oturum</span><b id="tOturum">—</b></div>
+    <div class="tani-satir"><span>Yetki</span><b id="tYetki">—</b></div>
+    <div class="tani-satir"><span>Ziyaret kayıtları</span><b id="tZiyaret">—</b></div>
+    <div class="tani-satir"><span>Siparişler</span><b id="tSiparis">—</b></div>
+    <div class="tani-satir"><span>Katalog</span><b id="tUrun">—</b></div>
+    <p class="tani-not" id="tNot"></p>
+  </div>
 
   <div class="kapi" id="kapi" style="display:none">
     <h2 id="kapiBaslik">Giriş gerekli</h2>
@@ -450,20 +484,57 @@ const YONETICI = 'sercansozer20@gmail.com';
       function (snap) {
         ziyaretler = snap.docs.map(function (d) { return d.data(); });
         $('durumBilgi').textContent = ziyaretler.length + ' kayıt okundu';
+        tani('tZiyaret', ziyaretler.length + ' kayıt okundu', true);
         ciz();
       },
-      function (e) { $('durumBilgi').textContent = 'Ziyaretler okunamadı: ' + e.code; });
+      function (e) {
+        $('durumBilgi').textContent = 'Ziyaretler okunamadı: ' + e.code;
+        tani('tZiyaret', 'HATA — ' + e.code, false);
+        taniNot(e.code);
+      });
 
     f.onSnapshot(f.collection(S.db, 'siparisler'), function (snap) {
       siparisler = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
       siparisler.sort(function (a, b) { return (ts(b.tarih) || 0) - (ts(a.tarih) || 0); });
+      tani('tSiparis', siparisler.length + ' sipariş', true);
       siparisCiz(); ciz();
-    }, function () {});
+    }, function (e) {
+      tani('tSiparis', 'HATA — ' + e.code, false);
+      taniNot(e.code);
+    });
 
     f.onSnapshot(f.collection(S.db, 'urunler'), function (snap) {
       urunler = snap.docs.map(function (d) { return d.data(); });
+      tani('tUrun', urunler.length + ' ürün', true);
       urunCiz(); ciz();
-    }, function () {});
+    }, function (e) {
+      tani('tUrun', 'HATA — ' + e.code, false);
+      taniNot(e.code);
+    });
+  }
+
+  /* --------------------------------------------------------------- tanı */
+  function tani(alan, metin, iyiMi) {
+    var el = $(alan);
+    if (!el) return;
+    el.textContent = metin;
+    el.className = iyiMi === true ? 'iyi' : iyiMi === false ? 'kotu' : '';
+  }
+
+  function taniNot(kod) {
+    var n = $('tNot');
+    if (!n) return;
+    var aciklama = {
+      'permission-denied':
+        'Firestore güvenlik kuralları bu hesaba okuma izni vermiyor. Kurallardaki yönetici ' +
+        'e-postası ile giriş yaptığınız hesap birebir aynı olmalı.',
+      'failed-precondition':
+        'Sorgu için Firestore dizini gerekiyor. Tarayıcı konsolundaki bağlantıya tıklayarak ' +
+        'dizini oluşturabilirsiniz.',
+      'unavailable':
+        'Firestore’a ulaşılamadı — ağ bağlantısını kontrol edin.'
+    }[kod];
+    n.textContent = aciklama || ('Hata kodu: ' + kod);
   }
 
   function oturum(u) {
@@ -471,6 +542,16 @@ const YONETICI = 'sercansozer20@gmail.com';
     var yetkili = u && u.email === YONETICI;
     $('kapi').style.display = yetkili ? 'none' : 'block';
     $('panel').style.display = yetkili ? 'block' : 'none';
+
+    tani('tOturum', u ? (u.email || 'e-posta yok') : 'giriş yapılmadı', u ? true : null);
+    tani('tYetki',
+      !u ? 'giriş bekleniyor' : yetkili ? 'yönetici' : 'yetkisiz hesap',
+      !u ? null : yetkili);
+    if (u && !yetkili) {
+      taniNot('permission-denied');
+      $('tNot').textContent = 'Panel yalnız ' + YONETICI + ' hesabına açık. Şu an ' +
+        u.email + ' ile giriş yaptınız. Sağ üstten çıkış yapıp doğru hesapla girin.';
+    }
 
     if (u && !yetkili) {
       $('kapiBaslik').textContent = 'Yetkiniz yok';
@@ -500,15 +581,30 @@ const YONETICI = 'sercansozer20@gmail.com';
     var app = r[0], authMod = r[1], fsMod = r[2];
     S = { auth: authMod.getAuth(app), db: fsMod.getFirestore(app), authMod: authMod, fsMod: fsMod,
           provider: new authMod.GoogleAuthProvider() };
+    tani('tFirebase', 'yüklendi (' + FIREBASE_CONFIG.projectId + ')', true);
     authMod.onAuthStateChanged(S.auth, oturum);
     $('girisBtn').onclick = function () {
+      tani('tOturum', 'giriş penceresi açıldı…', null);
       authMod.signInWithPopup(S.auth, S.provider).catch(function (e) {
         $('durumBilgi').textContent = 'Giriş yapılamadı: ' + e.code;
+        tani('tOturum', 'HATA — ' + e.code, false);
+        var mesaj = {
+          'auth/popup-blocked': 'Tarayıcı açılır pencereyi engelledi. Adres çubuğundaki engel ' +
+            'simgesinden izin verip tekrar deneyin.',
+          'auth/popup-closed-by-user': 'Giriş penceresi kapatıldı, tekrar deneyebilirsiniz.',
+          'auth/unauthorized-domain': 'Bu alan adı Firebase’de yetkili değil ' +
+            '(Authentication → Settings → Authorized domains).',
+          'auth/operation-not-allowed': 'Google ile giriş yöntemi Firebase’de etkin değil.'
+        }[e.code];
+        $('tNot').textContent = mesaj || ('Giriş hatası: ' + e.code);
       });
     };
-  }).catch(function () {
+  }).catch(function (e) {
     $('kapi').style.display = 'block';
     $('durumBilgi').textContent = 'Bağlantı kurulamadı.';
+    tani('tFirebase', 'YÜKLENEMEDİ', false);
+    $('tNot').textContent = 'Firebase kütüphanesi yüklenemedi — ağ engeli veya reklam engelleyici ' +
+      'olabilir. Ayrıntı: ' + ((e && e.message) || 'bilinmiyor');
   });
 
   $('araliklar').addEventListener('click', function (e) {
