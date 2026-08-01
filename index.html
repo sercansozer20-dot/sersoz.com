@@ -487,6 +487,12 @@ h1 .k, h2 .k { color: var(--kiremit-ac); }
 }
 
 /* ---------- HUD ---------- */
+/* Son istasyonda (mağaza bandının olduğu yerde) HUD çekilir — teklifi örtmesin. */
+body.sonda .hud { opacity: 0; visibility: hidden; }
+@media (prefers-reduced-motion: no-preference) {
+  .hud { transition: opacity .35s ease, visibility .35s; }
+}
+
 .hud {
   position: fixed;
   left: clamp(14px, 3vw, 26px);
@@ -1707,12 +1713,21 @@ body.akis .kol { display: none; }
 
   function tabanTazele() { TABAN = (W <= 760) ? '0px' : '-50%'; }
 
+  var sonEnIst = -1;
+
   function arayuzTazele() {
     /* en yakın istasyon */
     var en = 0, enD = 1e9, i, d;
     for (i = 0; i < N_IST; i++) {
       d = Math.abs(camZ - IST[i].z);
       if (d < enD) { enD = d; en = i; }
+    }
+
+    /* Son istasyonda HUD çekilir. Yolculuk bitmiştir; sabit duran ölçüm
+       göstergesi tam da mağaza bandının oturduğu köşeyi örtüyordu. */
+    if (en !== sonEnIst) {
+      sonEnIst = en;
+      document.body.classList.toggle('sonda', en === N_IST - 1);
     }
 
     for (i = 0; i < N_IST; i++) {
