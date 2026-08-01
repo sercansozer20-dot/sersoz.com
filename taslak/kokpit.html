@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Kokpit — Vision Detection App · taslak · sersoz.com</title>
+<meta name="description" content="Taslak ana sayfa kavramı: site gezinmez, iş seçilir. Sol rayda araç zinciri, ortada nokta bulutu, sağda çıktı panosu — 3D ölçümden PLC kararına.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%230b0f14'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%23c2410c' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23f6f2ea' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+/* =========================================================================
+   KOKPİT — taslak ana sayfa kavramı
+   Site gezinmez, İŞ seçilir. Sol ray = araç zinciri = sitenin gezinmesi.
+   Sağ pano = çıktılar = sitenin içeriği.
+   Dış bağımlılık yok: sistem fontları, satır içi SVG, tek kanvas.
+   ========================================================================= */
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  /* marka */
+  --kiremit: #c2410c;          /* değişmez marka rengi */
+  --kiremit-ac: #ff8b4a;       /* koyu zeminde okunur tonu */
+
+  /* kokpit (koyu) */
+  --k-zemin: #080b10;
+  --k-panel: #0e131a;
+  --k-panel2: #11161d;
+  --k-cizgi: rgba(255, 255, 255, .09);
+  --k-cizgi2: rgba(255, 255, 255, .05);
+  --k-yazi: #e6ecf4;
+  --k-soluk: rgba(230, 236, 244, .52);
+  --k-cok-soluk: rgba(230, 236, 244, .3);
+
+  /* sinyal */
+  --ok: #6ef0aa;
+  --nok: #f87171;
+  --bekle: #ffbe8c;
+  --veri: #78cdff;
+
+  /* kağıt (açık) */
+  --kagit: #f6f2ea;
+  --murekkep: #1a1815;
+  --gri: #5b564d;
+  --cizgi: rgba(26, 24, 21, .2);
+  --cizgi-ince: rgba(26, 24, 21, .1);
+  --sayfa: rgba(255, 253, 248, .55);
+
+  --mono: Consolas, 'Cascadia Mono', 'SF Mono', 'Courier New', monospace;
+  --serif: Georgia, 'Times New Roman', Times, serif;
+  --sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--k-zemin);
+  color: var(--k-yazi);
+  font-family: var(--sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img, svg, canvas { max-width: 100%; }
+
+a { color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--kiremit-ac);
+  outline-offset: 2px;
+}
+
+.atla {
+  position: absolute; left: -9999px; top: 0; z-index: 200;
+  background: var(--kiremit); color: #fff;
+  padding: 10px 16px; font-family: var(--mono); font-size: 12px;
+}
+.atla:focus { left: 8px; top: 8px; }
+
+/* ---------------------------------------------------------- TASLAK şeridi */
+.taslak-serit {
+  position: sticky; top: 0; z-index: 70;
+  display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap;
+  padding: 6px 14px;
+  background: #05070a;
+  border-bottom: 1px solid rgba(194, 65, 12, .45);
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--k-cok-soluk);
+}
+.taslak-rozet {
+  padding: 3px 8px; background: var(--kiremit); color: #fff;
+  font-weight: 700; letter-spacing: .2em;
+}
+.taslak-serit .ayrac { color: rgba(255, 255, 255, .18); }
+.taslak-serit .don { margin-left: auto; color: var(--kiremit-ac); text-decoration: none; border-bottom: 1px solid currentColor; }
+.taslak-serit .don:hover { color: #fff; }
+
+/* ================================================================ KOKPİT */
+.kokpit {
+  border-bottom: 3px solid var(--kiremit);
+  background: var(--k-zemin);
+}
+
+/* ---- üst çubuk: iş seçici ---- */
+.kp-ust {
+  display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--k-panel2);
+  border-bottom: 1px solid var(--k-cizgi);
+}
+
+.kp-marka { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; flex: none; }
+.kp-marka .im {
+  width: 24px; height: 24px; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--kiremit); color: #fff;
+  font-family: var(--serif); font-size: 15px; font-weight: 700; line-height: 1;
+}
+.kp-marka .ad { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--k-yazi); }
+.kp-marka .alt { display: block; font-size: 9px; letter-spacing: .18em; color: var(--k-cok-soluk); text-transform: uppercase; }
+
+.is-kutu { min-width: 0; flex: 1 1 320px; }
+.is-etiket {
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: .26em;
+  text-transform: uppercase; color: var(--k-cok-soluk); margin-bottom: 5px;
+}
+.is-secici {
+  display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+.is-secici::-webkit-scrollbar { height: 5px; }
+.is-secici::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .14); }
+
+.is-dugme {
+  flex: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 11px;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--k-cizgi);
+  color: var(--k-soluk);
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em;
+  transition: background .18s, color .18s, border-color .18s;
+}
+.is-dugme .no { color: rgba(255, 255, 255, .26); font-size: 9px; }
+.is-dugme:hover { color: var(--k-yazi); border-color: rgba(255, 255, 255, .22); }
+.is-dugme[aria-pressed="true"] {
+  background: rgba(194, 65, 12, .2);
+  border-color: rgba(255, 139, 74, .55);
+  color: #ffd9c2;
+}
+.is-dugme[aria-pressed="true"] .no { color: var(--kiremit-ac); }
+
+.kp-durum { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: none; }
+.cip {
+  padding: 4px 9px; border: 1px solid var(--k-cizgi);
+  font-family: var(--mono); font-size: 9px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--k-soluk); white-space: nowrap;
+}
+.cip.sema { border-color: rgba(255, 190, 140, .35); color: var(--bekle); }
+.cip.mod { border-color: rgba(120, 205, 255, .35); color: var(--veri); }
+.cip.mod[data-mod="elle"] { border-color: rgba(255, 139, 74, .6); color: var(--kiremit-ac); background: rgba(194, 65, 12, .14); }
+.oto-don {
+  padding: 4px 9px; cursor: pointer;
+  background: transparent; border: 1px solid rgba(255, 139, 74, .5);
+  color: var(--kiremit-ac);
+  font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+}
+.oto-don[hidden] { display: none; }
+.oto-don:hover { background: rgba(194, 65, 12, .18); }
+
+/* ---- gövde: ray | ekran | pano ---- */
+.kp-govde {
+  display: grid;
+  grid-template-columns: 214px minmax(0, 1fr) 338px;
+  grid-template-areas: "ray ekran pano";
+  grid-template-rows: clamp(360px, 54vh, 560px);
+}
+
+/* ---- sol ray = araç zinciri = gezinme ---- */
+.ray {
+  grid-area: ray; min-width: 0;
+  background: var(--k-panel);
+  border-right: 1px solid var(--k-cizgi);
+  display: flex; flex-direction: column;
+  overflow: auto;
+}
+.ray-baslik {
+  padding: 10px 12px 8px;
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: .24em;
+  text-transform: uppercase; color: var(--k-cok-soluk);
+  border-bottom: 1px solid var(--k-cizgi2);
+}
+.ray-liste { display: flex; flex-direction: column; min-height: 0; }
+
+.arac {
+  position: relative; cursor: pointer; text-align: left;
+  display: grid; grid-template-columns: 20px 18px minmax(0, 1fr) 14px;
+  align-items: center; gap: 8px;
+  padding: 9px 10px;
+  background: transparent; border: none; border-bottom: 1px solid var(--k-cizgi2);
+  color: var(--k-cok-soluk);
+  font-family: var(--mono); font-size: 10.5px;
+  transition: background .16s, color .16s;
+}
+.arac .sira { font-size: 8.5px; color: rgba(255, 255, 255, .22); }
+.arac .glif { font-size: 13px; line-height: 1; color: rgba(255, 255, 255, .3); }
+.arac .ad { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arac .led { justify-self: end; font-size: 10px; color: rgba(255, 255, 255, .16); }
+.arac:hover { background: rgba(255, 255, 255, .035); color: var(--k-soluk); }
+
+.arac[data-durum="bitti"] { color: rgba(230, 236, 244, .62); }
+.arac[data-durum="bitti"] .glif { color: rgba(200, 215, 230, .58); }
+.arac[data-durum="bitti"] .led { color: var(--ok); }
+
+.arac[aria-selected="true"] {
+  background: rgba(194, 65, 12, .16);
+  color: #ffe6d6;
+}
+.arac[aria-selected="true"]::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2.5px;
+  background: var(--kiremit);
+}
+.arac[aria-selected="true"] .glif { color: #ffc9a3; }
+.arac[aria-selected="true"] .sira { color: var(--kiremit-ac); }
+.arac[aria-selected="true"] .led { color: var(--bekle); }
+.arac[aria-selected="true"] .led::after { content: '●'; }
+.arac[aria-selected="true"] .led span { display: none; }
+
+.arac-ilerleme {
+  position: absolute; left: 0; bottom: 0; height: 1.5px; width: 0;
+  background: rgba(255, 190, 140, .7);
+}
+
+.ray-dip {
+  margin-top: auto; padding: 10px 12px;
+  border-top: 1px solid var(--k-cizgi2);
+  font-family: var(--mono); font-size: 9px; line-height: 1.6;
+  color: var(--k-cok-soluk);
+}
+.ray-dip kbd {
+  display: inline-block; padding: 1px 5px; margin: 0 1px;
+  border: 1px solid var(--k-cizgi); background: rgba(255, 255, 255, .05);
+  font-family: var(--mono); font-size: 9px; color: var(--k-soluk);
+}
+
+/* ---- orta: viewport ---- */
+.ekran {
+  grid-area: ekran; position: relative; min-width: 0; min-height: 240px;
+  background: #070a0e; overflow: hidden;
+}
+.ekran canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: pan-y; }
+.ekran canvas:focus-visible { outline: 2px solid var(--kiremit-ac); outline-offset: -2px; }
+
+.hud {
+  position: absolute; inset: 0; pointer-events: none;
+  padding: 10px 12px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--k-soluk);
+}
+.hud-sira { display: flex; justify-content: space-between; gap: 10px; }
+.hud .sol { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.hud .adim-ad { color: #ffd9c2; letter-spacing: .16em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hud .adim-no { color: rgba(255, 255, 255, .3); }
+.hud .sag { text-align: right; white-space: nowrap; }
+.hud .surukle { color: rgba(255, 255, 255, .28); }
+
+/* merak ipucu — 5. saniyede kendiliğinden belirir */
+.ipucu {
+  position: absolute; left: 12px; bottom: 42px; max-width: min(300px, calc(100% - 24px));
+  pointer-events: auto;
+  padding: 10px 12px;
+  background: rgba(11, 15, 20, .94);
+  border: 1px solid rgba(255, 139, 74, .55);
+  border-left-width: 3px;
+  font-family: var(--mono); font-size: 10.5px; line-height: 1.65;
+  letter-spacing: 0; text-transform: none; color: #ffd9c2;
+  opacity: 0; transform: translateY(6px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+.ipucu.gorunur { opacity: 1; transform: none; }
+.ipucu[hidden] { display: none; }
+.ipucu b { color: #fff; font-weight: 700; }
+.ipucu .ok-isaret { color: var(--kiremit-ac); }
+
+/* JS kapalıyken viewport yerine geçen özet */
+.ns-ekran {
+  position: absolute; inset: 0; z-index: 5; overflow: auto;
+  padding: 18px 20px; background: #0a0e13;
+  font-size: 13px; line-height: 1.7; color: var(--k-soluk);
+}
+.ns-ekran h2 { font-family: var(--serif); font-size: 19px; color: var(--k-yazi); margin-bottom: 10px; }
+.ns-ekran ol { margin: 10px 0 0 18px; font-family: var(--mono); font-size: 11.5px; line-height: 1.9; }
+
+/* ---- sağ pano = çıktılar = sitenin içeriği ---- */
+.pano {
+  grid-area: pano; min-width: 0;
+  background: var(--k-panel);
+  border-left: 1px solid var(--k-cizgi);
+  overflow: auto;
+  display: flex; flex-direction: column;
+}
+.pano-ust {
+  position: sticky; top: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 14px 8px;
+  background: var(--k-panel);
+  border-bottom: 1px solid var(--k-cizgi2);
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: .24em;
+  text-transform: uppercase; color: var(--k-cok-soluk);
+}
+.pano-ust .ornek { color: var(--bekle); border: 1px solid rgba(255, 190, 140, .3); padding: 2px 6px; letter-spacing: .16em; }
+
+.pano-ic { padding: 14px 14px 18px; }
+
+.pano-kicker {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .22em;
+  text-transform: uppercase; color: var(--kiremit-ac);
+}
+.pano h3 {
+  margin-top: 8px;
+  font-family: var(--serif); font-size: 19px; font-weight: 700;
+  line-height: 1.24; color: #fff;
+}
+.pano .metin { margin-top: 10px; font-size: 13px; line-height: 1.68; color: var(--k-soluk); }
+.pano .metin b { color: var(--k-yazi); font-weight: 600; }
+
+.pano .isde {
+  margin-top: 12px; padding: 9px 11px;
+  border-left: 2px solid rgba(120, 205, 255, .5);
+  background: rgba(120, 205, 255, .06);
+  font-family: var(--mono); font-size: 11px; line-height: 1.6; color: #b8e2ff;
+}
+.pano .isde .b { display: block; font-size: 8.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(120, 205, 255, .6); margin-bottom: 4px; }
+
+.pano ul { list-style: none; margin-top: 14px; }
+.pano li {
+  position: relative; padding-left: 15px; margin-top: 8px;
+  font-size: 12.5px; line-height: 1.55; color: var(--k-soluk);
+}
+.pano li::before {
+  content: ''; position: absolute; left: 0; top: .62em;
+  width: 8px; height: 1px; background: var(--kiremit-ac);
+}
+
+.pano-bag {
+  display: inline-flex; align-items: center; gap: 7px; margin-top: 16px;
+  padding: 8px 13px; border: 1px solid rgba(255, 139, 74, .5);
+  color: var(--kiremit-ac); text-decoration: none;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase;
+  transition: background .18s, color .18s;
+}
+.pano-bag:hover { background: rgba(194, 65, 12, .2); color: #ffd9c2; }
+
+/* çıktı tablosu */
+.cikti-baslik {
+  margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--k-cizgi2);
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--k-cok-soluk);
+}
+.tablo-kutu { overflow-x: auto; margin-top: 8px; }
+table.ciktilar { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10.5px; }
+table.ciktilar th {
+  text-align: left; font-weight: 400; padding: 4px 6px 5px 0;
+  font-size: 8.5px; letter-spacing: .16em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .24); border-bottom: 1px solid var(--k-cizgi2);
+}
+table.ciktilar td {
+  padding: 6px 6px 6px 0; border-bottom: 1px solid rgba(255, 255, 255, .04);
+  color: rgba(220, 230, 240, .74); vertical-align: middle;
+}
+table.ciktilar td.deger { color: var(--k-yazi); font-weight: 700; white-space: nowrap; }
+table.ciktilar td.limit { color: rgba(255, 255, 255, .34); font-size: 9.5px; white-space: nowrap; }
+table.ciktilar td.durum { text-align: right; white-space: nowrap; padding-right: 0; }
+table.ciktilar tr[data-dolu="0"] td { color: rgba(255, 255, 255, .2); }
+table.ciktilar tr[data-dolu="0"] td.deger { color: rgba(255, 255, 255, .18); font-weight: 400; }
+.glif-ok { color: var(--ok); }
+.glif-nok { color: var(--nok); }
+.glif-deger { color: var(--bekle); }
+.glif-bos { color: rgba(255, 255, 255, .2); }
+.plc-im { color: rgba(120, 205, 255, .3); margin-right: 6px; }
+.plc-im.yanik { color: var(--veri); }
+tr[data-dolu="0"] td.deger.nok, td.deger.nok { color: var(--nok); }
+
+.pano-ozet {
+  margin-top: 12px; font-family: var(--mono); font-size: 9.5px;
+  letter-spacing: .06em; color: var(--bekle);
+}
+.pano-ozet[data-bos="1"] { color: rgba(255, 255, 255, .24); }
+
+/* ---- alt çubuk: PLC bitleri + karar ---- */
+.kp-alt {
+  display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap;
+  padding: 10px 16px;
+  background: var(--k-panel2);
+  border-top: 1px solid var(--k-cizgi);
+}
+.karar-rozet {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 6px 12px; border: 1px solid rgba(255, 255, 255, .16);
+  font-family: var(--mono); font-size: 9px; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--k-cok-soluk);
+}
+.karar-rozet .deger { font-size: 14px; font-weight: 700; letter-spacing: .04em; color: rgba(255, 255, 255, .24); }
+.karar-rozet[data-karar="OK"] { border-color: rgba(110, 240, 170, .55); background: rgba(110, 240, 170, .1); }
+.karar-rozet[data-karar="OK"] .deger { color: var(--ok); }
+.karar-rozet[data-karar="NOK"] { border-color: rgba(248, 113, 113, .55); background: rgba(248, 113, 113, .1); }
+.karar-rozet[data-karar="NOK"] .deger { color: var(--nok); }
+
+.bitler { display: flex; align-items: center; gap: 6px 16px; flex-wrap: wrap; }
+.bit {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; color: var(--k-cok-soluk);
+}
+.bit i {
+  width: 8px; height: 8px; border-radius: 50%; flex: none;
+  background: rgba(255, 255, 255, .13);
+}
+.bit[data-on="1"] i { background: var(--ok); box-shadow: 0 0 7px rgba(110, 240, 170, .55); }
+.bit[data-on="1"] { color: var(--k-soluk); }
+.bit[data-ad="nok"][data-on="1"] i { background: var(--nok); box-shadow: 0 0 7px rgba(248, 113, 113, .55); }
+.bit[data-ad="yasam"] i { animation: yasamNabiz 1.1s steps(1, end) infinite; }
+@keyframes yasamNabiz { 0%, 49% { opacity: 1; } 50%, 100% { opacity: .18; } }
+.bit .sayi { font-variant-numeric: tabular-nums; color: var(--k-soluk); }
+.bit-not {
+  margin-left: auto; font-family: var(--mono); font-size: 9px;
+  letter-spacing: .12em; text-transform: uppercase; color: rgba(255, 255, 255, .22);
+}
+
+/* ---- kokpit → sayfa geçişi: sert ve kasıtlı ---- */
+.kesik {
+  background: var(--kiremit);
+  color: #fff;
+  padding: 9px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px 18px; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .24em; text-transform: uppercase;
+}
+.kesik .asagi { display: inline-flex; align-items: center; gap: 8px; color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255, 255, 255, .5); }
+.kesik .asagi:hover { border-bottom-color: #fff; }
+
+/* ============================================================ AÇIK BÖLÜM */
+.kagit-alan { background: var(--kagit); color: var(--murekkep); }
+
+.sr {
+  padding: clamp(52px, 8vh, 96px) 0;
+  border-top: 3px double var(--cizgi);
+}
+.sr:first-child { border-top: none; }
+.kap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+.ust-etiket {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .28em;
+  text-transform: uppercase; color: var(--gri); margin-bottom: 14px;
+}
+.ust-etiket .no { color: var(--kiremit); margin-right: 9px; }
+
+.kagit-alan h2 {
+  font-family: var(--serif); font-size: clamp(26px, 4.2vw, 44px);
+  font-weight: 700; line-height: 1.08; letter-spacing: -.012em;
+}
+.kagit-alan h2::after { content: '.'; color: var(--kiremit); }
+.giris {
+  margin-top: 18px; max-width: 64ch;
+  font-size: 15.5px; line-height: 1.78; color: var(--gri);
+}
+.giris b { color: var(--murekkep); font-weight: 600; }
+.ic-bag { color: var(--kiremit); text-decoration: none; border-bottom: 1px solid currentColor; }
+.ic-bag:hover { color: var(--murekkep); }
+
+/* zincir şeridi */
+.zincir { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 34px; }
+.zh { position: relative; padding: 22px 18px 24px; border: 1px solid var(--cizgi); border-right: none; background: var(--sayfa); }
+.zh:last-child { border-right: 1px solid var(--cizgi); }
+.zh .n { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; color: var(--kiremit); }
+.zh h3 { margin-top: 9px; font-family: var(--serif); font-size: 18px; font-weight: 700; line-height: 1.2; }
+.zh p { margin-top: 8px; font-size: 13px; line-height: 1.62; color: var(--gri); }
+.zh::after {
+  content: ''; position: absolute; right: -7px; top: 50%; z-index: 2;
+  width: 12px; height: 12px; margin-top: -6px;
+  border-top: 1px solid var(--cizgi); border-right: 1px solid var(--cizgi);
+  transform: rotate(45deg); background: var(--kagit);
+}
+.zh:last-child::after { display: none; }
+
+/* iş kartları */
+.isler { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 32px; }
+.is-kart {
+  display: flex; flex-direction: column;
+  padding: 24px 22px 22px; border: 1px solid var(--cizgi); background: var(--sayfa);
+  transition: border-color .25s, box-shadow .25s, transform .25s;
+}
+.is-kart:hover { border-color: rgba(194, 65, 12, .45); box-shadow: 0 12px 26px rgba(26, 24, 21, .09); transform: translateY(-3px); }
+.is-kart .kod { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--kiremit); }
+.is-kart h3 { margin-top: 9px; font-family: var(--serif); font-size: 20px; font-weight: 700; line-height: 1.2; }
+.is-kart p { margin-top: 10px; font-size: 13.5px; line-height: 1.65; color: var(--gri); }
+.is-kart p b { color: var(--murekkep); font-weight: 600; }
+.is-kart .cikti {
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--cizgi-ince);
+  font-family: var(--mono); font-size: 11px; line-height: 1.7; color: var(--gri);
+}
+.is-kart .cikti span { color: var(--murekkep); }
+.is-kart .ac {
+  margin-top: 16px; align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 14px; border: 1px solid var(--murekkep);
+  color: var(--murekkep); text-decoration: none;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+  cursor: pointer; background: transparent;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.is-kart .ac:hover { background: var(--kiremit); border-color: var(--kiremit); color: #fff; }
+
+/* ürün + fiyat */
+.urun { display: grid; grid-template-columns: 1.3fr 1fr; gap: 30px; align-items: start; margin-top: 32px; }
+.urun-metin p { margin-top: 14px; font-size: 14.5px; line-height: 1.75; color: var(--gri); max-width: 58ch; }
+.urun-metin p b { color: var(--murekkep); font-weight: 600; }
+.fiyat-kart { padding: 26px 24px; border: 1px solid var(--cizgi); background: var(--sayfa); }
+.fiyat-kart .et { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--kiremit); }
+.fiyat-kart .fy { margin-top: 10px; font-family: var(--mono); font-size: 32px; font-weight: 700; letter-spacing: -.01em; }
+.fiyat-kart .fy small { display: block; margin-top: 6px; font-size: 10.5px; font-weight: 400; letter-spacing: .12em; text-transform: uppercase; color: var(--gri); }
+.fiyat-kart ul { list-style: none; margin: 18px 0 20px; padding-top: 16px; border-top: 1px solid var(--cizgi-ince); }
+.fiyat-kart li { position: relative; padding-left: 18px; margin-top: 8px; font-size: 13px; line-height: 1.55; color: var(--gri); }
+.fiyat-kart li::before { content: ''; position: absolute; left: 0; top: .58em; width: 9px; height: 1px; background: var(--kiremit); }
+
+.dugme {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 13px 22px; border: 1px solid var(--murekkep);
+  color: var(--murekkep); text-decoration: none; background: transparent;
+  font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.dugme.dolu { background: var(--murekkep); color: var(--kagit); }
+.dugme:hover { border-color: var(--kiremit); color: var(--kiremit); background: transparent; }
+.dugme.dolu:hover { background: var(--kiremit); border-color: var(--kiremit); color: #fff; }
+.dugme svg { width: 15px; height: 15px; fill: currentColor; flex: none; }
+.dugme-sira { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+
+/* sensör kartları */
+.sensorler { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 32px; }
+.sensor { padding: 24px 22px; border: 1px solid var(--cizgi); background: var(--sayfa); }
+.sensor .marka { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--kiremit); }
+.sensor h3 { margin-top: 9px; font-family: var(--serif); font-size: 19px; font-weight: 700; }
+.sensor p { margin-top: 10px; font-size: 13px; line-height: 1.65; color: var(--gri); }
+.sensor ul { list-style: none; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--cizgi-ince); }
+.sensor li { position: relative; padding-left: 17px; margin-top: 7px; font-size: 12.5px; line-height: 1.5; color: var(--gri); }
+.sensor li::before { content: ''; position: absolute; left: 0; top: .6em; width: 9px; height: 1px; background: var(--kiremit); }
+
+/* protokol tablosu */
+.prot { margin-top: 28px; border: 1px solid var(--cizgi); background: var(--sayfa); }
+.prot-satir { display: grid; grid-template-columns: 210px minmax(0, 1fr); border-bottom: 1px solid var(--cizgi-ince); }
+.prot-satir:last-child { border-bottom: none; }
+.prot-satir .k {
+  padding: 13px 16px; border-right: 1px solid var(--cizgi-ince);
+  font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--gri);
+}
+.prot-satir .v { padding: 13px 16px; font-size: 13.5px; line-height: 1.6; overflow-wrap: anywhere; }
+.prot-satir .v b { font-weight: 600; }
+
+/* uyarı kutusu */
+.uyari {
+  margin-top: 24px; padding-left: 16px; border-left: 2px solid var(--kiremit);
+  font-size: 13.5px; line-height: 1.72; color: var(--gri); max-width: 80ch;
+}
+.uyari b { color: var(--murekkep); font-weight: 600; }
+
+/* iletişim */
+.kanal { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--cizgi); background: var(--sayfa); margin-top: 28px; }
+.kanal div { padding: 18px 20px; border-right: 1px solid var(--cizgi-ince); }
+.kanal div:last-child { border-right: none; }
+.kanal .k { font-family: var(--mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--gri); margin-bottom: 6px; }
+.kanal .v { font-size: 14.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.kanal .v a { color: var(--kiremit); text-decoration: none; border-bottom: 1px solid currentColor; }
+.kanal .not { display: block; margin-top: 5px; font-size: 12.5px; color: var(--gri); }
+
+/* JS kapalı özeti */
+.ns-tam { margin: 28px 0 0; padding: 22px 24px; border: 1px dashed var(--cizgi); background: var(--sayfa); }
+.ns-tam h3 { font-family: var(--serif); font-size: 20px; margin-bottom: 10px; }
+.ns-tam p { font-size: 14px; line-height: 1.72; color: var(--gri); margin-top: 10px; }
+.ns-tam ol, .ns-tam ul { margin: 12px 0 0 20px; font-size: 13.5px; line-height: 1.8; color: var(--gri); }
+
+/* alt bilgi */
+.dip { background: #0b0f14; color: var(--k-soluk); border-top: 3px solid var(--kiremit); }
+.dip-ic {
+  max-width: 1120px; margin: 0 auto; padding: 24px;
+  display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; justify-content: space-between;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+}
+.dip-bag { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.dip-bag a { color: var(--k-cok-soluk); text-decoration: none; text-transform: uppercase; font-size: 10.5px; letter-spacing: .14em; }
+.dip-bag a:hover { color: var(--kiremit-ac); }
+
+/* belirme */
+.bel { opacity: 0; transform: translateY(14px); transition: opacity .55s ease, transform .55s ease; transition-delay: var(--g, 0s); }
+.bel.gorunur { opacity: 1; transform: none; }
+
+/* ------------------------------------------------------------ kırılmalar */
+@media (max-width: 1180px) {
+  .kp-govde { grid-template-columns: 196px minmax(0, 1fr) 300px; }
+}
+
+@media (max-width: 1040px) {
+  .kp-govde {
+    grid-template-columns: 190px minmax(0, 1fr);
+    grid-template-areas: "ray ekran" "pano pano";
+    grid-template-rows: clamp(320px, 46vh, 460px) auto;
+  }
+  .pano { border-left: none; border-top: 1px solid var(--k-cizgi); overflow: visible; }
+  .pano-ust { position: static; }
+  .pano-ic { max-width: 780px; }
+  .urun { grid-template-columns: 1fr; }
+  .sensorler { grid-template-columns: 1fr; }
+  .zincir { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .zh { border-right: 1px solid var(--cizgi); }
+  .zh::after { display: none; }
+  .zh:nth-child(n+3) { border-top: none; }
+}
+
+@media (max-width: 760px) {
+  .kp-govde {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "ray" "ekran" "pano";
+    grid-template-rows: auto auto auto;
+  }
+  .ray {
+    border-right: none; border-bottom: 1px solid var(--k-cizgi);
+    flex-direction: column;
+  }
+  .ray-liste { flex-direction: row; overflow-x: auto; scrollbar-width: thin; }
+  .ray-liste::-webkit-scrollbar { height: 5px; }
+  .ray-liste::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .14); }
+  .arac {
+    flex: none; grid-template-columns: auto auto; grid-template-rows: auto auto;
+    gap: 3px 7px; padding: 8px 12px;
+    border-bottom: none; border-right: 1px solid var(--k-cizgi2);
+    min-width: 108px;
+  }
+  .arac .ad { grid-column: 1 / -1; }
+  .arac .led { display: none; }
+  .ray-dip { display: none; }
+  .ekran { aspect-ratio: 4 / 3; min-height: 260px; }
+  .isler { grid-template-columns: 1fr; }
+  .kanal { grid-template-columns: 1fr; }
+  .kanal div { border-right: none; border-bottom: 1px solid var(--cizgi-ince); }
+  .kanal div:last-child { border-bottom: none; }
+  .prot-satir { grid-template-columns: 1fr; }
+  .prot-satir .k { border-right: none; border-bottom: 1px solid var(--cizgi-ince); }
+  .ipucu { left: 10px; right: 10px; bottom: 36px; max-width: none; }
+}
+
+@media (max-width: 520px) {
+  .zincir { grid-template-columns: 1fr; }
+  .zh { border-right: 1px solid var(--cizgi); border-top: none; }
+  .zh:first-child { border-top: 1px solid var(--cizgi); }
+  .kap { padding: 0 16px; }
+  .kp-ust, .kp-alt, .kesik { padding-left: 12px; padding-right: 12px; }
+  .dugme { width: 100%; }
+  .bit-not { display: none; }
+  .taslak-serit { font-size: 9.5px; letter-spacing: .1em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bel { opacity: 1; transform: none; transition: none; }
+  .bit[data-ad="yasam"] i { animation: none; }
+  .ipucu { transition: none; }
+  .is-kart, .is-kart:hover { transition: none; transform: none; }
+  .arac, .dugme, .pano-bag { transition: none; }
+}
+</style>
+<noscript><style>
+  .bel { opacity: 1; transform: none; }
+  .js-gerek { display: none !important; }
+</style></noscript>
+</head>
+<body>
+
+<a class="atla" href="#sayfa">İçeriğe atla</a>
+
+<div class="taslak-serit">
+  <span class="taslak-rozet">Taslak</span>
+  <span>kavram: kokpit</span>
+  <span class="ayrac">/</span>
+  <span>yayında değil</span>
+  <a class="don" href="/">← gerçek siteye dön</a>
+</div>
+
+<!-- ==================================================================== KOKPİT -->
+<header class="kokpit" id="kokpit">
+
+  <!-- üst çubuk: sayfa gezinmez, İŞ seçilir -->
+  <div class="kp-ust">
+    <a class="kp-marka" href="/" aria-label="sersoz.com ana sayfa">
+      <span class="im" aria-hidden="true">S</span>
+      <span class="ad">sersoz.com<span class="alt">Vision Detection App</span></span>
+    </a>
+
+    <div class="is-kutu">
+      <p class="is-etiket" id="isEtiket">Yüklü iş</p>
+      <div class="is-secici" role="group" aria-labelledby="isEtiket" id="isSecici">
+        <button class="is-dugme" type="button" data-is="kaynak" aria-pressed="true"><span class="no">1</span>kaynak_govde_v4</button>
+        <button class="is-dugme" type="button" data-is="palet" aria-pressed="false"><span class="no">2</span>palet_3x3_kutu</button>
+        <button class="is-dugme" type="button" data-is="koli" aria-pressed="false"><span class="no">3</span>koli_12li_dolum</button>
+        <button class="is-dugme" type="button" data-is="kalite" aria-pressed="false"><span class="no">4</span>yuzey_denetim_a3</button>
+      </div>
+    </div>
+
+    <div class="kp-durum">
+      <span class="cip sema" title="Bu ekran uygulamanın çalışma mantığını anlatan bir şemadır, canlı bir sistem değildir.">Şema</span>
+      <span class="cip mod" id="modRozet" data-mod="oto">Otomatik koşum</span>
+      <button class="oto-don js-gerek" type="button" id="otoDon" hidden>▶ Otomatiğe dön</button>
+    </div>
+  </div>
+
+  <!-- gövde -->
+  <div class="kp-govde">
+
+    <!-- SOL RAY: araç zinciri = sitenin gezinmesi -->
+    <nav class="ray" aria-label="Araç zinciri">
+      <p class="ray-baslik">Araç zinciri · 8 adım</p>
+      <div class="ray-liste" role="tablist" aria-orientation="vertical" aria-label="Araç zinciri adımları" id="rayListe">
+        <!-- JS doldurur; JS kapalıysa aşağıdaki durağan liste kalır -->
+        <button class="arac" type="button" role="tab" id="arac-0" aria-controls="pano" aria-selected="true" data-durum="aktif"><span class="sira">1</span><span class="glif" aria-hidden="true">⬒</span><span class="ad">Tarama</span><span class="led"><span>—</span></span><span class="arac-ilerleme"></span></button>
+        <button class="arac" type="button" role="tab" id="arac-1" aria-controls="pano" aria-selected="false" data-durum="bos"><span class="sira">2</span><span class="glif" aria-hidden="true">▦</span><span class="ad">Zemin Kaldır</span><span class="led"><span>—</span></span><span class="arac-ilerleme"></span></button>
+        <button class="arac" type="button" role="tab" id="arac-2" aria-controls="pano" aria-selected="false" data-durum="bos"><span class="sira">3</span><span class="glif" aria-hidden="true">⌗</span><span class="ad">Kırpma (ROI)</span><span class="led"><span>—</span></span><span class="arac-ilerleme"></span></button>
+        <button class="arac" type="button" role="tab" id="arac-3" aria-controls="pano" aria-selected="false" data-durum="bos"><span class="sira">4</span><span class="glif" aria-hidden="true">⌖</span><span class="ad">Çapalama</span><span class="led"><span>—</span></span><span class="arac-ilerleme"></span></button>
+        <button class="arac" type="button" role="tab" id="arac-4" aria-controls="pano" aria-selected="false" data-durum="bos"><span class="sira">5</span><span class="glif" aria-hidden="true">∡</span><span class="ad">Kaynak Ağzı</span><span class="led"><span>—</span></span><span class="arac-ilerleme"></span></button>
+        <button class="arac" type="button" role="tab" id="arac-5" aria-controls="pano" aria-selected="false" data-durum="bos"><span class="sira">6</span><span class="glif" aria-hidden="true">◎</span><span class="ad">Denetim</span><span class="led"><span>—</span></span><span class="arac-ilerleme"></span></button>
+        <button class="arac" type="button" role="tab" id="arac-6" aria-controls="pano" aria-selected="false" data-durum="bos"><span class="sira">7</span><span class="glif" aria-hidden="true">☰</span><span class="ad">Karar</span><span class="led"><span>—</span></span><span class="arac-ilerleme"></span></button>
+        <button class="arac" type="button" role="tab" id="arac-7" aria-controls="pano" aria-selected="false" data-durum="bos"><span class="sira">8</span><span class="glif" aria-hidden="true">⇥</span><span class="ad">PLC Yaz</span><span class="led"><span>—</span></span><span class="arac-ilerleme"></span></button>
+      </div>
+      <p class="ray-dip">
+        <kbd>←</kbd><kbd>→</kbd> araç · <kbd>1</kbd>–<kbd>4</kbd> iş<br>
+        sahnede <kbd>←</kbd><kbd>→</kbd> döndürür
+      </p>
+    </nav>
+
+    <!-- ORTA: viewport -->
+    <div class="ekran" id="ekran">
+      <canvas id="sahne" tabindex="0" role="img"
+              aria-label="Nokta bulutu sahnesi — seçili araca göre değişir. Ok tuşlarıyla döndürülür."></canvas>
+
+      <div class="hud" aria-hidden="true">
+        <div class="hud-sira">
+          <span class="sol"><span class="adim-ad" id="hudAdim">TARAMA</span><span class="adim-no" id="hudNo">01/08</span></span>
+          <span class="sag" id="hudIs">kaynak_govde_v4</span>
+        </div>
+        <div class="hud-sira">
+          <span class="surukle" id="hudSurukle">↔ sürükleyerek döndürün</span>
+          <span class="sag" id="hudNokta">— nokta</span>
+        </div>
+      </div>
+
+      <div class="ipucu js-gerek" id="ipucu" hidden>
+        <span class="ok-isaret" aria-hidden="true">◀</span>
+        <b>Bu bir menü değil.</b> Soldaki her araç zincirin bir adımı:
+        dokunduğunuzda sahne değişir ve o adımın anlattığı bölüm burada açılır.
+        Zincir şu an kendi kendine koşuyor — istediğiniz yerde araya girin.
+      </div>
+
+      <noscript>
+        <div class="ns-ekran">
+          <h2>Araç zinciri</h2>
+          <p>Bu ekranda normalde bir nokta bulutu sahnesi çalışır ve aşağıdaki sekiz adım
+            sırayla koşarak parçanın nasıl ölçüldüğünü gösterir. Adımların tamamı yazılı olarak
+            sayfanın alt kısmındadır.</p>
+          <ol>
+            <li>Tarama</li><li>Zemin Kaldır</li><li>Kırpma (ROI)</li><li>Çapalama</li>
+            <li>Ölçüm</li><li>Denetim</li><li>Karar</li><li>PLC Yaz</li>
+          </ol>
+        </div>
+      </noscript>
+    </div>
+
+    <!-- SAĞ PANO: çıktılar = sitenin içeriği -->
+    <aside class="pano" id="pano" role="tabpanel" aria-labelledby="arac-0" tabindex="0">
+      <div class="pano-ust">
+        <span id="panoUst">Çıktılar · Tarama</span>
+        <span class="ornek">Örnek</span>
+      </div>
+      <div class="pano-ic">
+        <p class="pano-kicker" id="panoKicker">Adım 01 · Tarama</p>
+        <h3 id="panoBaslik">Kamera şekli görür, rengi değil</h3>
+        <p class="metin" id="panoMetin">3D profil sensörü kendi lazerini kullanır; ortam ışığı değişse de
+          aynı şeyi ölçer. Parlak sacta, koyu dökümde ve yağlı yüzeyde çalışır. Tarama biter bitmez
+          elinizde milimetre cinsinden bir <b>nokta bulutu</b> vardır — "var/yok" değil, "ne kadar".</p>
+
+        <p class="isde" id="panoIsde"><span class="b" id="panoIsdeB">Bu işte</span>
+          <span id="panoIsdeM">Gövde kaynak ağzı tek geçişte taranıyor; parlak sac lazer ışığından etkilenmiyor.</span></p>
+
+        <ul id="panoMaddeler">
+          <li>Wenglor MLBS115 ve LMI Gocator için çözüm üretiliyor</li>
+          <li>Tarama iş (job) olarak kaydedilir, vardiyada tekrar çağrılır</li>
+          <li>Veri tesiste kalır — bulut bağlantısı gerekmez</li>
+        </ul>
+
+        <a class="pano-bag" id="panoBag" href="/vision-detection.html">Ürün sayfası →</a>
+
+        <div class="cikti-baslik">
+          <span>Çıktılar</span>
+          <span id="ciktiDurum">zincir koşuyor</span>
+        </div>
+        <div class="tablo-kutu">
+          <table class="ciktilar" id="ciktiTablo">
+            <thead>
+              <tr><th scope="col">Ad</th><th scope="col">Değer</th><th scope="col">Limit</th><th scope="col">Durum</th></tr>
+            </thead>
+            <tbody id="ciktiGovde">
+              <tr data-dolu="0"><td>agiz_derinlik</td><td class="deger">—</td><td class="limit">2.8 – 3.6</td><td class="durum"><span class="glif-bos">—</span></td></tr>
+              <tr data-dolu="0"><td>agiz_genislik</td><td class="deger">—</td><td class="limit">5.5 – 6.5</td><td class="durum"><span class="glif-bos">—</span></td></tr>
+              <tr data-dolu="0"><td>duzlemsellik</td><td class="deger">—</td><td class="limit">≤ 0.15</td><td class="durum"><span class="glif-bos">—</span></td></tr>
+              <tr data-dolu="0"><td>delik_cap</td><td class="deger">—</td><td class="limit">7.9 – 8.1</td><td class="durum"><span class="glif-bos">—</span></td></tr>
+              <tr data-dolu="0"><td>nokta_sayisi</td><td class="deger">—</td><td class="limit">≥ 40 000</td><td class="durum"><span class="glif-bos">—</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="pano-ozet" id="panoOzet" data-bos="1">— koşum bekleniyor —</p>
+      </div>
+    </aside>
+  </div>
+
+  <!-- alt çubuk: PLC bitleri -->
+  <div class="kp-alt">
+    <span class="karar-rozet" id="kararRozet" data-karar="">
+      <span class="deger" id="kararDeger">—</span> Karar
+    </span>
+    <div class="bitler" aria-label="PLC bit satırı">
+      <span class="bit" data-ad="yasam" data-on="1"><i></i>yaşam</span>
+      <span class="bit" data-ad="hazir" data-on="0" id="bitHazir"><i></i>hazır</span>
+      <span class="bit" data-ad="ok" data-on="0" id="bitOk"><i></i>OK</span>
+      <span class="bit" data-ad="nok" data-on="0" id="bitNok"><i></i>NOK</span>
+      <span class="bit" data-ad="sayac" data-on="0" id="bitSayac"><i></i>sayaç <span class="sayi" id="sayacDeger">0000</span></span>
+    </div>
+    <span class="bit-not">DB10 · yaşam + geçerlilik + sayaç</span>
+  </div>
+</header>
+
+<!-- kokpit → sayfa: sert geçiş -->
+<div class="kesik">
+  <span>Kokpit bitti · sayfa başlıyor</span>
+  <a class="asagi" href="#sayfa">Okunabilir hâli aşağıda <span aria-hidden="true">↓</span></a>
+</div>
+
+<!-- =============================================================== AÇIK BÖLÜM -->
+<div class="kagit-alan" id="sayfa">
+  <main>
+
+    <noscript>
+      <section class="sr">
+        <div class="kap">
+          <div class="ns-tam">
+            <h3>Sayfanın özeti (JavaScript kapalı)</h3>
+            <p>Yukarıdaki kokpit, <b>Vision Detection App</b>'in çalışma mantığını gösteren etkileşimli
+              bir şemadır ve JavaScript ister. Anlattığı şey şudur: 3D kamera parçayı tarar, yazılım
+              taramayı milimetrik ölçüye, ölçüyü OK/NOK kararına, kararı da PLC sinyaline çevirir.</p>
+            <p><b>Araç zinciri:</b></p>
+            <ol>
+              <li><b>Tarama</b> — 3D profil sensörü parçanın şeklini nokta bulutu olarak alır.</li>
+              <li><b>Zemin Kaldır</b> — konveyör, fikstür ve palet tahtası ölçümden ayrılır.</li>
+              <li><b>Kırpma (ROI)</b> — yalnız ilgilenilen bölge kalır; gürültü ve süre düşer.</li>
+              <li><b>Çapalama</b> — ölçü parçanın kendi referansına bağlanır; parça kaysa da ölçü kaymaz.</li>
+              <li><b>Ölçüm</b> — düzlemsellik, kaynak ağzı, gap &amp; flush, delik konumu, hacim, CAD sapması.</li>
+              <li><b>Denetim</b> — her ölçü limitle kıyaslanır; ölçünün olmadığı yerde anomali motoru bakar.</li>
+              <li><b>Karar</b> — üç durumlu: OK, NOK ve "değerlendirilemedi".</li>
+              <li><b>PLC Yaz</b> — karar Siemens S7, Mitsubishi MC/SLMP veya Modbus TCP üzerinden hatta yazılır.</li>
+            </ol>
+            <p><b>Dört örnek iş:</b> kaynak ağzı ölçümü, paletlemede eksik ürün, kolilemede adet ve
+              oturma kontrolü, yüzey kalite denetimi.</p>
+            <p><b>Sensörler:</b> LMI Gocator ve Wenglor MLBS115 için çözüm üretiliyor.
+              <b>İletişim:</b> <a class="ic-bag" href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a></p>
+          </div>
+        </div>
+      </section>
+    </noscript>
+
+    <!-- 1 — zincirin okunabilir hâli -->
+    <section class="sr" id="zincir">
+      <div class="kap">
+        <p class="ust-etiket bel"><span class="no">01</span>Ne yapıyoruz</p>
+        <h2 class="bel">3D tespit, ölçüm, karar, PLC</h2>
+        <p class="giris bel">Yukarıdaki kokpit bir tanıtım animasyonu değil; uygulamanın gerçek
+          çalışma sırasının <b>şemasıdır</b>. Sahada zincir aynen böyle koşar: her aracın bir çıktısı,
+          her çıktının bir limiti, her koşumun bir kaydı vardır. Aşağısı aynı şeyin okunabilir hâli.</p>
+
+        <div class="zincir">
+          <article class="zh bel">
+            <span class="n">01 · 02 · 03</span>
+            <h3>3D tespit</h3>
+            <p>Sensör kendi lazeriyle tarar; taşıyıcı yüzey ayrılır, ilgi bölgesi kırpılır.
+              Ortam ışığı değişse de elde kalan aynı geometridir.</p>
+          </article>
+          <article class="zh bel" style="--g:.05s">
+            <span class="n">04 · 05</span>
+            <h3>Ölçüm</h3>
+            <p>Ölçü parçanın kendi referansına çapalanır, sonra geometri çalışır: düzlemsellik,
+              kaynak ağzı, gap &amp; flush, delik konumu, hacim, CAD sapması.</p>
+          </article>
+          <article class="zh bel" style="--g:.1s">
+            <span class="n">06 · 07</span>
+            <h3>Karar</h3>
+            <p>Her ölçü limitiyle kıyaslanır. Karar üç durumludur: OK, NOK ve
+              <b>değerlendirilemedi</b>. Şüpheli parça körü körüne reddedilmez.</p>
+          </article>
+          <article class="zh bel" style="--g:.15s">
+            <span class="n">08</span>
+            <h3>PLC</h3>
+            <p>Karar ekranda kalmaz, hatta yazılır: yaşam sinyali, geçerlilik biti ve sayaç
+              kelimesiyle. Kopan bağlantı kendini onarır.</p>
+          </article>
+        </div>
+
+        <p class="uyari bel">Kokpitteki değerler <b>örnektir</b>, canlı bir hattan gelmiyor.
+          Sizin parçanızdaki karşılığı fizibilitede ölçülür ve yazılı rapor olarak döner —
+          taranabilirlik, ulaşılabilir hassasiyet ve çevrime eklenen saniye ayrı ayrı.</p>
+      </div>
+    </section>
+
+    <!-- 2 — dört iş -->
+    <section class="sr" id="isler">
+      <div class="kap">
+        <p class="ust-etiket bel"><span class="no">02</span>Dört iş</p>
+        <h2 class="bel">Aynı zincir, dört ayrı hat derdi</h2>
+        <p class="giris bel">Kokpitin üst çubuğundaki dört iş bunlar. Kartın altındaki düğme
+          sahneyi o işe geçirir — sahne, ölçüler ve metinler tümüyle değişir.</p>
+
+        <div class="isler">
+          <article class="is-kart bel">
+            <span class="kod">kaynak_govde_v4</span>
+            <h3>Kaynak ağzı ölçümü</h3>
+            <p>Dikişin <b>derinliği, genişliği ve sürekliliği</b> ölçülür; çökme ve eksik dolgu
+              operatör görmeden yakalanır. Aynı tarama robotun kaynak yolunu da üretir.</p>
+            <p class="cikti">agiz_derinlik · agiz_genislik · duzlemsellik · delik_cap<br>
+              karar: <span>OK</span></p>
+            <a class="ac" href="#kokpit" data-is="kaynak">Kokpitte aç <span aria-hidden="true">↑</span></a>
+          </article>
+
+          <article class="is-kart bel" style="--g:.05s">
+            <span class="kod">palet_3x3_kutu</span>
+            <h3>Paletlemede eksik ürün</h3>
+            <p>Palet katındaki dokuz gözün doluluğu ve istif düzeni ölçülür. Eksik göz
+              <b>konumuyla birlikte</b> raporlanır — "bir tane eksik" değil, "S2·K3 boş".</p>
+            <p class="cikti">koli_adet · eksik_konum · palet_yukseklik · istif_sapma<br>
+              karar: <span>NOK</span></p>
+            <a class="ac" href="#kokpit" data-is="palet">Kokpitte aç <span aria-hidden="true">↑</span></a>
+          </article>
+
+          <article class="is-kart bel" style="--g:.1s">
+            <span class="kod">koli_12li_dolum</span>
+            <h3>Kolilemede adet ve oturma</h3>
+            <p>Koli kapatılmadan önce içi taranır: ürün sayısı doğru mu ve hepsi
+              <b>tam oturmuş mu</b>. Yarım oturmuş ürünü 2D kamera göremez, yükseklik farkı gösterir.</p>
+            <p class="cikti">urun_adet · oturma_farki · kapak_yuksek · koli_konum<br>
+              karar: <span>NOK</span></p>
+            <a class="ac" href="#kokpit" data-is="koli">Kokpitte aç <span aria-hidden="true">↑</span></a>
+          </article>
+
+          <article class="is-kart bel" style="--g:.15s">
+            <span class="kod">yuzey_denetim_a3</span>
+            <h3>Yüzey kalite kontrolü</h3>
+            <p>Panelde çökme, çukur ve düzlemsellik sapması ölçülür; ölçüyle yakalanamayan
+              kusurlara <b>anomali motoru</b> bakar. Ölçülemeyen ölçü gizlenmez, ayrı raporlanır.</p>
+            <p class="cikti">cukur_derinlik · cukur_alan · duzlemsellik · kenar_pah<br>
+              karar: <span>NOK</span> · 1 değerlendirilemedi</p>
+            <a class="ac" href="#kokpit" data-is="kalite">Kokpitte aç <span aria-hidden="true">↑</span></a>
+          </article>
+        </div>
+
+        <p class="uyari bel">Hattınızdaki karşılığı bu dördünden biri olmayabilir. Sektör ve
+          problem başlıklarının tam listesi <a class="ic-bag" href="/cozumler.html">çözümler</a>
+          sayfasında; oradan kendi derdinize en yakın maddeyi seçebilirsiniz.</p>
+      </div>
+    </section>
+
+    <!-- 3 — ürün + fiyat -->
+    <section class="sr" id="urun">
+      <div class="kap">
+        <p class="ust-etiket bel"><span class="no">03</span>Ürün</p>
+        <h2 class="bel">Vision Detection App</h2>
+        <div class="urun">
+          <div class="urun-metin bel">
+            <p>Kokpitte gördüğünüz araç zinciri, sattığım yazılımın kendisidir. Kamera kutusu
+              satmıyorum: makine görüşü projelerinde asıl faturayı çıkaran <b>entegrasyon
+              mühendisliği</b> uygulamanın içinde hazır gelir.</p>
+            <p>Windows 10/11 x64 üzerinde, tam ekran operatör modunda, <b>tamamen çevrimdışı</b>
+              çalışır. Ürün tarifini operatör kendisi öğretebilir; PLC köprüsü ayrı kalem değildir.
+              Tarama, görüntü ve kayıtlar tesisin içinde kalır.</p>
+            <p>Ayrıntılı özellik listesi, teknik tablo ve dokuz uygulama alanı
+              <a class="ic-bag" href="/vision-detection.html">ürün sayfasında</a>.</p>
+            <div class="dugme-sira">
+              <a class="dugme dolu" href="/vision-detection.html">Ürünü incele</a>
+              <a class="dugme" href="/magaza.html">Mağaza</a>
+            </div>
+          </div>
+
+          <div class="fiyat-kart bel" style="--g:.06s">
+            <span class="et">Tek hat lisansı</span>
+            <div class="fy">₺64.000<small>KDV hariç · süresiz kullanım</small></div>
+            <ul>
+              <li>3D ölçüm ve denetim araçlarının tamamı</li>
+              <li>2D tespit, sayım ve kusur denetimi dahil</li>
+              <li>Robot kılavuzlama ve el-göz kalibrasyonu</li>
+              <li>PLC haberleşme modülü (S7 · MC/SLMP · Modbus TCP)</li>
+              <li>Kurulum, kalibrasyon ve operatör eğitimi</li>
+              <li>İlk yıl sürüm güncellemeleri ve uzaktan destek</li>
+            </ul>
+            <a class="dugme dolu" href="/magaza.html" style="width:100%">Mağazadan sepete ekle</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 — sensör uyumluluğu -->
+    <section class="sr" id="sensorler">
+      <div class="kap">
+        <p class="ust-etiket bel"><span class="no">04</span>Uyumluluk</p>
+        <h2 class="bel">LMI Gocator ve Wenglor MLBS115</h2>
+        <p class="giris bel">Bu iki 3D kamera ailesi için çözüm üretiyorum: sürücü entegrasyonundan
+          ölçüm araçlarına, kalibrasyondan PLC çıktısına kadar zincirin tamamı. Elinizde
+          <b>hâlihazırda bir sensör varsa</b> onun üzerine kurulur; yoksa uygulamanıza uygun modeli
+          birlikte seçeriz.</p>
+
+        <div class="sensorler">
+          <article class="sensor bel">
+            <span class="marka">LMI Technologies</span>
+            <h3>Gocator serisi</h3>
+            <p>Gocator akıllı 3D sensörlerin ürettiği profil ve yükseklik haritaları uygulamaya
+              doğrudan alınır; GoPxL tarafındaki araç zincirine karşılık gelen ölçüm ve denetim
+              araçları uygulama içinde çalışır.</p>
+            <ul>
+              <li>Profil ve tam alan tarama verisinin alınması</li>
+              <li>Ölçüm araçları, tolerans ve OK/NOK karar katmanı</li>
+              <li>Robot kılavuzlama için koordinat üretimi</li>
+            </ul>
+          </article>
+
+          <article class="sensor bel" style="--g:.06s">
+            <span class="marka">Wenglor</span>
+            <h3>MLBS115</h3>
+            <p>Tarama tetikleme, nokta bulutu birleştirme ve ölçüm zinciri uçtan uca kurulur;
+              taramalar kaydedilir, iş (job) olarak saklanır ve vardiyada tekrar çağrılır.</p>
+            <ul>
+              <li>Nokta bulutu birleştirme, kayıt ve iş yönetimi</li>
+              <li>Kaynak ağzı, gap &amp; flush, düzlemsellik ölçümleri</li>
+              <li>CAD karşılaştırma ve sapma raporu</li>
+            </ul>
+          </article>
+
+          <article class="sensor bel" style="--g:.12s">
+            <span class="marka">Ölçüm katmanı</span>
+            <h3>Marka bağımsız kalır</h3>
+            <p>Ölçüm ve karar katmanı sensörden bağımsız çalışır. Farklı bir marka kullanıyorsanız
+              sürücü tarafı eklenir, uygulamanın geri kalanı aynı kalır. Listede olmayan bir marka
+              varsa bunu <b>fizibilitede söylerim</b>, teklifin içine gizlemem.</p>
+            <ul>
+              <li>2D endüstriyel kameralar (USB / GigE) ve IP kameralar</li>
+              <li>Mevcut kurulumunuzun üzerine entegrasyon</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="prot bel">
+          <div class="prot-satir">
+            <div class="k">Hazır gelen PLC protokolleri</div>
+            <div class="v"><b>Siemens S7</b> · <b>Mitsubishi MC/SLMP</b> · <b>Modbus TCP</b> —
+              ayrı entegrasyon kalemi değildir</div>
+          </div>
+          <div class="prot-satir">
+            <div class="k">Ağ keşfi</div>
+            <div class="v"><b>PROFINET DCP</b> ile saha cihazlarının keşfi ve tanımlanması</div>
+          </div>
+          <div class="prot-satir">
+            <div class="k">Yol haritasında</div>
+            <div class="v"><b>OPC UA</b> ve <b>PROFINET IO</b> — henüz hazır gelmiyor, planlıdır</div>
+          </div>
+          <div class="prot-satir">
+            <div class="k">Aktarım sözleşmesi</div>
+            <div class="v">Yaşam sinyali, geçerlilik biti ve sayaç kelimesi; kopan bağlantı kendini onarır.
+              PLC'ye yazma davranışı <b>onaysız değişmez</b>.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 — kazanç -->
+    <section class="sr" id="kazanc">
+      <div class="kap">
+        <p class="ust-etiket bel"><span class="no">05</span>Geri ödeme</p>
+        <h2 class="bel">Rakamı siz koyun, hesabı sayfa yapsın</h2>
+        <p class="giris bel">Burada müşteri adına tasarruf yüzdesi yazmıyorum — o rakamlar benim
+          değil, müşterinin verisidir ve izinsiz paylaşılmaz. Onun yerine hesabı size bırakıyorum:
+          hurda oranınızı, yeniden işleme maliyetinizi ve vardiya sayınızı girip yatırımın
+          kendini <b>kaç ayda ödediğini</b> kendi rakamlarınızla görürsünüz.</p>
+        <div class="dugme-sira">
+          <a class="dugme dolu" href="/kazanc.html">Kazanç hesabını aç</a>
+          <a class="dugme" href="/yazilar.html">Yazılar</a>
+          <a class="dugme" href="/forum.html">Forum</a>
+        </div>
+        <p class="uyari bel">Yatırım kararı için tek dürüst kaynak, sizin parçanızla yapılan
+          fizibilitedir: iki örnek parça yeterli. Taranabilirlik, ulaşılabilir hassasiyet ve
+          çevrim süresine eklenen saniye ölçülür ve yazılı rapor olarak döner.</p>
+      </div>
+    </section>
+
+    <!-- 6 — iletişim -->
+    <section class="sr" id="iletisim">
+      <div class="kap">
+        <p class="ust-etiket bel"><span class="no">06</span>İletişim</p>
+        <h2 class="bel">Parçanızı ölçelim</h2>
+        <p class="giris bel">Hattınızda gözle ayırt edilemeyen bir problem varsa en hızlı yol,
+          iki örnek parçayla fizibilite yapmak. Ne ölçülebildiğini, hangi hassasiyetle
+          ölçülebildiğini ve çevrime kaç saniye eklediğini yazılı olarak görürsünüz.</p>
+
+        <div class="dugme-sira">
+          <a class="dugme dolu" href="mailto:sercansozer20@gmail.com?subject=Fizibilite%20talebi%20%E2%80%94%20sersoz.com&amp;body=Merhaba%20Sercan%2C%0A%0AFirma%3A%0AHat%20%2F%20par%C3%A7a%3A%0AProblem%3A%0A%C3%87evrim%20s%C3%BCresi%20hedefi%3A%0A">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M.05 3.56A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.56L8 7.41.05 3.56zM0 4.7v6.8A2 2 0 0 0 2 13.5h12a2 2 0 0 0 2-2V4.7L8.35 8.42a.8.8 0 0 1-.7 0L0 4.7z"/></svg>
+            Fizibilite iste
+          </a>
+          <a class="dugme" href="mailto:sercansozer20@gmail.com?subject=15%20dk%20teknik%20g%C3%B6r%C3%BC%C5%9Fme%20%E2%80%94%20sersoz.com">15 dk teknik görüşme</a>
+        </div>
+
+        <div class="kanal bel">
+          <div>
+            <p class="k">E-posta</p>
+            <p class="v"><a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a>
+              <span class="not">E-posta uygulamanız açılmazsa adresi kopyalayıp yazabilirsiniz.</span></p>
+          </div>
+          <div>
+            <p class="k">Konum</p>
+            <p class="v">İzmir, Türkiye
+              <span class="not">Saha çalışması için Türkiye geneli; fizibilite ve geliştirme uzaktan yürür.</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer class="dip">
+  <div class="dip-ic">
+    <span>© 2026 Sercan Sözer · İzmir</span>
+    <nav class="dip-bag" aria-label="Alt gezinme">
+      <a href="/cozumler.html">Çözümler</a>
+      <a href="/vision-detection.html">Ürün</a>
+      <a href="/kazanc.html">Kazanç</a>
+      <a href="/magaza.html">Mağaza</a>
+      <a href="/yazilar.html">Yazılar</a>
+      <a href="/forum.html">Forum</a>
+      <a href="/">Ana sayfa</a>
+    </nav>
+    <span>taslak · kokpit</span>
+  </div>
+</footer>
+
+<script>
+/* =========================================================================
+   KOKPİT — tek dosya, dış bağımlılık yok
+   Kanvas yalnız viewport'u çizer; ray, pano ve PLC satırı gerçek DOM'dur
+   (klavye erişimi, seçilebilir metin, ekran okuyucu).
+   ========================================================================= */
+(function () {
+  'use strict';
+
+  var mq = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+  var AZALT = mq ? mq.matches : false;
+  var INCE = window.matchMedia ? matchMedia('(pointer: fine)').matches : true;
+
+  var ADIM_SURE = 3400;      /* otomatik koşumda bir adım */
+  var SON_SURE  = 4400;      /* PLC adımında biraz daha bekle */
+  var GECIS     = 850;       /* elle seçimde adım animasyonu */
+
+  /* ------------------------------------------------------------ ARAÇLAR
+     Sekiz adım = zincirin kendisi = sitenin gezinmesi.
+     Her adımın metni o adımın gerçek satış mesajıdır. */
+  var ARACLAR = [
+    {
+      glif: '⬒', ad: 'Tarama',
+      baslik: 'Kamera şekli görür, rengi değil',
+      metin: '3D profil sensörü kendi lazerini kullanır; ortam ışığı değişse de aynı şeyi ölçer. ' +
+             'Parlak sacta, koyu dökümde ve yağlı yüzeyde çalışır. Tarama biter bitmez elinizde ' +
+             'milimetre cinsinden bir <b>nokta bulutu</b> vardır — "var/yok" değil, "ne kadar".',
+      maddeler: [
+        'Wenglor MLBS115 ve LMI Gocator için çözüm üretiliyor',
+        'Tarama iş (job) olarak kaydedilir, vardiyada tekrar çağrılır',
+        'Veri tesiste kalır — bulut bağlantısı gerekmez'
+      ],
+      bag: { yazi: 'Ürün sayfası →', adres: '/vision-detection.html' }
+    },
+    {
+      glif: '▦', ad: 'Zemin Kaldır',
+      baslik: 'Taşıyıcıyı at, parçayı bırak',
+      metin: 'Konveyör bandı, fikstür ve palet tahtası ölçüme girmez. Düzlem uydurma ile taşıyıcı ' +
+             'yüzey ayrılır, geriye yalnız parça kalır. Banda çelik plaka eklendiğinde ya da fikstür ' +
+             'değiştiğinde <b>ölçü kaymaz</b>.',
+      maddeler: [
+        'RANSAC düzlem uydurma ile taşıyıcı yüzey ayrılır',
+        'Ölçüm parçaya göre alınır, tezgâha göre değil',
+        'Her ürün tarifi kendi eşiğini taşır'
+      ],
+      bag: { yazi: 'Çözümler →', adres: '/cozumler.html' }
+    },
+    {
+      glif: '⌗', ad: 'Kırpma (ROI)',
+      baslik: 'Bakılacak yer bellidir',
+      metin: 'İlgi bölgesi dışındaki her şey atılır: yansımalar, komşu parça, operatörün eli. ' +
+             'Hem gürültü hem işlem süresi düşer. Aynı taramadan <b>birden çok bölge</b> kırpılıp ' +
+             'her biri kendi limitiyle ayrı ayrı ölçülebilir.',
+      maddeler: [
+        'Kutu, halka ve serbest bölge kırpma',
+        'Bölge başına ayrı ölçüm ve ayrı limit',
+        'Daha az nokta = daha kısa çevrim'
+      ],
+      bag: { yazi: 'Ürün sayfası →', adres: '/vision-detection.html' }
+    },
+    {
+      glif: '⌖', ad: 'Çapalama',
+      baslik: 'Parça kaydı, ölçü kaymadı',
+      metin: 'Sabit noktadan ölçen sistem, parça 2 mm kaydığında yalan söyler. Çapa, ölçüyü parçanın ' +
+             '<b>kendi referansına</b> bağlar: delik, kenar, köşe ya da CAD hizalaması. Aynı çapa ' +
+             'robotun hedefini de her parça için yeniden hesaplar.',
+      maddeler: [
+        'Delik / kenar / düzlem çapası, ICP ile CAD hizalama',
+        'El-göz kalibrasyonuyla robot koordinatına dönüşüm',
+        'Fikstür yatırımı yerine yazılım çözümü'
+      ],
+      bag: { yazi: 'Çözümler →', adres: '/cozumler.html' }
+    },
+    {
+      glif: '∡', ad: 'Ölçüm',
+      baslik: 'Ölçer, tahmin etmez',
+      metin: 'Bu adımda geometri var, öğrenme yok: düzlem/silindir/küre uydurma, düzlemsellik, ' +
+             'paralellik ve diklik, kaynak ağzı (V/U), gap &amp; flush, hacim, delik konumu. ' +
+             'Her ölçünün bir <b>adı, değeri ve limiti</b> vardır — yandaki tabloya yazılan da budur.',
+      maddeler: [
+        'Uygulamada kayıtlı 30+ 3D ölçüm aracı',
+        'Milyon noktalı bulutlarda milisaniye ölçeğinde koşum (geliştirme makinesinde ölçüldü)',
+        'CAD karşılaştırma ve sapma haritası'
+      ],
+      bag: { yazi: 'Ürün sayfası →', adres: '/vision-detection.html' }
+    },
+    {
+      glif: '◎', ad: 'Denetim',
+      baslik: 'Limit, kusur ve gri bölge',
+      metin: 'Her ölçü limitiyle kıyaslanır. Ölçünün yetmediği yerde — çizik, ezik, gözenek — ' +
+             'anomali motoru devreye girer ve <b>yalnız sağlam örneklerle</b> öğrenir; kusur arşivi ' +
+             'toplamanız gerekmez. Sapma ısı haritasıyla gösterilir.',
+      maddeler: [
+        'PatchCore anomali: yalnız sağlam örnekle öğrenir',
+        'Ürün öğretme: embedding + kNN, model eğitimi yok',
+        'YOLO26 ile tespit, segmentasyon, sayım ve iz takibi'
+      ],
+      bag: { yazi: 'Çözümler →', adres: '/cozumler.html' }
+    },
+    {
+      glif: '☰', ad: 'Karar',
+      baslik: 'OK, NOK ve "değerlendirilemedi"',
+      metin: 'Karar üç durumludur. Ölçülemeyen ölçü ayrı raporlanır; şüpheli parça körü körüne ' +
+             'reddedilmez. Pilotta <b>yanlış ret sayısı ölçülür ve tutanağa geçer</b>, tahmin edilmez. ' +
+             'Her koşum kaydedilir: değer, limit, karar ve kare.',
+      maddeler: [
+        'Üç durumlu karar: OK / NOK / değerlendirilemedi',
+        'Koşum kaydı, kare arşivi ve izlenebilirlik',
+        'Eşik değişikliği insan onayı olmadan olmaz'
+      ],
+      bag: { yazi: 'Çözümler →', adres: '/cozumler.html' }
+    },
+    {
+      glif: '⇥', ad: 'PLC Yaz',
+      baslik: 'Kararın hatta karşılığı',
+      metin: 'Karar bir ekranda kalmaz, PLC\'ye yazılır. <b>Siemens S7, Mitsubishi MC/SLMP ve ' +
+             'Modbus TCP</b> uygulamayla birlikte gelir — ayrı entegrasyon kalemi değildir. ' +
+             'PROFINET DCP ile ağdaki cihazlar keşfedilir. OPC UA ve PROFINET IO yol haritasındadır.',
+      maddeler: [
+        'Aktarımda yaşam sinyali, geçerlilik biti ve sayaç kelimesi',
+        'Kopan bağlantı kendini onarır',
+        'PLC\'ye yazma davranışı onaysız değişmez'
+      ],
+      bag: { yazi: 'Fizibilite iste →', adres: 'mailto:sercansozer20@gmail.com?subject=Fizibilite%20talebi%20%E2%80%94%20sersoz.com' }
+    }
+  ];
+
+  /* -------------------------------------------------------------- İŞLER
+     Geometri ve çıktılar sersoz.com/sahne3d.js ile aynı mantıkta. */
+  var ISLER = {
+
+    /* ------------------------------------------------- KAYNAK AĞZI */
+    kaynak: {
+      kod: 'kaynak_govde_v4', ad: 'Kaynak ağzı ölçümü',
+      olcumAd: 'Kaynak Ağzı', olcumGlif: '∡',
+      ozet: '4/4 ölçüldü · 0 NOK · 0 ölçülemedi',
+      karar: 'OK',
+      ciktilar: [
+        { ad: 'agiz_derinlik', deger: '3.18 mm', limit: '2.8 – 3.6', durum: 'ok', plc: true },
+        { ad: 'agiz_genislik', deger: '6.04 mm', limit: '5.5 – 6.5', durum: 'ok', plc: true },
+        { ad: 'duzlemsellik',  deger: '0.06 mm', limit: '≤ 0.15',    durum: 'ok', plc: false },
+        { ad: 'delik_cap',     deger: 'Ø 8.02',  limit: '7.9 – 8.1', durum: 'ok', plc: true },
+        { ad: 'nokta_sayisi',  deger: '78 880',  limit: '≥ 40 000',  durum: 'ok', plc: false }
+      ],
+      isde: [
+        'Gövde kaynak ağzı tek geçişte taranıyor; parlak sac lazer ışığından etkilenmiyor.',
+        'Kaynak fikstürünün tablası ölçüme girmiyor, geriye yalnız gövde kalıyor.',
+        'Yalnız dikiş hattı ve iki referans deliği kalıyor; gerisi atılıyor.',
+        'İki delik çapa alınıyor; parça fikstürde kaysa da ağız hep aynı yerden ölçülüyor.',
+        'Ağız derinliği ve genişliği profilden, düzlemsellik yüzeyden alınıyor.',
+        'Dört ölçü de limit içinde; gözenek taraması ayrıca koşuyor.',
+        'OK — parça geçiyor, robot kaynak yolunu bu taramadan alıyor.',
+        'DB10\'a ağız ölçüleri, OK biti ve parça sayacı yazılıyor.'
+      ],
+      delikler: [{ u: -0.52, v: -0.30 }, { u: -0.52, v: 0.30 }],
+      roi: { u1: -0.30, u2: 0.56, v1: -0.35, v2: 0.35 },
+      capa: { u: 0.13, v: 0 },
+      yukseklik: function (u, v) {
+        if (Math.abs(u) >= 0.86 || Math.abs(v) >= 0.60) return 0;
+        var y = 0.10;
+        var kenar = Math.min(0.86 - Math.abs(u), 0.60 - Math.abs(v));
+        if (kenar < 0.05) y -= (0.05 - kenar) * 1.1;
+        if (u > -0.28 && u < 0.54 && Math.abs(v) < 0.33) {
+          y = 0.32 - 0.21 * Math.exp(-Math.pow((u - 0.13) / 0.052, 2));
+          y += 0.010 * Math.sin(u * 9) * Math.cos(v * 8);
+        } else {
+          y += 0.008 * Math.sin(u * 7) * Math.cos(v * 6);
+        }
+        for (var i = 0; i < this.delikler.length; i++) {
+          var d = this.delikler[i];
+          var r = Math.hypot(u - d.u, v - d.v);
+          if (r < 0.075) y -= 0.13 * (1 - r / 0.075);
+        }
+        return y;
+      },
+      zeminMi: function (y) { return y < 0.16; },
+      olcumCiz: function (S, aci, a) {
+        var oUst = S.yansit(0.13, -0.32, 0.12, aci), oAlt = S.yansit(0.13, -0.11, 0.12, aci);
+        S.ctx.strokeStyle = 'rgba(110,240,170,' + a + ')'; S.ctx.lineWidth = 1.4;
+        S.ctx.beginPath(); S.ctx.moveTo(oUst.X, oUst.Y); S.ctx.lineTo(oAlt.X, oAlt.Y); S.ctx.stroke();
+        S.etiket(oAlt.X + 10, (oUst.Y + oAlt.Y) / 2 + 4, 'ağız 3.18 mm', 'rgba(110,240,170,' + a + ')');
+        if (S.genis) {
+          var sol = S.yansit(-0.28, -0.32, -0.33, aci), sag = S.yansit(0.54, -0.32, -0.33, aci);
+          S.olcu(sol, sag, '82.40 mm', 'rgba(255,190,140,' + a + ')', -26);
+        }
+      }
+    },
+
+    /* ------------------------------------------------- PALET / EKSİK */
+    palet: {
+      kod: 'palet_3x3_kutu', ad: 'Paletlemede eksik ürün',
+      olcumAd: 'Bölge Sayım', olcumGlif: '▤',
+      ozet: '8/9 sayıldı · 1 NOK · 0 ölçülemedi',
+      karar: 'NOK',
+      ciktilar: [
+        { ad: 'koli_adet',       deger: '8',       limit: '= 9',       durum: 'nok', plc: true },
+        { ad: 'eksik_konum',     deger: 'S2 · K3', limit: '—',         durum: 'nok', plc: true },
+        { ad: 'palet_yukseklik', deger: '148 mm',  limit: '140 – 155', durum: 'ok',  plc: true },
+        { ad: 'istif_sapma',     deger: '4.2 mm',  limit: '≤ 8',       durum: 'ok',  plc: false },
+        { ad: 'nokta_sayisi',    deger: '86 768',  limit: '≥ 40 000',  durum: 'ok',  plc: false }
+      ],
+      isde: [
+        '3×3 palet katı üstten tek geçişte alınıyor.',
+        'Palet tahtası ve zemin ayrılıyor; yalnız koli üst yüzeyleri kalıyor.',
+        'Palet sınırı kırpılıyor; komşu paletin kolileri sayıma girmiyor.',
+        'Palet köşesi çapa alınıyor; palet 30 mm kaçık gelse de gözler yerinde kalıyor.',
+        'Dokuz gözün doluluğu ve istif yüksekliği ölçülüyor.',
+        'S2·K3 gözü boş çıkıyor; istif sapması limit içinde.',
+        'NOK — eksik göz "bir tane eksik" değil, konumuyla raporlanıyor.',
+        'Eksik konum PLC\'ye yazılıyor; hat kolileme robotuna geri dönüş veriyor.'
+      ],
+      kutular: (function () {
+        var l = [];
+        for (var s = 0; s < 3; s++) for (var k = 0; k < 3; k++) {
+          if (s === 1 && k === 2) continue;
+          l.push({ u: -0.50 + k * 0.50, v: -0.38 + s * 0.38 });
+        }
+        return l;
+      })(),
+      bosluk: { u: 0.50, v: 0 },
+      roi: { u1: -0.78, u2: 0.78, v1: -0.60, v2: 0.60 },
+      capa: { u: -0.50, v: -0.38 },
+      yukseklik: function (u, v) {
+        if (Math.abs(u) >= 0.88 || Math.abs(v) >= 0.66) return 0;
+        var y = 0.07;
+        for (var i = 0; i < this.kutular.length; i++) {
+          var b = this.kutular[i];
+          if (Math.abs(u - b.u) < 0.21 && Math.abs(v - b.v) < 0.16) {
+            y = 0.34;
+            if (Math.abs(u - b.u) < 0.012) y -= 0.02;
+            y += 0.006 * Math.sin(u * 40) * Math.cos(v * 30);
+          }
+        }
+        return y;
+      },
+      zeminMi: function (y) { return y < 0.12; },
+      olcumCiz: function (S, aci, a) {
+        var b = this.bosluk;
+        var k1 = S.yansit(b.u - 0.21, -0.09, b.v - 0.16, aci);
+        var k2 = S.yansit(b.u + 0.21, -0.09, b.v - 0.16, aci);
+        var k3 = S.yansit(b.u + 0.21, -0.09, b.v + 0.16, aci);
+        var k4 = S.yansit(b.u - 0.21, -0.09, b.v + 0.16, aci);
+        S.ctx.fillStyle = 'rgba(248,113,113,' + (0.18 * a) + ')';
+        S.ctx.beginPath();
+        S.ctx.moveTo(k1.X, k1.Y); S.ctx.lineTo(k2.X, k2.Y); S.ctx.lineTo(k3.X, k3.Y); S.ctx.lineTo(k4.X, k4.Y);
+        S.ctx.closePath(); S.ctx.fill();
+        S.ctx.strokeStyle = 'rgba(248,113,113,' + a + ')'; S.ctx.lineWidth = 1.8;
+        S.ctx.setLineDash([6, 4]); S.ctx.stroke(); S.ctx.setLineDash([]);
+        S.etiket((k1.X + k3.X) / 2 - 34, (k1.Y + k3.Y) / 2 - 20, 'EKSİK · S2·K3', 'rgba(248,113,113,' + a + ')');
+        for (var i = 0; i < this.kutular.length; i++) {
+          var c = this.kutular[i];
+          var cp = S.yansit(c.u, -0.36, c.v, aci);
+          S.ctx.strokeStyle = 'rgba(110,240,170,' + (0.8 * a) + ')'; S.ctx.lineWidth = 1.1;
+          S.ctx.beginPath(); S.ctx.arc(cp.X, cp.Y, 7, 0, Math.PI * 2); S.ctx.stroke();
+          S.ctx.font = '9px ' + S.yaziMono;
+          S.ctx.fillStyle = 'rgba(110,240,170,' + a + ')';
+          S.ctx.fillText(String(i + 1), cp.X - 2.5, cp.Y + 3);
+        }
+      }
+    },
+
+    /* ------------------------------------------------------- KOLİLEME */
+    koli: {
+      kod: 'koli_12li_dolum', ad: 'Kolilemede adet ve oturma',
+      olcumAd: 'Adet + Yükseklik', olcumGlif: '▤',
+      ozet: '12/12 kontrol · 2 NOK · 0 ölçülemedi',
+      karar: 'NOK',
+      ciktilar: [
+        { ad: 'urun_adet',    deger: '11',      limit: '= 12',     durum: 'nok', plc: true },
+        { ad: 'oturma_farki', deger: '6.4 mm',  limit: '≤ 2.0',    durum: 'nok', plc: true },
+        { ad: 'kapak_yuksek', deger: '92.1 mm', limit: '90 – 94',  durum: 'ok',  plc: false },
+        { ad: 'koli_konum',   deger: '1.2 mm',  limit: '≤ 3',      durum: 'ok',  plc: true },
+        { ad: 'nokta_sayisi', deger: '77 112',  limit: '≥ 40 000', durum: 'ok',  plc: false }
+      ],
+      isde: [
+        'Koli kapatılmadan hemen önce içi taranıyor.',
+        'Koli tabanı ve bandın kendisi ayrılıyor.',
+        'Koli duvarlarının içi kırpılıyor; dışarıdaki ürün sayıma girmiyor.',
+        'Koli köşesi çapa; koli bantta eğri dursa da gözler doğru yerde aranıyor.',
+        'On iki gözde ürün var mı ve hepsi aynı yükseklikte mi ölçülüyor.',
+        'Bir göz boş, bir ürün 6.4 mm yüksek duruyor — tam oturmamış.',
+        'NOK — hem adet hem oturma nedeni ayrı ayrı yazılıyor.',
+        'Kapatma istasyonu durduruluyor, koli operatöre yönlendiriliyor.'
+      ],
+      urunler: (function () {
+        var l = [];
+        for (var s = 0; s < 3; s++) for (var k = 0; k < 4; k++) {
+          if (s === 2 && k === 1) continue;
+          l.push({ u: -0.48 + k * 0.32, v: -0.34 + s * 0.34, alcak: (s === 0 && k === 2) });
+        }
+        return l;
+      })(),
+      roi: { u1: -0.72, u2: 0.72, v1: -0.56, v2: 0.56 },
+      capa: { u: -0.48, v: -0.34 },
+      yukseklik: function (u, v) {
+        if (Math.abs(u) >= 0.80 || Math.abs(v) >= 0.62) return 0;
+        var duvar = Math.min(0.80 - Math.abs(u), 0.62 - Math.abs(v));
+        var y = duvar < 0.06 ? 0.26 : 0.08;
+        for (var i = 0; i < this.urunler.length; i++) {
+          var p = this.urunler[i];
+          var r = Math.hypot(u - p.u, v - p.v);
+          if (r < 0.13) {
+            var tepe = p.alcak ? 0.24 : 0.38;
+            y = Math.max(y, tepe - 0.03 + 0.03 * Math.sqrt(Math.max(0, 1 - Math.pow(r / 0.13, 2))));
+          }
+        }
+        return y;
+      },
+      zeminMi: function (y) { return y < 0.12; },
+      olcumCiz: function (S, aci, a) {
+        for (var i = 0; i < this.urunler.length; i++) {
+          var p = this.urunler[i];
+          var pp = S.yansit(p.u, -(p.alcak ? 0.25 : 0.39), p.v, aci);
+          var renk = p.alcak ? 'rgba(248,113,113,' + a + ')' : 'rgba(110,240,170,' + (0.8 * a) + ')';
+          S.ctx.strokeStyle = renk; S.ctx.lineWidth = p.alcak ? 1.8 : 1.1;
+          S.ctx.beginPath(); S.ctx.arc(pp.X, pp.Y, 9, 0, Math.PI * 2); S.ctx.stroke();
+          if (p.alcak) S.etiket(pp.X + 13, pp.Y - 11, 'oturmadı −6.4', 'rgba(248,113,113,' + a + ')');
+        }
+        var bos = S.yansit(-0.16, -0.10, 0.34, aci);
+        S.ctx.strokeStyle = 'rgba(248,113,113,' + a + ')'; S.ctx.lineWidth = 1.6;
+        S.ctx.setLineDash([5, 4]);
+        S.ctx.beginPath(); S.ctx.arc(bos.X, bos.Y, 13, 0, Math.PI * 2); S.ctx.stroke();
+        S.ctx.setLineDash([]);
+        S.etiket(bos.X + 16, bos.Y + 4, 'eksik ürün', 'rgba(248,113,113,' + a + ')');
+      }
+    },
+
+    /* --------------------------------------------------- YÜZEY KALİTE */
+    kalite: {
+      kod: 'yuzey_denetim_a3', ad: 'Yüzey kalite kontrolü',
+      olcumAd: 'Yüzey Sapma', olcumGlif: '◈',
+      ozet: '3/4 ölçüldü · 2 NOK · 1 ölçülemedi',
+      karar: 'NOK',
+      ciktilar: [
+        { ad: 'cukur_derinlik', deger: '−0.42 mm', limit: '≤ 0.15',    durum: 'nok',   plc: true },
+        { ad: 'cukur_alan',     deger: '38.4 mm²', limit: '≤ 10',      durum: 'nok',   plc: false },
+        { ad: 'duzlemsellik',   deger: '0.31 mm',  limit: '≤ 0.20',    durum: 'nok',   plc: true },
+        { ad: 'kenar_pah',      deger: '—',        limit: '0.4 – 0.8', durum: 'deger', plc: false },
+        { ad: 'nokta_sayisi',   deger: '69 768',   limit: '≥ 40 000',  durum: 'ok',    plc: false }
+      ],
+      isde: [
+        'Panel yüzeyi yüksek çözünürlükte taranıyor.',
+        'Taşıyıcı ayrılıyor; geriye yalnız panel yüzeyi kalıyor.',
+        'Panel sınırı kırpılıyor; kenar kırılması ölçüme karışmıyor.',
+        'Panel köşesi çapa; sapma haritası her parçada aynı eksende çıkıyor.',
+        'Yüzey sapması ve çukur alanı ölçülüyor; kenar pahı ölçülemedi.',
+        'İki çukur limit dışı; bir ölçü değerlendirilemedi olarak işaretlendi.',
+        'NOK — "değerlendirilemedi" ayrı sayılıyor, OK\'a yuvarlanmıyor.',
+        'Panel ayrım hattına yönlendiriliyor; kusur kaydı kareyle saklanıyor.'
+      ],
+      kusurlar: [{ u: 0.22, v: -0.14, r: 0.14, d: 0.075 }, { u: -0.34, v: 0.22, r: 0.09, d: 0.045 }],
+      roi: { u1: -0.76, u2: 0.76, v1: -0.52, v2: 0.52 },
+      capa: { u: -0.70, v: -0.46 },
+      yukseklik: function (u, v) {
+        if (Math.abs(u) >= 0.82 || Math.abs(v) >= 0.58) return 0;
+        var y = 0.26;
+        var kenar = Math.min(0.82 - Math.abs(u), 0.58 - Math.abs(v));
+        if (kenar < 0.05) y -= (0.05 - kenar) * 1.4;
+        y += 0.006 * Math.sin(u * 11) * Math.cos(v * 9);
+        for (var i = 0; i < this.kusurlar.length; i++) {
+          var k = this.kusurlar[i];
+          var r = Math.hypot(u - k.u, v - k.v);
+          if (r < k.r) y -= k.d * (1 - Math.pow(r / k.r, 2));
+        }
+        return y;
+      },
+      zeminMi: function (y) { return y < 0.14; },
+      olcumCiz: function (S, aci, a) {
+        for (var i = 0; i < this.kusurlar.length; i++) {
+          var k = this.kusurlar[i];
+          var kp = S.yansit(k.u, -(this.yukseklik(k.u, k.v) + 0.01), k.v, aci);
+          var R = 24 - i * 7;
+          for (var h = 3; h >= 1; h--) {
+            S.ctx.fillStyle = 'rgba(248,113,113,' + (0.055 * h * a) + ')';
+            S.ctx.beginPath(); S.ctx.arc(kp.X, kp.Y, R * h / 2.2, 0, Math.PI * 2); S.ctx.fill();
+          }
+          S.ctx.strokeStyle = 'rgba(248,113,113,' + a + ')'; S.ctx.lineWidth = 1.6;
+          S.ctx.beginPath(); S.ctx.arc(kp.X, kp.Y, R / 2, 0, Math.PI * 2); S.ctx.stroke();
+          S.etiket(kp.X + 20, kp.Y - 18, i === 0 ? '−0.42 mm' : '−0.24 mm', 'rgba(248,113,113,' + a + ')');
+        }
+      }
+    }
+  };
+
+  var GLIF = { ok: '✓', nok: '✗', deger: '○', bos: '—' };
+  var GLIF_SINIF = { ok: 'glif-ok', nok: 'glif-nok', deger: 'glif-deger', bos: 'glif-bos' };
+  var SIRA = ['kaynak', 'palet', 'koli', 'kalite'];
+
+  /* ------------------------------------------------------------- DURUM */
+  var isKod = 'kaynak';
+  var is = ISLER[isKod];
+  var adim = 0;
+  var ilerleme = AZALT ? 1 : 0;
+  var otomatik = !AZALT;
+  var sayac = 0;
+  var aciKay = 0;
+  var noktaSayisi = 0;
+
+  /* --------------------------------------------------------------- DOM */
+  var d = document;
+  var ekranKutu = d.getElementById('ekran');
+  var c = d.getElementById('sahne');
+  if (!c || !c.getContext) return;
+  var ctx = c.getContext('2d');
+
+  var rayListe   = d.getElementById('rayListe');
+  var isSecici   = d.getElementById('isSecici');
+  var modRozet   = d.getElementById('modRozet');
+  var otoDon     = d.getElementById('otoDon');
+  var ipucu      = d.getElementById('ipucu');
+
+  var panoUst    = d.getElementById('panoUst');
+  var panoKicker = d.getElementById('panoKicker');
+  var panoBaslik = d.getElementById('panoBaslik');
+  var panoMetin  = d.getElementById('panoMetin');
+  var panoIsdeM  = d.getElementById('panoIsdeM');
+  var panoMadde  = d.getElementById('panoMaddeler');
+  var panoBag    = d.getElementById('panoBag');
+  var panoOzet   = d.getElementById('panoOzet');
+  var ciktiGovde = d.getElementById('ciktiGovde');
+  var ciktiDurum = d.getElementById('ciktiDurum');
+  var pano       = d.getElementById('pano');
+
+  var hudAdim    = d.getElementById('hudAdim');
+  var hudNo      = d.getElementById('hudNo');
+  var hudIs      = d.getElementById('hudIs');
+  var hudNokta   = d.getElementById('hudNokta');
+  var hudSurukle = d.getElementById('hudSurukle');
+
+  var kararRozet = d.getElementById('kararRozet');
+  var kararDeger = d.getElementById('kararDeger');
+  var bitHazir   = d.getElementById('bitHazir');
+  var bitOk      = d.getElementById('bitOk');
+  var bitNok     = d.getElementById('bitNok');
+  var bitSayac   = d.getElementById('bitSayac');
+  var sayacDeger = d.getElementById('sayacDeger');
+
+  var aracDugme = [];   /* ray düğmeleri */
+  var aracCubuk = [];   /* ray ilerleme çizgileri */
+
+  /* ------------------------------------------------------- KANVAS ÖLÇÜ */
+  var W = 600, H = 400, DPR = 1, N = 56, OLCEK = 300, CX = 300, CY = 220;
+  var TILT = -0.96, FOV = 3.5;
+  var YAZI = 'Consolas, "Courier New", monospace';
+
+  function boyutla() {
+    var r = ekranKutu.getBoundingClientRect();
+    W = Math.max(220, Math.round(r.width));
+    H = Math.max(200, Math.round(r.height));
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    c.width = Math.round(W * DPR);
+    c.height = Math.round(H * DPR);
+    c.style.width = W + 'px';
+    c.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    /* nokta sayısı üst sınırı — dar ekranda daha az */
+    N = W < 420 ? 34 : W < 700 ? 46 : W < 1000 ? 56 : 62;
+    OLCEK = Math.min(W, H) * 0.86;
+    CX = W * 0.5;
+    CY = H * 0.56;
+    if (!kosuyor) ciz(performance.now());
+  }
+
+  function yansit(px, py, pz, aci) {
+    var ca = Math.cos(aci), sa = Math.sin(aci);
+    var xr = px * ca + pz * sa, zr = -px * sa + pz * ca;
+    var cx2 = Math.cos(TILT), sx2 = Math.sin(TILT);
+    var yr = py * cx2 - zr * sx2, zd = py * sx2 + zr * cx2;
+    var s = FOV / (FOV + zd);
+    return { X: CX + xr * s * OLCEK, Y: CY + yr * s * OLCEK, s: s, zd: zd };
+  }
+
+  function etiket(px, py, yazi, renk) {
+    ctx.font = '600 11px ' + YAZI;
+    var g = ctx.measureText(yazi).width;
+    ctx.fillStyle = 'rgba(8,12,17,.88)';
+    ctx.fillRect(px - 5, py - 12, g + 10, 17);
+    ctx.strokeStyle = renk; ctx.lineWidth = 1;
+    ctx.strokeRect(px - 5, py - 12, g + 10, 17);
+    ctx.fillStyle = renk;
+    ctx.fillText(yazi, px, py);
+  }
+
+  function olcu(a, b, yazi, renk, kaydir) {
+    var oy = kaydir || -26;
+    ctx.strokeStyle = renk; ctx.lineWidth = 1.1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(a.X, a.Y + oy); ctx.lineTo(b.X, b.Y + oy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(a.X, a.Y + oy - 5); ctx.lineTo(a.X, a.Y + oy + 5);
+    ctx.moveTo(b.X, b.Y + oy - 5); ctx.lineTo(b.X, b.Y + oy + 5);
+    ctx.stroke();
+    ctx.font = '600 11px ' + YAZI;
+    etiket((a.X + b.X) / 2 - ctx.measureText(yazi).width / 2, a.Y + oy - 4, yazi, renk);
+  }
+
+  var S = { ctx: ctx, yansit: yansit, etiket: etiket, olcu: olcu, yaziMono: YAZI, genis: true };
+
+  /* --------------------------------------------------------- ÇİZİM */
+  function ciz(t) {
+    S.genis = W > 520;
+    var aci = (AZALT ? 0.34 : 0.30 + Math.sin(t / 6800) * 0.15) + aciKay;
+
+    var zg = ctx.createLinearGradient(0, 0, 0, H);
+    zg.addColorStop(0, '#0c1118'); zg.addColorStop(1, '#06090d');
+    ctx.fillStyle = zg; ctx.fillRect(0, 0, W, H);
+
+    /* ızgara — zemin kaldırılınca soluklaşır */
+    ctx.strokeStyle = 'rgba(255,255,255,' + (adim >= 1 ? 0.022 : 0.05) + ')';
+    ctx.lineWidth = 1;
+    for (var gi = -4; gi <= 4; gi++) {
+      var q = gi / 4 * 1.4;
+      var a1 = yansit(q, -0.02, -1.4, aci), a2 = yansit(q, -0.02, 1.4, aci);
+      ctx.beginPath(); ctx.moveTo(a1.X, a1.Y); ctx.lineTo(a2.X, a2.Y); ctx.stroke();
+      var b1 = yansit(-1.4, -0.02, q, aci), b2 = yansit(1.4, -0.02, q, aci);
+      ctx.beginPath(); ctx.moveTo(b1.X, b1.Y); ctx.lineTo(b2.X, b2.Y); ctx.stroke();
+    }
+
+    var roi = is.roi;
+    var taramaOran = adim === 0 ? ilerleme : 1;
+    var tarananU = -1 + taramaOran * 2;
+    var nokta = 0;
+
+    for (var i = 0; i < N; i++) {
+      var u = (i / (N - 1) - 0.5) * 2;
+      if (u > tarananU + 0.02) continue;
+      for (var j = 0; j < N; j++) {
+        var v = (j / (N - 1) - 0.5) * 2;
+        var y = is.yukseklik(u, v);
+        if (y === 0) continue;
+
+        var zemin = is.zeminMi(y);
+        var roiDisi = u < roi.u1 || u > roi.u2 || v < roi.v1 || v > roi.v2;
+
+        var solukluk = 1;
+        if (adim >= 1 && zemin) solukluk = adim === 1 ? Math.max(0, 1 - ilerleme * 1.4) : 0;
+        if (adim >= 2 && roiDisi) solukluk *= adim === 2 ? Math.max(0, 1 - ilerleme * 1.4) : 0;
+        if (solukluk <= 0.02) continue;
+
+        var pr = yansit(u, -y, v, aci);
+        nokta++;
+
+        var lazerde = adim === 0 && Math.abs(u - tarananU) < 0.03;
+        var yn = Math.max(0, Math.min(1, (y + 0.03) / 0.40));
+        var boy = (lazerde ? 3.0 : 2.0) * pr.s;
+
+        if (lazerde) {
+          ctx.fillStyle = 'rgba(215,245,255,.96)';
+        } else {
+          var sis = Math.max(0.2, 0.9 - (pr.zd + 1) * 0.24) * solukluk;
+          ctx.fillStyle = 'hsla(' + (214 - yn * 150) + ',88%,' + (50 + yn * 16) + '%,' + sis + ')';
+        }
+        ctx.fillRect(pr.X - boy / 2, pr.Y - boy / 2, boy, boy);
+      }
+    }
+    noktaSayisi = nokta;
+
+    /* adım 1: lazer düzlemi */
+    if (adim === 0) {
+      var l1 = yansit(tarananU, -0.64, -0.72, aci), l2 = yansit(tarananU, -0.64, 0.72, aci);
+      var l3 = yansit(tarananU, 0.02, 0.72, aci), l4 = yansit(tarananU, 0.02, -0.72, aci);
+      var lg = ctx.createLinearGradient(l1.X, l1.Y, l3.X, l3.Y);
+      lg.addColorStop(0, 'rgba(120,205,255,.04)');
+      lg.addColorStop(1, 'rgba(120,205,255,.20)');
+      ctx.fillStyle = lg;
+      ctx.beginPath();
+      ctx.moveTo(l1.X, l1.Y); ctx.lineTo(l2.X, l2.Y); ctx.lineTo(l3.X, l3.Y); ctx.lineTo(l4.X, l4.Y);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(200,240,255,.9)'; ctx.lineWidth = 1.7;
+      ctx.beginPath(); ctx.moveTo(l4.X, l4.Y); ctx.lineTo(l3.X, l3.Y); ctx.stroke();
+    }
+
+    /* adım 3+: ROI kutusu */
+    if (adim >= 2) {
+      var ra = adim === 2 ? ilerleme : 1;
+      var kose = [
+        yansit(roi.u1, -0.02, roi.v1, aci), yansit(roi.u2, -0.02, roi.v1, aci),
+        yansit(roi.u2, -0.02, roi.v2, aci), yansit(roi.u1, -0.02, roi.v2, aci)
+      ];
+      ctx.strokeStyle = 'rgba(120,205,255,' + (0.55 * ra) + ')';
+      ctx.lineWidth = 1.2; ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.moveTo(kose[0].X, kose[0].Y);
+      for (var k2 = 1; k2 < 4; k2++) ctx.lineTo(kose[k2].X, kose[k2].Y);
+      ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+      if (adim === 2) etiket(kose[1].X + 6, kose[1].Y - 6, 'ROI', 'rgba(120,205,255,.9)');
+    }
+
+    /* adım 4+: çapa */
+    if (adim >= 3) {
+      var ca2 = adim === 3 ? ilerleme : 1;
+      var cp = is.capa;
+      var cpt = yansit(cp.u, -(is.yukseklik(cp.u, cp.v) + 0.02), cp.v, aci);
+      ctx.strokeStyle = 'rgba(255,190,140,' + ca2 + ')'; ctx.lineWidth = 1.5;
+      var r2 = 13 + (1 - ca2) * 22;
+      ctx.beginPath(); ctx.arc(cpt.X, cpt.Y, r2, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cpt.X - r2 - 6, cpt.Y); ctx.lineTo(cpt.X + r2 + 6, cpt.Y);
+      ctx.moveTo(cpt.X, cpt.Y - r2 - 6); ctx.lineTo(cpt.X, cpt.Y + r2 + 6);
+      ctx.stroke();
+      if (adim === 3) etiket(cpt.X + r2 + 10, cpt.Y - 8, 'ÇAPA kilitlendi', 'rgba(255,190,140,.95)');
+    }
+
+    /* adım 5+: ölçüm işaretleri */
+    if (adim >= 4) {
+      var oa = adim === 4 ? Math.min(1, ilerleme * 1.6) : 1;
+      try { is.olcumCiz(S, aci, oa); } catch (e) {}
+    }
+
+    /* adım 6: tolerans bandı taraması */
+    if (adim === 5) {
+      var sy = H * ilerleme;
+      var g2 = ctx.createLinearGradient(0, sy - 16, 0, sy + 16);
+      g2.addColorStop(0, 'rgba(255,190,140,0)');
+      g2.addColorStop(.5, 'rgba(255,190,140,.16)');
+      g2.addColorStop(1, 'rgba(255,190,140,0)');
+      ctx.fillStyle = g2;
+      ctx.fillRect(0, sy - 16, W, 32);
+    }
+
+    /* adım 7+: karar bindirmesi */
+    if (adim >= 6) {
+      var rgb = is.karar === 'OK' ? '110,240,170' : '248,113,113';
+      var yogun = adim === 6 ? (1 - ilerleme) * 0.10 : 0.03;
+      ctx.fillStyle = 'rgba(' + rgb + ',' + yogun + ')';
+      ctx.fillRect(0, 0, W, H);
+      ctx.font = '700 ' + (S.genis ? 22 : 17) + 'px Georgia, serif';
+      ctx.fillStyle = 'rgba(' + rgb + ',.92)';
+      ctx.fillText(is.karar, W - (S.genis ? 78 : 62), 58);
+    }
+
+    /* adım 8: PLC aktarım oku */
+    if (adim === 7) {
+      var ax = W - 40, ay = H - 30;
+      var kay = (ilerleme * 40) % 40;
+      ctx.strokeStyle = 'rgba(120,205,255,.85)'; ctx.lineWidth = 1.6;
+      for (var q3 = 0; q3 < 3; q3++) {
+        var ox = ax - 60 + kay + q3 * 14;
+        ctx.beginPath();
+        ctx.moveTo(ox, ay); ctx.lineTo(ox + 8, ay - 5);
+        ctx.moveTo(ox, ay); ctx.lineTo(ox + 8, ay + 5);
+        ctx.stroke();
+      }
+      if (S.genis) etiket(W - 172, ay + 4, 'PLC ⇥ DB10', 'rgba(120,205,255,.9)');
+    }
+  }
+
+  /* --------------------------------------------------- DOM TAZELEME */
+  var sonNoktaYazi = '';
+  function hudTazele() {
+    var yazi = (noktaSayisi * 34).toLocaleString('tr-TR') + ' nokta';
+    if (yazi !== sonNoktaYazi) { sonNoktaYazi = yazi; hudNokta.textContent = yazi; }
+  }
+
+  function aracAdi(i) { return i === 4 ? is.olcumAd : ARACLAR[i].ad; }
+
+  function rayTazele() {
+    for (var i = 0; i < aracDugme.length; i++) {
+      var b = aracDugme[i];
+      b.setAttribute('aria-selected', i === adim ? 'true' : 'false');
+      b.setAttribute('data-durum', i === adim ? 'aktif' : (i < adim ? 'bitti' : 'bos'));
+      b.setAttribute('tabindex', i === adim ? '0' : '-1');
+      var led = b.querySelector('.led span');
+      if (led) led.textContent = i < adim ? '✓' : '—';
+      aracCubuk[i].style.width = (i === adim ? Math.round(ilerleme * 100) : 0) + '%';
+    }
+    pano.setAttribute('aria-labelledby', 'arac-' + adim);
+  }
+
+  function panoTazele() {
+    var a = ARACLAR[adim];
+    var ad = aracAdi(adim);
+    panoUst.textContent = 'Çıktılar · ' + ad;
+    panoKicker.textContent = 'Adım ' + (adim + 1 < 10 ? '0' : '') + (adim + 1) + ' · ' + ad;
+    panoBaslik.textContent = a.baslik;
+    panoMetin.innerHTML = a.metin;
+    panoIsdeM.textContent = is.isde[adim];
+    panoMadde.innerHTML = a.maddeler.map(function (m) { return '<li>' + m + '</li>'; }).join('');
+    panoBag.textContent = a.bag.yazi;
+    panoBag.setAttribute('href', a.bag.adres);
+
+    hudAdim.textContent = ad.toUpperCase();
+    hudNo.textContent = '0' + (adim + 1) + '/08';
+    hudIs.textContent = is.kod;
+
+    ciktiTazele();
+  }
+
+  /* çıktılar ölçüm adımından itibaren dolar */
+  function ciktiTazele() {
+    var gorunur = adim < 4 ? 0 : adim === 4 ? 3 : is.ciktilar.length;
+    var satir = '';
+    for (var i = 0; i < is.ciktilar.length; i++) {
+      var o = is.ciktilar[i];
+      var dolu = i < gorunur;
+      var durum = dolu ? o.durum : 'bos';
+      satir += '<tr data-dolu="' + (dolu ? 1 : 0) + '">' +
+        '<td>' + o.ad + '</td>' +
+        '<td class="deger' + (dolu && o.durum === 'nok' ? ' nok' : '') + '">' + (dolu ? o.deger : '—') + '</td>' +
+        '<td class="limit">' + o.limit + '</td>' +
+        '<td class="durum">' +
+          (o.plc ? '<span class="plc-im' + (dolu && adim >= 7 ? ' yanik' : '') + '" title="PLC\'ye yazılır">⇥</span>' : '') +
+          '<span class="' + GLIF_SINIF[durum] + '">' + GLIF[durum] + '</span>' +
+        '</td></tr>';
+    }
+    ciktiGovde.innerHTML = satir;
+    ciktiDurum.textContent = AZALT ? 'durağan kare' : (otomatik ? 'zincir koşuyor' : 'elle mod');
+    if (adim >= 5) {
+      panoOzet.textContent = is.ozet;
+      panoOzet.setAttribute('data-bos', '0');
+    } else {
+      panoOzet.textContent = '— koşum bekleniyor —';
+      panoOzet.setAttribute('data-bos', '1');
+    }
+  }
+
+  function plcTazele() {
+    var kararVar = adim >= 6;
+    kararRozet.setAttribute('data-karar', kararVar ? is.karar : '');
+    kararDeger.textContent = kararVar ? is.karar : '—';
+    bitHazir.setAttribute('data-on', adim >= 1 ? '1' : '0');
+    bitOk.setAttribute('data-on', (adim >= 7 && is.karar === 'OK') ? '1' : '0');
+    bitNok.setAttribute('data-on', (adim >= 7 && is.karar === 'NOK') ? '1' : '0');
+    bitSayac.setAttribute('data-on', adim >= 7 ? '1' : '0');
+    sayacDeger.textContent = ('000' + sayac).slice(-4);
+  }
+
+  function modTazele() {
+    modRozet.setAttribute('data-mod', (otomatik || AZALT) ? 'oto' : 'elle');
+    modRozet.textContent = AZALT ? 'Durağan kare' : (otomatik ? 'Otomatik koşum' : 'Elle mod');
+    otoDon.hidden = otomatik || AZALT;
+  }
+
+  function tazeleHepsi() {
+    rayTazele(); panoTazele(); plcTazele(); modTazele();
+    if (!kosuyor) { ciz(performance.now()); hudTazele(); }
+  }
+
+  /* ---------------------------------------------------------- EYLEMLER */
+  function adimAta(y, elle) {
+    if (elle) elleGec();
+    var eski = adim;
+    adim = ((y % 8) + 8) % 8;
+    ilerleme = AZALT ? 1 : 0;
+    if (adim === 7 && eski !== 7) sayac++;
+    rayTazele(); panoTazele(); plcTazele();
+    if (!kosuyor) { ciz(performance.now()); hudTazele(); }
+  }
+
+  function isAta(kod, elle) {
+    if (!ISLER[kod]) return;
+    if (elle) elleGec();
+    if (kod === isKod) return;
+    isKod = kod;
+    is = ISLER[kod];
+    sayac = 0;
+    adim = 0;
+    ilerleme = AZALT ? 1 : 0;
+    /* 5. araç adı ve glifi işe göre değişir */
+    aracDugme[4].querySelector('.ad').textContent = is.olcumAd;
+    aracDugme[4].querySelector('.glif').textContent = is.olcumGlif;
+    Array.prototype.forEach.call(isSecici.querySelectorAll('.is-dugme'), function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-is') === kod ? 'true' : 'false');
+    });
+    c.setAttribute('aria-label', is.ad + ' işinin nokta bulutu sahnesi. Ok tuşlarıyla döndürülür.');
+    tazeleHepsi();
+  }
+
+  function elleGec() {
+    ipucuKapat();
+    if (!otomatik) return;
+    otomatik = false;
+    modTazele();
+    ciktiTazele();
+  }
+
+  function otoGec() {
+    if (AZALT) return;
+    otomatik = true;
+    ilerleme = 0;
+    modTazele();
+    ciktiTazele();
+  }
+
+  /* ---------------------------------------------------------- İPUCU */
+  var ipucuZaman = null, ipucuKapali = false;
+  function ipucuAc() {
+    if (ipucuKapali) return;
+    if (!otomatik && !AZALT) return;
+    ipucu.hidden = false;
+    /* bir tık sonra sınıf ekle ki geçiş çalışsın */
+    setTimeout(function () { ipucu.classList.add('gorunur'); }, 30);
+    ipucuZaman = setTimeout(ipucuKapat, 15000);
+  }
+  function ipucuKapat() {
+    ipucuKapali = true;
+    if (ipucuZaman) { clearTimeout(ipucuZaman); ipucuZaman = null; }
+    ipucu.classList.remove('gorunur');
+    setTimeout(function () { ipucu.hidden = true; }, 500);
+  }
+
+  /* ------------------------------------------------------------ DÖNGÜ */
+  var raf = null, kosuyor = false, ekranda = true, sonT = 0;
+
+  function dongu(t) {
+    if (!kosuyor) return;
+    raf = requestAnimationFrame(dongu);
+    var dt = Math.min(80, t - sonT); sonT = t;
+
+    if (otomatik) {
+      var sure = adim === 7 ? SON_SURE : ADIM_SURE;
+      ilerleme += dt / sure;
+      if (ilerleme >= 1) { adimAta(adim + 1, false); }
+    } else if (ilerleme < 1) {
+      ilerleme = Math.min(1, ilerleme + dt / GECIS);
+    }
+
+    ciz(t);
+    hudTazele();
+    if (aracCubuk[adim]) aracCubuk[adim].style.width = Math.round(ilerleme * 100) + '%';
+  }
+
+  function baslat() {
+    if (kosuyor || AZALT || !ekranda || document.hidden) return;
+    kosuyor = true; sonT = performance.now();
+    raf = requestAnimationFrame(dongu);
+  }
+  function durdur() {
+    kosuyor = false;
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+  }
+
+  /* ------------------------------------------------------------- KURUN */
+  aracDugme = Array.prototype.slice.call(rayListe.querySelectorAll('.arac'));
+  aracCubuk = aracDugme.map(function (b) { return b.querySelector('.arac-ilerleme'); });
+
+  aracDugme.forEach(function (b, i) {
+    b.addEventListener('click', function () { adimAta(i, true); b.focus(); });
+  });
+
+  rayListe.addEventListener('keydown', function (e) {
+    var k = e.key, y = null;
+    if (k === 'ArrowRight' || k === 'ArrowDown') y = adim + 1;
+    else if (k === 'ArrowLeft' || k === 'ArrowUp') y = adim - 1;
+    else if (k === 'Home') y = 0;
+    else if (k === 'End') y = 7;
+    if (y === null) return;
+    e.preventDefault();
+    adimAta(y, true);
+    aracDugme[adim].focus();
+  });
+
+  Array.prototype.forEach.call(isSecici.querySelectorAll('.is-dugme'), function (b) {
+    b.addEventListener('click', function () { isAta(b.getAttribute('data-is'), true); });
+  });
+
+  otoDon.addEventListener('click', otoGec);
+
+  /* alt bölümdeki "kokpitte aç" bağlantıları */
+  Array.prototype.forEach.call(d.querySelectorAll('.is-kart .ac'), function (a) {
+    a.addEventListener('click', function () {
+      isAta(a.getAttribute('data-is'), true);
+      /* varsayılan #kokpit atlaması sayfayı yukarı taşır */
+    });
+  });
+
+  /* genel klavye: 1-4 iş, ok tuşları araç (kanvas dışında) */
+  d.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    var h = e.target;
+    var etiketAd = h && h.tagName ? h.tagName.toLowerCase() : '';
+    if (etiketAd === 'input' || etiketAd === 'textarea' || etiketAd === 'select') return;
+
+    if (e.key >= '1' && e.key <= '4') {
+      isAta(SIRA[parseInt(e.key, 10) - 1], true);
+      e.preventDefault();
+      return;
+    }
+    if (h === c) return;                       /* kanvasta oklar döndürür */
+    if (rayListe.contains(h)) return;          /* rayın kendi işleyicisi var */
+    if (e.key === 'ArrowRight') { adimAta(adim + 1, true); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft') { adimAta(adim - 1, true); e.preventDefault(); }
+  });
+
+  /* kanvas: ok tuşlarıyla ve sürükleyerek döndürme */
+  c.addEventListener('keydown', function (e) {
+    var adim2 = e.shiftKey ? 0.35 : 0.12;
+    if (e.key === 'ArrowRight') { aciKay += adim2; }
+    else if (e.key === 'ArrowLeft') { aciKay -= adim2; }
+    else if (e.key === 'Home') { aciKay = 0; }
+    else return;
+    e.preventDefault();
+    if (!kosuyor) ciz(performance.now());
+  });
+
+  if (INCE) {
+    var suruklu = false, basX = 0, sonAci = 0;
+    c.style.cursor = 'grab';
+    c.addEventListener('pointerdown', function (e) {
+      suruklu = true; basX = e.clientX; sonAci = aciKay;
+      c.style.cursor = 'grabbing';
+      if (c.setPointerCapture) { try { c.setPointerCapture(e.pointerId); } catch (h) {} }
+    });
+    c.addEventListener('pointermove', function (e) {
+      if (!suruklu) return;
+      aciKay = sonAci + (e.clientX - basX) / 180;
+      if (!kosuyor) ciz(performance.now());
+    });
+    var birak = function () { suruklu = false; c.style.cursor = 'grab'; };
+    c.addEventListener('pointerup', birak);
+    c.addEventListener('pointercancel', birak);
+    c.addEventListener('pointerleave', birak);
+  } else {
+    hudSurukle.textContent = '↔ parmakla döndürün';
+  }
+
+  /* ölçü değişimi */
+  if (window.ResizeObserver) {
+    new ResizeObserver(function () { boyutla(); }).observe(ekranKutu);
+  } else {
+    window.addEventListener('resize', boyutla);
+  }
+
+  /* kokpit ekranda değilken rAF tamamen durur */
+  if (window.IntersectionObserver) {
+    new IntersectionObserver(function (g) {
+      ekranda = g[g.length - 1].isIntersecting;
+      if (ekranda) baslat(); else durdur();
+    }, { threshold: 0, rootMargin: '140px' }).observe(ekranKutu);
+  }
+  /* sekme arkaya atılınca da durur */
+  d.addEventListener('visibilitychange', function () {
+    if (document.hidden) durdur(); else baslat();
+  });
+
+  /* hareket azaltma tercihi sonradan değişirse */
+  if (mq && mq.addEventListener) {
+    mq.addEventListener('change', function (e) {
+      AZALT = e.matches;
+      if (AZALT) { durdur(); otomatik = true; ilerleme = 1; modTazele(); ciz(performance.now()); hudTazele(); }
+      else { otomatik = false; modTazele(); baslat(); }
+    });
+  }
+
+  /* ------------------------------------------------------------ AÇILIŞ */
+  boyutla();
+
+  if (AZALT) {
+    /* durağan mod: zincir koşmaz, ama TAMAMLANMIŞ bir koşumun dolu karesi çizilir —
+       bulut kırpılmış, çapa kilitli, ölçüler çizili, karar verilmiş, PLC yazılmış */
+    adim = 7;
+    ilerleme = 1;
+    sayac = 1;
+    hudSurukle.textContent = '↔ döndürülebilir · hareket azaltma açık';
+    ipucu.innerHTML = '<span class="ok-isaret" aria-hidden="true">◀</span> ' +
+      '<b>Bu bir menü değil.</b> Soldaki her araç zincirin bir adımı: dokunduğunuzda sahne ' +
+      'o adıma döner ve o adımın anlattığı bölüm burada açılır. Ekranda tamamlanmış bir koşum duruyor.';
+    tazeleHepsi();
+    ipucuAc();
+  } else {
+    tazeleHepsi();
+    baslat();
+    setTimeout(ipucuAc, 4600);      /* 5 sn içinde kendiliğinden ipucu */
+  }
+
+  /* ------------------------------------------- açık bölüm: belirme */
+  var belirenler = d.querySelectorAll('.bel');
+  if (AZALT || !window.IntersectionObserver) {
+    Array.prototype.forEach.call(belirenler, function (e) { e.classList.add('gorunur'); });
+  } else {
+    var atesledi = false;
+    var bo = new IntersectionObserver(function (g) {
+      atesledi = true;
+      g.forEach(function (x) {
+        if (x.isIntersecting) { x.target.classList.add('gorunur'); bo.unobserve(x.target); }
+      });
+    }, { threshold: .12, rootMargin: '0px 0px -8% 0px' });
+    Array.prototype.forEach.call(belirenler, function (e) { bo.observe(e); });
+    /* gözlemci hiç ateşlemezse sayfa gizli kalmasın — ateşlediyse karışma */
+    setTimeout(function () {
+      if (atesledi) return;
+      Array.prototype.forEach.call(belirenler, function (e) { e.classList.add('gorunur'); });
+    }, 4000);
+  }
+})();
+</script>
+</body>
+</html>
