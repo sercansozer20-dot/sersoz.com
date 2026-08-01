@@ -146,7 +146,7 @@
     -webkit-appearance: none; appearance: none; width: 100%; margin-top: 13px;
     background: transparent; cursor: pointer;
   }
-  input[type="range"]:focus { outline: none; }
+  input[type="range"]:focus:not(:focus-visible) { outline: none; }
   input[type="range"]::-webkit-slider-runnable-track { height: 3px; background: var(--line); }
   input[type="range"]::-moz-range-track { height: 3px; background: var(--line); }
   input[type="range"]::-webkit-slider-thumb {
@@ -507,11 +507,11 @@
                 <div class="girdi-ust">
                   <label for="kacakTL">Müşteriye kaçan hatanın maliyeti</label>
                   <span class="girdi-alan">
-                    <input type="number" id="kacakTL" min="0" max="5000000" step="100" value="1500" inputmode="numeric">
+                    <input type="number" id="kacakTL" min="0" max="5000000" step="100" value="500" inputmode="numeric">
                     <span class="birim">₺/adet</span>
                   </span>
                 </div>
-                <input type="range" data-hedef="kacakTL" min="0" max="100000" step="100" value="1500" aria-label="Müşteriye kaçan hatanın maliyeti kaydırıcı">
+                <input type="range" data-hedef="kacakTL" min="0" max="100000" step="100" value="500" aria-label="Müşteriye kaçan hatanın maliyeti kaydırıcı">
                 <p class="ipucu">İade, nakliye, sıralama (sorting), 8D raporu, ceza ve müşteri nezdinde itibar kaybı.
                   Genelde iç maliyetin katları olur.</p>
               </div>
@@ -550,13 +550,13 @@
 
               <div class="girdi">
                 <div class="girdi-ust">
-                  <label for="yatirim">Sistem yatırımı</label>
+                  <label for="yatirim">Sistem yatırımı (toplam proje)</label>
                   <span class="girdi-alan">
-                    <input type="number" id="yatirim" min="0" max="20000000" step="1000" value="64000" inputmode="numeric">
+                    <input type="number" id="yatirim" min="0" max="20000000" step="1000" value="250000" inputmode="numeric">
                     <span class="birim">₺</span>
                   </span>
                 </div>
-                <input type="range" data-hedef="yatirim" min="0" max="2000000" step="1000" value="64000" aria-label="Sistem yatırımı kaydırıcı">
+                <input type="range" data-hedef="yatirim" min="0" max="2000000" step="1000" value="250000" aria-label="Sistem yatırımı kaydırıcı">
                 <p class="ipucu">Varsayılan 64.000 ₺ <b>yalnızca yazılım lisansıdır</b>. Kamera, optik, aydınlatma,
                   endüstriyel PC, montaj aparatı ve devreye alma bu tutarın dışındadır — gerçekçi bir sonuç için
                   toplam proje bedelinizi yazın.</p>
@@ -894,15 +894,41 @@
 
   /* ------------------------------------------------ scroll reveal */
   var ogeler = document.querySelectorAll('.reveal');
+
+  function ac(e) { e.classList.add('visible'); }
+  function hepsiniAc() { Array.prototype.forEach.call(ogeler, ac); }
+
   if (azalt || !('IntersectionObserver' in window)) {
-    Array.prototype.forEach.call(ogeler, function (e) { e.classList.add('visible'); });
+    hepsiniAc();
   } else {
+    var atesledi = false;
     var ro = new IntersectionObserver(function (g) {
+      atesledi = true;
       g.forEach(function (x) {
-        if (x.isIntersecting) { x.target.classList.add('visible'); ro.unobserve(x.target); }
+        if (x.isIntersecting) { ac(x.target); ro.unobserve(x.target); }
       });
     }, { threshold: .15, rootMargin: '0px 0px -10% 0px' });
     Array.prototype.forEach.call(ogeler, function (e) { ro.observe(e); });
+
+    /* Güvenlik ağı: gözlemci hiç ateşlemezse (sekme arka planda açıldı, sayfa hiç
+       kare üretmedi, gözlemci engellendi) sayfa kalıcı olarak görünmez kalmasın.
+       Aynı davranışı elle yürüten yedek — kaydırdıkça açar. */
+    function elleAc() {
+      var vy = window.innerHeight || document.documentElement.clientHeight;
+      Array.prototype.forEach.call(ogeler, function (e) {
+        if (e.classList.contains('visible')) return;
+        var b = e.getBoundingClientRect();
+        if (b.top < vy * .9 && b.bottom > 0) ac(e);
+      });
+    }
+    addEventListener('load', function () {
+      setTimeout(function () {
+        if (atesledi) return;
+        elleAc();
+        addEventListener('scroll', elleAc, { passive: true });
+        addEventListener('resize', elleAc);
+      }, 1500);
+    });
   }
 
   /* ------------------------------------------------ biçimlendirme */
@@ -1069,7 +1095,7 @@
       not = '<b>Bu kadar kısa geri ödeme dikkatle okunmalı.</b> Varsayılan 64.000 ₺ yalnız yazılım ' +
             'lisansıdır; kamera, aydınlatma, endüstriyel PC, montaj ve devreye alma dahil değildir. ' +
             'Gerçekçi bir tablo için "Sistem yatırımı" alanına toplam proje bedelini yazın. ' +
-            'Sektörde yayımlanan görsel denetim kurulumlarında tipik geri ödeme <b>6-14 ay</b> bandındadır.';
+            'Gerçekçi bir tablo için <b>Sistem yatırımı</b> alanına toplam proje bedelini yazın; geri ödeme genelde belirgin şekilde uzar.';
     } else if (geriAy > 36) {
       not = '<b>Geri ödeme 3 yılı aşıyor.</b> Bu rakamlarla yatırım gerekçesi zayıf görünüyor. ' +
             'Ya kapsamı daraltmak (tek istasyon, tek kusur tipi) ya da önce daha yüksek hacimli ' +
@@ -1090,6 +1116,9 @@
     /* ---- özet kutuları ---- */
     oAylik.textContent = tl(aylikTasarruf);
     oYillik.textContent = tl(yillikTasarruf);
+    /* zarar yesil gosterilmesin — durustluk */
+    oAylik.className = 'v ' + (aylikTasarruf >= 0 ? 'yesil' : 'eksi');
+    oYillik.className = 'v ' + (yillikTasarruf >= 0 ? 'yesil' : 'eksi');
 
     oIsgucu.textContent = tl(isgucuTasarruf);
     oIsgucuAlt.textContent = kisi > 0
@@ -1213,6 +1242,20 @@
   kaydiriciSenkron();
   hesapla();
 })();
+</script>
+<script>
+  /* IntersectionObserver ateslemezse sayfa gizli kalmasin — guvenlik yedegi */
+  (function () {
+    var atesledi = false;
+    document.addEventListener('sersozReveal', function () { atesledi = true; });
+    function elleAc() {
+      if (atesledi) return;
+      var hepsi = document.querySelectorAll('.reveal');
+      for (var i = 0; i < hepsi.length; i++) hepsi[i].classList.add('visible');
+    }
+    addEventListener('load', function () { setTimeout(elleAc, 1500); });
+    setTimeout(elleAc, 4000);
+  })();
 </script>
 <script src="/iz.js" defer></script>
 </body>

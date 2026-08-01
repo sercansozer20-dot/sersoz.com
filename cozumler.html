@@ -112,7 +112,7 @@
   .fig-cap::before { content: ''; width: 8px; height: 8px; background: var(--accent); flex: none; }
 
   /* ---------- Ortak bölüm düzeni ---------- */
-  .section { position: relative; padding: clamp(64px, 10vh, 116px) 0; border-top: 3px double var(--line); overflow: hidden; }
+  .section { position: relative; padding: clamp(64px, 10vh, 116px) 0; border-top: 3px double var(--line); overflow: clip; }
   .section-index {
     position: absolute; top: clamp(20px, 4vh, 46px); right: -8px;
     font-family: var(--serif); font-size: clamp(100px, 16vw, 190px); font-weight: 700;
@@ -497,7 +497,7 @@
           <div class="csatir">
             <div class="k">Kaynak dikişi</div>
             <div class="v">3D profil taramasıyla dikişin yüksekliği, genişliği ve sürekliliği ölçülür; limit dışı bölge NOK verir.
-              <span class="arac">Kaynak ağzı ölçümü</span><span class="arac">Profil kesiti</span><span class="arac">Tolerans kararı</span></div>
+              <span class="arac">Dikiş denetimi (Surface Track)</span><span class="arac">Profil kesiti</span><span class="arac">Tolerans kararı</span></div>
           </div>
           <div class="csatir">
             <div class="k">Boyutsal sapma</div>
@@ -517,7 +517,7 @@
           <div class="csatir">
             <div class="k">PLC / hat bağlantısı</div>
             <div class="v">Karar üç durumludur (OK / NOK / belirsiz) ve el sıkışma bitleriyle PLC'ye yazılır.
-              <span class="arac">Siemens S7</span><span class="arac">MC / SLMP</span><span class="arac">Modbus TCP</span><span class="arac">PROFINET</span><span class="arac">OPC UA</span></div>
+              <span class="arac">Siemens S7</span><span class="arac">MC / SLMP</span><span class="arac">Modbus TCP</span><span class="arac">PROFINET DCP (keşif)</span></div>
           </div>
         </div>
 
@@ -944,7 +944,7 @@
           </div>
           <div class="csatir">
             <div class="k">Zorlu ortam</div>
-            <div class="v">3D lazer profil sensörü kendi ışığını kullandığı için ortam ışığından etkilenmez. Buhar/toz yoğunluğu ise <b>fizibilitede ölçülmesi gereken</b> bir sınırdır, baştan garanti edilmez.
+            <div class="v">3D lazer profil sensörü kendi ışığını kullandığı için ortam ışığından büyük ölçüde bağımsızdır; doğrudan güneş ışığı ve güçlü IR kaynakları ise yerleşimde hesaba katılır. Buhar/toz yoğunluğu ise <b>fizibilitede ölçülmesi gereken</b> bir sınırdır, baştan garanti edilmez.
               <span class="arac">Kendi aydınlatması</span><span class="arac">Fizibilite ölçümü</span></div>
           </div>
           <div class="csatir">
@@ -955,7 +955,7 @@
           <div class="csatir">
             <div class="k">PLC bağlantısı</div>
             <div class="v">Karar ve yaşam sinyali mevcut PLC'ye yazılır; ayrı bir kontrol katmanı eklenmez.
-              <span class="arac">Siemens S7</span><span class="arac">Modbus TCP</span><span class="arac">OPC UA</span></div>
+              <span class="arac">Siemens S7</span><span class="arac">Modbus TCP</span></div>
           </div>
         </div>
 
@@ -1231,7 +1231,7 @@
           <label class="soru">
             <input type="checkbox" data-soru="4">
             <span class="metin">Hatta PLC var ve Ethernet üzerinden veri alışverişine açık.
-              <small>Siemens S7 · Mitsubishi MC/SLMP · Modbus TCP · PROFINET · OPC UA hazır gelir. PLC yoksa dijital çıkış da kurgulanabilir.</small></span>
+              <small>Siemens S7 · Mitsubishi MC/SLMP · Modbus TCP hazır gelir; PROFINET DCP ile cihaz keşfi yapılır. OPC UA ve PROFINET IO yol haritasındadır, proje bazında konuşulur. PLC yoksa dijital çıkış da kurgulanabilir.</small></span>
           </label>
           <label class="soru">
             <input type="checkbox" data-soru="5">
@@ -1470,6 +1470,19 @@
   kutular.forEach(function (k) { k.addEventListener('change', ctaGuncelle); });
   ctaGuncelle();
 })();
+
+  /* IntersectionObserver ateslemezse sayfa gizli kalmasin — guvenlik yedegi */
+  (function () {
+    var atesledi = false;
+    document.addEventListener('sersozReveal', function () { atesledi = true; });
+    function elleAc() {
+      if (atesledi) return;
+      var hepsi = document.querySelectorAll('.reveal');
+      for (var i = 0; i < hepsi.length; i++) hepsi[i].classList.add('visible');
+    }
+    addEventListener('load', function () { setTimeout(elleAc, 1500); });
+    setTimeout(elleAc, 4000);
+  })();
 </script>
 <script src="/iz.js" defer></script>
 </body>

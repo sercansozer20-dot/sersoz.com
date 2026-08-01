@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sercan Sözer — Makine Görüşü, 3D Ölçüm ve Endüstriyel Otomasyon</title>
-<meta name="description" content="3D tarama, derin öğrenme ile görsel denetim ve PLC otomasyonu tek elden. Entegrasyon faturasını yazılıma gömen endüstriyel görüş sistemleri — İzmir merkezli, sahada kanıtlanmış.">
+<meta name="description" content="3D tarama, derin öğrenme ile görsel denetim ve PLC otomasyonu tek elden. Entegrasyon faturasını yazılıma gömen endüstriyel görüş sistemleri — İzmir merkezli. Robotik hücre, PLC ve SCADA tarafında saha deneyimi; görüş sistemi kararı fizibilitede ölçülen rakamlarla verilir.">
 <meta name="author" content="Sercan Sözer">
 <meta property="og:title" content="Sercan Sözer — Makine Görüşü &amp; Endüstriyel Otomasyon">
 <meta property="og:description" content="Fabrikanız için gören, ölçen, karar veren sistemler. 3D ölçüm · görsel denetim · robotik hücre · PLC otomasyonu — tek muhatap.">
@@ -698,7 +698,7 @@
       linear-gradient(var(--accent), var(--accent)) center/1.5px 13px no-repeat;
     transition: transform .28s cubic-bezier(.2, .7, .3, 1);
   }
-  .sss details[open] summary::after { transform: rotate(90deg); background-size: 13px 1.5px, 0 0; }
+  .sss details[open] summary::after { transform: rotate(90deg); background-size: 0 0, 1.5px 13px; }
   .sss details[open] summary { color: var(--accent); }
   .sss .cevap { padding: 0 46px 24px 0; font-size: 14.5px; line-height: 1.8; color: var(--muted); max-width: 78ch; }
   .sss .cevap b { color: var(--ink); font-weight: 600; }
@@ -717,7 +717,7 @@
   .principle:nth-child(odd) { border-left: none; padding-left: 0; }
   .principle:nth-child(n+3) { border-top: 1px solid var(--line-soft); }
 
-  .principle h4 {
+  .principle h3, .ilke-baslik {
     font-family: var(--mono);
     font-size: 12px;
     letter-spacing: .22em;
@@ -729,7 +729,7 @@
     align-items: center;
     gap: 10px;
   }
-  .principle h4::before { content: ''; width: 8px; height: 8px; background: var(--accent); flex: none; }
+  .principle h3, .ilke-baslik::before { content: ''; width: 8px; height: 8px; background: var(--accent); flex: none; }
 
   .principle p {
     color: var(--muted);
@@ -1412,8 +1412,9 @@
             <p>Mitsubishi MC/SLMP, Siemens S7, Modbus TCP ve PROFINET DCP keşfi uygulamayla birlikte
               gelir — ayrı bir entegrasyon kalemi değildir. Aktarım yaşam sinyali, geçerlilik biti ve
               sayaç kelimesiyle yapılır; kopan bağlantı kendini onarır.</p>
-            <p>Robot tarafında KUKA, FANUC, ABB, Universal Robots ve Yaskawa poz sözleşmeleriyle
-              çalıştım. Listede olmayan bir marka veya protokol varsa bunu <b>fizibilite aşamasında
+            <p>Robot tarafında KUKA, Fanuc, Universal Robots ve ABB ile projelerde çalıştım;
+              Yaskawa dahil diğer markaların poz sözleşmelerini <b>inceledim</b>, uygulanabilir.
+              Listede olmayan bir marka veya protokol varsa bunu <b>fizibilite aşamasında
               söylerim</b>, teklifin içine gizlemem.</p>
           </div>
         </details>
@@ -1454,22 +1455,22 @@
 
       <div class="principles">
         <div class="principle reveal">
-          <h4>Ölçülebilir kabul kriterleri</h4>
+          <h3 class="ilke-baslik">Ölçülebilir kabul kriterleri</h3>
           <p>Her proje, baştan yazılmış ve sayıyla ifade edilen kabul kriterleriyle teslim edilir.
             "Çalışıyor gibi" değil; ölçüldü, tutanağa geçti.</p>
         </div>
         <div class="principle reveal" style="--d:.08s">
-          <h4>Deterministik, test edilmiş yazılım</h4>
+          <h3 class="ilke-baslik">Deterministik, test edilmiş yazılım</h3>
           <p>Aynı girdi her seferinde aynı sonucu üretir. Kritik yollar otomatik testlerden ve simülatör
             senaryolarından geçmeden sahaya çıkmaz.</p>
         </div>
         <div class="principle reveal" style="--d:.16s">
-          <h4>Sensörden PLC'ye tek muhatap</h4>
+          <h3 class="ilke-baslik">Sensörden PLC'ye tek muhatap</h3>
           <p>Kamera, algoritma, arayüz ve PLC haberleşmesi tek elden tasarlanır. Tedarikçiler arasında
             sorumluluk boşluğu, sizde koordinasyon yükü kalmaz.</p>
         </div>
         <div class="principle reveal" style="--d:.24s">
-          <h4>Veriniz sizde kalır</h4>
+          <h3 class="ilke-baslik">Veriniz sizde kalır</h3>
           <p>Tarama, görüntü ve kayıtlar tesisin içinde kalır; bulut bağlantısı gerekmez.
             Model, eşik ve PLC yazımı asla insan onayı olmadan değişmez.</p>
         </div>
@@ -1627,6 +1628,19 @@
     setInterval(function () { n = (n + 1) % sira.length;
       var y = s.senaryoDegistir(sira[n]); if (ad && y) ad.textContent = y; }, 15000);
   });
+
+  /* IntersectionObserver ateslemezse sayfa gizli kalmasin — guvenlik yedegi */
+  (function () {
+    var atesledi = false;
+    document.addEventListener('sersozReveal', function () { atesledi = true; });
+    function elleAc() {
+      if (atesledi) return;
+      var hepsi = document.querySelectorAll('.reveal');
+      for (var i = 0; i < hepsi.length; i++) hepsi[i].classList.add('visible');
+    }
+    addEventListener('load', function () { setTimeout(elleAc, 1500); });
+    setTimeout(elleAc, 4000);
+  })();
 </script>
 <script src="/iz.js" defer></script>
 </body>
