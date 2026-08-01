@@ -77,6 +77,12 @@
   }
   .tani-not:empty { display: none; }
 
+  /* kullanıcı listesi */
+  .k-foto { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); flex: none; }
+  .k-mail { font-family: var(--mono); font-size: 11.5px; color: var(--muted); flex: 1;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (max-width: 720px) { .k-mail { flex: 1 1 100%; } }
+
   /* veri kalitesi uyarısı */
   .veri-uyari {
     margin: 16px 0 4px; padding: 14px 18px;
@@ -272,6 +278,12 @@
     </section>
 
     <section class="blok">
+      <h2>Kullanıcılar</h2>
+      <p class="alt" id="kullaniciAlt">Google ile giriş yapan ve kişiselleştirme onayı veren kişiler</p>
+      <div id="kullaniciListe"></div>
+    </section>
+
+    <section class="blok">
       <h2>Siparişler</h2>
       <p class="alt" id="siparisAlt">Site üzerinden gelen tüm siparişler</p>
       <div id="siparisListe"></div>
@@ -308,7 +320,7 @@ const YONETICI = 'sercansozer20@gmail.com';
   'use strict';
 
   var S = null, user = null;
-  var ziyaretler = [], siparisler = [], urunler = [];
+  var ziyaretler = [], siparisler = [], urunler = [], kullanicilar = [];
   var gun = 7;
 
   var TRY = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 });
@@ -529,6 +541,33 @@ const YONETICI = 'sercansozer20@gmail.com';
       tani('tUrun', 'HATA — ' + e.code, false);
       taniNot(e.code);
     });
+
+    f.onSnapshot(f.collection(S.db, 'kullanicilar'), function (snap) {
+      kullanicilar = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+      kullanicilar.sort(function (a, b) { return (ts(b.sonGiris) || 0) - (ts(a.sonGiris) || 0); });
+      kullaniciCiz();
+    }, function (e) {
+      $('kullaniciListe').innerHTML =
+        '<p class="bos">Kullanıcılar okunamadı — ' + esc(e.code) + '</p>';
+    });
+  }
+
+  function kullaniciCiz() {
+    $('kullaniciAlt').textContent = kullanicilar.length
+      ? kullanicilar.length + ' kayıtlı kullanıcı · yalnız kişiselleştirme onayı verenler listelenir'
+      : 'Google ile giriş yapan ve kişiselleştirme onayı veren kişiler';
+
+    $('kullaniciListe').innerHTML = kullanicilar.length
+      ? '<div class="liste">' + kullanicilar.map(function (k) {
+          var t = ts(k.sonGiris);
+          return '<div class="satir">' +
+            (k.foto ? '<img class="k-foto" src="' + esc(k.foto) + '" alt="">' : '') +
+            '<span class="ad">' + esc(k.ad || 'İsimsiz') + '</span>' +
+            '<span class="k-mail">' + esc(k.eposta || '') + '</span>' +
+            '<span class="sayi">' + (t ? SAAT.format(t) : '—') + '</span>' +
+          '</div>';
+        }).join('') + '</div>'
+      : '<p class="bos">Henüz kayıtlı kullanıcı yok.</p>';
   }
 
   /* --------------------------------------------------------------- tanı */
@@ -665,5 +704,6 @@ const YONETICI = 'sercansozer20@gmail.com';
   });
 })();
 </script>
+<script src="/onay.js" defer></script>
 </body>
 </html>

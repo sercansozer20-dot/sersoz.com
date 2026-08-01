@@ -63,16 +63,34 @@
     } catch (e) {}
   }
 
-  yaz('giris');
-
   var cikisYazildi = false;
   function cikis() {
     if (cikisYazildi) return;
     cikisYazildi = true;
     yaz('cikis');
   }
-  addEventListener('pagehide', cikis);
-  addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'hidden') cikis();
-  });
+
+  /* Kayıt yalnızca İstatistik onayı verilmişse tutulur (KVKK).
+     Onay yoksa hiçbir istek gönderilmez. */
+  function basla() {
+    yaz('giris');
+    addEventListener('pagehide', cikis);
+    addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') cikis();
+    });
+  }
+
+  function onayKontrol() {
+    if (!window.Onay) {
+      /* onay.js yoksa güvenli taraf: kayıt tutma */
+      return;
+    }
+    window.Onay.bekle(function (secim) {
+      if (secim && secim.istatistik === true) basla();
+    });
+  }
+
+  /* onay.js defer ile yükleniyor olabilir — hazır olunca bak */
+  if (window.Onay) onayKontrol();
+  else addEventListener('DOMContentLoaded', onayKontrol);
 })();
