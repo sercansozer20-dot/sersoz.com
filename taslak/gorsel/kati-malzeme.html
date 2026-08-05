@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Katı malzeme · 3B anlatım denemesi</title>
+<meta name="description" content="Yükseklik alanının ışık alan katı yüzey olarak çizildiği 3B anlatım denemesi — kaynak gövdesi senaryosu, sekiz adımlı araç zinciri.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%230d1219'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%23c2410c' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23f2eee6' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<style>
+/* ============================================================
+   KATI MALZEME — gölgeli yüzey render
+   Tek dosya · dış bağımlılık yok · sistem fontları.
+   ============================================================ */
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --zemin: #0d1219;
+  --zemin-ac: #131a24;
+  --kiremit: #c2410c;
+  --kiremit-ac: #f97316;
+  --sis: #93a0b3;
+  --kagit: #f2eee6;
+  --ok: #6ef0aa;
+  --nok: #f87171;
+  --plc: #78cdff;
+  --cizgi: rgba(175, 198, 226, .16);
+  --cizgi-ac: rgba(175, 198, 226, .30);
+  --mono: 'Cascadia Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+  --serif: Georgia, 'Times New Roman', Times, serif;
+  --sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, Arial, sans-serif;
+}
+
+html, body { max-width: 100%; overflow-x: hidden; }
+
+body {
+  background: var(--zemin);
+  color: var(--kagit);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+::selection { background: var(--kiremit); color: #fff; }
+
+:focus-visible {
+  outline: 2px solid var(--kiremit-ac);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.sarmal { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 18px; }
+
+/* ---------------- üst şerit ---------------- */
+.ust {
+  border-bottom: 1px solid var(--cizgi);
+  background: linear-gradient(180deg, #10161f 0%, #0d1219 100%);
+}
+.ust .sarmal {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+  padding-top: 13px; padding-bottom: 13px;
+}
+.geri {
+  font-family: var(--mono); font-size: 12.5px; letter-spacing: .04em;
+  color: var(--sis); text-decoration: none;
+  border: 1px solid var(--cizgi); border-radius: 3px;
+  padding: 9px 12px; min-height: 40px; display: inline-flex; align-items: center;
+  transition: color .15s, border-color .15s;
+}
+.geri:hover, .geri:focus-visible { color: var(--kagit); border-color: var(--kiremit); }
+
+.baslik { display: flex; flex-direction: column; gap: 2px; margin-right: auto; }
+.baslik .no {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .22em;
+  color: var(--kiremit-ac); text-transform: uppercase;
+}
+.baslik h1 {
+  font-family: var(--serif); font-size: clamp(20px, 3.6vw, 27px);
+  font-weight: 700; line-height: 1.15; letter-spacing: -.01em;
+}
+
+.rozet {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .05em;
+  color: #ffd8a8; background: rgba(194, 65, 12, .17);
+  border: 1px solid rgba(194, 65, 12, .55); border-radius: 3px;
+  padding: 7px 10px; white-space: normal;
+}
+
+/* ---------------- sahne ---------------- */
+.sahne {
+  position: relative;
+  margin: 18px 0 0;
+  border: 1px solid var(--cizgi);
+  border-radius: 4px;
+  background: #0a0e14;
+  overflow: hidden;
+}
+#tuval {
+  display: block; width: 100%; height: auto;
+  aspect-ratio: 16 / 10;
+  max-height: 66vh;
+  cursor: grab;
+  touch-action: pan-y;
+}
+#tuval:active { cursor: grabbing; }
+#tuval:focus-visible { outline: 2px solid var(--kiremit-ac); outline-offset: -2px; }
+
+.ipuc {
+  position: absolute; right: 9px; bottom: 8px;
+  font-family: var(--mono); font-size: 10.5px; color: rgba(147, 160, 179, .8);
+  background: rgba(8, 12, 17, .72); border: 1px solid var(--cizgi);
+  border-radius: 3px; padding: 5px 8px; pointer-events: none;
+}
+
+/* ---------------- adım denetimi ---------------- */
+.denetim { margin-top: 14px; }
+.denetim .etik {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .2em;
+  color: var(--sis); text-transform: uppercase; margin-bottom: 8px;
+}
+.adimlar { display: flex; flex-wrap: wrap; gap: 7px; }
+.adim {
+  flex: 1 1 132px; min-width: 0; min-height: 46px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  background: #121924; color: var(--sis);
+  border: 1px solid var(--cizgi); border-radius: 3px;
+  font-family: var(--mono); font-size: 12px; line-height: 1.25;
+  text-align: left; cursor: pointer;
+  transition: border-color .14s, color .14s, background .14s;
+}
+.adim .s {
+  flex: none; width: 21px; height: 21px; border-radius: 2px;
+  display: grid; place-items: center;
+  font-size: 10px; background: rgba(175, 198, 226, .09); color: var(--sis);
+}
+.adim .a { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.adim:hover { border-color: var(--cizgi-ac); color: var(--kagit); }
+.adim[aria-pressed="true"] {
+  background: rgba(194, 65, 12, .18); border-color: var(--kiremit); color: #ffe6d5;
+}
+.adim[aria-pressed="true"] .s { background: var(--kiremit); color: #fff; }
+.adim.bitti .s { background: rgba(110, 240, 170, .16); color: var(--ok); }
+
+.gezin { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.gezin button {
+  min-height: 44px; padding: 10px 15px;
+  background: transparent; color: var(--kagit);
+  border: 1px solid var(--cizgi-ac); border-radius: 3px;
+  font-family: var(--mono); font-size: 12.5px; cursor: pointer;
+  transition: border-color .14s, background .14s;
+}
+.gezin button:hover { border-color: var(--kiremit-ac); background: rgba(194, 65, 12, .14); }
+.gezin .durum {
+  font-family: var(--mono); font-size: 12px; color: var(--sis);
+  margin-left: auto; padding: 4px 0;
+}
+.gezin .durum b { color: var(--kagit); font-weight: 600; }
+
+/* ---------------- metin ---------------- */
+.metin { margin: 30px 0 56px; max-width: 74ch; }
+.metin h2 {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em;
+  color: var(--kiremit-ac); text-transform: uppercase;
+  margin: 24px 0 9px; font-weight: 400;
+}
+.metin h2:first-child { margin-top: 0; }
+.metin p { font-size: 15.5px; color: #d5dae2; margin-bottom: 13px; }
+.metin p b { color: var(--kagit); font-weight: 600; }
+.metin code {
+  font-family: var(--mono); font-size: 13px;
+  background: rgba(175, 198, 226, .09); border-radius: 2px; padding: 1px 5px;
+  color: #cfe0f2;
+}
+.metin .kucuk { font-size: 13.5px; color: var(--sis); }
+
+@media (max-width: 560px) {
+  .adim { flex: 1 1 100%; }
+  .gezin .durum { margin-left: 0; flex: 1 1 100%; }
+  #tuval { aspect-ratio: 4 / 3; max-height: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="ust">
+  <div class="sarmal">
+    <a class="geri" href="/taslak/gorsel/">← altısını karşılaştır</a>
+    <div class="baslik">
+      <span class="no">Teknik 01 · gölgeli yüzey render</span>
+      <h1>Katı malzeme</h1>
+    </div>
+    <span class="rozet">ŞEMA · örnek veri · ekran kaydı değildir</span>
+  </div>
+</header>
+
+<main class="sarmal">
+
+  <div class="sahne">
+    <canvas id="tuval" tabindex="0" role="img"
+            aria-label="Kaynak gövdesinin katı yüzey olarak çizildiği üç boyutlu sahne. Ok tuşlarıyla döndürülür."></canvas>
+    <div class="ipuc" id="ipuc">sürükle · ok tuşları döndürür</div>
+  </div>
+
+  <div class="denetim">
+    <div class="etik">Araç zinciri — adımlar arasında gezin</div>
+    <div class="adimlar" id="adimlar" role="group" aria-label="Araç zinciri adımları"></div>
+    <div class="gezin">
+      <button type="button" id="onceki">◀ önceki</button>
+      <button type="button" id="sonraki">sonraki ▶</button>
+      <span class="durum" id="durum"></span>
+    </div>
+  </div>
+
+  <section class="metin">
+    <h2>Bu teknik neyi iyi anlatır</h2>
+    <p>
+      Katı yüzey render, <b>parçanın ne olduğunu</b> tek bakışta anlatır. Yükseklik alanı
+      dörtgen ağa çevrilip her yüze normal hesaplanır; Lambert dağınık + Blinn-Phong parlak
+      terim ve ucuz bir ortam kapanması ile boyanır. Sonuç: kaynak ağzının V kesiti, kenar
+      pahı, delik dipleri ve tabla üstündeki temas gölgesi <b>ölçü okumadan önce</b> okunur.
+      Operatör “sistem neye bakıyor” sorusunu görselden yanıtlar — nokta bulutunda bu soru
+      ancak sayılara bakılarak yanıtlanabiliyordu.
+    </p>
+    <p>
+      Adımlar da malzemenin üstünde geçer, yanında değil: <b>Tarama</b>da lazer perdesi
+      geçtiği yeri katı olarak var eder, arkası boş kalır; <b>Zemin Kaldır</b>da taban plakası
+      grileşip düşer ve kaynak ağzı bindirmesi ortada yalnız kalır; <b>Kırpma</b>da ROI dışı
+      malzeme doygunluğunu yitirir; <b>Kaynak Ağzı</b>nda ölçü okları düz bir arka plana değil,
+      gerçekten eğimli yüzeye oturur. Kusur, gölgeli yüzeyde <em>gölge olarak</em> görünür.
+    </p>
+
+    <h2>Neyi anlatmaz</h2>
+    <p>
+      Katı yüzey <b>ölçüm belirsizliğini gizler</b>. Her yer aynı derecede dolu ve kesin
+      görünür; oysa gerçek taramada nokta yoğunluğu yer yer düşer, dik duvarlarda gölgeleme
+      olur, parlak yüzeyde veri delikleri açılır. Bu render tüm bunları düzgün bir kabukla
+      örter — “ölçülemedi” hâli görsel olarak <b>“ölçüldü ve düzgün”</b>den ayırt edilemez.
+      Kalite gözcüsü açısından bu tehlikeli bir sessizliktir.
+    </p>
+    <p>
+      Ayrıca yükseklik alanıdır, gerçek katı model değildir: her <code>(u, v)</code> için tek
+      bir yükseklik saklanır, dolayısıyla alt oyuk, delik içi cidar veya ters açı
+      <b>geometrik olarak temsil edilemez</b>. Delikler koni gibi çizilir. Kalınlık, ağırlık,
+      CAD sapması gibi hacimsel sorular bu gösterimin dışındadır. Bir de maliyeti vardır:
+      kare başına birkaç bin dörtgen sıralanıp boyanır, nokta bulutundan pahalıdır.
+    </p>
+    <p class="kucuk">
+      Sahne simülasyondur; sayılar örnek veridir. Ağ çözünürlüğü, çizilen dörtgen sayısı ve
+      kare süresi kanvasın sağ üstünde canlı gösterilir. PLC yazma adımı yalnızca şemadır.
+      OPC UA ve PROFINET IO bağlantıları yol haritasındadır.
+    </p>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ==========================================================
+     0. ORTAK ZEMİN — sahne3d.js · SENARYOLAR.kaynak
+     Yükseklik alanı ve bölgeler altı teknikte de AYNI.
+     ========================================================== */
+
+  var SEN = {
+    ad: 'Kaynak robotu',
+    is: 'kaynak_govde_v4',
+    delikler: [{ u: -0.52, v: -0.30 }, { u: -0.52, v: 0.30 }],
+    roi: { u1: -0.30, u2: 0.56, v1: -0.35, v2: 0.35 },
+    capa: { u: 0.13, v: 0 },
+    yukseklik: function (u, v) {
+      if (Math.abs(u) >= 0.86 || Math.abs(v) >= 0.60) return 0;
+      var y = 0.10;
+      var kenar = Math.min(0.86 - Math.abs(u), 0.60 - Math.abs(v));
+      if (kenar < 0.05) y -= (0.05 - kenar) * 1.1;
+      if (u > -0.28 && u < 0.54 && Math.abs(v) < 0.33) {
+        y = 0.32 - 0.21 * Math.exp(-Math.pow((u - 0.13) / 0.052, 2));
+        y += 0.010 * Math.sin(u * 9) * Math.cos(v * 8);
+      } else {
+        y += 0.008 * Math.sin(u * 7) * Math.cos(v * 6);
+      }
+      for (var i = 0; i < this.delikler.length; i++) {
+        var d = this.delikler[i];
+        var r = Math.hypot(u - d.u, v - d.v);
+        if (r < 0.075) y -= 0.13 * (1 - r / 0.075);
+      }
+      return y;
+    }
+  };
+
+  /* Parçanın dış sınırı: yükseklik fonksiyonu tam sınırda 0 döner; ağın siluetini
+     keskin tutmak için sınır köşeleri bir tık içeriden örneklenir. */
+  var U0 = -0.86, U1 = 0.86, V0 = -0.60, V1 = 0.60;
+  function h(u, v) {
+    if (u < -0.8598) u = -0.8598; else if (u > 0.8598) u = 0.8598;
+    if (v < -0.5998) v = -0.5998; else if (v > 0.5998) v = 0.5998;
+    return SEN.yukseklik(u, v);
+  }
+
+  /* zeminMi: kaynağın orijinali y<0.16 der. Kaynak ağzı oluğunun TABANI da 0.11'dir;
+     ölçülen özelliği "zemin" sayıp düşürmek parçayı yırtardı — oluk bölgesi hariç. */
+  function agizBolgesi(u, v) { return u > -0.28 && u < 0.54 && Math.abs(v) < 0.33; }
+  function zeminMi(u, v, y) { return agizBolgesi(u, v) ? false : y < 0.16; }
+
+  var CIKTI = [
+    { ad: 'agiz_derinlik', deger: '3.18 mm', limit: '2.8 – 3.6', durum: 'ok', plc: true },
+    { ad: 'agiz_genislik', deger: '6.04 mm', limit: '5.5 – 6.5', durum: 'ok', plc: true },
+    { ad: 'duzlemsellik',  deger: '0.06 mm', limit: '≤ 0.15',    durum: 'ok', plc: false },
+    { ad: 'delik_cap',     deger: 'Ø 8.02',  limit: '7.9 – 8.1', durum: 'ok', plc: true },
+    { ad: 'nokta_sayisi',  deger: '78 880',  limit: '≥ 40 000',  durum: 'ok', plc: false }
+  ];
+
+  var ADIM = [
+    { ad: 'Tarama',       glif: '⬒', anim: 1, duruk: 0.74 },
+    { ad: 'Zemin Kaldır', glif: '▦', anim: 1, duruk: 1 },
+    { ad: 'Kırpma (ROI)', glif: '⌗', anim: 1, duruk: 1 },
+    { ad: 'Çapalama',     glif: '⌖', anim: 1, duruk: 1 },
+    { ad: 'Kaynak Ağzı',  glif: '∡', anim: 1, duruk: 1 },
+    { ad: 'Denetim',      glif: '◎', anim: 1, duruk: 0.58 },
+    { ad: 'Karar',        glif: '☰', anim: 0, duruk: 1 },
+    { ad: 'PLC Yaz',      glif: '⇥', anim: 1, duruk: 0.5 }
+  ];
+  var NADIM = ADIM.length;
+
+  /* Adım başına o adımın katı yüzeyde nasıl okunduğunu söyleyen tek satır */
+  var ADIM_NOT = [
+    'lazer perdesi geçtiği yeri katı olarak var ediyor',
+    'taban plakası grileşip düşüyor — ağız bindirmesi yalnız kalıyor',
+    'ROI dışı malzeme doygunluğunu yitiriyor',
+    'çapa yüzeyin üstüne oturuyor, yerel eksen takımı kilitlendi',
+    'ölçü okları düzleme değil eğimli yüzeye düşüyor',
+    'tolerans bandı katının üstünden geçiyor',
+    'karar rengi malzemeye siniyor',
+    'değerler PLC blokuna yazılıyor (şema)'
+  ];
+
+  /* ==========================================================
+     1. KAMERA — sahne3d.js ile aynı çerçeve
+     ========================================================== */
+
+  /* sahne3d.js: TILT = -0.96, FOV = 3.5. Katı yüzeyde ressam algoritması için
+     derinliğin işareti doğru olmak zorunda; TILT + alındı. Parça v ekseninde
+     simetrik olduğundan (iki delik, oluk, ROI, çapa) çerçeveleme değişmez. */
+  var TILT = 0.96, FOV = 3.5;
+  var SX = Math.sin(TILT), CT = Math.cos(TILT);
+  var ACI0 = 0.30;                 /* altı örnekte AYNI başlangıç açısı */
+  var aciKay = 0;
+  var CXp = 0, CYp = 0, OLCEK = 1;
+
+  /* ==========================================================
+     2. IŞIK — kameraya sabit, üst-sol-ön
+     ========================================================== */
+  var LX = -0.459, LY = 0.799, LZ = -0.389;          /* ışık yönü */
+  var HX = -0.2369, HY = 0.8350, HZ = -0.4967;       /* yarı vektör (Blinn) */
+
+  /* ==========================================================
+     3. RENK RAMPALARI — bir kez kurulur, karede asla gradient/filter yok
+     ========================================================== */
+  var RN = 44, SN = 10, LMAX = 1.2;
+  var RAMPA = [];
+  var R_CELIK = 0, R_GRI = 1, R_SOLUK = 2, R_LAZER = 3, R_DENETIM = 4, R_KARAR = 5;
+
+  function ton(x) {
+    var c = (1 - Math.exp(-2.3 * x)) * 255;
+    return c < 0 ? 0 : (c > 255 ? 255 : c | 0);
+  }
+  (function rampaKur() {
+    var tanim = [
+      { alb: [0.560, 0.585, 0.620], ksp: 0.95, tint: [0, 0, 0] },          /* işlenmiş çelik */
+      { alb: [0.330, 0.352, 0.388], ksp: 0.10, tint: [0, 0, 0] },          /* kaldırılmış zemin */
+      { alb: [0.285, 0.315, 0.360], ksp: 0.05, tint: [0, 0, 0] },          /* ROI dışı */
+      { alb: [0.500, 0.660, 0.740], ksp: 1.60, tint: [0.10, 0.30, 0.42] }, /* lazer aydınlığı */
+      { alb: [0.600, 0.545, 0.455], ksp: 1.05, tint: [0.17, 0.10, 0.01] }, /* denetim bandı */
+      { alb: [0.495, 0.600, 0.545], ksp: 0.95, tint: [0.02, 0.13, 0.07] }  /* karar: OK */
+    ];
+    for (var t = 0; t < tanim.length; t++) {
+      var T = tanim[t], d = new Array(RN * SN);
+      for (var li = 0; li < RN; li++) {
+        var L = (li + 0.5) / RN * LMAX;
+        for (var si = 0; si < SN; si++) {
+          var sp = (si + 0.5) / SN * T.ksp;
+          var r = T.alb[0] * (0.085 * 0.55 + L * 1.06) + sp * 1.00 + T.tint[0] * L;
+          var g = T.alb[1] * (0.085 * 0.70 + L * 1.02) + sp * 0.99 + T.tint[1] * L;
+          var b = T.alb[2] * (0.085 * 1.00 + L * 0.96) + sp * 0.95 + T.tint[2] * L;
+          d[li * SN + si] = 'rgb(' + ton(r) + ',' + ton(g) + ',' + ton(b) + ')';
+        }
+      }
+      RAMPA.push(d);
+    }
+  })();
+
+  /* ==========================================================
+     4. AĞ — uyarlanmış örnekleme, normaller ve kapanma BİR KEZ
+     ========================================================== */
+
+  var G = 0;                       /* kenar başına köşe */
+  var UA = null, VA = null;        /* eksen örnekleri */
+  var VU, VH, VV;                  /* köşe havuzu (u, yükseklik, v) */
+  var PX, PY, PS, PZ;              /* izdüşüm sonuçları */
+  var QA, QB, QC, QD;              /* dörtgen köşe indisleri */
+  var QNX, QNY, QNZ, QAO, QU, QV, QYH;
+  var QZEM, QDIS, QETK;            /* zemin mi · ROI dışı mı · etek mi */
+  var NQ = 0, NV = 0;
+  var gor, kova, sira, bas, sayac;
+  var NB = 384;
+
+  /* Yoğunluk fonksiyonu: eğimin büyük olduğu yerde daha çok örnek.
+     Oluk ağzı, bindirme duvarları, delik kenarları ve kenar pahı. */
+  function yogunU(u) {
+    return 1
+      + 3.6 * Math.exp(-Math.pow((u - 0.13) / 0.070, 2))
+      + 1.5 * Math.exp(-Math.pow((u + 0.28) / 0.035, 2))
+      + 1.5 * Math.exp(-Math.pow((u - 0.54) / 0.035, 2))
+      + 1.2 * Math.exp(-Math.pow((u + 0.52) / 0.085, 2))
+      + 0.9 * Math.exp(-Math.pow((Math.abs(u) - 0.83) / 0.035, 2));
+  }
+  function yogunV(v) {
+    return 1
+      + 1.5 * Math.exp(-Math.pow((Math.abs(v) - 0.33) / 0.035, 2))
+      + 1.2 * Math.exp(-Math.pow((Math.abs(v) - 0.30) / 0.085, 2))
+      + 0.9 * Math.exp(-Math.pow((Math.abs(v) - 0.57) / 0.035, 2));
+  }
+
+  /* [a,b] aralığını yoğunluk fonksiyonuna göre n örneğe böler (uçlar dahil) */
+  function orgu(a, b, n, f) {
+    var M = 1400, dx = (b - a) / M, kum = new Float64Array(M + 1), i;
+    kum[0] = 0;
+    for (i = 0; i < M; i++) kum[i + 1] = kum[i] + f(a + (i + 0.5) * dx) * dx;
+    var top = kum[M], dizi = new Float64Array(n), k = 0;
+    for (i = 0; i < n; i++) {
+      var hedef = top * i / (n - 1);
+      while (k < M && kum[k + 1] < hedef) k++;
+      var p = (kum[k + 1] - kum[k]) > 1e-12 ? (hedef - kum[k]) / (kum[k + 1] - kum[k]) : 0;
+      dizi[i] = a + (k + p) * dx;
+    }
+    dizi[0] = a; dizi[n - 1] = b;
+    return dizi;
+  }
+
+  /* Ucuz ortam kapanması: yerel yükseklik ortalamasının altında kalan koyulaşır. */
+  var KOS = [], KOC = [];
+  (function () {
+    for (var i = 0; i < 8; i++) { KOS.push(Math.sin(i * Math.PI / 4)); KOC.push(Math.cos(i * Math.PI / 4)); }
+  })();
+  function kapanma(u, v, hc) {
+    var i, y1 = 0, y2 = 0;
+    for (i = 0; i < 8; i++) {
+      y1 += h(u + KOC[i] * 0.085, v + KOS[i] * 0.085);
+      y2 += h(u + KOC[i] * 0.170, v + KOS[i] * 0.170);
+    }
+    var ort = 0.60 * (y1 / 8) + 0.40 * (y2 / 8);
+    var a = 1 + (hc - ort) * 5.0;
+    return a < 0.12 ? 0.12 : (a > 1.20 ? 1.20 : a);
+  }
+
+  function agKur(g) {
+    G = g;
+    UA = orgu(U0, U1, G, yogunU);
+    VA = orgu(V0, V1, G, yogunV);
+
+    NV = G * G + 4 * G;
+    VU = new Float32Array(NV); VH = new Float32Array(NV); VV = new Float32Array(NV);
+    PX = new Float32Array(NV); PY = new Float32Array(NV);
+    PS = new Float32Array(NV); PZ = new Float32Array(NV);
+
+    var i, j, idx;
+    for (j = 0; j < G; j++) for (i = 0; i < G; i++) {
+      idx = j * G + i;
+      VU[idx] = UA[i]; VV[idx] = VA[j]; VH[idx] = h(UA[i], VA[j]);
+    }
+    /* etek (yan cidar) alt köşeleri — h = 0 */
+    var BU0 = G * G, BU1 = BU0 + G, BV0 = BU1 + G, BV1 = BV0 + G;
+    for (j = 0; j < G; j++) {
+      VU[BU0 + j] = U0; VV[BU0 + j] = VA[j]; VH[BU0 + j] = 0;
+      VU[BU1 + j] = U1; VV[BU1 + j] = VA[j]; VH[BU1 + j] = 0;
+    }
+    for (i = 0; i < G; i++) {
+      VU[BV0 + i] = UA[i]; VV[BV0 + i] = V0; VH[BV0 + i] = 0;
+      VU[BV1 + i] = UA[i]; VV[BV1 + i] = V1; VH[BV1 + i] = 0;
+    }
+
+    var Q = G - 1;
+    NQ = Q * Q + 4 * Q;
+    QA = new Int32Array(NQ); QB = new Int32Array(NQ); QC = new Int32Array(NQ); QD = new Int32Array(NQ);
+    QNX = new Float32Array(NQ); QNY = new Float32Array(NQ); QNZ = new Float32Array(NQ);
+    QAO = new Float32Array(NQ); QU = new Float32Array(NQ); QV = new Float32Array(NQ);
+    QYH = new Float32Array(NQ);
+    QZEM = new Uint8Array(NQ); QDIS = new Uint8Array(NQ); QETK = new Uint8Array(NQ);
+
+    var roi = SEN.roi, q = 0;
+    for (j = 0; j < Q; j++) for (i = 0; i < Q; i++, q++) {
+      var a = j * G + i, b = j * G + i + 1, c = (j + 1) * G + i + 1, d = (j + 1) * G + i;
+      QA[q] = a; QB[q] = b; QC[q] = c; QD[q] = d;
+      var du = UA[i + 1] - UA[i], dv = VA[j + 1] - VA[j];
+      var dhdu = ((VH[b] + VH[c]) - (VH[a] + VH[d])) / (2 * du);
+      var dhdv = ((VH[d] + VH[c]) - (VH[a] + VH[b])) / (2 * dv);
+      var nx = -dhdu, ny = 1, nz = -dhdv;
+      var L = Math.sqrt(nx * nx + 1 + nz * nz);
+      QNX[q] = nx / L; QNY[q] = ny / L; QNZ[q] = nz / L;
+      var uc = (UA[i] + UA[i + 1]) * 0.5, vc = (VA[j] + VA[j + 1]) * 0.5;
+      var hc = (VH[a] + VH[b] + VH[c] + VH[d]) * 0.25;
+      QU[q] = uc; QV[q] = vc; QYH[q] = hc;
+      QAO[q] = kapanma(uc, vc, hc);
+      QZEM[q] = zeminMi(uc, vc, hc) ? 1 : 0;
+      QDIS[q] = (uc < roi.u1 || uc > roi.u2 || vc < roi.v1 || vc > roi.v2) ? 1 : 0;
+      QETK[q] = 0;
+    }
+    /* etek dörtgenleri */
+    function etek(a, b, c, d, nx, ny, nz, uc, vc) {
+      QA[q] = a; QB[q] = b; QC[q] = c; QD[q] = d;
+      QNX[q] = nx; QNY[q] = ny; QNZ[q] = nz;
+      QAO[q] = 0.46; QU[q] = uc; QV[q] = vc; QYH[q] = 0.05;
+      QZEM[q] = 1; QDIS[q] = 1; QETK[q] = 1;
+      q++;
+    }
+    for (j = 0; j < Q; j++) {
+      etek(j * G, (j + 1) * G, BU0 + j + 1, BU0 + j, -1, 0, 0, U0, (VA[j] + VA[j + 1]) * 0.5);
+      etek(j * G + G - 1, (j + 1) * G + G - 1, BU1 + j + 1, BU1 + j, 1, 0, 0, U1, (VA[j] + VA[j + 1]) * 0.5);
+    }
+    for (i = 0; i < Q; i++) {
+      etek(i, i + 1, BV0 + i + 1, BV0 + i, 0, 0, -1, (UA[i] + UA[i + 1]) * 0.5, V0);
+      etek((G - 1) * G + i, (G - 1) * G + i + 1, BV1 + i + 1, BV1 + i, 0, 0, 1, (UA[i] + UA[i + 1]) * 0.5, V1);
+    }
+
+    gor = new Int32Array(NQ); kova = new Int32Array(NQ); sira = new Int32Array(NQ);
+    bas = new Int32Array(NB); sayac = new Int32Array(NB);
+  }
+
+  /* ==========================================================
+     5. KANVAS · ölçü · izdüşüm
+     ========================================================== */
+  var tuval = document.getElementById('tuval');
+  var ctx = tuval.getContext('2d', { alpha: false });
+  var W = 0, Hp = 0, dpr = 1, dar = false;
+
+  function olcuAl() {
+    var r = tuval.getBoundingClientRect();
+    W = Math.max(240, Math.round(r.width));
+    Hp = Math.max(200, Math.round(r.height));
+    /* Ölçüldü: 375×812'de DPR 2 kare başına 1,22 MP demek; 1.5 sınırı bunu 0,69 MP yapar. */
+    var ekranW = window.innerWidth || document.documentElement.clientWidth;
+    dar = ekranW <= 760;
+    dpr = Math.min(dar ? 1.5 : 2, window.devicePixelRatio || 1);
+    tuval.width = Math.max(1, Math.round(W * dpr));
+    tuval.height = Math.max(1, Math.round(Hp * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    CXp = W * 0.50;
+    CYp = Hp * 0.545;
+    OLCEK = Math.min(W / 2.95, Hp / 2.55);
+
+    var istenen = dar ? 40 : (ekranW <= 1024 ? 52 : 62);
+    if (istenen !== G) agKur(istenen);
+  }
+
+  var _X = 0, _Y = 0, _S = 0, _Z = 0;
+  function yansit(px, py, pz, ca, sa) {
+    var xr = px * ca + pz * sa, zr = -px * sa + pz * ca;
+    var yr = py * CT - zr * SX, zd = py * SX + zr * CT;
+    var s = FOV / (FOV + zd);
+    _X = CXp + xr * s * OLCEK; _Y = CYp + yr * s * OLCEK; _S = s; _Z = zd;
+    return 1;
+  }
+  /* nesne döndüren biçim — HUD/ölçü çizimleri için */
+  function y3(u, hh, v, ca, sa) {
+    yansit(u, -hh, v, ca, sa);
+    return { X: _X, Y: _Y, s: _S, z: _Z };
+  }
+
+  /* ==========================================================
+     6. TEMAS GÖLGESİ — bir kez üretilir, karede drawImage
+     ========================================================== */
+  var golge = document.createElement('canvas');
+  (function () {
+    var N = 128; golge.width = N; golge.height = N;
+    var g = golge.getContext('2d');
+    var rg = g.createRadialGradient(N / 2, N / 2, N * 0.10, N / 2, N / 2, N * 0.50);
+    rg.addColorStop(0, 'rgba(0,0,0,.72)');
+    rg.addColorStop(0.55, 'rgba(0,0,0,.34)');
+    rg.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = rg; g.fillRect(0, 0, N, N);
+  })();
+
+  /* ==========================================================
+     7. HUD yardımcıları
+     ========================================================== */
+  function etiket(px, py, yazi, renk) {
+    ctx.font = '600 11px ' + MONO;
+    var g = ctx.measureText(yazi).width;
+    ctx.fillStyle = 'rgba(8,12,17,.86)';
+    ctx.fillRect(px - 5, py - 12, g + 10, 17);
+    ctx.strokeStyle = renk; ctx.lineWidth = 1;
+    ctx.strokeRect(px - 5, py - 12, g + 10, 17);
+    ctx.fillStyle = renk;
+    ctx.fillText(yazi, px, py);
+  }
+  function olcu(a, b, yazi, renk, kaydir) {
+    var oy = kaydir || -26;
+    ctx.strokeStyle = renk; ctx.lineWidth = 1.1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(a.X, a.Y + oy); ctx.lineTo(b.X, b.Y + oy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(a.X, a.Y + oy - 5); ctx.lineTo(a.X, a.Y + oy + 5);
+    ctx.moveTo(b.X, b.Y + oy - 5); ctx.lineTo(b.X, b.Y + oy + 5);
+    ctx.stroke();
+    ctx.font = '600 11px ' + MONO;
+    etiket((a.X + b.X) / 2 - ctx.measureText(yazi).width / 2, a.Y + oy - 4, yazi, renk);
+  }
+  var MONO = 'Consolas, "Cascadia Mono", ui-monospace, monospace';
+
+  /* ==========================================================
+     8. ÇİZİM
+     ========================================================== */
+  var adim = 0, cizilenOge = 0, sonKare = 0;
+  var DUS = 0.115;                                   /* zemin kaldırma düşüşü */
+
+  function ciz(a, p) {
+    var t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+    var ca = Math.cos(ACI0 + aciKay), sa = Math.sin(ACI0 + aciKay);
+    var i, q, k;
+    cizilenOge = 0;
+
+    /* --- arka plan --- */
+    ctx.fillStyle = '#0a0e14';
+    ctx.fillRect(0, 0, W, Hp);
+
+    /* --- tabla --- */
+    var t1 = y3(-1.45, 0, -1.15, ca, sa), t2 = y3(1.45, 0, -1.15, ca, sa);
+    var t3 = y3(1.45, 0, 1.15, ca, sa), t4 = y3(-1.45, 0, 1.15, ca, sa);
+    ctx.fillStyle = '#0f151d';
+    ctx.beginPath();
+    ctx.moveTo(t1.X, t1.Y); ctx.lineTo(t2.X, t2.Y); ctx.lineTo(t3.X, t3.Y); ctx.lineTo(t4.X, t4.Y);
+    ctx.closePath(); ctx.fill();
+    cizilenOge++;
+
+    ctx.strokeStyle = 'rgba(147,160,179,' + (a >= 1 ? 0.055 : 0.11) + ')';
+    ctx.lineWidth = 1;
+    for (i = -5; i <= 5; i++) {
+      var qq = i / 5 * 1.45, rr = i / 5 * 1.15;
+      var g1 = y3(qq, 0, -1.15, ca, sa), g2 = y3(qq, 0, 1.15, ca, sa);
+      ctx.beginPath(); ctx.moveTo(g1.X, g1.Y); ctx.lineTo(g2.X, g2.Y); ctx.stroke();
+      var g3 = y3(-1.45, 0, rr, ca, sa), g4 = y3(1.45, 0, rr, ca, sa);
+      ctx.beginPath(); ctx.moveTo(g3.X, g3.Y); ctx.lineTo(g4.X, g4.Y); ctx.stroke();
+      cizilenOge += 2;
+    }
+
+    /* --- temas gölgesi (parçanın altına) --- */
+    var s0 = y3(-1.00, 0.002, -0.76, ca, sa);
+    var s1 = y3(1.00, 0.002, -0.76, ca, sa);
+    var s3 = y3(-1.00, 0.002, 0.76, ca, sa);
+    ctx.save();
+    ctx.globalAlpha = a >= 1 ? 0.45 : 0.85;
+    ctx.transform(s1.X - s0.X, s1.Y - s0.Y, s3.X - s0.X, s3.Y - s0.Y, s0.X, s0.Y);
+    ctx.drawImage(golge, 0, 0, 1, 1);
+    ctx.restore();
+    cizilenOge++;
+
+    /* --- köşeleri yansıt --- */
+    for (i = 0; i < NV; i++) {
+      var xr = VU[i] * ca + VV[i] * sa, zr = -VU[i] * sa + VV[i] * ca;
+      var py = -VH[i];
+      var yr = py * CT - zr * SX, zd = py * SX + zr * CT;
+      var ss = FOV / (FOV + zd);
+      PX[i] = CXp + xr * ss * OLCEK; PY[i] = CYp + yr * ss * OLCEK;
+      PS[i] = ss; PZ[i] = zd;
+    }
+
+    /* --- adım durumları --- */
+    var tarama = (a === 0);
+    var tU = tarama ? (-0.95 + p * 1.92) : 2;
+    var zeminP = a === 1 ? p : (a > 1 ? 1 : 0);
+    var roiP = a === 2 ? p : (a > 2 ? 1 : 0);
+    var kararP = a >= 6 ? 1 : 0;
+    var bantY = a === 5 ? (p * (Hp + 120) - 60) : -1e6;
+    var bantH = 46;
+
+    /* --- görünür dörtgenleri topla, derinliğini hesapla --- */
+    var gn = 0, zmin = 1e9, zmax = -1e9;
+    var derin = new Float32Array(0);
+    if (!ciz._d || ciz._d.length !== NQ) ciz._d = new Float32Array(NQ);
+    derin = ciz._d;
+
+    for (q = 0; q < NQ; q++) {
+      if (tarama && QU[q] > tU + 0.01) continue;
+      var zd2 = (PZ[QA[q]] + PZ[QB[q]] + PZ[QC[q]] + PZ[QD[q]]) * 0.25;
+      if (QZEM[q] && zeminP > 0) zd2 += 0.8192 * DUS * zeminP;
+      derin[q] = zd2;
+      if (zd2 < zmin) zmin = zd2;
+      if (zd2 > zmax) zmax = zd2;
+      gor[gn++] = q;
+    }
+
+    /* --- sayarak sıralama: uzak → yakın (ressam algoritması) --- */
+    var inv = (NB - 1) / ((zmax - zmin) || 1);
+    for (i = 0; i < NB; i++) sayac[i] = 0;
+    for (k = 0; k < gn; k++) {
+      var b2 = ((derin[gor[k]] - zmin) * inv) | 0;
+      if (b2 < 0) b2 = 0; else if (b2 >= NB) b2 = NB - 1;
+      kova[k] = b2; sayac[b2]++;
+    }
+    var acc = 0;
+    for (i = NB - 1; i >= 0; i--) { bas[i] = acc; acc += sayac[i]; }
+    for (k = 0; k < gn; k++) sira[bas[kova[k]]++] = gor[k];
+
+    /* --- dörtgenleri boya --- */
+    var sonAlfa = -1, GEN = 1.055;
+    var dusPx = 0.5735 * DUS * zeminP * OLCEK;
+
+    for (k = 0; k < gn; k++) {
+      q = sira[k];
+
+      /* rampa ve saydamlık seçimi */
+      var rmp = R_CELIK, alfa = 1, kaydirY = 0;
+      var lazerde = tarama && (tU - QU[q]) < 0.055;
+
+      if (QZEM[q] && zeminP > 0) {
+        rmp = R_GRI;
+        alfa = 1 - 0.60 * zeminP;
+        kaydirY = dusPx;
+      }
+      if (QDIS[q] && roiP > 0) {
+        rmp = R_SOLUK;
+        alfa *= 1 - 0.68 * roiP;
+      }
+      if (alfa <= 0.03) continue;
+
+      if (kararP && !QZEM[q] && !QDIS[q]) rmp = R_KARAR;
+
+      var ia = QA[q], ib = QB[q], ic = QC[q], id = QD[q];
+      var x0 = PX[ia], y0 = PY[ia] + kaydirY;
+      var x1 = PX[ib], y1 = PY[ib] + kaydirY;
+      var x2 = PX[ic], y2 = PY[ic] + kaydirY;
+      var x3 = PX[id], y3v = PY[id] + kaydirY;
+      var mx = (x0 + x1 + x2 + x3) * 0.25, my = (y0 + y1 + y2 + y3v) * 0.25;
+
+      if (a === 5 && my > bantY - bantH && my < bantY + bantH && !QZEM[q] && !QDIS[q]) rmp = R_DENETIM;
+      if (lazerde) { rmp = R_LAZER; alfa = 1; }
+
+      /* --- ışıklandırma --- */
+      var nx = QNX[q], nz = QNZ[q];
+      var rx = nx * ca + nz * sa, rz = -nx * sa + nz * ca, ny = QNY[q];
+      var dif = rx * LX + ny * LY + rz * LZ; if (dif < 0) dif = 0;
+      var ao = QAO[q];
+      var Lv = 0.155 * ao + dif * (0.45 + 0.55 * ao);
+      if (lazerde) Lv += 0.55;
+
+      var hd = rx * HX + ny * HY + rz * HZ; if (hd < 0) hd = 0;
+      /* anizotropik izlenim: işleme çizgileri v yönünde spekulerı modüle eder */
+      hd *= 0.84 + 0.16 * Math.sin(QV[q] * 118 + QU[q] * 9);
+      hd *= hd; hd *= hd; hd *= hd; hd *= hd; hd *= hd;   /* ^32 */
+      hd *= (0.55 + 0.45 * ao);
+
+      var li = (Lv * (RN / LMAX)) | 0; if (li < 0) li = 0; else if (li >= RN) li = RN - 1;
+      var si = (hd * SN) | 0; if (si < 0) si = 0; else if (si >= SN) si = SN - 1;
+
+      if (alfa !== sonAlfa) { ctx.globalAlpha = alfa; sonAlfa = alfa; }
+      ctx.fillStyle = RAMPA[rmp][li * SN + si];
+
+      ctx.beginPath();
+      ctx.moveTo(mx + (x0 - mx) * GEN, my + (y0 - my) * GEN);
+      ctx.lineTo(mx + (x1 - mx) * GEN, my + (y1 - my) * GEN);
+      ctx.lineTo(mx + (x2 - mx) * GEN, my + (y2 - my) * GEN);
+      ctx.lineTo(mx + (x3 - mx) * GEN, my + (y3v - my) * GEN);
+      ctx.fill();
+      cizilenOge++;
+    }
+    if (sonAlfa !== 1) ctx.globalAlpha = 1;
+
+    /* ================= adım bindirmeleri ================= */
+
+    /* 0 · TARAMA — lazer perdesi */
+    if (a === 0) {
+      var l1 = y3(tU, 0, -0.74, ca, sa), l2 = y3(tU, 0, 0.74, ca, sa);
+      var l3 = y3(tU, 0.62, 0.74, ca, sa), l4 = y3(tU, 0.62, -0.74, ca, sa);
+      ctx.fillStyle = 'rgba(120,205,255,.10)';
+      ctx.beginPath();
+      ctx.moveTo(l1.X, l1.Y); ctx.lineTo(l2.X, l2.Y); ctx.lineTo(l3.X, l3.Y); ctx.lineTo(l4.X, l4.Y);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(205,242,255,.92)'; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(l1.X, l1.Y); ctx.lineTo(l2.X, l2.Y); ctx.stroke();
+      /* kaynak */
+      var em = y3(tU, 1.02, 0, ca, sa);
+      ctx.strokeStyle = 'rgba(120,205,255,.42)'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(em.X, em.Y); ctx.lineTo(l1.X, l1.Y);
+      ctx.moveTo(em.X, em.Y); ctx.lineTo(l2.X, l2.Y);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(147,160,179,.85)';
+      ctx.fillRect(em.X - 15, em.Y - 9, 30, 11);
+      etiket(em.X + 22, em.Y + 2, 'MLBS115', 'rgba(120,205,255,.9)');
+      cizilenOge += 4;
+    }
+
+    /* 1 · ZEMİN KALDIR */
+    if (a === 1) {
+      var zp = y3(-0.70, 0.10, 0.40, ca, sa);
+      etiket(zp.X - 40, zp.Y + 46 * p + 22, 'zemin ↓ ' + (11.5 * p).toFixed(1) + ' mm', 'rgba(147,160,179,.95)');
+      cizilenOge++;
+    }
+
+    /* 2 · KIRPMA (ROI) */
+    if (a >= 2) {
+      var ar = a === 2 ? p : 1;
+      var roi = SEN.roi;
+      var kk = [
+        y3(roi.u1, 0.345, roi.v1, ca, sa), y3(roi.u2, 0.345, roi.v1, ca, sa),
+        y3(roi.u2, 0.345, roi.v2, ca, sa), y3(roi.u1, 0.345, roi.v2, ca, sa)
+      ];
+      ctx.strokeStyle = 'rgba(120,205,255,' + (0.55 * ar) + ')';
+      ctx.lineWidth = 1.3; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(kk[0].X, kk[0].Y);
+      for (i = 1; i < 4; i++) ctx.lineTo(kk[i].X, kk[i].Y);
+      ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+      if (a === 2) etiket(kk[1].X + 8, kk[1].Y - 8, 'ROI', 'rgba(120,205,255,.92)');
+      cizilenOge++;
+    }
+
+    /* 3 · ÇAPALAMA */
+    if (a >= 3) {
+      var acp = a === 3 ? p : 1;
+      var cp = SEN.capa;
+      var ch = h(cp.u, cp.v);
+      var c0 = y3(cp.u, ch + 0.012, cp.v, ca, sa);
+      var r2 = 13 + (1 - acp) * 24;
+      ctx.strokeStyle = 'rgba(255,190,140,' + acp + ')'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(c0.X, c0.Y, r2, 0, Math.PI * 2); ctx.stroke();
+      /* yerel eksen takımı */
+      var eu = y3(cp.u + 0.20, ch + 0.012, cp.v, ca, sa);
+      var ev = y3(cp.u, ch + 0.012, cp.v + 0.20, ca, sa);
+      var eh = y3(cp.u, ch + 0.20, cp.v, ca, sa);
+      ctx.lineWidth = 1.6;
+      ctx.strokeStyle = 'rgba(248,113,113,' + acp + ')';
+      ctx.beginPath(); ctx.moveTo(c0.X, c0.Y); ctx.lineTo(eu.X, eu.Y); ctx.stroke();
+      ctx.strokeStyle = 'rgba(110,240,170,' + acp + ')';
+      ctx.beginPath(); ctx.moveTo(c0.X, c0.Y); ctx.lineTo(ev.X, ev.Y); ctx.stroke();
+      ctx.strokeStyle = 'rgba(120,205,255,' + acp + ')';
+      ctx.beginPath(); ctx.moveTo(c0.X, c0.Y); ctx.lineTo(eh.X, eh.Y); ctx.stroke();
+      if (a === 3) etiket(c0.X + r2 + 10, c0.Y - 10, 'ÇAPA kilitlendi', 'rgba(255,190,140,.96)');
+      cizilenOge += 4;
+    }
+
+    /* 4 · KAYNAK AĞZI — ölçüler katının üstüne düşer */
+    if (a >= 4) {
+      var oa = a === 4 ? Math.min(1, p * 1.6) : 1;
+      var A = 'rgba(110,240,170,' + oa + ')';
+      /* ağız derinliği */
+      var dUst = y3(0.13, 0.322, 0.12, ca, sa), dAlt = y3(0.13, 0.111, 0.12, ca, sa);
+      ctx.strokeStyle = A; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(dUst.X, dUst.Y); ctx.lineTo(dAlt.X, dAlt.Y); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(dUst.X - 5, dUst.Y); ctx.lineTo(dUst.X + 5, dUst.Y);
+      ctx.moveTo(dAlt.X - 5, dAlt.Y); ctx.lineTo(dAlt.X + 5, dAlt.Y);
+      ctx.stroke();
+      etiket(dAlt.X + 12, (dUst.Y + dAlt.Y) / 2 + 4, 'ağız 3.18 mm', A);
+      /* ağız genişliği */
+      var wS = y3(0.13 - 0.075, 0.326, -0.16, ca, sa), wE = y3(0.13 + 0.075, 0.326, -0.16, ca, sa);
+      olcu(wS, wE, '6.04 mm', A, -18);
+      /* bindirme uzunluğu */
+      var pS = y3(-0.28, 0.322, -0.33, ca, sa), pE = y3(0.54, 0.322, -0.33, ca, sa);
+      olcu(pS, pE, '82.40 mm', 'rgba(255,190,140,' + oa + ')', -44);
+      /* düzlemsellik */
+      var dz = y3(0.44, 0.328, 0.24, ca, sa);
+      etiket(dz.X + 10, dz.Y, 'düzlemsellik 0.06', 'rgba(255,190,140,' + oa + ')');
+      cizilenOge += 6;
+    }
+
+    /* 5 · DENETİM — tolerans bandı */
+    if (a === 5) {
+      ctx.strokeStyle = 'rgba(255,190,140,.55)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(0, bantY); ctx.lineTo(W, bantY); ctx.stroke();
+      etiket(12, bantY - 8, 'tolerans bandı · ' + Math.round(p * 100) + '%', 'rgba(255,190,140,.95)');
+      var gecen = Math.min(4, Math.floor(p * 5));
+      for (i = 0; i < gecen; i++) {
+        ctx.font = '600 12px ' + MONO;
+        ctx.fillStyle = 'rgba(110,240,170,.95)';
+        ctx.fillText('✓ ' + CIKTI[i].ad, 14, Hp - 92 + i * 17);
+      }
+      cizilenOge += 2 + gecen;
+    }
+
+    /* 6 · KARAR */
+    if (a >= 6) {
+      ctx.font = '700 26px ' + SERIF;
+      ctx.fillStyle = 'rgba(110,240,170,.95)';
+      ctx.fillText('OK', W - 66, 42);
+      ctx.font = '10px ' + MONO;
+      ctx.fillStyle = 'rgba(110,240,170,.65)';
+      ctx.fillText('4/4 ölçüldü · 0 NOK', W - 168, 60);
+      cizilenOge += 2;
+    }
+
+    /* 7 · PLC YAZ */
+    if (a === 7) {
+      var ay = Hp - 34, ax = W - 44;
+      var kay = (p * 44) % 44;
+      ctx.strokeStyle = 'rgba(120,205,255,.85)'; ctx.lineWidth = 1.7;
+      for (i = 0; i < 3; i++) {
+        var ox = ax - 66 + kay + i * 15;
+        ctx.beginPath();
+        ctx.moveTo(ox, ay); ctx.lineTo(ox + 9, ay - 5.5);
+        ctx.moveTo(ox, ay); ctx.lineTo(ox + 9, ay + 5.5);
+        ctx.stroke();
+      }
+      etiket(W - 214, ay + 4, 'PLC ⇥ DB10 (şema)', 'rgba(120,205,255,.92)');
+      cizilenOge += 2;
+    }
+
+    /* ================= HUD ================= */
+    ctx.font = '600 11px ' + MONO;
+    ctx.fillStyle = 'rgba(242,238,230,.92)';
+    ctx.fillText((a + 1) + '/8 · ' + ADIM[a].ad.toUpperCase(), 14, 22);
+    ctx.font = '10px ' + MONO;
+    ctx.fillStyle = 'rgba(147,160,179,.82)';
+    ctx.fillText(ADIM_NOT[a], 14, 38);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(147,160,179,.72)';
+    ctx.fillText('ağ ' + G + '×' + G + ' · ' + cizilenOge + ' öğe/kare', W - 14, Hp - 14);
+    ctx.fillText('katı yüzey · ressam sıralaması', W - 14, Hp - 28);
+    ctx.textAlign = 'left';
+
+    /* çıktı okuması (ölçüm adımından sonra dolar) */
+    if (a >= 4) {
+      var say = a === 4 ? 3 : 5;
+      for (i = 0; i < say && i < 3; i++) {
+        ctx.font = '10px ' + MONO;
+        ctx.fillStyle = 'rgba(147,160,179,.72)';
+        ctx.fillText(CIKTI[i].ad, 14, Hp - 44 + i * 15);
+        ctx.fillStyle = 'rgba(110,240,170,.92)';
+        ctx.fillText(CIKTI[i].deger, 132, Hp - 44 + i * 15);
+      }
+    }
+
+    sonKare = ((window.performance && performance.now) ? performance.now() : Date.now()) - t0;
+    return true;
+  }
+  var SERIF = 'Georgia, "Times New Roman", serif';
+
+  /* ==========================================================
+     9. DÖNGÜ · adım denetimi
+     ========================================================== */
+  var azalt = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var SURE = 2600;
+  var basla = (window.performance && performance.now) ? performance.now() : Date.now();
+  var rafId = null, kosuyor = false, ekranda = true, gorunur = true;
+
+  function ilerleme() {
+    if (azalt || !ADIM[adim].anim) return ADIM[adim].duruk;
+    var t = ((window.performance && performance.now) ? performance.now() : Date.now()) - basla;
+    return (t % SURE) / SURE;
+  }
+  function kare() {
+    if (!kosuyor) return;
+    if (ekranda && gorunur) { try { ciz(adim, ilerleme()); } catch (e) {} }
+    rafId = requestAnimationFrame(kare);
+  }
+  function baslat() {
+    if (azalt || kosuyor) return;
+    kosuyor = true; rafId = requestAnimationFrame(kare);
+  }
+  function durdur() {
+    kosuyor = false;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  }
+
+  /* --- adım düğmeleri --- */
+  var kap = document.getElementById('adimlar');
+  var dugmeler = [];
+  for (var d = 0; d < NADIM; d++) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'adim';
+    b.setAttribute('aria-pressed', 'false');
+    b.innerHTML = '<span class="s">' + (d + 1) + '</span><span class="a">' + ADIM[d].glif + ' ' + ADIM[d].ad + '</span>';
+    (function (n) { b.addEventListener('click', function () { adimSec(n); }); })(d);
+    kap.appendChild(b);
+    dugmeler.push(b);
+  }
+  var durum = document.getElementById('durum');
+
+  function tazele() {
+    for (var i = 0; i < NADIM; i++) {
+      dugmeler[i].setAttribute('aria-pressed', i === adim ? 'true' : 'false');
+      dugmeler[i].className = 'adim' + (i < adim ? ' bitti' : '');
+    }
+    durum.innerHTML = 'adım <b>' + (adim + 1) + '/8</b> · ' + ADIM[adim].ad +
+      ' — ' + ADIM_NOT[adim];
+  }
+  function adimSec(n) {
+    adim = ((n % NADIM) + NADIM) % NADIM;
+    basla = (window.performance && performance.now) ? performance.now() : Date.now();
+    tazele();
+    ciz(adim, ilerleme());          /* senkron: rAF beklemeden */
+  }
+
+  document.getElementById('onceki').addEventListener('click', function () { adimSec(adim - 1); });
+  document.getElementById('sonraki').addEventListener('click', function () { adimSec(adim + 1); });
+
+  /* --- klavye: kanvas odaktaysa döndür, değilse adım değiştir --- */
+  document.addEventListener('keydown', function (e) {
+    var k = e.key;
+    if (k !== 'ArrowLeft' && k !== 'ArrowRight') return;
+    if (document.activeElement === tuval) {
+      aciKay += (k === 'ArrowRight' ? 1 : -1) * 0.11;
+      e.preventDefault();
+      ciz(adim, ilerleme());
+      return;
+    }
+    var el = document.activeElement;
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) return;
+    e.preventDefault();
+    adimSec(adim + (k === 'ArrowRight' ? 1 : -1));
+    if (el && el.classList && el.classList.contains('adim')) dugmeler[adim].focus();
+  });
+
+  /* --- sürükleyerek döndürme --- */
+  var surukle = false, basX = 0, sonAci = 0;
+  tuval.addEventListener('pointerdown', function (e) {
+    surukle = true; basX = e.clientX; sonAci = aciKay;
+    if (tuval.setPointerCapture) { try { tuval.setPointerCapture(e.pointerId); } catch (er) {} }
+  });
+  tuval.addEventListener('pointermove', function (e) {
+    if (!surukle) return;
+    aciKay = sonAci + (e.clientX - basX) / 190;
+    if (azalt || !kosuyor) ciz(adim, ilerleme());
+  });
+  function birak() { surukle = false; }
+  tuval.addEventListener('pointerup', birak);
+  tuval.addEventListener('pointercancel', birak);
+  tuval.addEventListener('lostpointercapture', birak);
+
+  /* --- ölçü değişimi --- */
+  var zamanlayici = null;
+  function yenidenOlc() {
+    olcuAl();
+    ciz(adim, ilerleme());
+  }
+  window.addEventListener('resize', function () {
+    if (zamanlayici) clearTimeout(zamanlayici);
+    zamanlayici = setTimeout(yenidenOlc, 120);
+  });
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(function () {
+      if (zamanlayici) clearTimeout(zamanlayici);
+      zamanlayici = setTimeout(yenidenOlc, 120);
+    });
+    ro.observe(tuval.parentNode);
+  }
+
+  /* --- ekran dışında / sekme arkada rAF DURUR --- */
+  document.addEventListener('visibilitychange', function () {
+    gorunur = !document.hidden;
+    if (gorunur && ekranda) baslat(); else durdur();
+  });
+  if (window.IntersectionObserver) {
+    var io = new IntersectionObserver(function (g) {
+      ekranda = g[g.length - 1].isIntersecting;
+      if (ekranda && gorunur) baslat(); else durdur();
+    }, { threshold: 0, rootMargin: '120px' });
+    io.observe(tuval);
+  }
+
+  /* ==========================================================
+     10. TANI ARAYÜZÜ
+     ========================================================== */
+  window.TANI = {
+    kareCiz: function (n) {
+      if (typeof n === 'number') {
+        adim = ((n | 0) % NADIM + NADIM) % NADIM;
+        tazele();
+      }
+      return ciz(adim, ilerleme());
+    },
+    bilgi: function () {
+      return {
+        teknik: 'Katı malzeme',
+        adim: adim,
+        adimAdi: ADIM[adim].ad,
+        cizilenOge: cizilenOge,
+        nokta: NV,
+        ag: G + '×' + G,
+        dortgen: NQ,
+        dpr: dpr,
+        kareMs: Math.round(sonKare * 100) / 100,
+        azaltilmisHareket: !!azalt
+      };
+    }
+  };
+
+  /* ==========================================================
+     11. AÇILIŞ — İLK KARE SENKRON (rAF beklenmez)
+     ========================================================== */
+  olcuAl();
+  tazele();
+  ciz(adim, ilerleme());
+  if (!azalt) baslat();
+  else document.getElementById('ipuc').textContent = 'azaltılmış hareket · duruk kare';
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+{
+  "olcek_mm_birim": 100.0,
+  "not": "Değerler sahne3d.js'teki yükseklik alanından hesaplanmıştır; eşyönlü 100 mm/birim ölçeği kullanılmıştır. Sahne bir şemadır, gerçek bir ölçüm kaydı değildir.",
+  "parca": {
+    "en_mm": 172.0,
+    "boy_mm": 120.0,
+    "roi_alan_mm2": 5995.3
+  },
+  "olcumler": [
+    {
+      "ad": "agiz_derinlik",
+      "deger_mm": 19.28,
+      "nominal_mm": 21.0,
+      "alt": 20.4,
+      "ust": 21.6
+    },
+    {
+      "ad": "agiz_genislik",
+      "deger_mm": 8.16,
+      "nominal_mm": 8.6,
+      "alt": 8.1,
+      "ust": 9.1
+    },
+    {
+      "ad": "duzlemsellik",
+      "deger_mm": 1.674,
+      "nominal_mm": 0.0,
+      "alt": 0.0,
+      "ust": 2.0
+    },
+    {
+      "ad": "delik_cap",
+      "deger_mm": 14.84,
+      "nominal_mm": 14.77,
+      "alt": 14.57,
+      "ust": 14.97
+    },
+    {
+      "ad": "nokta_sayisi",
+      "deger": 168489,
+      "alt": 40000,
+      "ust": null
+    }
+  ],
+  "sapma": {
+    "en_dusuk_mm": -1.0,
+    "en_yuksek_mm": 1.0,
+    "ortalama_mutlak_mm": 0.388,
+    "bant_araligi_mm": 0.25
+  },
+  "capa": {
+    "u": 0.13,
+    "v": 0.0
+  },
+  "roi": {
+    "u1": -0.3,
+    "u2": 0.56,
+    "v1": -0.35,
+    "v2": 0.35
+  },
+  "delikler": [
+    {
+      "u": -0.52,
+      "v": -0.3
+    },
+    {
+      "u": -0.52,
+      "v": 0.3
+    }
+  ]
+}

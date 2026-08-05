@@ -48,6 +48,16 @@
   --serif: Georgia, 'Times New Roman', Times, serif;
   --sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, Arial, sans-serif;
 
+  /* ---- ortak betiklerin beklediği adlar (hesap.js giriş/hesap kutusunu
+         var(--ink)/var(--line)/var(--accent)/var(--muted) ile boyar; sitenin
+         kâğıt sayfalarında bunlar açık zemine göredir. Bu sayfanın şeridi KOYU,
+         bu yüzden değerler koyu zemine göre verilir — tanımlanmazsa betiğin
+         yedeği #1a1815 kalır ve düğme koyu şeritte görünmez olur.) ---- */
+  --ink: #f2eee6;
+  --line: rgba(175, 198, 226, .38);
+  --accent: #f97316;
+  --muted: #93a0b3;
+
   /* ---- perde 2 · yarık · insan tarafı ---- */
   --y-kagit: #f6f2ea;
   --y-kagit-parlak: #fffdf8;
@@ -236,7 +246,10 @@ body {
 }
 .bolum.etkin { pointer-events: auto; }
 
-.ic {
+/* NOT: perde 1'in .ic / .metin kuralları #katman'a bağlıdır. Sayfaya sonradan
+   giren ortak betikler (onay.js onay bandı) da .ic / .metin adlarını kullanıyor;
+   kapsamsız bırakılırsa cam panel, turuncu sol kenar ve max-height o banda sızar. */
+#katman .ic {
   max-width: 616px;
   padding: clamp(18px, 2.6vw, 30px) clamp(18px, 2.6vw, 32px) clamp(20px, 2.8vw, 32px);
   background: var(--cam);
@@ -251,8 +264,8 @@ body {
   scrollbar-width: thin;
   scrollbar-color: rgba(175,198,226,.28) transparent;
 }
-.ic::-webkit-scrollbar { width: 6px; }
-.ic::-webkit-scrollbar-thumb { background: rgba(175,198,226,.28); }
+#katman .ic::-webkit-scrollbar { width: 6px; }
+#katman .ic::-webkit-scrollbar-thumb { background: rgba(175,198,226,.28); }
 
 .kicker {
   display: flex;
@@ -286,7 +299,7 @@ h1 { font-size: clamp(29px, 5vw, 52px); }
 .katman h2 { font-size: clamp(24px, 3.5vw, 39px); }
 h1 .k, .katman h2 .k { color: var(--kiremit-ac); }
 
-.metin {
+#katman .metin {
   margin-top: 15px;
   font-size: clamp(13.5px, 1.15vw, 15.5px);
   line-height: 1.72;
@@ -294,10 +307,10 @@ h1 .k, .katman h2 .k { color: var(--kiremit-ac); }
   max-width: 54ch;
   overflow-wrap: break-word;
 }
-.metin + .metin { margin-top: 11px; }
-.metin b { color: #fbf8f2; font-weight: 600; }
-.metin a { color: var(--kiremit-ac); text-decoration: none; border-bottom: 1px solid currentColor; }
-.metin a:hover { color: #fff; }
+#katman .metin + .metin { margin-top: 11px; }
+#katman .metin b { color: #fbf8f2; font-weight: 600; }
+#katman .metin a { color: var(--kiremit-ac); text-decoration: none; border-bottom: 1px solid currentColor; }
+#katman .metin a:hover { color: #fff; }
 
 /* satır içi bilgi çipleri */
 .cipler { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 17px; }
@@ -634,7 +647,7 @@ h1 .k, .katman h2 .k { color: var(--kiremit-ac); }
 
 /* ---------- kırılmalar ---------- */
 @media (max-width: 1000px) {
-  .ic { max-width: 560px; }
+  #katman .ic { max-width: 560px; }
 }
 
 @media (max-width: 760px) {
@@ -644,7 +657,7 @@ h1 .k, .katman h2 .k { color: var(--kiremit-ac); }
     transform: none;
     padding: 0 62px 96px 14px;
   }
-  .ic { max-width: none; max-height: calc(100dvh - 210px); }
+  #katman .ic { max-width: none; max-height: calc(100dvh - 210px); }
   .genis { display: none; }
   .olcek { width: 46px; top: 78px; bottom: 128px; }
   .olcek .ray { left: 14px; }
@@ -678,7 +691,7 @@ body.akis .bolum {
   padding: 9vh clamp(16px, 6vw, 90px) 9vh clamp(16px, 6vw, 90px);
   pointer-events: auto;
 }
-body.akis .ic { max-height: none; overflow: visible; margin: 0 auto; max-width: 660px; }
+body.akis #katman .ic { max-height: none; overflow: visible; margin: 0 auto; max-width: 660px; }
 body.akis .genis { display: block; }
 body.akis #uzunluk { display: none; }
 body.akis .cagri { display: none; }
@@ -1549,7 +1562,7 @@ body.akis .gecis-blok { display: block; }
     padding: 9vh clamp(16px, 6vw, 90px) !important;
     pointer-events: auto !important;
   }
-  .ic { max-height: none !important; overflow: visible !important; margin: 0 auto; max-width: 660px; }
+  #katman .ic { max-height: none !important; overflow: visible !important; margin: 0 auto; max-width: 660px; }
   #uzunluk, .cagri, .olcek, .hud { display: none !important; }
   #sahne, .hava { display: none !important; }
   .genis { display: block !important; }
