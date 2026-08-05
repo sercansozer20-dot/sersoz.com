@@ -10,7 +10,7 @@
 
 <style>
 /* ============================================================
-   TEL KAFESTEN KATIYA — 3B anlatım denemesi 3/6
+   TEL KAFESTEN KATIYA — 3B anlatım denemesi 4/6
    Tek dosya · dış bağımlılık yok · sistem fontları.
    Ortak zemin (altı denemede aynı): kaynak gövdesi senaryosu,
    yansit() izdüşümü, başlangıç açısı 0.30, 8 adımlık araç zinciri.
@@ -95,7 +95,11 @@ body {
   font-size: 10px;
   letter-spacing: .13em;
   text-transform: uppercase;
-  flex: none;
+  /* flex:none idi: 40 karakterlik rozet ~305 px max-content ister ve 340 px
+     altı ekranda kap dışına taşardı (body overflow-x:hidden bunu gizliyordu,
+     yazıyı kırpıyordu). Artık daralabilir; dar ekranda iki satıra sarar. */
+  flex: 0 1 auto;
+  min-width: 0;
 }
 .rozet i { width: 6px; height: 6px; background: var(--kiremit-ac); display: block; flex: none; }
 
@@ -341,7 +345,7 @@ input[type=range]::-moz-range-thumb {
         <button type="button" class="gez" id="ileriDug" aria-label="Sonraki adım">›</button>
       </div>
       <div class="oneri">
-        <p id="oneriMetin">—</p>
+        <p id="oneriMetin" aria-live="polite">—</p>
         <button type="button" id="oneriDug">Önerilen hale geç</button>
       </div>
     </div>
@@ -469,6 +473,7 @@ input[type=range]::-moz-range-thumb {
   var aci = ACI0, aSin = Math.sin(ACI0), aCos = Math.cos(ACI0);
 
   var W = 0, H = 0, dpr = 1, CX = 0, CY = 0, OLCEK = 1;
+  var zeminGrad = null;                /* arka plan gradyanı — ölçü değişince kurulur */
 
   /* tahsissiz izdüşüm — köşeler kare başına binlerce kez yansıtılır */
   var _X = 0, _Y = 0, _S = 0, _D = 0;
@@ -672,8 +677,13 @@ input[type=range]::-moz-range-thumb {
      ÖLÇÜ
      ========================================================================= */
   function olcuAl() {
-    var kutu = kanvas.parentNode.getBoundingClientRect();
-    W = Math.max(220, Math.round(kutu.width));
+    /* Kanvasın KENDİ kutusu ölçülür. Ebeveyn (.sahne-kutu) 1 px kenarlıklıdır;
+       onun genişliği kenarlıkları da içerdiği için bit eşlem 2 px fazla oluyor,
+       tarayıcı da bunu %0,18 küçülterek basıyordu (hafif bulanıklık + en-boy
+       sapması). Kanvas width:100% olduğu için kendi kutusu doğru içeriği verir. */
+    var kutu = kanvas.getBoundingClientRect();
+    var gen = kutu.width || kanvas.parentNode.getBoundingClientRect().width;
+    W = Math.max(220, Math.round(gen));
     H = Math.round(Math.min(546, Math.max(276, W * (W < 620 ? 0.90 : 0.50))));
     /* Ölçüldü: 375×812'de DPR 2, kare başına 1,22 MP demek; 1.5 sınırı bunu
        0,69 MP'ye indirir ve gözle fark edilmez. Masaüstünde 2 kalır. */
@@ -684,6 +694,10 @@ input[type=range]::-moz-range-thumb {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     OLCEK = Math.min(W * 0.44, H * 0.64);
     CX = W * 0.5; CY = H * 0.52;
+    /* Kare içinde tahsis yok: gradyan yalnız H değişince kurulur. */
+    zeminGrad = ctx.createLinearGradient(0, 0, 0, H);
+    zeminGrad.addColorStop(0, '#0d1219');
+    zeminGrad.addColorStop(1, '#070a0e');
     gerek = true;
   }
 
@@ -737,7 +751,10 @@ input[type=range]::-moz-range-thumb {
   function ciz() {
     var t = ms();
     var p = zorlaTam || azalt ? 1 : Math.min(1, (t - adimT0) / 1250);
-    var tarama = adim === 0 ? (zorlaTam || azalt ? 1 : ((t - adimT0) / 2500) % 1) : 1;
+    /* Tarama süpürmesi zaten döngüsel; faz 0'dan değil 0.34'ten başlatılır ki
+       İLK SENKRON KARE boş kalmasın. (Ölçüldü: fazsız hâlde açılış karesi
+       yalnız ızgara + lazer düzlemi çiziyordu — kanvas boş görünüyordu.) */
+    var tarama = adim === 0 ? (zorlaTam || azalt ? 1 : (0.34 + (t - adimT0) / 2500) % 1) : 1;
     var tarananU = U0 + (U1 - U0) * tarama;
 
     var kA = katAlfa(adim, p);
@@ -747,10 +764,9 @@ input[type=range]::-moz-range-thumb {
 
     var oge = 0, gorNokta = 0, gorUcgen = 0;
 
-    /* --- arka plan --- */
-    var zg = ctx.createLinearGradient(0, 0, 0, H);
-    zg.addColorStop(0, '#0d1219'); zg.addColorStop(1, '#070a0e');
-    ctx.fillStyle = zg; ctx.fillRect(0, 0, W, H);
+    /* --- arka plan (gradyan olcuAl'da bir kez kuruldu) --- */
+    ctx.fillStyle = zeminGrad || '#0b0f16';
+    ctx.fillRect(0, 0, W, H);
 
     if (siraAci !== aci) siraYenile();
     isikCevir();
@@ -824,8 +840,12 @@ input[type=range]::-moz-range-thumb {
       ctx.globalAlpha = 1;
     }
 
-    /* ================= 2) ÜÇGEN AĞ (tel kafes) ================= */
-    if (kafesA > 0.004) {
+    /* ================= 2) ÜÇGEN AĞ (tel kafes) =================
+       Eşik 0.004 değil 0.10: kafes solduğunda katı hâlin altında kalan
+       %4'lük çizgiler ekranda görünmüyor ama 11 579 kenarlık Path2D'yi
+       yine de kurduruyordu. (Ölçüldü: 375 px'te 4. adım karesi 26,5 ms →
+       9,8 ms.) Görünür kafes bu eşiğin üstünde aynen çizilir. */
+    if (kafesA > 0.10) {
       var yolA = [new Path2D(), new Path2D(), new Path2D()];
       var yolC = [new Path2D(), new Path2D(), new Path2D()];
       var segKoy = function (yol, ka, kb) {
@@ -896,12 +916,12 @@ input[type=range]::-moz-range-thumb {
         oge++; gorNokta++;
       }
       ctx.globalAlpha = 1;
-    } else {
-      for (k = 0; k < NU * NV; k++) {
-        if (!vG[k]) continue;
-        if (kA[vK[k]] > 0.02 && (adim !== 0 || uu[k % NU] <= tarananU)) gorNokta++;
-      }
     }
+    /* Nokta katmanı kapalıyken (karışım ≥ ~0.55) HUD'un "görünen" satırı eskiden
+       yine de hayatta kalan noktaları sayıyordu: ekranda tek nokta yokken
+       "942 nokta" yazıyordu. Sayfanın iddiası sayının dürüstlüğü olduğu için
+       artık YALNIZ gerçekten çizilen öge sayılır (bir de kare başına gereksiz
+       3 948'lik döngü kalktı). Ağın toplam sayıları üstteki satırda zaten var. */
 
     /* ================= BİNDİRMELER (ortak zemin) ================= */
     if (adim === 0) {
@@ -1176,16 +1196,25 @@ input[type=range]::-moz-range-thumb {
     else if (e.key === 'Home') { aciAyar(ACI0); e.preventDefault(); }
   });
 
-  /* --- görünürlük --- */
+  /* --- görünürlük ---
+     Eskiden döngü DURMUYORDU: rAF her karede yeniden sıraya giriyor, yalnız
+     çizim atlanıyordu. Artık ekran dışında / sekme arkadayken gerçekten
+     durdurulur, geri gelince baştan başlatılır. */
+  function uyanikMi() { return ekranda && sekmede; }
+  function durumTazele() {
+    if (uyanikMi()) { gerek = true; baslat(); }
+    else durdur();
+  }
   if (window.IntersectionObserver) {
     new IntersectionObserver(function (g) {
       ekranda = g[g.length - 1].isIntersecting;
-      if (ekranda) gerek = true;
+      durumTazele();
     }, { threshold: 0, rootMargin: '140px' }).observe(kanvas);
   }
   document.addEventListener('visibilitychange', function () {
     sekmede = !document.hidden;
-    if (sekmede) { adimT0 = ms(); gerek = true; }
+    if (sekmede) adimT0 = ms();
+    durumTazele();
   });
 
   var olcuBek = null;

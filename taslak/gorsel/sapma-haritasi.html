@@ -34,7 +34,11 @@
   --sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, Arial, sans-serif;
 }
 
-html, body { overflow-x: hidden; }
+/* Yatay taşma kilidi YALNIZ html'de durur. body'ye de konursa body bir kaydırma
+   kabı olur ve içindeki position:sticky başlık ARTIK YAPIŞMAZ (ölçüldü: scrollY
+   600'de .ust top = −600). html'de tutmak taşma güvencesini bozmadan sticky'yi
+   geri getirir (aynı ölçümde top = 0). */
+html { overflow-x: hidden; }
 
 body {
   min-height: 100%;
@@ -417,6 +421,59 @@ canvas:active { cursor: grabbing; }
   var CELIK = [143, 154, 168];   /* harita kurulmadan önceki nötr yüzey */
   var HAYALET = [86, 96, 110];   /* ROI dışı */
 
+  /* --- renk tabloları ---
+     Ölçüldü: dörtgen başına 'rgba(...)' dizgisi kurmak + fill()+stroke() yapmak
+     1122×600'de kareyi 87 ms'ye çıkarıyordu (~11 kare/s). Gölgelenme 26 basamağa
+     yuvarlanıp dizgiler önceden kurulur, dörtgen tek fill() ile boyanır ve dikiş
+     izini kapatmak için merkezine göre %5 büyütülür. */
+  var SHN = 26, SHMAX = 1.30, GEN = 1.05;
+  function kes(x) { return x < 0 ? 0 : (x > 255 ? 255 : x | 0); }
+  function renkStr(rgb, s, e0, e1, e2) {
+    return 'rgb(' + kes(rgb[0] * s + e0) + ',' + kes(rgb[1] * s + e1) + ',' + kes(rgb[2] * s + e2) + ')';
+  }
+  function tabloYap(rgb, e0, e1, e2) {
+    var t = new Array(SHN);
+    for (var i = 0; i < SHN; i++) t[i] = renkStr(rgb, (i + 0.5) / SHN * SHMAX, e0, e1, e2);
+    return t;
+  }
+  function shIdx(s) {
+    var i = (s / SHMAX * SHN) | 0;
+    return i < 0 ? 0 : (i >= SHN ? SHN - 1 : i);
+  }
+
+  var T_BANT = [], T_CELIK = tabloYap(CELIK, 0, 0, 0);
+  (function () { for (var i = 0; i < NB; i++) T_BANT.push(tabloYap(BANT[i].rgb, 0, 0, 0)); })();
+
+  /* kare içinde sabit, kareler arasında değişenler — yalnız değişince kurulur */
+  var T_DISI = null, T_DISI_RGB = CELIK, T_DISI_KAR = -1;
+  var T_YANIP = null, T_YANIP_Q = -1;
+  var LAZER = 'rgb(215,245,255)';
+
+  /* Geçiş (gradient) nesneleri de kare başına kurulmasın: zemin geçişi yalnız
+     yüksekliğe bağlı, lazer perdesininki uç noktalara. Ölçüldü: sarma öncesi
+     her karede 1 (tarama adımında 2) createLinearGradient çağrısı vardı. */
+  var G_ZEMIN = null, G_ZEMIN_H = -1;
+  var G_LAZER = null, G_LAZER_A = '';
+  function zeminGrad() {
+    if (G_ZEMIN_H !== H) {
+      G_ZEMIN_H = H;
+      G_ZEMIN = ctx.createLinearGradient(0, 0, 0, H);
+      G_ZEMIN.addColorStop(0, '#0d1219');
+      G_ZEMIN.addColorStop(1, '#070a0e');
+    }
+    return G_ZEMIN;
+  }
+  function lazerGrad(x0, y0, x1, y1) {
+    var a = (x0 | 0) + ',' + (y0 | 0) + ',' + (x1 | 0) + ',' + (y1 | 0);
+    if (a !== G_LAZER_A) {
+      G_LAZER_A = a;
+      G_LAZER = ctx.createLinearGradient(x0, y0, x1, y1);
+      G_LAZER.addColorStop(0, 'rgba(120,205,255,.05)');
+      G_LAZER.addColorStop(1, 'rgba(120,205,255,.22)');
+    }
+    return G_LAZER;
+  }
+
   /* ==========================================================
      3. KAMERA — ortak zemin: aynı izdüşüm, aynı başlangıç açısı
         (sahne3d.js yansit(); TILT işareti kamerayı üstte tutar ki
@@ -454,7 +511,10 @@ canvas:active { cursor: grabbing; }
   var istatistik = null, bolgeStat = null, histogram = null, toplamOrnek = 0;
 
   function agKur() {
-    N = dar ? 46 : 72;
+    /* Ölçüldü: kare maliyeti dörtgen sayısıyla doğrusal artıyor, kaplanan alan
+       sabit kaldığı için çözünürlüğü artırmak yalnız kurulum yükü getiriyordu.
+       72 → 60'ta bant sınırları hâlâ keskin, kare ~%20 ucuzluyor. */
+    N = dar ? 40 : 60;
     NV = N + 1;
     var n2 = NV * NV;
     gU = new Float32Array(NV); gV = new Float32Array(NV);
@@ -670,8 +730,27 @@ canvas:active { cursor: grabbing; }
     var roiGec = adim === 2 ? ilerleme : 1;
     var yanip = adim >= 6 ? (0.5 + 0.5 * Math.sin(t / 190)) : 0;
 
-    var uu, vv, bant, ren, sh, a1, a2;
-    var sayac = 0;
+    /* ROI dışı karışım rengi — karışım oranı değişince yeniden kurulur */
+    var karQ = Math.round(roiGec * 20) / 20;
+    if (karQ !== T_DISI_KAR) {
+      T_DISI_KAR = karQ;
+      T_DISI_RGB = [CELIK[0] + (HAYALET[0] - CELIK[0]) * karQ,
+                    CELIK[1] + (HAYALET[1] - CELIK[1]) * karQ,
+                    CELIK[2] + (HAYALET[2] - CELIK[2]) * karQ];
+      T_DISI = tabloYap(T_DISI_RGB, 0, 0, 0);
+    }
+    /* karar adımında tolerans dışı bantların yanıp sönmesi */
+    var yanQ = Math.round(yanip * 12) / 12;
+    if (yanip > 0 && yanQ !== T_YANIP_Q) {
+      T_YANIP_Q = yanQ;
+      T_YANIP = [];
+      for (var yb = 0; yb < NB; yb++) {
+        T_YANIP.push(disardaMi(yb) ? tabloYap(BANT[yb].rgb, 92 * yanQ, 46 * yanQ, 46 * yanQ) : null);
+      }
+    }
+
+    var uu, vv, bant, sh;
+    var sayac = 0, sonAlfa = -1;
 
     function hucre(i2, j2) {
       var k00 = i2 * NV + j2, k10 = (i2 + 1) * NV + j2;
@@ -695,42 +774,39 @@ canvas:active { cursor: grabbing; }
       var disi = roiAcik && (uu < ROI.u1 || uu > ROI.u2 || vv < ROI.v1 || vv > ROI.v2);
       var haritada = (uu <= haritaOn) && !disi && !duvar;
 
-      if (haritada) {
+      var si = shIdx(sh);
+      /* harita cephesi: denetim adımında ilerleyen parlak ön yüz — ince şerit */
+      var cephe = (adim === 5 && uu > haritaOn - 0.035 && uu <= haritaOn);
+      var st, alfa = 1;
+
+      if (adim === 0 && uu > taramaOn - 0.05) {
+        st = LAZER;                                   /* tarama önündeki lazer bandı */
+      } else if (haritada) {
         bant = bI[k00];
-        ren = BANT[bant].rgb;
+        if (cephe) st = renkStr(BANT[bant].rgb, sh, 70, 70, 70);
+        else if (yanip > 0 && disardaMi(bant)) st = T_YANIP[bant][si];
+        else st = T_BANT[bant][si];
       } else if (disi) {
-        var kar = roiGec;
-        ren = [CELIK[0] + (HAYALET[0] - CELIK[0]) * kar,
-               CELIK[1] + (HAYALET[1] - CELIK[1]) * kar,
-               CELIK[2] + (HAYALET[2] - CELIK[2]) * kar];
-        bant = -1;
+        st = cephe ? renkStr(T_DISI_RGB, sh, 70, 70, 70) : T_DISI[si];
+        alfa = 0.30;
       } else {
-        ren = CELIK; bant = -1;
+        st = cephe ? renkStr(CELIK, sh, 70, 70, 70) : T_CELIK[si];
+        if (adim >= 1 && duvar) alfa = 0.72;
       }
 
-      var r = ren[0] * sh, g2 = ren[1] * sh, b2 = ren[2] * sh;
-      /* tarama önünde parlak lazer bandı */
-      if (adim === 0 && uu > taramaOn - 0.05) { r = 215; g2 = 245; b2 = 255; }
-      /* harita cephesi */
-      if (adim === 5 && uu > haritaOn - 0.035 && uu <= haritaOn) { r += 70; g2 += 70; b2 += 70; }
-      /* karar adımında tolerans dışı bölgeler yanıp söner */
-      if (yanip > 0 && bant >= 0 && disardaMi(bant)) {
-        var art = 92 * yanip;
-        r += art; g2 += art * 0.5; b2 += art * 0.5;
-      }
-      if (r > 255) r = 255; if (g2 > 255) g2 = 255; if (b2 > 255) b2 = 255;
+      if (alfa !== sonAlfa) { ctx.globalAlpha = alfa; sonAlfa = alfa; }
+      ctx.fillStyle = st;
 
-      a1 = disi ? 0.30 : (adim >= 1 && duvar ? 0.72 : 1);
-      var st = 'rgba(' + (r | 0) + ',' + (g2 | 0) + ',' + (b2 | 0) + ',' + a1 + ')';
-
+      /* dikiş izini kapatmak için dörtgen merkezine göre büyütülür (kenar çizgisi yok) */
+      var x0 = vX[k00], y0 = vY[k00], x1 = vX[k10], y1 = vY[k10];
+      var x2 = vX[k11], y2 = vY[k11], x3 = vX[k01], y3 = vY[k01];
+      var mx = (x0 + x1 + x2 + x3) * 0.25, my = (y0 + y1 + y2 + y3) * 0.25;
       ctx.beginPath();
-      ctx.moveTo(vX[k00], vY[k00]);
-      ctx.lineTo(vX[k10], vY[k10]);
-      ctx.lineTo(vX[k11], vY[k11]);
-      ctx.lineTo(vX[k01], vY[k01]);
-      ctx.closePath();
-      ctx.fillStyle = st; ctx.fill();
-      ctx.strokeStyle = st; ctx.lineWidth = 0.8; ctx.stroke();
+      ctx.moveTo(mx + (x0 - mx) * GEN, my + (y0 - my) * GEN);
+      ctx.lineTo(mx + (x1 - mx) * GEN, my + (y1 - my) * GEN);
+      ctx.lineTo(mx + (x2 - mx) * GEN, my + (y2 - my) * GEN);
+      ctx.lineTo(mx + (x3 - mx) * GEN, my + (y3 - my) * GEN);
+      ctx.fill();
       sayac++;
     }
 
@@ -741,16 +817,14 @@ canvas:active { cursor: grabbing; }
       for (j = jBas; j !== jSon; j += jAdim)
         for (i = iBas; i !== iSon; i += iAdim) hucre(i, j);
     }
+    ctx.globalAlpha = 1;
     cizilenOge += sayac;
 
     /* lazer düzlemi */
     if (adim === 0) {
       var l1 = nokta(taramaOn, 0.02, -0.70), l2 = nokta(taramaOn, 0.02, 0.70);
       var l3 = nokta(taramaOn, -0.62, 0.70), l4 = nokta(taramaOn, -0.62, -0.70);
-      var lg = ctx.createLinearGradient(l1.X, l1.Y, l3.X, l3.Y);
-      lg.addColorStop(0, 'rgba(120,205,255,.05)');
-      lg.addColorStop(1, 'rgba(120,205,255,.22)');
-      ctx.fillStyle = lg;
+      ctx.fillStyle = lazerGrad(l1.X, l1.Y, l3.X, l3.Y);
       ctx.beginPath();
       ctx.moveTo(l1.X, l1.Y); ctx.lineTo(l2.X, l2.Y); ctx.lineTo(l3.X, l3.Y); ctx.lineTo(l4.X, l4.Y);
       ctx.closePath(); ctx.fill();
@@ -967,9 +1041,15 @@ canvas:active { cursor: grabbing; }
   }
 
   /* ---------------- kesit profili kutusu ---------------- */
-  function profilCiz(canli) {
+  /* Kutunun yeri iki yerde gerekiyor (profil + dürüstlük rozeti) — tek yerden gelsin. */
+  function profilKutu() {
     var bw = dar ? 176 : 226, bh = dar ? 74 : 90;
-    var bx = 12, by = H - bh - 12;
+    return { x: 12, y: H - bh - 12, w: bw, h: bh };
+  }
+
+  function profilCiz(canli) {
+    var pk = profilKutu();
+    var bw = pk.w, bh = pk.h, bx = pk.x, by = pk.y;
     ctx.fillStyle = 'rgba(8,12,18,.90)';
     ctx.fillRect(bx, by, bw, bh);
     ctx.strokeStyle = 'rgba(175,198,226,.22)'; ctx.lineWidth = 1;
@@ -1029,7 +1109,8 @@ canvas:active { cursor: grabbing; }
     ctx.fillText('ADIM ' + (adim + 1) + '/8', x, y);
     ctx.font = '600 13px ' + MONO;
     ctx.fillStyle = 'rgba(255,235,220,.96)';
-    ctx.fillText(ADIMLAR[adim].ad.toUpperCase(), x, y + 17);
+    /* Türkçe büyük harf: toUpperCase() "Denetim"i "DENETIM" yapar; i → İ olmalı */
+    ctx.fillText(ADIMLAR[adim].ad.toLocaleUpperCase('tr-TR'), x, y + 17);
     ctx.font = '10px ' + MONO;
     ctx.fillStyle = 'rgba(147,160,179,.86)';
     ctx.fillText(ADIMLAR[adim].not, x, y + 32);
@@ -1052,10 +1133,16 @@ canvas:active { cursor: grabbing; }
     }
     cizilenOge += sat.length + 3;
 
-    /* dürüstlük rozeti — kanvasın içinde de dursun */
+    /* dürüstlük rozeti — kanvasın içinde de dursun.
+       Dar ekranda alt sağ köşe kesit kutusunun üstüne biniyordu (ölçüldü: 360 px'te
+       rozet x 134–213 · y 329–336, kutu x 12–188 · y 260–334). Çakışırsa kutunun
+       hemen ÜSTÜNE taşınır; geniş ekranda yeri değişmez. */
     ctx.font = '8.5px ' + MONO;
     ctx.fillStyle = 'rgba(194,65,12,.9)';
-    ctx.fillText('ŞEMA · ÖRNEK VERİ', W - SAG - 118, H - 10);
+    var pk = profilKutu();
+    var rx = W - SAG - 118, ry = H - 10;
+    if (rx < pk.x + pk.w + 8) { rx = pk.x; ry = pk.y - 7; }
+    ctx.fillText('ŞEMA · ÖRNEK VERİ', rx, ry);
 
     /* dar ekranda ipucu HTML tarafında zaten yazılı — kanvası kalabalıklaştırma */
     if (adim === 0 && !kosuyor && !dar) {
@@ -1067,6 +1154,17 @@ canvas:active { cursor: grabbing; }
   }
 
   /* ---------------- karar ---------------- */
+  /* Rozetteki sayı ölçümden gelir, elle yazılmaz: ROI dışı bölge sayılmaz,
+     çünkü o ölçülmüştür ama DEĞERLENDİRİLMEMİŞTİR. */
+  function disBolgeSayisi() {
+    var n = 0;
+    for (var i = 0; i < BOLGE.length; i++) {
+      if (i === 2 && adim >= 2) continue;
+      if (Math.abs(bolgeStat[i].tepe) > TOL) n++;
+    }
+    return n;
+  }
+
   function kararCiz(t) {
     var a = adim === 6 ? Math.min(1, ilerleme * 2.2) : 1;
     var kaydir = (1 - a) * -34;
@@ -1083,7 +1181,7 @@ canvas:active { cursor: grabbing; }
     ctx.fillText('NOK', bx + 11, by + bh - (dar ? 13 : 15));
     ctx.font = '9px ' + MONO;
     ctx.fillStyle = 'rgba(255,255,255,.52)';
-    ctx.fillText('2 bölge', bx + bw - (dar ? 52 : 60), by + 18);
+    ctx.fillText(disBolgeSayisi() + ' bölge', bx + bw - (dar ? 52 : 60), by + 18);
     ctx.fillText('tol dışı', bx + bw - (dar ? 52 : 60), by + 30);
     cizilenOge += 4;
   }
@@ -1135,10 +1233,7 @@ canvas:active { cursor: grabbing; }
     aci = ACI0 + aciKay + (azalt ? 0 : Math.sin(t / 7200) * 0.075);
     aSin = Math.sin(aci); aCos = Math.cos(aci);
 
-    var zg = ctx.createLinearGradient(0, 0, 0, H);
-    zg.addColorStop(0, '#0d1219');
-    zg.addColorStop(1, '#070a0e');
-    ctx.fillStyle = zg;
+    ctx.fillStyle = zeminGrad();
     ctx.fillRect(0, 0, W, H);
 
     zeminCiz(adim === 0 ? 1 : (adim === 1 ? Math.max(0, 1 - ilerleme * 1.4) : 0));
@@ -1324,6 +1419,16 @@ canvas:active { cursor: grabbing; }
     kareCiz: function (a) {
       var y = (typeof a === 'number') ? Math.max(0, Math.min(7, a | 0)) : adim;
       adim = y;
+      /* Zincir koşuyorsa durdurulur ve ilerleme dondurulur: aksi hâlde bir sonraki
+         rAF karesi ya yarım canlandırma çizer ya da istenen adımdan kaçar —
+         doğrulama bu arayüzün DEĞİŞMEZ kare vermesine dayanır. */
+      if (kosuyor) {
+        kosuyor = false;
+        dgKos.setAttribute('aria-pressed', 'false');
+        dgKos.className = 'dug';
+        dgKos.textContent = '▶ zinciri koştur';
+      }
+      adimT0 = (performance.now() - t0) - (ADIM_SURE + 200);
       ilerleme = 1;
       for (var q = 0; q < dugmeler.length; q++) {
         dugmeler[q].setAttribute('aria-pressed', q === adim ? 'true' : 'false');
