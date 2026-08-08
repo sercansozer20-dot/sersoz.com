@@ -410,7 +410,10 @@ table.cikti td.pl { color: var(--plc); }
 (function () {
   'use strict';
   var d = { hazir: false, webgl: false, kip: 'malzeme', adim: 0, adimAdi: 'Tarama',
-            ucgen: 0, cizim: 0, hata: null };
+            ucgen: 0, cizim: 0, hata: null,
+            /* kuruldu: TEK YÖNLÜ — ilk başarılı kareden sonra bir daha false olmaz.
+               hazir geçici olarak düşebilir (bağlam kaybı), gözcü ona bakmamalı. */
+            kuruldu: false, gozcu: 0 };
   window.TANI = {
     _d: d,
     kareCiz: function () { return false; },
@@ -447,9 +450,12 @@ table.cikti td.pl { color: var(--plc); }
     return;
   }
 
-  /* Modül 8 saniye içinde hazır demezse yükleme kırılmış demektir. */
-  setTimeout(function () {
-    if (!d.hazir && !d.hata) window.SAHNE_YEDEK('modül yüklenemedi ya da çalışamadı');
+  /* Modül 8 saniye içinde ilk karesini çizemezse yükleme kırılmış demektir.
+     Bir kez kurulduysa gözcü SUSAR — yoksa 8. saniyeye denk gelen bir bağlam
+     kaybı, geri gelmiş ÇALIŞAN sahneyi kalıcı olarak 2B'ye düşürüyordu. */
+  d.gozcu = setTimeout(function () {
+    d.gozcu = 0;
+    if (!d.kuruldu && !d.hata) window.SAHNE_YEDEK('modül yüklenemedi ya da çalışamadı');
   }, 8000);
 })();
 </script>
@@ -1025,7 +1031,7 @@ function golgeDoku() {
       for (var a = -1; a <= 1; a++) for (var b = -1; b <= 1; b++) akum[(pz + b) * S + px + a] = 1;
     }
   }
-  /* ayrılabilir kutu bulanıklık — üç geçiş */
+  /* ayrılabilir kutu bulanıklık — iki tur × (yatay + dikey) = dört geçiş */
   var tmp = new Float32Array(S * S);
   function bulanik(src, dst, yatay, R) {
     for (var y2 = 0; y2 < S; y2++) for (var x2 = 0; x2 < S; x2++) {
@@ -1842,6 +1848,8 @@ function ciz() {
   if (ilkKare) {
     ilkKare = false;
     TD.hazir = true;
+    TD.kuruldu = true;
+    if (TD.gozcu) { clearTimeout(TD.gozcu); TD.gozcu = 0; }   /* gözcü sustu */
     var po = document.getElementById('poster');
     if (po) { po.classList.add('gitti'); setTimeout(function () { po.style.display = 'none'; }, 300); }
   }
@@ -1856,8 +1864,9 @@ function animasyonVar() {
 }
 
 var planlandi = false;
+var kapali = false;   /* kalıcı olarak 2B'ye düşüldü — bir daha kare üretilmez */
 function planla() {
-  if (planlandi || !D.gorunur || document.hidden) return;
+  if (planlandi || kapali || !D.gorunur || document.hidden) return;
   planlandi = true;
   var yapildi = false;
   function calis() {
@@ -1880,7 +1889,7 @@ function dongu() {
 }
 
 function iste() {
-  if (!D.gorunur || document.hidden) return;
+  if (kapali || !D.gorunur || document.hidden) return;
   if (animasyonVar()) planla();
   else ciz();          /* SENKRON — rAF beklenmez */
 }
@@ -1908,8 +1917,10 @@ function tazeleArayuz() {
   var d = document.getElementById('durum');
   d.innerHTML = 'adım <b>' + (D.adim + 1) + '/' + NADIM + '</b> · ' + ADIM[D.adim].ad +
                 ' — ' + ADIM[D.adim].not;
-  document.getElementById('kos').setAttribute('aria-pressed', D.kosuyor ? 'true' : 'false');
-  document.getElementById('kos').textContent = D.kosuyor ? '⏸ durdur' : '▶ zinciri koştur';
+  var kd = document.getElementById('kos');
+  kd.setAttribute('aria-pressed', D.kosuyor ? 'true' : 'false');
+  /* AZ_HAREKET'te düğme zinciri koşturmaz, tek adım ilerletir — etiket yalan söylemesin */
+  kd.textContent = AZ_HAREKET ? '▶ sonraki adım' : (D.kosuyor ? '⏸ durdur' : '▶ zinciri koştur');
 }
 
 function kipDugmeleriTazele() {
@@ -2048,17 +2059,24 @@ function baglamKur() {
     D.gorunur = false;
     planlandi = false;
     TD.hazir = false;
-    if (kayipSayisi >= 2) yedek('3B bağlamı iki kez kapandı; sade görünüme geçildi');
+    if (kayipSayisi >= 2) {
+      kapali = true;   /* artık hiçbir yol (görünürlük, sekme, yeniden boyut) kare istemesin */
+      yedek('3B bağlamı iki kez kapandı; sade görünüme geçildi');
+    }
   }, false);
 
   tuval.addEventListener('webglcontextrestored', function () {
-    if (kayipSayisi >= 2) return;
+    if (kayipSayisi >= 2 || kapali) return;
     try {
       boyutTazele();
       D.gorunur = true;
       ilkKare = true;
+      /* bağlamın kapalı geçtiği süre adım saatinden düşülür — yoksa zincir öne sıçrar */
+      if (D.ilerleme < 1) D.t0 = simdi() - D.ilerleme * ADIM[D.adim].sure;
+      if (kipGecis.aktif) kipGecis.t0 = simdi();
       ciz();
       TD.hazir = true;
+      iste();   /* KOŞAN ZİNCİR SÜRSÜN: yalnız ciz() çağırmak döngüyü öldürüyordu */
     } catch (x) { yedek('bağlam geri geldi ama sahne kurulamadı'); }
   }, false);
 
@@ -2120,11 +2138,15 @@ window.addEventListener('pagehide', yikim);
 function taniKur() {
   window.TANI.kareCiz = function (adim, kip) {
     try {
+      /* Tanı karesi BELİRLİ olmalı: koşan zincir, çizilen kareyi bir sonraki
+         zamanlayıcı tikinde değiştirebiliyordu. Önce zinciri durdur. */
+      D.kosuyor = false;
       if (typeof adim === 'number') {
         D.adim = ((adim % NADIM) + NADIM) % NADIM;
-        D.ilerleme = 1; D.t0 = simdi();
-        tazeleArayuz();
+        D.t0 = simdi();
       }
+      D.ilerleme = 1;
+      tazeleArayuz();
       if (kip === 'sapma' || kip === 1) { D.kip = 1; D.kipEski = 1; }
       else if (kip === 'malzeme' || kip === 0) { D.kip = 0; D.kipEski = 0; }
       if (kip !== undefined) { kipGecis.aktif = false; D.cephe = 3.0; kipDugmeleriTazele(); }
