@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nasıl çalışır — fizibilite ve iletişim | Sercan Sözer</title>
+<meta name="description" content="Satın almadan önce ölçüm: dört adımlı fizibilite süreci, numune parça koşulları, fizibilite raporunda ne döndüğü ve devreye almanın dinleyici kipten onaylı PLC yazmasına geçişi. Fizibilite talebi formu bu sayfadadır.">
+<meta name="author" content="Sercan Sözer">
+<meta name="theme-color" content="#c2410c">
+<link rel="canonical" href="https://sersoz.com/surec.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Sercan Sözer — Makine Görüşü">
+<meta property="og:title" content="Nasıl çalışır — fizibilite ve iletişim">
+<meta property="og:description" content="Önce ölçeriz, sonra konuşuruz: dört adımlı fizibilite, numune koşulları, yazılı rapor ve dinleyici kipte başlayan devreye alma.">
+<meta property="og:url" content="https://sersoz.com/surec.html">
+<meta property="og:image" content="https://sersoz.com/og.png">
+<meta property="og:locale" content="tr_TR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23fafaf9'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231c1917' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Consolas,monospace' font-size='36' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="sistem.css">
+<script>
+/* Tema seçimi ilk boyamadan ÖNCE uygulanır — yoksa koyu temada beyaz çakma olur.
+   Anahtar: sersoz_tema. Mevcut sersoz_* anahtarlarının hiçbirine dokunmaz. */
+(function () {
+  try {
+    var t = localStorage.getItem('sersoz_tema');
+    if (t === 'koyu' || t === 'acik') document.documentElement.setAttribute('data-tema', t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body>
+
+<a class="atla" href="#icerik">İçeriğe atla</a>
+
+<!-- ==================================================================
+     ÜST ÇUBUK
+     .nav-links kapsayıcısı hesap.js'in API'sidir: giriş kutusu ve site
+     sahibine özel "Yönetim" bağlantısı oraya eklenir. Sınıf adı değişirse
+     ikisi de sessizce yok olur — konsolda hata bile çıkmaz.
+     ================================================================== -->
+<header class="ust">
+  <input type="checkbox" id="menuKutu" class="menu-kutu" aria-hidden="true" tabindex="-1">
+  <div class="kap ust-ic">
+    <a class="logo" href="index.html">
+      <span class="isaret" aria-hidden="true">S</span>
+      <span>Sercan Sözer<span class="alt">makine görüşü · İzmir</span></span>
+    </a>
+
+    <nav class="ust-menu" aria-label="Ana gezinme">
+      <a href="uygulamalar.html">Uygulamalar</a>
+      <a href="yazilim.html">Yazılım</a>
+      <a href="yazilim.html#uyumluluk">Uyumluluk</a>
+      <a href="surec.html" aria-current="page">Nasıl çalışır</a>
+      <a href="fiyat.html">Fiyat</a>
+      <a href="forum.html">Danışma Masası</a>
+    </nav>
+
+    <div class="nav-links">
+      <a class="dug dug-1 dug-ust" href="#talep">Fizibilite talebi</a>
+    </div>
+
+    <label class="menu-dug" for="menuKutu" role="button" tabindex="0"
+           aria-label="Menüyü aç veya kapat" aria-controls="menuKutu">
+      <svg class="ac" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <svg class="kapa" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </label>
+  </div>
+</header>
+
+<main id="icerik">
+
+  <!-- ================================================================
+       1. GİRİŞ — tek h1, tek birincil eylem
+       ================================================================ -->
+  <section class="bolum">
+    <div class="kap">
+      <span class="ust-baslik">Nasıl çalışır</span>
+      <h1 style="margin-top:var(--a4);max-width:20ch">Önce ölçeriz, sonra konuşuruz.</h1>
+      <p class="giris" style="margin-top:var(--a5);max-width:54ch">
+        Gösterebileceğim bir müşteri listesi yok; onun yerine denemeyi öne alıyorum.
+        Sizin parçanız taranır, ulaşılabilen hassasiyet rakamla ölçülür ve sonuç ne
+        çıkarsa çıksın yazılı gelir. Satın alma kararını sunuma değil, kendi parçanızın
+        verilerine bakarak verirsiniz.
+      </p>
+
+      <div class="satir" style="margin-top:var(--a6)">
+        <a class="dug dug-1 dug-b" href="#talep">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM4 6l8 6 8-6"/></svg>
+          Fizibilite talebi gönderin
+        </a>
+        <a class="dug dug-2 dug-b" href="#numune">Numune koşullarını görün</a>
+      </div>
+
+      <p class="kunye" style="margin-top:var(--a6)">
+        <span>süreç <b>4 adım</b></span>
+        <span>numune <b>iyi + kusurlu</b></span>
+        <span>rapor <b>yazılı</b></span>
+        <span>devreye alma <b>dinleyici kipte başlar</b></span>
+      </p>
+
+      <p class="kucuk soluk" style="margin-top:var(--a5);max-width:60ch">
+        Bu sayfa tek bir eylem içindir: fizibilite talebi. Arada satış temsilcisi yok;
+        yazdığınız e-postayı yazılımı yazan kişi okur.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       2. DÖRT ADIM — her adımda sizden / benden
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="adimlar" aria-labelledby="adimBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Süreç</span>
+        <h2 id="adimBas">Dört adım — her birinde kimin ne yapacağı yazılı</h2>
+        <p>
+          Adımlar sırayla yürür ve her adımın çıktısı bir sonrakinin girdisidir. Hiçbir
+          adım "sonra bakarız" diye atlanmaz; atlanan adım devreye almada sürpriz olarak
+          geri gelir.
+        </p>
+      </div>
+
+      <div class="adimlar">
+        <div class="adim">
+          <h3>Gereksinimi tanımla</h3>
+          <p>
+            Hangi büyüklük ölçülecek, hangi karar verilecek, kabul sınırı ne, hat hızı ne
+            ve parça kameranın önüne nasıl geliyor. Tek sayfalık yazılı gereksinim çıkar;
+            ikimiz de aynı cümleyi okuruz.
+          </p>
+          <p class="sure">sizden: hat bilgisi · benden: soru listesi</p>
+        </div>
+
+        <div class="adim">
+          <h3>Numune parça gönder</h3>
+          <p>
+            İyi <strong>ve</strong> kusurlu numune. Yalnız sağlam parça gönderilirse
+            sistemin kusuru yakalayıp yakalamadığı ölçülemez — elde yalnız iyimser bir
+            tahmin kalır.
+          </p>
+          <p class="sure">sizden: numune + etiket · benden: teslim adresi</p>
+        </div>
+
+        <div class="adim">
+          <h3>Kavram ispatı</h3>
+          <p>
+            Aydınlatma, optik, çözünürlük ve çalışma mesafesi denenir; parça gerçekten
+            taranır, ölçüm defalarca tekrarlanır. Burada çıkan sonuç iyimser değil,
+            gerçektir.
+          </p>
+          <p class="sure">benden: tarama ve ölçüm · sizden: bekleme</p>
+        </div>
+
+        <div class="adim">
+          <h3>Rapor ve teklif</h3>
+          <p>
+            Örnek görüntü, ölçüm dağılımı, tekrarlanabilirlik, sınırlar, iş dosyası ve
+            "bu iş bu yöntemle olur / olmaz" cümlesi. Teklif de aynı zarfta gelir.
+          </p>
+          <p class="sure">benden: rapor + teklif · kararı siz verirsiniz</p>
+        </div>
+      </div>
+
+      <div class="not not-marka" style="margin-top:var(--a6)">
+        <span class="isaret" aria-hidden="true">◆</span>
+        <div>
+          <p class="baslik">Fizibilite ne sonuç verirse versin yazılı gelir</p>
+          <p>
+            "Bu parça bu aydınlatmayla güvenilir ölçülmez" cümlesi de bir sonuçtur ve
+            size satın almadan <em>önce</em> lazımdır. Bir işi reddetmek, tutmayacağını
+            bilerek kurmaktan ucuzdur — ikimiz için de.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       3. NUMUNE — ne gönderilir, nasıl gönderilir
+       ================================================================ -->
+  <section class="bolum" id="numune" aria-labelledby="numuneBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Numune</span>
+        <h2 id="numuneBas">Numune paketi: ne gönderilir, nasıl gönderilir</h2>
+        <p>
+          Fizibilitenin tamamı bu kutunun içinden çıkar. Eksik gelen her kalem, raporda
+          bir rakamın yerine "ölçülemedi" yazılması demektir.
+        </p>
+      </div>
+
+      <div class="tablo-sar kart-kir" tabindex="0" aria-label="Numune paketi tablosu, yatay kaydırılabilir">
+        <table class="spec">
+          <caption>Numune paketi — kalem · neden gerekli · eksikse ne olur</caption>
+          <thead>
+            <tr>
+              <th scope="col">kalem</th>
+              <th scope="col">neden gerekli</th>
+              <th scope="col">eksikse ne olur</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">İyi numune — en az 2 adet</th>
+              <td data-bas="neden gerekli">Nominal yüzeyin sensörde nasıl göründüğü öğrenilir; kabul bandı buradan kurulur.</td>
+              <td data-bas="eksikse">Sistemin "doğru" saydığı bir referans olmaz; her ölçüm havada kalır.</td>
+            </tr>
+            <tr>
+              <th scope="row">Kusurlu numune — en az 2 adet</th>
+              <td data-bas="neden gerekli">Yakalama oranı sayılır: bilinen kaç kusurdan kaçı bulundu.</td>
+              <td data-bas="eksikse">Yakalama oranı ölçülemez, yalnız tahmin edilir — rapora rakam yazılamaz.</td>
+            </tr>
+            <tr>
+              <th scope="row">Sınırdaki numune — varsa</th>
+              <td data-bas="neden gerekli">Kabul sınırının hangi tarafında olduğu tartışmalı parçalar en zor kararı verdirir.</td>
+              <td data-bas="eksikse">Sınır davranışı bilinmez; hatta beklenmedik yanlış ret çıkar.</td>
+            </tr>
+            <tr>
+              <th scope="row">Kabul kriteri — yazılı</th>
+              <td data-bas="neden gerekli">Tolerans (± mm) ya da fiziksel OK/NOK örneği. Karar kuralı bundan yazılır.</td>
+              <td data-bas="eksikse">"Kötü olanı ayıklayın" bir kabul kriteri değildir; sistem neye göre reddedeceğini bilemez.</td>
+            </tr>
+            <tr>
+              <th scope="row">Çevrim süresi ve hat düzeni</th>
+              <td data-bas="neden gerekli">Denetime kaç saniye pay var, parça duruyor mu yoksa bilinen bir hızla mı geçiyor.</td>
+              <td data-bas="eksikse">Sensör ve tarama kurgusu yanlış seçilir; maliyet de süre de kayar.</td>
+            </tr>
+            <tr>
+              <th scope="row">Fotoğraf — telefon yeterli</th>
+              <td data-bas="neden gerekli">İstasyon, montaj yeri, kablo yolu ve mevcut ışık koşulu görünür.</td>
+              <td data-bas="eksikse">Yerleşim sorunları saha ziyaretinde ortaya çıkar; en pahalı gecikme buradan gelir.</td>
+            </tr>
+            <tr>
+              <th scope="row">Ortam koşulları</th>
+              <td data-bas="neden gerekli">Titreşim, buhar, toz, yağ sisi, Ex bölgesi. Bilinmiyorsa fizibilitede ölçülür.</td>
+              <td data-bas="eksikse">Bilinmemesi sorun değil; hiç konuşulmadan kurulum yapılması sorundur.</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3">
+                Adet sayıları alt sınırdır; parça çeşitliliği yüksekse her çeşitten örnek istenir.
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="izgara iz-yan" style="margin-top:var(--a6)">
+        <div class="kart">
+          <span class="ust-baslik">Gönderim koşulları</span>
+          <ul class="metin-blok kucuk">
+            <li>
+              <strong>Her parça etiketlenir:</strong> OK / NOK ve kusur tek cümleyle yazılır.
+              Etiketsiz kusurlu parça, sağlam parçadan ayırt edilemez; ölçüm yapılır ama
+              yakalama oranı sayılamaz.
+            </li>
+            <li>
+              <strong>Parça temizlenmez, parlatılmaz.</strong> Hattan çıktığı hâliyle gelsin:
+              yağlı, tozlu, çapaklı hâli gerçek koşuldur. Temizlenmiş numuneyle çıkan sonuç
+              sahada tekrarlanmaz.
+            </li>
+            <li>
+              <strong>Taşınamayan parça için önce ölçü ve fotoğraf.</strong> Ağır, kırılgan
+              ya da hattan sökülemeyen parçalarda yerinde ölçüm ayrıca konuşulur.
+            </li>
+            <li>
+              <strong>Numuneler iade edilir.</strong> Kargo yönü ve masrafı yazışmada, numune
+              yola çıkmadan önce kararlaştırılır.
+            </li>
+            <li>
+              <strong>Görseller izinsiz yayımlanmaz.</strong> Parça fotoğrafları, taramalar ve
+              ölçümler yazılı izniniz olmadan bu sitede veya başka bir yerde kullanılmaz;
+              isterseniz gizlilik anlaşması imzalanır.
+            </li>
+            <li>
+              <strong>Tehlikeli madde gönderilmez.</strong> Kimyasal, basınçlı veya Ex kapsamına
+              giren numuneler bu akışın dışındadır; bu durumda yöntem baştan farklı kurulur.
+            </li>
+          </ul>
+        </div>
+
+        <div class="yigin">
+          <div class="not not-uyari">
+            <span class="isaret" aria-hidden="true">!</span>
+            <div>
+              <p class="baslik">Numune gelmeden verilen her rakam tahmindir</p>
+              <p>
+                Telefonda "bu iş olur, ±0,1 mm çıkar" demek kolaydır. Ben bunu numune
+                taranmadan söylemiyorum — çünkü söylediğim rakam sonra sözleşmeye giriyor.
+              </p>
+            </div>
+          </div>
+          <div class="not not-bilgi">
+            <span class="isaret" aria-hidden="true">i</span>
+            <div>
+              <p class="baslik">Numuneniz yoksa süreç yine başlar</p>
+              <p>
+                İlk adım yazışmadır: parçanın ne olduğu ve neyin denetleneceği bir cümleyle
+                yeter. Numune ikinci adımda gerekir; ilk cevabı almak için beklemenize
+                gerek yok.
+              </p>
+            </div>
+          </div>
+          <a class="dug dug-2 dug-tam" href="#talep">Talebi yazmaya başlayın</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       4. RAPOR — fizibiliteden ne döner
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="rapor" aria-labelledby="raporBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Çıktı</span>
+        <h2 id="raporBas">Fizibilite raporunda ne döner</h2>
+        <p>
+          Rapor bir tanıtım dosyası değil, ölçüm kaydıdır. Aşağıdaki sekiz kalemin hepsi
+          gelir; gelemeyen bir kalem varsa nedeni raporda yazılıdır.
+        </p>
+      </div>
+
+      <div class="tablo-sar kart-kir" tabindex="0" aria-label="Fizibilite raporu içeriği tablosu, yatay kaydırılabilir">
+        <table class="spec">
+          <caption>Rapor içeriği — ne gelir · içinde ne var · neye yarar</caption>
+          <thead>
+            <tr>
+              <th scope="col">ne gelir</th>
+              <th scope="col">içinde ne var</th>
+              <th scope="col">neye yarar</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Örnek görüntü</th>
+              <td data-bas="içinde">Ham nokta bulutu, ondan kurulan yüzey ve nominale göre sapma haritası.</td>
+              <td data-bas="neye yarar">Parçanızın gerçekten taranabildiğini gözle görürsünüz; veri boşlukları da görünür.</td>
+            </tr>
+            <tr>
+              <th scope="row">Ölçüm dağılımı</th>
+              <td data-bas="içinde">Tekrarlanan ölçümlerin dağılımı: ortalama, saçılım, uç değerler.</td>
+              <td data-bas="neye yarar">Ortalama kadar saçılım da karar verir; tek bir ölçüm hiçbir şey ispat etmez.</td>
+            </tr>
+            <tr class="vurgu">
+              <th scope="row">Tekrarlanabilirlik</th>
+              <td data-bas="içinde">Aynı parça defalarca ölçülür; ölçüm saçılımı ± mm olarak yazılır.</td>
+              <td data-bas="neye yarar">Kalite tarafının MSA / Gage R&amp;R dosyasına girecek ham veri budur.</td>
+            </tr>
+            <tr>
+              <th scope="row">Yakalama oranı</th>
+              <td data-bas="içinde">Bilinen kusurlu parçaların kaçı yakalandı, sayı olarak.</td>
+              <td data-bas="neye yarar">Tahmin ölçüme dönüşür; kazanç hesabına girecek oran budur.</td>
+            </tr>
+            <tr>
+              <th scope="row">Yanlış ret sayısı</th>
+              <td data-bas="içinde">Sağlam parçalar da geçirilir; kaçının gereksiz yere reddedildiği raporlanır.</td>
+              <td data-bas="neye yarar">Üretim müdürünün ilk sorusu budur: "sağlam parçamı atacak mı?"</td>
+            </tr>
+            <tr>
+              <th scope="row">Çevrim süresi</th>
+              <td data-bas="içinde">Denetimin hatta eklediği süre, tahmin değil ölçüm olarak.</td>
+              <td data-bas="neye yarar">Denetim istasyonunun darboğaz olup olmayacağı hesaplanabilir.</td>
+            </tr>
+            <tr>
+              <th scope="row">Sınırlar</th>
+              <td data-bas="içinde">Bu yöntemin bu parçada yapamadıkları ve riskli koşullar, açık cümlelerle.</td>
+              <td data-bas="neye yarar">Sürpriz devreye almada değil, karar öncesinde çıkar.</td>
+            </tr>
+            <tr>
+              <th scope="row">İş dosyası</th>
+              <td data-bas="içinde">Fizibilitede kullanılan araç zinciri, parametreler ve kabul limitleri.</td>
+              <td data-bas="neye yarar">Kurulumda aynı dosya yüklenir; sahada sıfırdan başlanmaz.</td>
+            </tr>
+            <tr>
+              <th scope="row">Teklif</th>
+              <td data-bas="içinde">Kapsam, kapsam dışı, süre ve fiyat. Yazılım lisansı <span class="n-b">64.000&nbsp;TL</span>.</td>
+              <td data-bas="neye yarar">Rapordaki rakamlarla teklifteki rakamlar aynı zarftan çıkar.</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3">
+                Fiyat ve kapsam ayrıntısı: <a href="fiyat.html">fiyat sayfası</a> ·
+                geri dönüş hesabı: <a href="fiyat.html#kazanc">kazanç hesabı</a>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="not" style="margin-top:var(--a6)">
+        <span class="isaret" aria-hidden="true">◆</span>
+        <div>
+          <p class="baslik">"Olmaz" da geçerli bir rapor sonucudur</p>
+          <p>
+            Parçanız için 3D tarama uygun değilse, 2D bir çözüm yeterliyse ya da iş
+            koordinat ölçüm makinesinin alanına giriyorsa rapor bunu yazar. Uygun olmayan
+            işi satmak iki tarafa da zarar verir.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       5. DEVREYE ALMA — dinleyici kip → onaylı yazma
+       ================================================================ -->
+  <section class="bolum" id="devreye" aria-labelledby="devreyeBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Devreye alma</span>
+        <h2 id="devreyeBas">Önce dinler, sonra yazar</h2>
+        <p>
+          Amaç hattı durdurmamaktır. Sistem üretime ilk günden karar veren bir otorite
+          olarak değil, sessiz bir gözlemci olarak girer; PLC'ye yazma en son ve sizin
+          onayınızla açılır.
+        </p>
+      </div>
+
+      <figure class="sema-kutu">
+        <div class="bas">
+          <span class="baslik">Devreye alma sırası — üç aşama</span>
+          <span class="sema-rozet">Şema</span>
+        </div>
+        <div class="govde" style="color:var(--metin-2)">
+          <svg viewBox="0 0 720 200" role="img"
+               aria-label="Üç aşamalı devreye alma şeması. Birinci aşama dinleyici kip: sistem ölçer, kaydeder ve karar üretir, PLC'ye yazma kapalıdır. İkinci aşama karşılaştırma: sistemin kararı gerçek üretim sonucuyla yan yana konur, yanlış ret sayılır, PLC'ye yazma hâlâ kapalıdır. Üçüncü aşama onaylı yazma: yazılı onaydan sonra PLC'ye yazma açılır."
+               style="width:100%;height:auto">
+            <g stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="8"   y="26" width="212" height="98" rx="4"/>
+              <rect x="254" y="26" width="212" height="98" rx="4"/>
+              <rect x="500" y="26" width="212" height="98" rx="4" style="stroke:var(--marka)"/>
+              <path d="M226 75h20M240 69l8 6-8 6"/>
+              <path d="M472 75h20M486 69l8 6-8 6"/>
+              <rect x="8"   y="146" width="212" height="30" rx="3" stroke-dasharray="4 3"/>
+              <rect x="254" y="146" width="212" height="30" rx="3" stroke-dasharray="4 3"/>
+              <rect x="500" y="146" width="212" height="30" rx="3" style="stroke:var(--marka)"/>
+            </g>
+            <g font-family="Consolas, ui-monospace, monospace" font-size="12" fill="currentColor" text-anchor="middle">
+              <text x="114" y="54" font-size="14" font-weight="600">1 · Dinleyici kip</text>
+              <text x="114" y="78">ölçer · kaydeder</text>
+              <text x="114" y="98">karar üretir</text>
+              <text x="114" y="116" opacity=".75">hat normal çalışır</text>
+
+              <text x="360" y="54" font-size="14" font-weight="600">2 · Karşılaştırma</text>
+              <text x="360" y="78">karar ↔ gerçek sonuç</text>
+              <text x="360" y="98">yanlış ret sayılır</text>
+              <text x="360" y="116" opacity=".75">eşik birlikte ayarlanır</text>
+
+              <text x="606" y="54" font-size="14" font-weight="600" fill="currentColor" style="fill:var(--marka-metin)">3 · Onaylı yazma</text>
+              <text x="606" y="78">yazılı onaydan sonra</text>
+              <text x="606" y="98">PLC'ye yazar</text>
+              <text x="606" y="116" opacity=".75">adres ve sinyal sabit</text>
+
+              <text x="114" y="165">PLC'ye yazma: KAPALI</text>
+              <text x="360" y="165">PLC'ye yazma: KAPALI</text>
+              <text x="606" y="165" fill="currentColor" style="fill:var(--marka-metin)">PLC'ye yazma: AÇIK</text>
+            </g>
+            <g font-family="Consolas, ui-monospace, monospace" font-size="11" fill="currentColor" opacity=".8">
+              <text x="8" y="16">zaman →</text>
+              <text x="8" y="194">Aşamalar arası geçiş süresi hatta göre değişir; geçiş kararını siz verirsiniz.</text>
+            </g>
+          </svg>
+        </div>
+        <figcaption>
+          Şema — gerçek bir devreye alma kaydı değil, izlenen sıranın anlatımıdır.
+          Aşamaların ne kadar süreceği hatta ve parça çeşitliliğine göre değişir.
+        </figcaption>
+      </figure>
+
+      <div class="izgara iz-yan" style="margin-top:var(--a6)">
+        <div class="not not-uyari">
+          <span class="isaret" aria-hidden="true">!</span>
+          <div>
+            <p class="baslik">PLC yazma davranışı habersiz değişmez</p>
+            <p>
+              Hangi adrese, hangi sinyal, hangi koşulda yazılacağı devreye almada yazılı
+              olarak sabitlenir. Bu davranış sonradan ancak yeni bir yazılı onayla
+              değiştirilir — canlı hat üzerinde deneme yapılmaz, "küçük bir düzeltme"
+              diye tek satır değiştirilmez.
+            </p>
+            <p>
+              Dinleyici kipte geçen sürede sistem yalnız okur ve kaydeder; hattın mevcut
+              çalışması hiçbir biçimde etkilenmez.
+            </p>
+          </div>
+        </div>
+
+        <div class="yigin">
+          <div>
+            <span class="ust-baslik notr">Yazma tarafında ne hazır</span>
+            <div class="etiket-satir" style="margin-top:var(--a3)">
+              <span class="rozet rozet-hazir" data-isaret="✓">Siemens S7</span>
+              <span class="rozet rozet-hazir" data-isaret="✓">Mitsubishi MC/SLMP</span>
+              <span class="rozet rozet-hazir" data-isaret="✓">Modbus TCP</span>
+              <span class="rozet rozet-hazir" data-isaret="✓">PROFINET DCP keşfi</span>
+              <span class="rozet rozet-yol" data-isaret="◔">OPC UA — yol haritasında</span>
+              <span class="rozet rozet-yol" data-isaret="◔">PROFINET IO — yol haritasında</span>
+            </div>
+            <p class="kucuk soluk" style="margin-top:var(--a3)">
+              Yol haritasındaki iki protokol bugün çalışmıyor; proje bazında konuşulur ve
+              teklifte taahhüt olarak yazılmaz. Ayrıntı:
+              <a href="yazilim.html#uyumluluk">uyumluluk tablosu</a>.
+            </p>
+          </div>
+          <div class="not not-bilgi">
+            <span class="isaret" aria-hidden="true">i</span>
+            <div>
+              <p class="baslik">PLC yoksa da yol var</p>
+              <p>
+                Hatta PLC bulunmuyorsa karar dijital çıkış olarak kurgulanabilir; bu da
+                fizibilitede denenir ve rapora yazılır.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       6. TALEP — sayfanın tek CTA bandı, tek eylem
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="talep" aria-labelledby="talepBas">
+    <div class="kap">
+      <div class="cta">
+        <div class="izgara iz-yan">
+          <div>
+            <span class="ust-baslik">Tek eylem</span>
+            <h2 id="talepBas" style="margin-top:var(--a3)">Fizibilite talebi</h2>
+            <p>
+              Bir iyi ve bir kusurlu numune, bir de "şunu ölçmek istiyorum" cümlesi yeter.
+              Gerisini fizibilite söyler.
+            </p>
+            <p class="kucuk soluk" style="margin-top:var(--a4)">
+              Doğrudan yazmak isterseniz:
+              <a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a><br>
+              Sercan Sözer — mekatronik mühendisi, İzmir.
+            </p>
+            <p class="kucuk soluk" style="margin-top:var(--a4)">
+              Bilmediğiniz alanları boş bırakın; eksik kalanları ben sorarım. Formu
+              doldurmak zorunda da değilsiniz — düz bir e-posta da aynı işi görür.
+            </p>
+          </div>
+
+          <form class="form" id="talepForm" action="mailto:sercansozer20@gmail.com"
+                method="post" enctype="text/plain">
+            <p class="kucuk soluk">
+              Bu form <strong>hiçbir sunucuya veri göndermez</strong>: yazdıklarınızdan
+              e-posta taslağı hazırlar ve kendi posta uygulamanızda açar. Gönderme kararı
+              sizde kalır.
+            </p>
+
+            <label class="alan" for="tFirma">
+              <span class="etiket">Firma / hat <span class="gerek" aria-hidden="true">*</span></span>
+              <input type="text" id="tFirma" name="firma" required autocomplete="organization"
+                     placeholder="Örn. dolum hattı 2">
+            </label>
+
+            <label class="alan" for="tIletisim">
+              <span class="etiket">Dönüş adresi <span class="gerek" aria-hidden="true">*</span></span>
+              <input type="text" id="tIletisim" name="iletisim" required autocomplete="email"
+                     placeholder="E-posta veya telefon">
+              <span class="ipucu">Cevabı buraya yazarım; başka hiçbir yerde saklanmaz.</span>
+            </label>
+
+            <label class="alan" for="tIs">
+              <span class="etiket">Parça ve denetlenecek özellik <span class="gerek" aria-hidden="true">*</span></span>
+              <textarea id="tIs" name="is" required
+                        placeholder="Örn. kaynaklı gövde — kaynak ağzı derinliği ve genişliği ölçülecek"></textarea>
+            </label>
+
+            <label class="alan" for="tKriter">
+              <span class="etiket">Kabul kriteri</span>
+              <input type="text" id="tKriter" name="kriter"
+                     placeholder="Tolerans (± mm) ya da elimde OK/NOK örnek var">
+            </label>
+
+            <label class="alan" for="tCevrim">
+              <span class="etiket">Çevrim süresi</span>
+              <input type="text" id="tCevrim" name="cevrim"
+                     placeholder="Örn. 4 saniye / parça — bilmiyorsanız boş bırakın">
+            </label>
+
+            <label class="alan" for="tPlc">
+              <span class="etiket">Hattaki PLC</span>
+              <select id="tPlc" name="plc">
+                <option value="">Seçiniz (isteğe bağlı)</option>
+                <option>Siemens S7</option>
+                <option>Mitsubishi (MC/SLMP)</option>
+                <option>Modbus TCP konuşan bir cihaz</option>
+                <option>PLC yok</option>
+                <option>Başka / bilmiyorum</option>
+              </select>
+            </label>
+
+            <label class="alan" for="tOrtam">
+              <span class="etiket">Ortam koşulları</span>
+              <input type="text" id="tOrtam" name="ortam"
+                     placeholder="Titreşim, buhar, toz, yağ sisi, Ex bölgesi">
+            </label>
+
+            <label class="secim" for="tNumune">
+              <input type="checkbox" id="tNumune" name="numune" value="var">
+              <span class="yazi">Kusurlu numune gönderebilirim (fizibiliteyi ciddi biçimde hızlandırır)</span>
+            </label>
+
+            <div class="eylem" style="margin-top:var(--a5)">
+              <button type="submit" class="dug dug-1 dug-b">E-posta taslağını aç</button>
+            </div>
+
+            <div class="not not-bilgi gizli" id="talepNot" role="status" style="margin-top:var(--a4)">
+              <span class="isaret" aria-hidden="true">i</span>
+              <div>
+                <p class="baslik">Posta uygulamanız açılmadıysa</p>
+                <p>
+                  Tarayıcı e-posta uygulamasını açamıyor olabilir. Bu durumda doğrudan
+                  <a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a>
+                  adresine yazın; aynı bilgileri iki cümleyle özetlemeniz yeterli.
+                </p>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       7. SSS — JavaScript'siz akordeon
+       ================================================================ -->
+  <section class="bolum" id="sss" aria-labelledby="sssBas">
+    <div class="kap kap-dar" style="max-width:52rem">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Sık sorulanlar</span>
+        <h2 id="sssBas">Satın almadan önceki gerçek itirazlar</h2>
+      </div>
+
+      <div class="sss">
+        <details>
+          <summary>Fizibilite ücretli mi?</summary>
+          <div class="cevap kucuk">
+            <p>
+              Kapsamı ve varsa ücreti, numune yola çıkmadan <strong>önce</strong> yazılı
+              olarak netleşir. Birkaç parçayla yapılan bir tarama ile özel fikstür, uzun
+              süreli veri toplama veya saha ziyareti gerektiren bir çalışma aynı şey
+              değildir; hangisi olduğunu ilk yazışmada birlikte belirleriz.
+            </p>
+            <p>
+              Neyin ne kadar tutacağını bilmeden numune göndermenizi istemem.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Ne kadar sürer?</summary>
+          <div class="cevap kucuk">
+            <p>
+              Tek bir rakam söylemiyorum, çünkü süre parça çeşidi sayısına, aydınlatma
+              denemelerine ve kabul kriterinin ne kadar net olduğuna bağlı. Numune elime
+              geçtiğinde takvimi yazılı veririm ve sapma olursa haber veririm.
+            </p>
+            <p>
+              Gecikmelerin çoğu teknikten değil eksik bilgiden çıkar: kabul kriteri yazılı
+              değilse ölçüm biter, karar bitmez.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Numunelerim iade edilir mi, gizli kalır mı?</summary>
+          <div class="cevap kucuk">
+            <p>
+              Numuneler iade edilir; kargo yönü ve masrafı numune yola çıkmadan
+              kararlaştırılır. Parça fotoğrafları, taramalar ve ölçümler yazılı izniniz
+              olmadan bu sitede veya başka bir yerde kullanılmaz.
+            </p>
+            <p>
+              Gizlilik anlaşması isterseniz imzalanır. Bu sitede yayımlanan hiçbir görsel
+              müşteri parçası değildir — sahnelerin hepsi şema olarak işaretlidir.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Sonuç olumsuz çıkarsa ne oluyor?</summary>
+          <div class="cevap kucuk">
+            <p>
+              Raporda "bu iş bu yöntemle güvenilir yapılmaz" yazar ve nedeni açıklanır:
+              yüzey, ışık, tolerans, hız ya da parça duruşu. Bu bir başarısızlık değil,
+              raporun asıl işlerinden biridir.
+            </p>
+            <p>
+              Uygun olmayan işi satmak iki tarafa da zarar verir: siz para kaybedersiniz,
+              ben tek kişilik bir işletme olarak itibar kaybederim.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Devreye alma sırasında hattım duracak mı?</summary>
+          <div class="cevap kucuk">
+            <p>
+              Amaç durdurmamaktır. Sistem önce <strong>dinleyici</strong> kipte kurulur:
+              ölçer, kaydeder, karar üretir ama PLC'ye yazmaz. Kararları bir süre gerçek
+              üretimle karşılaştırırsınız; ancak siz onay verdikten sonra yazma açılır.
+            </p>
+            <p>
+              Mekanik montaj ve kablolama için planlı bir duruş gerekebilir; bu, işin
+              başında hat bakımıyla birlikte planlanır ve sürprize bırakılmaz.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Kendi kameramla çalışır mı?</summary>
+          <div class="cevap kucuk">
+            <p>
+              LMI Gocator ve Wenglor MLBS115 aileleri bugün çalışır. Başka bir marka için
+              sürücü yazmak gerekir; bu bir fizibilite kalemidir ve süresi tahminle değil
+              cihazın belgesine bakılarak söylenir.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Aydınlatmayı ben mi çözeceğim?</summary>
+          <div class="cevap kucuk">
+            <p>
+              Hayır, ama aydınlatma "sonra bakarız" kalemi de değil. Makine görüşü
+              projelerinin çoğu yazılımdan değil kontrolsüz ışıktan başarısız olur.
+              Fizibilitede aydınlatma denenir ve rapora yazılır; sahadaki uygulaması
+              kapsam dışıdır ama tarifi kapsamdadır.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Neden sitede müşteri logosu ve referans yok?</summary>
+          <div class="cevap kucuk">
+            <p>
+              Çünkü gösterebileceğim bir logo duvarı yok. Uydurmak yerine bölümü hiç
+              açmadım. Yerine koyduklarım kontrol edilebilir: açık fiyat, durum sütunlu
+              protokol tablosu, "yapamaz" listesi ve satın almadan önce yapılan fizibilite.
+            </p>
+            <p>
+              Tek kişiyim ve kurumsal bir tüzel kişilik henüz yok; bunu gizlemek yerine
+              yazıyorum. Faturalandırma biçimi işin başında yazılı olarak netleştirilir.
+            </p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       8. SÖZLÜK — rapordaki terimlerin karşılığı
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="sozluk" aria-labelledby="sozlukBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Sözlük</span>
+        <h2 id="sozlukBas">Raporda geçen terimler</h2>
+        <p>
+          Bu terimler fizibilite raporunda ve teklifte aynen geçer. Toplantıda "anladım"
+          demek zorunda kalmayın diye buraya yazdım.
+        </p>
+      </div>
+
+      <div class="tablo-sar kart-kir" tabindex="0" aria-label="Terim sözlüğü tablosu, yatay kaydırılabilir">
+        <table class="spec">
+          <caption>Terim · ne demek · neden sizi ilgilendirir</caption>
+          <thead>
+            <tr>
+              <th scope="col">terim</th>
+              <th scope="col">ne demek</th>
+              <th scope="col">neden sizi ilgilendirir</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Nokta bulutu</th>
+              <td data-bas="ne demek">Sensörün yüzeyden topladığı on binlerce (x, y, z) ölçüm noktası. Fotoğraf değil, ölçülmüş geometridir.</td>
+              <td data-bas="neden önemli">Bütün ölçüler doğrudan bu noktalardan çıkar. Nokta yoğunluğu düşen bölgede küçük kusur gözden kaçar.</td>
+            </tr>
+            <tr>
+              <th scope="row">Tekrarlanabilirlik</th>
+              <td data-bas="ne demek">Aynı parçayı aynı koşulda defalarca ölçtüğünüzde sonuçların ne kadar saçıldığı; ± mm olarak yazılır.</td>
+              <td data-bas="neden önemli">Toleransınız ±0,2 mm iken ölçüm saçılımı ±0,15 mm ise sistem toleransın çoğunu kendisi yer.</td>
+            </tr>
+            <tr>
+              <th scope="row">GR&amp;R (Gage R&amp;R)</th>
+              <td data-bas="ne demek">Ölçüm sisteminin kendi belirsizliğini tolerans bandına oranlayan kalite yöntemi; MSA çalışmasının parçasıdır.</td>
+              <td data-bas="neden önemli">Kalite tarafı ölçüm sistemini bu dosyayla kabul eder; rapordaki saçılım verisi bu dosyanın ham girdisidir.</td>
+            </tr>
+            <tr>
+              <th scope="row">Çalışma mesafesi</th>
+              <td data-bas="ne demek">Sensörün ölçüm yapabildiği, sensör ile yüzey arasındaki mesafe aralığı. Aralığın dışına çıkan yüzey ölçülmez.</td>
+              <td data-bas="neden önemli">Montaj yeri ve parça yükseklik farkı bu aralığa sığmak zorunda; sığmıyorsa mekanik değişir, yazılım kurtarmaz.</td>
+            </tr>
+            <tr>
+              <th scope="row">Yanlış ret</th>
+              <td data-bas="ne demek">Sağlam parçanın sistem tarafından hatalı sayılması. Kaçak kusurun tersi yöndeki hatadır.</td>
+              <td data-bas="neden önemli">Çok sıkı eşik hurdayı azaltmaz, üretimi durdurur. Eşik bu sayı bilinerek ayarlanır.</td>
+            </tr>
+            <tr>
+              <th scope="row">İlgi alanı (ROI)</th>
+              <td data-bas="ne demek">Taranan yüzeyin, ölçümün gerçekten yapıldığı sınırlandırılmış bölgesi.</td>
+              <td data-bas="neden önemli">Kararın hangi bölgeye bakılarak verildiğini belirler; ROI dışındaki kusur raporlanmaz.</td>
+            </tr>
+            <tr>
+              <th scope="row">Dinleyici kip</th>
+              <td data-bas="ne demek">Sistemin ölçüp kaydettiği ama PLC'ye hiçbir şey yazmadığı devreye alma aşaması.</td>
+              <td data-bas="neden önemli">Hattı riske atmadan sistemin kararlarını gerçek üretimle karşılaştırmanızı sağlar.</td>
+            </tr>
+            <tr>
+              <th scope="row">İş dosyası</th>
+              <td data-bas="ne demek">Araç zinciri, parametreler ve kabul limitlerinin tutulduğu yapılandırma dosyası.</td>
+              <td data-bas="neden önemli">Fizibilitede çıkan ayar sahaya aynen taşınır; kurulumda sıfırdan parametre aranmaz.</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3">
+                Bu tablodaki tanımlar sektörde yerleşik karşılıklardır; teklifte farklı bir
+                anlamda kullanılan bir terim olursa teklifte ayrıca tanımlanır.
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <noscript>
+    <div class="kap" style="padding-bottom:var(--a7)">
+      <div class="not not-uyari">
+        <span class="isaret" aria-hidden="true">!</span>
+        <div>
+          <p class="baslik">JavaScript kapalı</p>
+          <p>
+            Bu sayfanın tamamı JavaScript olmadan okunur: süreç adımları, numune tablosu,
+            rapor içeriği, devreye alma şeması, SSS ve sözlük çalışmaya devam eder.
+            Fizibilite formu da çalışır; yalnız e-posta taslağı daha sade biçimlenir.
+            Dilerseniz doğrudan
+            <a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a>
+            adresine yazabilirsiniz.
+          </p>
+        </div>
+      </div>
+    </div>
+  </noscript>
+
+</main>
+
+<!-- ==================================================================
+     ALT BİLGİ
+     ================================================================== -->
+<footer class="alt-bilgi">
+  <div class="kap">
+    <div class="alt-izgara">
+      <div>
+        <h2 class="bas">İş</h2>
+        <ul>
+          <li><a href="uygulamalar.html">Uygulamalar</a></li>
+          <li><a href="yazilim.html">Vision Detection App</a></li>
+          <li><a href="yazilim.html#uyumluluk">Uyumluluk ve protokoller</a></li>
+          <li><a href="surec.html">Nasıl çalışır</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Karar</h2>
+        <ul>
+          <li><a href="fiyat.html">Fiyat ve kapsam</a></li>
+          <li><a href="fiyat.html#kazanc">Kazanç hesabı</a></li>
+          <li><a href="fiyat.html#magaza">Satın alma</a></li>
+          <li><a href="surec.html#talep">Fizibilite talebi</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Site</h2>
+        <ul>
+          <li><a href="forum.html">Danışma Masası</a></li>
+          <li><a href="hakkinda.html">Hakkında ve yazılar</a></li>
+          <li><a href="hesabim.html">Hesabım</a></li>
+          <li><a href="gizlilik.html">Gizlilik ve KVKK</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">İletişim</h2>
+        <ul>
+          <li><a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a></li>
+        </ul>
+        <p class="kucuk soluk" style="margin-top:var(--a3);max-width:26ch">
+          Sercan Sözer — mekatronik mühendisi, İzmir. Şahıs olarak, mühendislik hizmeti
+          biçiminde çalışıyorum.
+        </p>
+      </div>
+    </div>
+
+    <div class="alt-son">
+      <span>© <span class="sayi">2026</span> Sercan Sözer</span>
+      <span>Dış font, dış stil ve reklam/analitik izleyicisi yüklenmez.</span>
+      <button type="button" class="tema-dug" id="temaDug" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6 6l1.5 1.5M16.5 16.5L18 18M18 6l-1.5 1.5M7.5 16.5L6 18"/><circle cx="12" cy="12" r="4"/></svg>
+        <span id="temaYazi">Koyu tema</span>
+      </button>
+    </div>
+  </div>
+</footer>
+
+<!-- ==================================================================
+     SAYFA BETİKLERİ
+     ================================================================== -->
+<script>
+/* ---------------------------------------------------------------
+   Sayfa etkileşimleri: tema anahtarı, mobil menü, fizibilite formu.
+   Klasik betik — defer'lı ortak betiklerden önce koşar.
+   Form SUNUCUYA VERİ GÖNDERMEZ: yalnız mailto taslağı kurar. Bu
+   yüzden Onay (KVKK) kapısına takılan bir yazma işlemi yoktur.
+   --------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  /* --- tema anahtarı --- */
+  var kok = document.documentElement;
+  var dug = document.getElementById('temaDug');
+  var yazi = document.getElementById('temaYazi');
+
+  function koyuMu() {
+    var t = kok.getAttribute('data-tema');
+    if (t) return t === 'koyu';
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  function temaYaz() {
+    var k = koyuMu();
+    dug.setAttribute('aria-pressed', k ? 'true' : 'false');
+    yazi.textContent = k ? 'Açık tema' : 'Koyu tema';
+  }
+  if (dug && yazi) {
+    dug.addEventListener('click', function () {
+      var yeni = koyuMu() ? 'acik' : 'koyu';
+      kok.setAttribute('data-tema', yeni);
+      try { localStorage.setItem('sersoz_tema', yeni); } catch (e) {}
+      temaYaz();
+    });
+    temaYaz();
+  }
+
+  /* --- mobil menü: Escape kapatır, bağlantıya tıklayınca kapanır --- */
+  var mk = document.getElementById('menuKutu');
+  if (mk) {
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && mk.checked) { mk.checked = false; }
+    });
+    var menu = document.querySelector('.ust-menu');
+    if (menu) menu.addEventListener('click', function (e) {
+      if (e.target.tagName === 'A') mk.checked = false;
+    });
+    /* label'ın klavyeyle çalışması (role=button) */
+    var etiketDug = document.querySelector('.menu-dug');
+    if (etiketDug) etiketDug.addEventListener('keydown', function (e) {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); mk.checked = !mk.checked; }
+    });
+  }
+
+  /* --- fizibilite formu: düzgün bir e-posta taslağı kurar --------
+     JS kapalıysa formun kendi action="mailto:" davranışı devreye girer;
+     o hâlde taslak daha sade olur ama iş yine görülür. */
+  var form = document.getElementById('talepForm');
+  if (!form) return;
+
+  function al(kimlik) {
+    var e = document.getElementById(kimlik);
+    if (!e) return '';
+    if (e.type === 'checkbox') return e.checked ? 'evet' : 'hayır';
+    return (e.value || '').replace(/\s+/g, ' ').trim();
+  }
+  function satirEkle(dizi, etiket, deger) {
+    dizi.push(etiket + ': ' + (deger || '-'));
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    var s = [];
+    s.push('Merhaba Sercan,');
+    s.push('');
+    s.push('sersoz.com/surec.html sayfasındaki formdan yazıyorum.');
+    s.push('');
+    satirEkle(s, 'Firma / hat', al('tFirma'));
+    satirEkle(s, 'Dönüş adresi', al('tIletisim'));
+    s.push('');
+    s.push('Parça ve denetlenecek özellik:');
+    s.push(al('tIs') || '-');
+    s.push('');
+    satirEkle(s, 'Kabul kriteri', al('tKriter'));
+    satirEkle(s, 'Çevrim süresi', al('tCevrim'));
+    satirEkle(s, 'Hattaki PLC', al('tPlc'));
+    satirEkle(s, 'Ortam koşulları', al('tOrtam'));
+    satirEkle(s, 'Kusurlu numune gönderebilirim', al('tNumune'));
+    s.push('');
+    s.push('İyi çalışmalar.');
+    s.push('');
+
+    var konu = 'Fizibilite talebi — ' + (al('tFirma') || 'sersoz.com');
+    var adres = 'mailto:sercansozer20@gmail.com'
+              + '?subject=' + encodeURIComponent(konu)
+              + '&body=' + encodeURIComponent(s.join('\n'));
+
+    var not = document.getElementById('talepNot');
+    if (not) not.classList.remove('gizli');
+
+    window.location.href = adres;
+  });
+})();
+</script>
+
+<!-- ORTAK BETİKLER — sıra sözleşmedir, bozulmaz:
+     onay.js window.Onay'ı kurar; hesap.js ve iz.js ona bakar.
+     Sıra bozulursa hata çıkmaz, işlevler SESSİZCE ölür. -->
+<script src="/onay.js" defer></script>
+<script src="/hesap.js" defer></script>
+<script src="/iz.js" defer></script>
+
+</body>
+</html>

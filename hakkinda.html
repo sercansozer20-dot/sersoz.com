@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hakkında ve yazılar — Sercan Sözer</title>
+<meta name="description" content="Sercan Sözer: mekatronik mühendisi, İzmir. Şahıs olarak mühendislik hizmeti veriyorum, şirket kaydım yok. Saha deneyimi (robot hücresi, PLC, SCADA), geliştirdiğim sistemler ve mühendislik günlüğü.">
+<meta name="author" content="Sercan Sözer">
+<meta name="theme-color" content="#c2410c">
+<link rel="canonical" href="https://sersoz.com/hakkinda.html">
+<meta property="og:type" content="profile">
+<meta property="og:site_name" content="Sercan Sözer — Makine Görüşü">
+<meta property="og:title" content="Hakkında ve yazılar — Sercan Sözer">
+<meta property="og:description" content="Mekatronik mühendisi, İzmir. Tek muhatap: yazılımı yazan kişiyle konuşursunuz. Saha deneyimi, geliştirdiğim sistemler ve mühendislik günlüğü.">
+<meta property="og:url" content="https://sersoz.com/hakkinda.html">
+<meta property="og:image" content="https://sersoz.com/og.png">
+<meta property="og:locale" content="tr_TR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23fafaf9'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231c1917' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Consolas,monospace' font-size='36' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="sistem.css">
+<script>
+/* Tema seçimi ilk boyamadan ÖNCE uygulanır — yoksa koyu temada beyaz çakma olur.
+   Anahtar yeni: mevcut sersoz_* anahtarlarının hiçbirine dokunmaz. */
+(function () {
+  try {
+    var t = localStorage.getItem('sersoz_tema');
+    if (t === 'koyu' || t === 'acik') document.documentElement.setAttribute('data-tema', t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body>
+
+<a class="atla" href="#icerik">İçeriğe atla</a>
+
+<!-- ==================================================================
+     ÜST ÇUBUK
+     .nav-links kapsayıcısı hesap.js'in API'sidir: giriş kutusu ve site
+     sahibine özel "Yönetim" bağlantısı oraya eklenir. Sınıf adı değişirse
+     ikisi de sessizce yok olur.
+     ================================================================== -->
+<header class="ust">
+  <input type="checkbox" id="menuKutu" class="menu-kutu" aria-hidden="true" tabindex="-1">
+  <div class="kap ust-ic">
+    <a class="logo" href="index.html">
+      <span class="isaret" aria-hidden="true">S</span>
+      <span>Sercan Sözer<span class="alt">makine görüşü · İzmir</span></span>
+    </a>
+
+    <nav class="ust-menu" aria-label="Ana gezinme">
+      <a href="uygulamalar.html">Uygulamalar</a>
+      <a href="yazilim.html">Yazılım</a>
+      <a href="yazilim.html#uyumluluk">Uyumluluk</a>
+      <a href="surec.html">Nasıl çalışır</a>
+      <a href="fiyat.html">Fiyat</a>
+      <a href="forum.html">Danışma Masası</a>
+    </nav>
+
+    <div class="nav-links">
+      <a class="dug dug-1 dug-ust" href="surec.html#talep">Fizibilite talebi</a>
+    </div>
+
+    <label class="menu-dug" for="menuKutu" role="button" tabindex="0"
+           aria-label="Menüyü aç veya kapat" aria-controls="menuKutu">
+      <svg class="ac" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <svg class="kapa" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </label>
+  </div>
+</header>
+
+<main id="icerik">
+
+  <!-- ================================================================
+       1. KİM — tek mühendis gerçeği, satış argümanı olarak
+       ================================================================ -->
+  <section class="bolum">
+    <div class="kap">
+      <span class="ust-baslik">Hakkında</span>
+      <h1 style="margin-top:var(--a4);max-width:20ch">Tek mühendis. Arada satış katmanı yok.</h1>
+      <p class="giris" style="margin-top:var(--a5);max-width:54ch">
+        Mekatronik mühendisiyim, İzmir'de çalışıyorum. Bu sitedeki yazılımı ben yazdım,
+        fizibiliteyi ben yapıyorum, sahada devreye alan da benim. Aradığınızda satış
+        temsilcisine değil, sistemi kuran kişiye ulaşırsınız.
+      </p>
+
+      <p class="kunye" style="margin-top:var(--a6)">
+        <span>meslek <b>Mekatronik mühendisi</b></span>
+        <span>konum <b>İzmir · Türkiye</b></span>
+        <span>çalışma biçimi <b>şahıs · mühendislik hizmeti</b></span>
+        <span>tüzel kişilik <b>şirket kaydı yok</b></span>
+      </p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       2. KÜNYE TABLOSU — doğrulanabilir olan / olmayan
+       ================================================================ -->
+  <section class="bolum-sik" aria-labelledby="kunyeBas">
+    <div class="kap">
+      <h2 id="kunyeBas" class="sr-only">Künye</h2>
+
+      <div class="izgara iz-yan">
+        <div class="tablo-sar kart-kir" tabindex="0" aria-label="Künye tablosu, yatay kaydırılabilir">
+          <table class="spec">
+            <caption>Künye — kiminle çalışıyorsunuz</caption>
+            <thead>
+              <tr>
+                <th scope="col">Kalem</th>
+                <th scope="col">Bilgi</th>
+                <th scope="col">Durum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Ad</th>
+                <td data-bas="Bilgi">Sercan Sözer</td>
+                <td data-bas="Durum"><span class="rozet rozet-hazir" data-isaret="✓">AÇIK</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Meslek</th>
+                <td data-bas="Bilgi">Mekatronik mühendisi</td>
+                <td data-bas="Durum"><span class="rozet rozet-hazir" data-isaret="✓">AÇIK</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Eğitim</th>
+                <td data-bas="Bilgi">Süleyman Demirel Üniversitesi, Mekatronik Mühendisliği (lisans, 2015–2019)</td>
+                <td data-bas="Durum"><span class="rozet rozet-hazir" data-isaret="✓">AÇIK</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Konum</th>
+                <td data-bas="Bilgi">İzmir; saha işi için seyahat eder</td>
+                <td data-bas="Durum"><span class="rozet rozet-hazir" data-isaret="✓">AÇIK</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Çalışma biçimi</th>
+                <td data-bas="Bilgi">Şahıs olarak mühendislik hizmeti; faturalandırma biçimi işin başında yazılı olarak netleşir</td>
+                <td data-bas="Durum"><span class="rozet rozet-hazir" data-isaret="✓">AÇIK</span></td>
+              </tr>
+              <tr class="vurgu">
+                <th scope="row">Tüzel kişilik</th>
+                <td data-bas="Bilgi">Şirket kaydı henüz yok — kurumsal bir yapı gibi görünmeye çalışmıyorum</td>
+                <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">YOK</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Ekip</th>
+                <td data-bas="Bilgi">Tek kişi. "Ekibimiz" diye çoğul konuşan bir sayfa görürseniz burası değildir</td>
+                <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">YOK</span></td>
+              </tr>
+              <tr>
+                <th scope="row">İletişim</th>
+                <td data-bas="Bilgi"><a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a></td>
+                <td data-bas="Durum"><span class="rozet rozet-hazir" data-isaret="✓">AÇIK</span></td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr><td colspan="3">
+                AÇIK = sayfada yazılı ve sorulduğunda belgelenir · YOK = elimde olmayan şey.
+                Bu tabloda övünme değil, satın alma kararınızı etkileyecek olgular var.
+              </td></tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="yigin">
+          <div class="not not-marka">
+            <span class="isaret" aria-hidden="true">◆</span>
+            <div>
+              <p class="baslik">Şirket kaydı yok — bunu neden yazıyorum</p>
+              <p>
+                Çünkü satın alma sürecinizde ikinci hafta ortaya çıkacak bir bilgiyi ilk gün
+                söylemek ikimizin de zamanını korur. Kurumsal tedarikçi zorunluluğunuz varsa
+                bunu baştan bilin; yoksa kazancı şudur: karar veren, kod yazan ve sahaya çıkan
+                aynı kişidir.
+              </p>
+            </div>
+          </div>
+          <div class="not">
+            <span class="isaret" aria-hidden="true">§</span>
+            <div>
+              <p class="baslik">Bunu da bir risk kalemi olarak yazın</p>
+              <p>
+                Tek kişilik bir tedarikçiden alıyorsunuz. Bunu küçültmüyorum: yazılım yerelde
+                çalışır, buluta bağlı değildir; iş dosyaları, tarama kayıtları ve kararların
+                dayanağı sizin makinenizde durur. Yani sistem, bana bağlı kalmadan da çalışmaya
+                devam eder.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       3. ÇALIŞMA BİÇİMİ — tek kişi olmanın iki yüzü
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="calisma" aria-labelledby="calBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Çalışma biçimi</span>
+        <h2 id="calBas">Tek kişi olmanın iki yüzü</h2>
+        <p>
+          Büyük entegratörün yapabildiği bazı şeyleri yapamam; onun yapamadığı bazı şeyleri
+          yaparım. İkisini de yazıyorum ki karşılaştırırken doğru şeyi karşılaştırın.
+        </p>
+      </div>
+
+      <div class="izgara iz-2">
+        <div class="kart">
+          <span class="ust-baslik">Kazandığınız</span>
+          <ul class="metin-blok kucuk">
+            <li><strong>Tek muhatap</strong> — teknik soruyu soran ile cevaplayan arasında satış katmanı yok; "mühendisimize soralım" cümlesi kurulmaz.</li>
+            <li><strong>Kısa devir</strong> — bir parametre, bir ekran ya da bir PLC alanı değişecekse aynı gün denenebilir.</li>
+            <li><strong>Şeffaf fiyat</strong> — tek hat lisansı <span class="n-b">64.000&nbsp;TL</span>, kapsam ve kapsam dışı yazılı. <a href="fiyat.html">Fiyat sayfasında</a> durur.</li>
+            <li><strong>Satmadan önce ispat</strong> — parça taranmadan teklif verilmez; fizibilite olumsuz çıkarsa bu da yazılı gelir.</li>
+          </ul>
+        </div>
+
+        <div class="kart">
+          <span class="ust-baslik">Kaybettiğiniz</span>
+          <ul class="metin-blok kucuk">
+            <li><strong>7/24 servis masası yok</strong> — çağrı merkezi, vardiyalı destek ekibi ve SLA taahhüdü bu ölçekte verilmez.</li>
+            <li><strong>Aynı anda çok proje yok</strong> — takvim sınırlıdır; başlangıç tarihi gerçekçi verilir, "hemen başlarız" denmez.</li>
+            <li><strong>Mekanik ve elektrik montaj kapsam dışı</strong> — pano, kablolama, ayak ve muhafaza işi sizde ya da sizin taşeronunuzda kalır.</li>
+            <li><strong>Sınırsız marka desteği yok</strong> — bugün LMI Gocator ve Wenglor MLBS115 çalışır; başka kamera bir fizibilite kalemidir.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="not not-uyari" style="margin-top:var(--a6)">
+        <span class="isaret" aria-hidden="true">!</span>
+        <div>
+          <p class="baslik">Canlı hatta çalışma kuralım</p>
+          <p>
+            Sistem önce dinleyici kipte kurulur: ölçer, kaydeder, karar üretir ama PLC'ye
+            yazmaz. Kararları bir süre gerçek üretimle karşılaştırırsınız. PLC sinyal, adres
+            ve yazma davranışı hiçbir zaman habersiz değiştirilmez — yazılı onay olmadan tek
+            satır değişiklik yapılmaz.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       4. SAHA DENEYİMİ — iş geçmişi, müşteri referansı DEĞİL
+       ================================================================ -->
+  <section class="bolum" id="deneyim" aria-labelledby="denBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Saha deneyimi</span>
+        <h2 id="denBas">Yazılım nereden geliyor</h2>
+        <p>
+          Bu yazılım masa başında doğmadı; robot hücresi devreye alırken, SCADA revizyonunda
+          ve bakım vardiyasında biriken şeyden doğdu. Aşağıdakiler <strong>iş geçmişimdir</strong>.
+        </p>
+      </div>
+
+      <div class="not not-bilgi">
+        <span class="isaret" aria-hidden="true">i</span>
+        <div>
+          <p class="baslik">Bunlar referans değil, özgeçmiştir</p>
+          <p>
+            Listelenen işler çalıştığım firmalarda, ekip içinde yer aldığım projelerdir; adı
+            geçen kurumların Vision Detection App'i kullandığı ya da tavsiye ettiği anlamına
+            <strong>gelmez</strong>. Bu sitede müşteri referansı, tanıklık ve logo yoktur.
+          </p>
+        </div>
+      </div>
+
+      <div class="izgara iz-3" style="margin-top:var(--a5)">
+
+        <article class="kart">
+          <p class="kunye"><span>2024 — halen</span><span>İzmir</span></p>
+          <h3 class="h4">Simbiosis Mekatronik</h3>
+          <p class="kucuk soluk">Otomasyon mühendisi</p>
+          <ul class="metin-blok kucuk">
+            <li>İZSU Çiğli ve MOSB atıksu tesislerinde SCADA revizyonu (Siemens)</li>
+            <li>Paletleme hattı: Fanuc ve Universal Robots kolları, Beckhoff TwinCAT</li>
+            <li>Robotlu gaz kaçak tespit hücresi: KUKA + Mitsubishi PLC + LMI Gocator, üstünde WinUI 3 masaüstü yazılımı</li>
+            <li>Paralel SCARA ayıklama-dizme hücresi (CODESYS) ve peletli kazan otomasyonu</li>
+          </ul>
+        </article>
+
+        <article class="kart">
+          <p class="kunye"><span>2023 — 2024</span><span>İzmir</span></p>
+          <h3 class="h4">S2 Otomasyon</h3>
+          <p class="kucuk soluk">Otomasyon mühendisi</p>
+          <ul class="metin-blok kucuk">
+            <li>Hidrolik çapak kesme robot hücresi (Siemens, Beijer)</li>
+            <li>Atex boyama ve kauçuk kaplama makinesi — yazılım ve proje yürütme (Delta)</li>
+            <li>Dozajlama makinesi (GMT)</li>
+            <li>Elektrik sayacı montaj hattı (Beckhoff TwinCAT)</li>
+          </ul>
+        </article>
+
+        <article class="kart">
+          <p class="kunye"><span>2021 — 2023</span><span>Karaman</span></p>
+          <h3 class="h4">Döhler Gıda</h3>
+          <p class="kucuk soluk">Üretim / bakım mühendisi</p>
+          <ul class="metin-blok kucuk">
+            <li>Hidrolik pres ve ön hatlarda bölüm sorumluluğu</li>
+            <li>Üretim ve bakım süreçlerinin yürütülmesi; duruş ve arıza takibi</li>
+            <li>Vardiya gerçeğini bu dönemde öğrendim: hattı durduran bir denetim, denetim değil arızadır</li>
+          </ul>
+        </article>
+
+      </div>
+
+      <p class="kucuk soluk" style="margin-top:var(--a5);max-width:var(--olcu)">
+        Kullandığım ortamlar: Siemens TIA Portal, Beckhoff TwinCAT, CODESYS, Delta, Mitsubishi;
+        KUKA, Fanuc, ABB ve Universal Robots kolları; C# / .NET 8, WinUI 3, ONNX Runtime, OpenCV,
+        Python. Bunlar bir beceri duvarı değil, hangi dili konuşabildiğimin listesidir.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       5. NEDEN LOGO / TANIKLIK / VAKA RAKAMI YOK
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="neden-yok" aria-labelledby="yokBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Sosyal kanıt</span>
+        <h2 id="yokBas">Bu sitede logo duvarı, tanıklık ve vaka rakamı yok</h2>
+        <p>
+          Yok, çünkü gösterebileceğim gerçeği yok. Uydurmak yerine bölümü hiç açmadım.
+          Yerine koyduklarım kontrol edilebilir: her biri bugün bu sitede duruyor.
+        </p>
+      </div>
+
+      <div class="tablo-sar kart-kir" tabindex="0" aria-label="Olmayan ve yerine konan kanıt tablosu">
+        <table class="spec">
+          <caption>Olmayan · yerine ne var</caption>
+          <thead>
+            <tr>
+              <th scope="col">Rakiplerde gördüğünüz</th>
+              <th scope="col">Durum</th>
+              <th scope="col">Bunun yerine burada olan</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Müşteri logosu duvarı</th>
+              <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">YOK</span></td>
+              <td data-bas="Yerine"><span><a href="fiyat.html">Açık fiyat</a>: tek hat lisansı <span class="n-b">64.000&nbsp;TL</span>, kapsam ve kapsam dışı yazılı</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Müşteri tanıklığı / alıntı</th>
+              <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">YOK</span></td>
+              <td data-bas="Yerine"><span><a href="yazilim.html#uyumluluk">Durum sütunlu protokol tablosu</a>: HAZIR / YOL HARİTASINDA / YOK</span></td>
+            </tr>
+            <tr>
+              <th scope="row">"%98 doğruluk" türü vaka rakamı</th>
+              <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">YOK</span></td>
+              <td data-bas="Yerine"><span><a href="surec.html">Fizibilite</a>: satın almadan önce sizin parçanızda ölçülen gerçek sayı</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Yıldız puanı, ödül rozeti, "N+ ekip"</th>
+              <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">YOK</span></td>
+              <td data-bas="Yerine">Künye: tek kişi, şirket kaydı yok — bu sayfada yazılı</td>
+            </tr>
+            <tr>
+              <th scope="row">Ekran görüntüsü diye sunulan render</th>
+              <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">YOK</span></td>
+              <td data-bas="Yerine"><span>Her diyagramda <span class="sema-rozet">Şema</span> rozeti; simülasyon, simülasyon diye işaretlenir</span></td>
+            </tr>
+            <tr>
+              <th scope="row">"Her şeyi yaparız" listesi</th>
+              <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">YOK</span></td>
+              <td data-bas="Yerine"><span><a href="yazilim.html#uyumluluk">"Yapamaz" satırları</a>: desteklenmeyen protokoller açıkça YOK yazar</span></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr><td colspan="3">
+              Bir gün gerçek bir referans olursa buraya, müşterinin yazılı izniyle ve adıyla
+              eklenir. O güne kadar bu sütun boş kalır — doldurulmuş gibi yapılmaz.
+            </td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       6. PORTFOLYO KESİTİ — SVG şema + geliştirilen sistemler
+       (Canvas 2D arka plan animasyonu taşınmadı: hareket üretiyor,
+       bilgi üretmiyordu. Yerine tek bir statik şema kondu.)
+       ================================================================ -->
+  <section class="bolum" id="portfolyo" aria-labelledby="porBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Ne geliştirdim</span>
+        <h2 id="porBas">Portfolyo kesiti</h2>
+        <p>
+          Vision Detection App tek bir modül değil, üst üste oturan üç katman. Aşağıdaki şema
+          bu katmanların hatta nereye denk düştüğünü gösterir; ardından her katmanda ne
+          yazdığım yazıyor.
+        </p>
+      </div>
+
+      <figure class="sema-kutu">
+        <div class="bas">
+          <span class="baslik">Sistemin hattaki yeri — saha · istasyon · otomasyon</span>
+          <span class="sema-rozet">Şema</span>
+        </div>
+        <div class="govde">
+          <svg viewBox="0 0 720 250" role="img"
+               aria-label="Üç sütunlu şema. Solda saha katmanı: parça, 3D kamera ve aydınlatma, hat tetiği. Ortada istasyon yazılımı: tarama, zemin kaldırma, çapalama, ölçüm, denetim ve karar adımları. Sağda otomasyon katmanı: PLC, robot ve aktüatör, kayıt ve izlenebilirlik. Oklar soldan sağa, karar sonucundan da sola doğru bir geri besleme gösterir.">
+            <g style="stroke:var(--metin-2)" stroke-width="1.4" fill="none">
+              <!-- saha -->
+              <rect x="8" y="46" width="180" height="40" rx="3"/>
+              <rect x="8" y="98" width="180" height="40" rx="3"/>
+              <rect x="8" y="150" width="180" height="40" rx="3"/>
+              <!-- istasyon -->
+              <rect x="256" y="30" width="208" height="188" rx="4" style="stroke:var(--marka-metin)" stroke-width="1.6"/>
+              <!-- otomasyon -->
+              <rect x="532" y="46" width="180" height="40" rx="3"/>
+              <rect x="532" y="98" width="180" height="40" rx="3"/>
+              <rect x="532" y="150" width="180" height="40" rx="3"/>
+            </g>
+
+            <!-- sütun başlıkları -->
+            <g font-family="Consolas,monospace" font-size="11" letter-spacing="1.2"
+               style="fill:var(--metin-soluk)">
+              <text x="8" y="22">SAHA</text>
+              <text x="256" y="22">İSTASYON — VISION DETECTION APP</text>
+              <text x="532" y="22">OTOMASYON</text>
+            </g>
+
+            <!-- kutu yazıları -->
+            <g font-family="Consolas,monospace" font-size="12" style="fill:var(--metin)">
+              <text x="24" y="71">parça · yüzey · pah</text>
+              <text x="24" y="123">3D kamera + aydınlatma</text>
+              <text x="24" y="175">hat tetiği · enkoder</text>
+              <text x="548" y="71">PLC · S7 / MC / Modbus</text>
+              <text x="548" y="123">robot · ayıklama kolu</text>
+              <text x="548" y="175">kayıt · izlenebilirlik</text>
+            </g>
+
+            <!-- istasyon adımları -->
+            <g font-family="Consolas,monospace" font-size="12" style="fill:var(--metin)">
+              <text x="274" y="58">1 · tarama</text>
+              <text x="274" y="84">2 · zemin kaldırma</text>
+              <text x="274" y="110">3 · ilgi alanı kırpma</text>
+              <text x="274" y="136">4 · çapalama</text>
+              <text x="274" y="162">5 · ölçüm ve denetim</text>
+              <text x="274" y="188">6 · karar</text>
+              <text x="274" y="210" style="fill:var(--marka-metin)">7 · PLC'ye yazma</text>
+            </g>
+
+            <!-- oklar -->
+            <g style="stroke:var(--cizgi-guclu)" stroke-width="1.4" fill="none">
+              <path d="M188 66 H236 M188 118 H236 M188 170 H236"/>
+              <path d="M228 60 l8 6 -8 6 M228 112 l8 6 -8 6 M228 164 l8 6 -8 6"/>
+              <path d="M464 66 H524 M464 118 H524 M464 170 H524"/>
+              <path d="M516 60 l8 6 -8 6 M516 112 l8 6 -8 6 M516 164 l8 6 -8 6"/>
+            </g>
+
+            <!-- geri besleme: kayıt katmanından istasyona -->
+            <g style="stroke:var(--marka-metin)" stroke-width="1.4" fill="none">
+              <path d="M622 190 V240 H360 V226" stroke-dasharray="4 4"/>
+              <path d="M354 234 l6 -8 6 8"/>
+            </g>
+            <text x="8" y="236" font-family="Consolas,monospace" font-size="11"
+                  style="fill:var(--marka-metin)">geri besleme: kusur biriktikçe eşik gözden geçirilir</text>
+          </svg>
+        </div>
+        <figcaption>
+          Şema; bir ekran görüntüsü değildir. Kutuların hangi donanımla karşılanacağı ve
+          adımların hangi sırayla koşacağı hatta göre değişir — fizibilitede belirlenir.
+        </figcaption>
+      </figure>
+
+      <div class="izgara iz-2" style="margin-top:var(--a6)">
+
+        <article class="kart uyg-kart">
+          <p class="no">01 · 3D vizyon</p>
+          <h3>3D nokta bulutu istasyonu</h3>
+          <p>
+            3D profil sensöründen gelen bulutu görselleştiren, ölçen ve denetleyen istasyon
+            yazılımı. Sürükle-bırak araç zinciri, iş (job) dosyası ve CAD karşılaştırması tek
+            ekranda. Aynı bulut her koşuda aynı sonucu üretir — ölçüm rastgele değildir.
+          </p>
+          <dl>
+            <dt>Araçlar</dt><dd>Zemin kaldırma, silindir/küre/daire uydurma, düzlemsellik, paralellik, kaynak ağzı (V/U), gap &amp; flush, ICP hizalama</dd>
+            <dt>Çapalama</dt><dd>Parça kaysa bile ölçüm bölgeleri referans özelliğe kilitlenir</dd>
+            <dt>Yığın</dt><dd>C# / .NET 8 · WinUI 3 · WebView2 · SQLite</dd>
+            <dt>Sınır</dt><dd>Yükseklik alanı temsili; alt oyuk ve ters açı tek taramayla görülmez</dd>
+          </dl>
+        </article>
+
+        <article class="kart uyg-kart">
+          <p class="no">02 · derin öğrenme</p>
+          <h3>2D görsel denetim</h3>
+          <p>
+            Tespit, bölütleme, poz, yönlü kutu ve sınıflandırma görevlerinin beşi de tamamen
+            çevrimdışı çalışır; internet bağlantısı ve bulut çıkarımı gerekmez. Operatör örnek
+            göstererek yeni ürün tanıtır, kod yazmaz.
+          </p>
+          <dl>
+            <dt>Model</dt><dd>YOLO26 · ONNX Runtime · OpenCV</dd>
+            <dt>Öğretme</dt><dd>Gömü + kNN ile ürün tanıtma; yeniden eğitim gerekmeden</dd>
+            <dt>Anomali</dt><dd>Yalnız sağlam örnek görerek "normalden sapma" öğrenir, ısı haritası çıkarır</dd>
+            <dt>Sınır</dt><dd>Aydınlatma kontrol altında değilse hiçbir model tutarlı çalışmaz</dd>
+          </dl>
+        </article>
+
+        <article class="kart uyg-kart">
+          <p class="no">03 · robotik</p>
+          <h3>Robot kılavuzlama</h3>
+          <p>
+            3D taramadan robot koordinatına giden hat: tespit araçları, el-göz kalibrasyonu ve
+            ölçüm noktalarını robota aktaran haberleşme sözleşmesi. Kalibrasyonun teorisini
+            aşağıdaki yazıda ayrıntısıyla anlattım.
+          </p>
+          <dl>
+            <dt>Yöntem</dt><dd>Tsai-Lenz el-göz kalibrasyonu · RANSAC · Kabsch hizalama</dd>
+            <dt>Eşleştirme</dt><dd>Referans ile tarama arasında Hungarian eşleme</dd>
+            <dt>Robot</dt><dd>KUKA · Fanuc · ABB · Universal Robots poz sözleşmeleri incelendi</dd>
+            <dt>Sınır</dt><dd>Kalibrasyon kalitesi robotun tekrarlanabilirliğini aşamaz</dd>
+          </dl>
+        </article>
+
+        <article class="kart uyg-kart">
+          <p class="no">04 · haberleşme</p>
+          <h3>Çok protokollü PLC köprüsü</h3>
+          <p>
+            Denetim kararını fabrika otomasyonuna bağlayan katman. Yaşam sinyali, geçerlilik
+            biti ve sayaç kelimesiyle yarış durumu bırakmayan bir el sıkışma; kopan bağlantıyı
+            kendi kendine toparlayan sürücü zinciri.
+          </p>
+          <dl>
+            <dt>Hazır</dt><dd>Siemens S7 · Mitsubishi MC/SLMP · Modbus TCP · PROFINET DCP keşfi</dd>
+            <dt>Yol haritasında</dt><dd>OPC UA · PROFINET IO (tarih verilmez)</dd>
+            <dt>İlke</dt><dd>PLC yazma davranışı yazılı onay olmadan değişmez</dd>
+            <dt>Ayrıntı</dt><dd><a href="yazilim.html#uyumluluk">Uyumluluk tablosu</a></dd>
+          </dl>
+        </article>
+
+        <article class="kart uyg-kart">
+          <p class="no">05 · otonom katman</p>
+          <h3>Kendini izleyen istasyon</h3>
+          <p>
+            Arka planda çalışan görevliler: veri biriktikçe eğitim önerir, kalite düştüğünde
+            nedeniyle uyarır, kopan cihazı yeniden bağlar. Hepsi <strong>öneri</strong> üretir;
+            model, eşik ve PLC yazımı insan onayı olmadan değişmez.
+          </p>
+          <dl>
+            <dt>Görevliler</dt><dd>Veri toplama · kalite gözcüsü · haberleşme nöbetçisi · model doğrulama · disk bakımı</dd>
+            <dt>İlke</dt><dd>İnsan onaylı otomasyon — otonom olan izleme, karar değil</dd>
+            <dt>Yığın</dt><dd>.NET 8 arka plan servisleri · olay günlüğü</dd>
+          </dl>
+        </article>
+
+        <article class="kart uyg-kart">
+          <p class="no">06 · platform</p>
+          <h3>Operatör platformu</h3>
+          <p>
+            Vizyon istasyonunun üzerinde yükseldiği taban: sahada çalışan bir sızdırmazlık test
+            istasyonu için geliştirdiğim tam ekran operatör yazılımı. Vizyon sayfaları bu
+            gezinme mimarisinin üstüne eklendi.
+          </p>
+          <dl>
+            <dt>Arayüz</dt><dd>WinUI 3 · XAML · tam ekran, Türkçe, operatör için</dd>
+            <dt>Dağıtım</dt><dd>Kendi kendine yeten paket; hedef makinede kurulum bağımlılığı yok</dd>
+            <dt>Kayıt</dt><dd>SQLite izlenebilirlik · JSON kalıcı ayar deseni</dd>
+          </dl>
+        </article>
+
+      </div>
+
+      <div class="not" style="margin-top:var(--a5)">
+        <span class="isaret" aria-hidden="true">§</span>
+        <div>
+          <p class="baslik">Performans rakamlarını buraya yazmadım</p>
+          <p>
+            "Şu kadar ms", "şu kadar nokta", "şu kadar başarı" gibi sayılar ancak hangi
+            donanımda, hangi veriyle ve kaç tekrarla ölçüldüğü yazılıysa bir şey ifade eder.
+            O kaydı sitede yayımlamadığım için sayıyı da yazmıyorum. Sizin parçanızın gerçek
+            sayısı zaten <a href="surec.html">fizibilite raporunda</a> çıkar.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       7. YAZILAR — etiket süzgeci + arşiv
+       Süzgeç sözleşmesi korunur: .filter-btn[data-filter], .entry[data-tags],
+       #shown-count / #total-count / #empty-note.
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="yazilar" aria-labelledby="yaziBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Mühendislik günlüğü</span>
+        <h2 id="yaziBas">Yazılar</h2>
+        <p>
+          Teorik olarak öğrendiklerimi türetip not ettiğim arşiv: robotik, 3D metroloji,
+          endüstriyel haberleşme ve derin öğrenme. Pazarlama metni değil; formülü ve
+          varsayımı yazılı olan notlar.
+        </p>
+      </div>
+
+      <div class="satir" role="group" aria-label="Etikete göre süz">
+        <span class="ust-baslik notr" style="flex:none">Süzgeç</span>
+        <div class="dug-grup">
+          <button type="button" class="dug-kip filter-btn active" data-filter="tumu" aria-pressed="true">Tümü</button>
+          <button type="button" class="dug-kip filter-btn" data-filter="robotik" aria-pressed="false">Robotik</button>
+          <button type="button" class="dug-kip filter-btn" data-filter="3d-metroloji" aria-pressed="false">3D metroloji</button>
+          <button type="button" class="dug-kip filter-btn" data-filter="plc-haberlesme" aria-pressed="false">PLC · haberleşme</button>
+          <button type="button" class="dug-kip filter-btn" data-filter="derin-ogrenme" aria-pressed="false">Derin öğrenme</button>
+        </div>
+        <p class="kunye satir-son" aria-live="polite">
+          <span>kayıt <b class="sayi"><span id="shown-count">1</span> / <span id="total-count">1</span></b></span>
+        </p>
+      </div>
+
+      <div class="izgara" id="entries" style="margin-top:var(--a5)">
+
+        <!-- ============================================================
+             YENİ YAZI ŞABLONU — kopyala, listenin EN ÜSTÜNE yapıştır.
+               1) data-tags : robotik · 3d-metroloji · plc-haberlesme ·
+                              derin-ogrenme (boşlukla ayrılır, çoklu olabilir)
+               2) tarih     : YYYY-AA-GG
+               3) href      : /yazilar/dosya-adi.html (iki yerde)
+             Sayaçlar (#shown-count / #total-count) kendini günceller.
+
+        <article class="kart entry" data-tags="robotik">
+          <p class="kunye"><span class="sayi">2026-01-01</span><span>Konu adı</span></p>
+          <h3 class="h4"><a href="/yazilar/dosya-adi.html">Yazı başlığı</a></h3>
+          <p class="kucuk">Tek cümlelik özet.</p>
+          <div class="kart-alt satir">
+            <span class="etiket-satir">
+              <span class="rozet" data-isaret="#">Etiket</span>
+            </span>
+            <a class="dug dug-2 satir-son" href="/yazilar/dosya-adi.html">Oku</a>
+          </div>
+        </article>
+             ============================================================ -->
+
+        <article class="kart entry" data-tags="robotik 3d-metroloji">
+          <p class="kunye">
+            <span class="sayi">2026-07-30</span>
+            <span>Robotik algılama</span>
+          </p>
+          <h3 class="h4">
+            <a href="/yazilar/el-goz-kalibrasyonu-tsai-lenz.html">El-göz kalibrasyonu: Tsai-Lenz yöntemine giriş</a>
+          </h3>
+          <p class="kucuk">
+            Robot flanşı ile kamera arasındaki bilinmeyen dönüşümü AX&nbsp;=&nbsp;XB
+            denkleminden iki aşamada söküp alan klasik yöntem: önce dönme, sonra öteleme —
+            ve sahada işe yarayan veri toplama kuralları.
+          </p>
+          <div class="kart-alt satir">
+            <span class="etiket-satir">
+              <span class="rozet" data-isaret="#">Robotik</span>
+              <span class="rozet" data-isaret="#">3D metroloji</span>
+              <span class="rozet" data-isaret="#">Kalibrasyon</span>
+            </span>
+            <a class="dug dug-2 satir-son" href="/yazilar/el-goz-kalibrasyonu-tsai-lenz.html">
+              Oku
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+            </a>
+          </div>
+        </article>
+
+        <p class="not" id="empty-note" style="display:none">
+          <span class="isaret" aria-hidden="true">—</span>
+          <span>Bu etikette henüz yazı yok. Arşiv tek yazıyla başladı; biriktikçe buraya eklenir.</span>
+        </p>
+      </div>
+
+      <p class="kucuk soluk" style="margin-top:var(--a5);max-width:var(--olcu)">
+        Arşiv şu an tek yazı taşıyor ve bu sayı sayfada olduğu gibi yazılıdır — "onlarca
+        makale" izlenimi verilmedi. Yeni yazı eklendikçe süzgeç ve sayaç kendiliğinden
+        güncellenir.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       8. CTA BANDI — sayfa başına BİR kez, tek eylem
+       ================================================================ -->
+  <section class="bolum" id="iletisim" aria-labelledby="ctaBas">
+    <div class="kap">
+      <div class="cta">
+        <div class="izgara iz-yan">
+          <div>
+            <span class="ust-baslik">Tek eylem</span>
+            <h2 id="ctaBas" style="margin-top:var(--a3)">Konuşmadan önce ölçelim</h2>
+            <p>
+              Kiminle çalışacağınızı bu sayfada okudunuz. Sırada işin kendisi var: bir iyi ve
+              bir kusurlu numune, bir de "şunu ölçmek istiyorum" cümlesi yeter.
+            </p>
+            <div class="eylem">
+              <a class="dug dug-1 dug-b" href="surec.html#talep">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM4 6l8 6 8-6"/></svg>
+                Fizibilite talebi gönderin
+              </a>
+            </div>
+            <p class="ikincil" style="margin-top:var(--a4)">
+              Doğrudan e-posta:
+              <a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a>
+            </p>
+          </div>
+
+          <div class="yigin">
+            <div class="not">
+              <span class="isaret" aria-hidden="true">§</span>
+              <div>
+                <p class="baslik">Ne yazmanız yeter</p>
+                <p>
+                  Parça nedir, hangi büyüklüğü ölçmek istiyorsunuz, hat hızı yaklaşık ne kadar
+                  ve hatta hangi PLC var. Bilmediğiniz kalemleri boş bırakın; soruları ben
+                  sorarım.
+                </p>
+              </div>
+            </div>
+            <a class="dug dug-2 dug-tam" href="forum.html">Danışma Masası'nda soru sorun</a>
+            <a class="dug dug-3 dug-tam" href="https://github.com/sercansozer20-dot" rel="noopener">Açık kaynak profilim (GitHub)</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <noscript>
+    <div class="kap" style="padding-bottom:var(--a7)">
+      <div class="not not-uyari">
+        <span class="isaret" aria-hidden="true">!</span>
+        <div>
+          <p class="baslik">JavaScript kapalı</p>
+          <p>
+            Bu sayfanın tamamı okunabilir durumda: künye, deneyim, portfolyo kesiti ve yazı
+            arşivi alt alta görünür. Çalışmayan tek şey etiket süzgecidir — süzgeç kapalıyken
+            bütün yazılar listelenir, hiçbir içerik gizlenmez.
+          </p>
+        </div>
+      </div>
+    </div>
+  </noscript>
+
+</main>
+
+<!-- ==================================================================
+     ALT BİLGİ
+     ================================================================== -->
+<footer class="alt-bilgi">
+  <div class="kap">
+    <div class="alt-izgara">
+      <div>
+        <h2 class="bas">İş</h2>
+        <ul>
+          <li><a href="uygulamalar.html">Uygulamalar</a></li>
+          <li><a href="yazilim.html">Vision Detection App</a></li>
+          <li><a href="yazilim.html#uyumluluk">Uyumluluk ve protokoller</a></li>
+          <li><a href="surec.html">Nasıl çalışır</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Karar</h2>
+        <ul>
+          <li><a href="fiyat.html">Fiyat ve kapsam</a></li>
+          <li><a href="fiyat.html#kazanc">Kazanç hesabı</a></li>
+          <li><a href="fiyat.html#magaza">Satın alma</a></li>
+          <li><a href="surec.html#talep">Fizibilite talebi</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Site</h2>
+        <ul>
+          <li><a href="forum.html">Danışma Masası</a></li>
+          <li><a href="hakkinda.html" aria-current="page">Hakkında ve yazılar</a></li>
+          <li><a href="hesabim.html">Hesabım</a></li>
+          <li><a href="gizlilik.html">Gizlilik ve KVKK</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">İletişim</h2>
+        <ul>
+          <li><a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a></li>
+        </ul>
+        <p class="kucuk soluk" style="margin-top:var(--a3);max-width:26ch">
+          Sercan Sözer — mekatronik mühendisi, İzmir. Şahıs olarak, mühendislik hizmeti
+          biçiminde çalışıyorum.
+        </p>
+      </div>
+    </div>
+
+    <div class="alt-son">
+      <span>© <span class="sayi">2026</span> Sercan Sözer</span>
+      <span>Dış font, dış stil ve reklam/analitik izleyicisi yüklenmez.</span>
+      <button type="button" class="tema-dug" id="temaDug" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6 6l1.5 1.5M16.5 16.5L18 18M18 6l-1.5 1.5M7.5 16.5L6 18"/><circle cx="12" cy="12" r="4"/></svg>
+        <span id="temaYazi">Koyu tema</span>
+      </button>
+    </div>
+  </div>
+</footer>
+
+<!-- ==================================================================
+     SAYFA BETİKLERİ
+     ================================================================== -->
+<script>
+/* ---------------------------------------------------------------
+   Tema anahtarı, mobil menü ve yazı arşivi etiket süzgeci.
+   Klasik betik — defer'lı ortak betiklerden ÖNCE koşar.
+   --------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  /* --- tema anahtarı --- */
+  var kok = document.documentElement;
+  var dug = document.getElementById('temaDug');
+  var yazi = document.getElementById('temaYazi');
+
+  function koyuMu() {
+    var t = kok.getAttribute('data-tema');
+    if (t) return t === 'koyu';
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  function temaYaz() {
+    var k = koyuMu();
+    dug.setAttribute('aria-pressed', k ? 'true' : 'false');
+    yazi.textContent = k ? 'Açık tema' : 'Koyu tema';
+  }
+  dug.addEventListener('click', function () {
+    var yeni = koyuMu() ? 'acik' : 'koyu';
+    kok.setAttribute('data-tema', yeni);
+    try { localStorage.setItem('sersoz_tema', yeni); } catch (e) {}
+    temaYaz();
+  });
+  temaYaz();
+
+  /* --- mobil menü: Escape kapatır, bağlantıya tıklayınca kapanır --- */
+  var mk = document.getElementById('menuKutu');
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && mk.checked) { mk.checked = false; }
+  });
+  var menu = document.querySelector('.ust-menu');
+  if (menu) menu.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') mk.checked = false;
+  });
+  var etiketDug = document.querySelector('.menu-dug');
+  if (etiketDug) etiketDug.addEventListener('keydown', function (e) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); mk.checked = !mk.checked; }
+  });
+
+  /* --- yazı arşivi etiket süzgeci ---------------------------------
+     Sözleşme korunur: .filter-btn[data-filter] · .entry[data-tags] ·
+     #shown-count · #total-count · #empty-note. Gizleme style.display
+     ile yapılır; .kart display:flex olduğu için [hidden] yetmez.
+     JS hiç koşmazsa bütün yazılar görünür kalır — içerik gizlenmez. */
+  var dugmeler = [].slice.call(document.querySelectorAll('.filter-btn'));
+  var ogeler = [].slice.call(document.querySelectorAll('.entry'));
+  var bosNot = document.getElementById('empty-note');
+  var gorunenEl = document.getElementById('shown-count');
+  var toplamEl = document.getElementById('total-count');
+
+  if (dugmeler.length && ogeler.length && gorunenEl && toplamEl) {
+    toplamEl.textContent = String(ogeler.length);
+    gorunenEl.textContent = String(ogeler.length);
+
+    function suz(anahtar) {
+      var gorunen = 0;
+      ogeler.forEach(function (o) {
+        var etiketler = (o.getAttribute('data-tags') || '').split(/\s+/);
+        var goster = anahtar === 'tumu' || etiketler.indexOf(anahtar) !== -1;
+        o.style.display = goster ? '' : 'none';
+        if (goster) gorunen++;
+      });
+      if (bosNot) bosNot.style.display = gorunen ? 'none' : '';
+      gorunenEl.textContent = String(gorunen);
+    }
+
+    dugmeler.forEach(function (d) {
+      d.addEventListener('click', function () {
+        dugmeler.forEach(function (b) {
+          b.classList.remove('active');
+          b.setAttribute('aria-pressed', 'false');
+        });
+        d.classList.add('active');
+        d.setAttribute('aria-pressed', 'true');
+        suz(d.getAttribute('data-filter'));
+      });
+    });
+  }
+})();
+</script>
+
+<!-- ORTAK BETİKLER — sıra sözleşmedir, bozulmaz:
+     onay.js window.Onay'ı kurar; hesap.js ve iz.js ona bakar.
+     Sıra bozulursa hata çıkmaz, işlevler SESSİZCE ölür. -->
+<script src="/onay.js" defer></script>
+<script src="/hesap.js" defer></script>
+<script src="/iz.js" defer></script>
+
+</body>
+</html>

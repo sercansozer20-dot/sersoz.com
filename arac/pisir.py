@@ -43,7 +43,8 @@ ROI = {"u1": -0.30, "u2": 0.56, "v1": -0.35, "v2": 0.35}
 CAPA = (0.13, 0.0)
 
 BURADA = os.path.dirname(os.path.abspath(__file__))
-CIKTI = os.path.normpath(os.path.join(BURADA, "..", "taslak", "gorsel", "veri"))
+# Pisirilen varliklar artik taslagin degil SITENIN mali: kokte /veri/
+CIKTI = os.path.normpath(os.path.join(BURADA, "..", "veri"))
 
 
 # ------------------------------------------------------- yükseklik alanları

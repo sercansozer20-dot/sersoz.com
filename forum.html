@@ -2,22 +2,34 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Danışma Masası — Sahadan soru sorun · sersoz.com</title>
-<meta name="description" content="Makine görüşü, PLC haberleşme, 3D ölçüm ve robot kılavuzlama üzerine kamuya açık danışma masası. Sorunuzu yazın, cevabı burada kalsın.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Danışma Masası — sahadan soru sorun · Sercan Sözer</title>
+<meta name="description" content="Makine görüşü, PLC haberleşme, 3D ölçüm ve robot kılavuzlama üzerine kamuya açık danışma masası. Okumak için giriş gerekmez; sorunuzu yazın, cevabı burada kalsın.">
+<meta name="author" content="Sercan Sözer">
+<meta name="theme-color" content="#c2410c">
 <link rel="canonical" href="https://sersoz.com/forum.html">
-<meta property="og:title" content="Danışma Masası — Sahadan soru sorun">
-<meta property="og:description" content="PLC haberleşme, kamera-aydınlatma, 3D ölçüm, robot kılavuzlama. Soruyu yazın; iş günlerinde 48 saat içinde yanıtlıyorum.">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="Sercan Sözer — Makine Görüşü">
+<meta property="og:title" content="Danışma Masası — sahadan soru sorun">
+<meta property="og:description" content="PLC haberleşme, kamera-aydınlatma, 3D ölçüm, robot kılavuzlama. Soruyu yazın; iş günlerinde 48 saat içinde yanıtlıyorum.">
 <meta property="og:url" content="https://sersoz.com/forum.html">
 <meta property="og:image" content="https://sersoz.com/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:site_name" content="sersoz.com">
 <meta property="og:locale" content="tr_TR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://sersoz.com/og.png">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23fafaf9'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231c1917' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Consolas,monospace' font-size='36' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="sistem.css">
+<script>
+/* Tema seçimi ilk boyamadan ÖNCE uygulanır — yoksa koyu temada beyaz çakma olur. */
+(function () {
+  try {
+    var t = localStorage.getItem('sersoz_tema');
+    if (t === 'koyu' || t === 'acik') document.documentElement.setAttribute('data-tema', t);
+  } catch (e) {}
+})();
+</script>
 
 <!--
   Bu sayfa Cloud Firestore (proje: sersoz-f93c3) üzerinde çalışır.
@@ -26,481 +38,283 @@
   Ayrıca forumAyar/genel = { yazmaAcik: true, yasakli: [] } belgesi
   bulunmalıdır; site sahibi hesabıyla girildiğinde sayfadaki
   "Kurulum" kutusundan tek tıkla oluşturulabilir.
+
+  KABUK sistem.css'e taşındı (üst çubuk, alt bilgi, tipografi, düğme, form).
+  Aşağıdaki <style> YALNIZ foruma özgü sınıfları tanımlar; bu sınıf adları
+  sayfanın JavaScript'i tarafından üretilen DOM'da geçer (dm() yardımcısı),
+  bu yüzden adları DEĞİŞTİRİLEMEZ. Renk/ölçü değerleri sistem tokenlarından
+  gelir — burada yeni renk uydurulmaz.
 -->
-
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --bg: #f6f2ea;
-    --ink: #1a1815;
-    --muted: #5b564d;
-    --accent: #c2410c;
-    --green: #14532d;
-    --line: rgba(26, 24, 21, .2);
-    --line-soft: rgba(26, 24, 21, .1);
-    --faint: rgba(26, 24, 21, .055);
-    --paper: rgba(255, 253, 248, .72);
-    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
-    --serif: Georgia, 'Times New Roman', Times, serif;
-    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
-  }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: var(--sans);
-    font-size: 16px;
-    line-height: 1.6;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  ::selection { background: var(--accent); color: var(--bg); }
-
-  :focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
+  /* JS pek çok kutuyu hidden özniteliğiyle gizler; display:flex/grid bunu ezerdi. */
   [hidden] { display: none !important; }
 
-  .container { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
-
-  /* ---------- Nav ---------- */
-  nav#nav {
-    position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 40;
-    display: flex; align-items: center;
-    background: rgba(246, 242, 234, .93);
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--line);
-  }
-  .nav-inner {
-    width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 28px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
-  .brand .mark {
-    width: 22px; height: 22px; background: var(--accent); color: var(--bg);
-    display: inline-flex; align-items: center; justify-content: center;
-    font-family: var(--serif); font-size: 14px; font-weight: 700; line-height: 1;
-  }
-  .brand span.host { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--ink); }
-  .nav-links { display: flex; align-items: center; gap: 4px; }
-  .nav-links a {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
-    color: var(--ink); text-decoration: none; padding: 11px 12px; transition: color .2s;
-  }
-  .nav-links a:hover, .nav-links a.active { color: var(--accent); }
-
-  /* ---------- Başlık alanı ---------- */
-  .page-head { padding: 108px 0 10px; }
-
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 14px;
-    font-family: var(--mono); font-size: 12px; letter-spacing: .3em;
-    text-transform: uppercase; color: var(--ink); margin-bottom: 22px;
-  }
-  .eyebrow::before { content: ''; width: 42px; height: 2px; background: var(--accent); }
-
-  /* Kullanıcı metni boşluksuz uzun dizgi içerebilir (dosya yolu, adres, PLC
-     etiketi). Sarma zorlanmazsa sayfa yatay taşar. */
-  h1, h2, h3, p, li, td, .baslik-bag, .konu-meta, .konu-ustbilgi,
-  .yanit-ust, .rozet { overflow-wrap: anywhere; }
-
-  h1 {
-    font-family: var(--serif);
-    font-size: clamp(34px, 6vw, 62px);
-    font-weight: 700; letter-spacing: -.015em; line-height: 1.04;
-    max-width: 20ch;
-  }
-  h1 .nokta { color: var(--accent); }
-
-  .tagline {
-    margin-top: 18px; max-width: 60ch;
-    font-family: var(--serif); font-style: italic;
-    font-size: clamp(17px, 2.2vw, 21px); color: var(--muted);
-  }
-  .tagline b { color: var(--ink); font-weight: 600; font-style: italic; }
-
-  /* Kimlik + söz bandı */
-  .kimlik-band {
-    margin-top: 34px;
-    display: grid; grid-template-columns: 1fr auto; gap: 22px 34px;
-    align-items: center;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    padding: 20px 0;
-  }
-  .kimlik { display: flex; align-items: center; gap: 16px; min-width: 0; }
-  .kimlik .yuz {
-    width: 58px; height: 58px; flex: none; border-radius: 50%;
-    border: 1px solid var(--line); object-fit: cover; background: var(--faint);
-  }
+  /* ---------- kimlik + söz bandı ---------- */
+  .kimlik { display: flex; gap: var(--a4); align-items: flex-start; }
   .kimlik .monogram {
-    width: 58px; height: 58px; flex: none; border-radius: 50%;
+    width: 52px; height: 52px; flex: none;
     display: inline-flex; align-items: center; justify-content: center;
-    background: var(--ink); color: var(--bg);
-    font-family: var(--serif); font-size: 23px; font-weight: 700;
+    background: var(--marka); color: var(--marka-kontrast); border-radius: var(--r3);
+    font-family: var(--yazi-mono); font-size: 22px; font-weight: 600; line-height: 1;
   }
-  .kimlik-ad { font-family: var(--serif); font-size: 19px; font-weight: 700; }
-  .kimlik-rol { font-size: 14.5px; color: var(--muted); }
-  .kimlik-bag { margin-top: 5px; display: flex; gap: 6px 16px; flex-wrap: wrap; }
-  .kimlik-bag a {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
-    text-transform: uppercase; color: var(--accent); text-decoration: none;
-    border-bottom: 1px solid rgba(194, 65, 12, .35); padding-bottom: 2px;
-  }
-  .kimlik-bag a:hover { border-bottom-color: var(--accent); }
+  .kimlik .yuz { width: 52px; height: 52px; flex: none; border-radius: var(--r3); object-fit: cover; border: 1px solid var(--cizgi-2); }
+  .kimlik-ad { font-weight: 600; }
+  .kimlik-rol { font-size: var(--p-kucuk); color: var(--metin-2); max-width: 34ch; }
+  .kimlik-bag { display: flex; flex-wrap: wrap; gap: var(--a2) var(--a4); margin-top: var(--a2); }
+  .kimlik-bag a { font-size: var(--p-kucuk); }
+  .soz-olcum { margin-top: var(--a2); font-family: var(--yazi-mono); font-size: var(--p-mikro); color: var(--metin-soluk); }
 
-  .soz {
-    border-left: 3px solid var(--accent); padding: 4px 0 4px 18px; max-width: 34ch;
-  }
-  .soz-etiket {
-    font-family: var(--mono); font-size: 10.5px; letter-spacing: .22em;
-    text-transform: uppercase; color: var(--accent); margin-bottom: 5px;
-  }
-  .soz p { font-size: 15px; color: var(--muted); }
-  .soz p b { color: var(--ink); font-weight: 600; }
-  .soz-olcum { margin-top: 6px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .sayilar { display: flex; flex-wrap: wrap; gap: var(--a5) var(--a7); }
+  .sayilar dt { font-family: var(--yazi-mono); font-size: var(--p-mikro); letter-spacing: .06em; text-transform: uppercase; color: var(--metin-soluk); }
+  .sayilar dd b { font-size: var(--p-h3); font-weight: 600; font-variant-numeric: tabular-nums slashed-zero; }
 
-  /* Gerçek sayılar — yalnız hesaplanabildiğinde görünür */
-  .sayilar {
-    margin-top: 18px; display: flex; gap: 10px 34px; flex-wrap: wrap;
-    font-family: var(--mono); font-size: 12px; letter-spacing: .1em;
-    text-transform: uppercase; color: var(--muted);
-  }
-  .sayilar > div { display: flex; gap: 10px; align-items: baseline; }
-  .sayilar b { color: var(--ink); font-size: 15px; letter-spacing: 0; }
-
-  /* ---------- Bölümler ---------- */
-  .section { padding: clamp(44px, 7vh, 76px) 0; }
-  .section + .section { border-top: 3px double var(--line); }
-
-  .kicker {
-    font-family: var(--mono); font-size: 12px; letter-spacing: .3em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
-  }
-  .kicker .idx { color: var(--accent); margin-right: 10px; }
-
-  h2 {
-    font-family: var(--serif); font-size: clamp(26px, 3.6vw, 38px);
-    font-weight: 700; letter-spacing: -.012em; line-height: 1.1;
-  }
-  h2 .nokta { color: var(--accent); }
-  h3 { font-family: var(--serif); font-size: 19px; font-weight: 700; }
-
-  /* ---------- Soru kutusu ---------- */
-  .sor-izgara { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px; align-items: start; }
+  /* ---------- soru kutusu ---------- */
+  .sor-izgara { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: var(--a6); align-items: start; }
+  @media (max-width: 900px) { .sor-izgara { grid-template-columns: minmax(0, 1fr); } }
 
   .sor-kutu {
-    margin-top: 22px; border: 1px solid var(--line); background: var(--paper);
-    padding: 22px 24px 20px;
+    background: var(--yuzey); border: 1px solid var(--cizgi-2); border-radius: var(--r3);
+    padding: var(--a5);
   }
-  .alan { margin-bottom: 16px; }
-  .alan > label, .kucuk-baslik {
-    display: block; margin-bottom: 7px;
-    font-family: var(--mono); font-size: 11px; letter-spacing: .18em;
-    text-transform: uppercase; color: var(--muted);
+  .kucuk-baslik,
+  .alan > label {
+    display: block; margin-bottom: var(--a2);
+    font-size: var(--p-kucuk); font-weight: 500; color: var(--metin);
   }
-  input[type="text"], textarea, select {
-    width: 100%; font-family: var(--sans); font-size: 16px; line-height: 1.6;
-    color: var(--ink); background: #fffdf8;
-    border: 1px solid var(--line); padding: 12px 14px; border-radius: 0;
-    transition: border-color .18s;
-  }
-  input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--accent); }
-  textarea { resize: vertical; min-height: 150px; }
-  select { min-height: 46px; }
-  ::placeholder { color: rgba(91, 86, 77, .6); }
-
-  .sor-satir { display: flex; gap: 16px 24px; flex-wrap: wrap; align-items: flex-end; }
-  .sor-satir .alan { flex: 1 1 220px; margin-bottom: 0; }
+  #konuGovde { min-height: 9.5rem; }
+  .sor-satir { display: flex; flex-wrap: wrap; gap: var(--a4); align-items: flex-end; margin-top: var(--a4); }
+  .sor-satir .alan { flex: 1 1 14rem; margin-top: 0; }
 
   .kutucuk {
-    display: flex; gap: 11px; align-items: flex-start;
-    font-size: 14.5px; line-height: 1.6; color: var(--muted);
-    padding: 10px 0; cursor: pointer;
+    display: flex; align-items: flex-start; gap: var(--a3);
+    padding: var(--a3) 0; cursor: pointer;
+    font-size: var(--p-kucuk); line-height: 1.6; color: var(--metin-2);
   }
   .kutucuk input[type="checkbox"] {
-    width: 22px; height: 22px; margin-top: 1px; flex: none; accent-color: var(--accent); cursor: pointer;
+    width: 20px; height: 20px; flex: none; margin-top: .2rem; accent-color: var(--marka); cursor: pointer;
   }
-  .kutucuk b { color: var(--ink); font-weight: 600; }
+  .kutucuk b { color: var(--metin); font-weight: 600; }
 
   .sor-alt {
-    margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line-soft);
-    display: flex; gap: 14px 18px; align-items: center; flex-wrap: wrap;
+    margin-top: var(--a4); padding-top: var(--a4); border-top: 1px solid var(--cizgi);
+    display: flex; flex-wrap: wrap; gap: var(--a3) var(--a4); align-items: center;
   }
-  .sayac { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-left: auto; }
-  .sayac.asim { color: var(--accent); }
+  .sayac { font-family: var(--yazi-mono); font-size: var(--p-mikro); color: var(--metin-soluk); margin-left: auto; font-variant-numeric: tabular-nums slashed-zero; }
+  .sayac.asim { color: var(--hata); font-weight: 500; }
 
-  .ipuclari { margin-top: 14px; display: grid; gap: 6px; }
-  .ipuclari p { font-size: 13.5px; color: var(--muted); padding-left: 18px; position: relative; }
-  .ipuclari p::before { content: ''; position: absolute; left: 0; top: .72em; width: 10px; height: 1px; background: var(--accent); }
+  .ipuclari { margin-top: var(--a4); display: grid; gap: var(--a2); }
+  .ipuclari p { position: relative; padding-left: 1.15rem; font-size: var(--p-kucuk); color: var(--metin-soluk); margin: 0; }
+  .ipuclari p::before { content: ""; position: absolute; left: 0; top: .72em; width: 10px; height: 1px; background: var(--marka-metin); }
 
-  /* Düğmeler */
+  /* ---------- düğmeler: .dug ailesinin foruma özgü takma adları ---------- */
   .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-    min-height: 46px; padding: 12px 22px; cursor: pointer;
-    border: 1px solid var(--ink); background: transparent; color: var(--ink);
-    text-decoration: none; font-family: var(--mono); font-size: 12px;
-    letter-spacing: .12em; text-transform: uppercase;
-    transition: border-color .2s, background .2s, color .2s;
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    min-height: 44px; padding: .625rem 1.125rem;
+    background: var(--yuzey); color: var(--metin);
+    border: 1px solid var(--cizgi-guclu); border-radius: var(--r2);
+    font-size: var(--p-kucuk); font-weight: 500; line-height: 1.2;
+    text-align: center; text-decoration: none; cursor: pointer;
+    transition: background var(--sure-h), border-color var(--sure-h), color var(--sure-h);
   }
-  .btn:hover { border-color: var(--accent); color: var(--accent); }
-  .btn.ana { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-  .btn.ana:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .btn[disabled] { opacity: .5; cursor: default; }
-  .btn.kucuk { min-height: 44px; padding: 8px 14px; font-size: 11px; }
+  .btn:hover { border-color: var(--marka); color: var(--marka-metin); }
+  .btn.ana { background: var(--marka); border-color: var(--marka); color: var(--marka-kontrast); }
+  .btn.ana:hover { background: var(--marka-basili); border-color: var(--marka-basili); color: var(--marka-kontrast); }
+  .btn[disabled] { opacity: .5; cursor: default; pointer-events: none; }
+  .btn.kucuk { min-height: 44px; padding: .5rem .75rem; font-size: var(--p-mikro); }
 
   .metin-btn {
-    background: none; border: none; cursor: pointer; padding: 10px 8px;
-    min-height: 44px;
-    font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
-    text-transform: uppercase; color: var(--muted);
+    min-height: 44px; padding: .5rem .5rem; cursor: pointer;
+    background: none; border: 0;
+    font-family: var(--yazi-mono); font-size: var(--p-mikro); letter-spacing: .04em;
+    text-transform: uppercase; color: var(--metin-soluk);
   }
-  .metin-btn:hover { color: var(--accent); }
-  .metin-btn.tehlike:hover { color: #991b1b; }
+  .metin-btn:hover { color: var(--marka-metin); }
+  .metin-btn.tehlike:hover { color: var(--hata); }
 
-  .durum-satir { font-size: 14px; color: var(--muted); min-height: 22px; }
-  .durum-satir.hata { color: #991b1b; }
-  .durum-satir.iyi { color: var(--green); }
+  .durum-satir { font-size: var(--p-kucuk); color: var(--metin-soluk); min-height: 1.375rem; }
+  .durum-satir.hata { color: var(--hata); }
+  .durum-satir.iyi { color: var(--ok); }
 
-  /* Rehber (kenar notu) */
+  /* ---------- rehber (kenar notu) ---------- */
   .rehber {
-    border: 1px solid var(--line); border-left: 3px solid var(--accent);
-    background: var(--faint); padding: 20px 22px; margin-top: 22px;
+    background: var(--yuzey); border: 1px solid var(--cizgi-2); border-left: 3px solid var(--marka);
+    border-radius: 0 var(--r3) var(--r3) 0; padding: var(--a5);
   }
-  .rehber h3 { font-size: 17px; margin-bottom: 12px; }
-  .rehber ol { list-style: none; counter-reset: r; }
+  .rehber h2 { font-size: var(--p-h4); font-weight: 600; letter-spacing: -.01em; }
+  .rehber ol { counter-reset: r; margin-top: var(--a3); }
   .rehber li {
-    counter-increment: r; position: relative; padding-left: 26px;
-    margin-bottom: 10px; font-size: 14.5px; line-height: 1.62; color: var(--muted);
+    counter-increment: r; position: relative; padding-left: 1.6rem;
+    font-size: var(--p-kucuk); line-height: 1.6; color: var(--metin-2);
   }
+  .rehber li + li { margin-top: var(--a3); }
   .rehber li::before {
-    content: counter(r); position: absolute; left: 0; top: 0;
-    font-family: var(--mono); font-size: 12px; color: var(--accent);
+    content: counter(r); position: absolute; left: 0; top: .05em;
+    font-family: var(--yazi-mono); font-size: var(--p-mikro); color: var(--marka-metin);
   }
-  .rehber li b { color: var(--ink); font-weight: 600; }
+  .rehber li b { color: var(--metin); font-weight: 600; }
   .rehber .kapsam {
-    margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-soft);
-    font-size: 13.5px; color: var(--muted);
+    margin-top: var(--a4); padding-top: var(--a3); border-top: 1px solid var(--cizgi);
+    font-size: var(--p-kucuk); color: var(--metin-soluk);
   }
 
-  /* ---------- Liste ---------- */
+  /* ---------- liste ---------- */
   .liste-ust {
-    display: flex; gap: 14px 24px; align-items: flex-end;
-    justify-content: space-between; flex-wrap: wrap; margin-bottom: 18px;
+    display: flex; flex-wrap: wrap; gap: var(--a3) var(--a5);
+    align-items: flex-end; justify-content: space-between; margin-bottom: var(--a4);
   }
-  .sekmeler { display: flex; gap: 4px; flex-wrap: wrap; }
-  .sekme {
-    background: none; border: 1px solid transparent; cursor: pointer;
-    min-height: 44px; padding: 10px 14px;
-    font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
-    text-transform: uppercase; color: var(--muted);
-  }
-  .sekme:hover { color: var(--accent); }
-  .sekme[aria-pressed="true"] { color: var(--ink); border-color: var(--line); background: var(--paper); }
+  /* .sekmeler/.sekme sistem.css'ten gelir; buradaki sekmeler aria-selected
+     yerine aria-pressed kullanıyor (rol=tab değil, sıralama düğmesi). */
+  .sekme[aria-pressed="true"] { color: var(--marka-metin); border-bottom-color: var(--marka); }
 
-  .cipler { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .cipler { display: flex; flex-wrap: wrap; gap: var(--a2); margin: var(--a4) 0; }
   .cip {
-    background: none; cursor: pointer; border: 1px solid var(--line);
-    min-height: 44px; padding: 10px 14px;
-    font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
-    color: var(--muted); transition: border-color .18s, color .18s;
+    display: inline-flex; align-items: center; gap: .4rem;
+    min-height: 44px; padding: .5rem .8rem;
+    background: var(--yuzey); color: var(--metin-2);
+    border: 1px solid var(--cizgi-guclu); border-radius: var(--r2);
+    font-family: var(--yazi-mono); font-size: var(--p-mikro); letter-spacing: .02em;
+    cursor: pointer; transition: border-color var(--sure-h), color var(--sure-h);
   }
-  .cip:hover { border-color: var(--accent); color: var(--accent); }
-  .cip[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); background: var(--paper); }
-  .cip .adet { color: var(--accent); margin-left: 6px; }
+  .cip:hover { border-color: var(--marka); color: var(--metin); }
+  .cip[aria-pressed="true"] { background: var(--marka-tint-2); border-color: var(--marka); color: var(--marka-koyu); font-weight: 500; }
+  .cip .adet { color: var(--marka-metin); font-variant-numeric: tabular-nums slashed-zero; }
 
-  .konu-liste { border-top: 1px solid var(--line); }
-  .konu-sat { border-bottom: 1px solid var(--line-soft); padding: 20px 0; }
+  .konu-liste { border-top: 1px solid var(--cizgi-2); }
+  .konu-sat { border-bottom: 1px solid var(--cizgi); padding: var(--a5) 0; }
   .konu-sat .baslik-bag {
-    font-family: var(--serif); font-size: clamp(19px, 2.2vw, 23px);
-    font-weight: 700; line-height: 1.24; color: var(--ink);
-    text-decoration: none; display: inline-block;
+    display: inline-block; color: var(--metin); text-decoration: none;
+    font-size: var(--p-h4); font-weight: 600; line-height: 1.3; letter-spacing: -.012em;
+    overflow-wrap: anywhere;
   }
-  .konu-sat .baslik-bag:hover { color: var(--accent); }
+  .konu-sat .baslik-bag:hover { color: var(--marka-metin); text-decoration: underline; }
   .konu-meta {
-    margin-top: 9px; display: flex; gap: 8px 14px; align-items: center; flex-wrap: wrap;
-    font-size: 13.5px; color: var(--muted);
+    margin-top: var(--a2); display: flex; flex-wrap: wrap; gap: var(--a2) var(--a4);
+    align-items: center; font-size: var(--p-kucuk); color: var(--metin-soluk);
   }
-  .konu-meta .yazar { display: inline-flex; align-items: center; gap: 8px; }
+  .konu-meta .yazar { display: inline-flex; align-items: center; gap: var(--a2); }
 
-  .avatar, .avatar-harf {
-    width: 26px; height: 26px; border-radius: 50%; flex: none;
-  }
-  .avatar { border: 1px solid var(--line); object-fit: cover; }
+  .avatar, .avatar-harf { width: 26px; height: 26px; flex: none; border-radius: var(--r-tam); }
+  .avatar { border: 1px solid var(--cizgi-2); object-fit: cover; }
   .avatar-harf {
     display: inline-flex; align-items: center; justify-content: center;
-    background: var(--faint); border: 1px solid var(--line);
-    font-family: var(--serif); font-size: 13px; font-weight: 700; color: var(--muted);
+    background: var(--yuzey-2); border: 1px solid var(--cizgi-2);
+    font-size: var(--p-mikro); font-weight: 600; color: var(--metin-soluk);
   }
-  .avatar.buyuk, .avatar-harf.buyuk { width: 34px; height: 34px; font-size: 15px; }
+  .avatar.buyuk, .avatar-harf.buyuk { width: 34px; height: 34px; font-size: var(--p-kucuk); }
 
-  .rozet {
-    display: inline-flex; align-items: center; gap: 7px;
-    font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
-    text-transform: uppercase; padding: 5px 10px; border: 1px solid var(--line);
-    color: var(--muted); white-space: nowrap;
-  }
-  .rozet.bekliyor { border-color: rgba(194, 65, 12, .5); color: var(--accent); }
-  .rozet.cozuldu { border-color: rgba(20, 83, 45, .5); color: var(--green); }
-  .rozet.saha { border-color: var(--ink); color: var(--ink); }
-  .rozet.gizli { border-color: #991b1b; color: #991b1b; }
-  .rozet.kilit { border-style: dashed; }
-  .rozet.hiz { border: none; padding-left: 0; color: var(--green); }
+  /* .rozet tabanı sistem.css'te. Oradaki ::before data-isaret bekler; forumun
+     JS'i data-isaret yazmadığı için boş sözde-öğe kapatılır. */
+  .rozet:not([data-isaret])::before { content: none; }
+  .rozet.bekliyor { background: var(--uyari-tint); border-color: var(--uyari-kenar); color: var(--uyari); }
+  .rozet.cozuldu  { background: var(--ok-tint);    border-color: var(--ok-kenar);    color: var(--ok); }
+  .rozet.saha     { background: var(--marka-tint); border-color: var(--marka-kenar); color: var(--marka-koyu); }
+  .rozet.gizli    { background: var(--hata-tint);  border-color: var(--hata-kenar);  color: var(--hata); }
+  .rozet.kilit    { border-style: dashed; }
+  .rozet.hiz      { background: none; border: 0; padding-left: 0; color: var(--ok); }
 
   .etiket-cip {
-    font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
-    color: var(--muted); border-bottom: 1px dotted var(--line);
+    font-family: var(--yazi-mono); font-size: var(--p-mikro); letter-spacing: .04em;
+    color: var(--metin-soluk); border-bottom: 1px dotted var(--cizgi-2);
   }
 
-  /* ---------- Boş durum ---------- */
-  .bos { border-top: 1px solid var(--line); padding-top: 30px; }
-  .bos-acilis {
-    font-family: var(--mono); font-size: 12px; letter-spacing: .16em;
-    text-transform: uppercase; color: var(--muted);
-  }
-  .bos h3 { margin-top: 12px; font-size: clamp(21px, 3vw, 27px); max-width: 26ch; }
-  .bos .bos-lead { margin-top: 10px; max-width: 56ch; color: var(--muted); font-size: 15.5px; }
-  .ornek-baslik {
-    margin-top: 30px; font-family: var(--mono); font-size: 11.5px;
-    letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
-  }
-  .ornekler { margin-top: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  /* ---------- boş durum ---------- */
+  .bos { border-top: 1px solid var(--cizgi-2); padding-top: var(--a6); }
+  .bos-acilis { font-family: var(--yazi-mono); font-size: var(--p-mikro); letter-spacing: .06em; text-transform: uppercase; color: var(--metin-soluk); }
+  .bos h2 { margin-top: var(--a3); font-size: var(--p-h3); max-width: 26ch; }
+  .bos .bos-lead { margin-top: var(--a3); max-width: var(--olcu); color: var(--metin-2); }
+  .ornek-baslik { margin-top: var(--a6); font-family: var(--yazi-mono); font-size: var(--p-mikro); letter-spacing: .06em; text-transform: uppercase; color: var(--metin-soluk); }
+  .ornekler { margin-top: var(--a3); display: grid; gap: var(--a3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); }
   .ornek {
-    text-align: left; cursor: pointer; background: none;
-    border: 1px dashed var(--line); padding: 15px 16px; min-height: 44px;
-    font-family: var(--serif); font-size: 16px; line-height: 1.4; color: var(--muted);
-    transition: border-color .18s, color .18s;
+    text-align: left; cursor: pointer; min-height: 44px;
+    background: var(--yuzey); border: 1px dashed var(--cizgi-guclu); border-radius: var(--r3);
+    padding: var(--a4); font-size: var(--p-kucuk); line-height: 1.5; color: var(--metin-2);
+    transition: border-color var(--sure-h), color var(--sure-h);
   }
-  .ornek:hover { border-color: var(--accent); color: var(--ink); }
-  .ornek span { display: block; margin-top: 7px; font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  .ornek:hover { border-color: var(--marka); color: var(--metin); }
+  .ornek span { display: block; margin-top: var(--a2); font-family: var(--yazi-mono); font-size: var(--p-mikro); letter-spacing: .06em; text-transform: uppercase; color: var(--marka-metin); }
 
-  /* ---------- Konu görünümü ---------- */
+  /* ---------- konu görünümü ---------- */
   .geri {
-    display: inline-flex; align-items: center; gap: 9px; min-height: 44px;
-    font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
-    text-transform: uppercase; color: var(--muted); text-decoration: none;
+    display: inline-flex; align-items: center; gap: .5rem; min-height: 44px;
+    font-family: var(--yazi-mono); font-size: var(--p-mikro); letter-spacing: .06em;
+    text-transform: uppercase; color: var(--metin-soluk); text-decoration: none;
   }
-  .geri:hover { color: var(--accent); }
+  .geri:hover { color: var(--marka-metin); }
 
-  .konu-basi { margin-top: 10px; }
-  .konu-basi h2 { max-width: 26ch; }
-  .konu-ustbilgi { margin-top: 14px; display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
-
-  .govde {
-    margin-top: 20px; font-size: 16.5px; line-height: 1.75; color: var(--ink);
-    max-width: 74ch;
+  .konu-basi { margin-top: var(--a3); }
+  .konu-basi h2 { max-width: 28ch; overflow-wrap: anywhere; }
+  .konu-ustbilgi {
+    margin-top: var(--a3); display: flex; flex-wrap: wrap; gap: var(--a2) var(--a4);
+    align-items: center; font-size: var(--p-kucuk); color: var(--metin-soluk);
   }
-  .govde p { white-space: pre-wrap; margin-bottom: 14px; overflow-wrap: anywhere; }
+
+  /* Kullanıcı metni boşluksuz uzun dizgi içerebilir (dosya yolu, adres, PLC
+     etiketi) — overflow-wrap: anywhere yatay taşmayı kesin olarak keser. */
+  .govde { margin-top: var(--a5); max-width: 74ch; line-height: 1.75; color: var(--metin); }
+  .govde p { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0 0 var(--a4); }
   .govde p:last-child { margin-bottom: 0; }
-  .govde a { color: var(--accent); overflow-wrap: anywhere; }
+  .govde a { overflow-wrap: anywhere; }
+  /* Kod bloğu sistem tokenlarıyla boyanır (sistem.css'teki `code` kuralının
+     blok karşılığı) — sabit HEX yazılırsa koyu/açık temada kopuk kalırdı. */
   .govde pre {
-    background: #11161d; color: #e8edf5; padding: 16px 18px; margin: 14px 0;
-    overflow-x: auto; border-left: 3px solid var(--accent);
+    margin: var(--a4) 0; padding: var(--a4); overflow-x: auto;
+    background: var(--yuzey-2); color: var(--metin);
+    border: 1px solid var(--cizgi); border-left: 3px solid var(--marka);
+    border-radius: var(--r2);
   }
-  .govde pre code { font-family: var(--mono); font-size: 13.5px; line-height: 1.6; white-space: pre; }
+  .govde pre code {
+    background: none; border: 0; padding: 0; color: inherit;
+    font-family: var(--yazi-mono); font-size: var(--p-kucuk); line-height: 1.6; white-space: pre;
+  }
 
   .cozum-kutu {
-    margin-top: 24px; border: 1px solid rgba(20, 83, 45, .45);
-    border-left: 3px solid var(--green); background: rgba(20, 83, 45, .045);
-    padding: 18px 20px;
+    margin-top: var(--a5); padding: var(--a4) var(--a5);
+    background: var(--ok-tint); border: 1px solid var(--ok-kenar); border-left: 3px solid var(--ok);
+    border-radius: 0 var(--r3) var(--r3) 0;
   }
   .cozum-kutu .cozum-etiket {
-    font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em;
-    text-transform: uppercase; color: var(--green); margin-bottom: 10px;
+    font-family: var(--yazi-mono); font-size: var(--p-mikro); letter-spacing: .08em;
+    text-transform: uppercase; color: var(--ok); margin-bottom: var(--a2);
   }
 
-  .islem-satir { margin-top: 16px; display: flex; gap: 4px 10px; flex-wrap: wrap; align-items: center; }
+  .islem-satir { margin-top: var(--a4); display: flex; flex-wrap: wrap; gap: var(--a2) var(--a3); align-items: center; }
 
-  .yanit-liste { margin-top: 34px; border-top: 3px double var(--line); }
-  .yanit {
-    padding: 22px 0; border-bottom: 1px solid var(--line-soft);
+  /* JS'in ürettiği ara başlıklar ("3 yanıt", "Yanıt yazın", "Bu konu kilitli") */
+  .yanit-liste h3, .yanit-yaz h3, #konuIcerik .uyari-kutu h3 { font-size: var(--p-h4); font-weight: 600; }
+  .yanit-liste { margin-top: var(--a7); border-top: 1px solid var(--cizgi-2); }
+  .yanit { padding: var(--a5) 0; border-bottom: 1px solid var(--cizgi); }
+  .yanit.cozum-yanit { border-left: 3px solid var(--ok); padding-left: var(--a4); }
+  .yanit-ust { display: flex; flex-wrap: wrap; gap: var(--a2) var(--a3); align-items: center; font-size: var(--p-kucuk); color: var(--metin-soluk); }
+  .yanit .govde { margin-top: var(--a3); }
+  .yanit.silinmis .govde { font-style: italic; color: var(--metin-soluk); }
+
+  .yanit-yaz {
+    margin-top: var(--a6); padding: var(--a5);
+    background: var(--yuzey); border: 1px solid var(--cizgi-2); border-radius: var(--r3);
   }
-  .yanit.cozum-yanit { border-left: 3px solid var(--green); padding-left: 16px; }
-  .yanit-ust { display: flex; gap: 10px 14px; align-items: center; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
-  .yanit .govde { margin-top: 12px; font-size: 16px; }
-  .yanit.silinmis .govde { font-style: italic; color: var(--muted); }
+  .bildir-kutu { margin-top: var(--a3); display: flex; flex-wrap: wrap; gap: var(--a2); align-items: center; }
 
-  .yanit-yaz { margin-top: 30px; border: 1px solid var(--line); background: var(--paper); padding: 20px 22px; }
-
-  .bildir-kutu { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-
-  /* Kurulum / yönetici kutusu */
+  /* ---------- kurulum / uyarı / yükleniyor ---------- */
   .kurulum {
-    margin-top: 26px; border: 1px dashed var(--accent); background: rgba(194, 65, 12, .05);
-    padding: 18px 20px;
+    margin-top: var(--a6); padding: var(--a4) var(--a5);
+    background: var(--marka-tint); border: 1px dashed var(--marka-kenar); border-radius: var(--r3);
   }
-  .kurulum h3 { font-size: 17px; margin-bottom: 8px; }
-  .kurulum p { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
-  .kurulum code { font-family: var(--mono); font-size: 13px; background: var(--faint); padding: 2px 6px; }
+  .kurulum h2 { font-size: var(--p-h4); font-weight: 600; margin-bottom: var(--a2); }
+  .kurulum h3 { font-size: var(--p-h4); font-weight: 600; margin-bottom: var(--a2); }
+  .kurulum p { font-size: var(--p-kucuk); color: var(--metin-2); margin-bottom: var(--a3); }
 
   .uyari-kutu {
-    margin-top: 22px; border: 1px solid var(--line); border-left: 3px solid var(--accent);
-    background: var(--paper); padding: 18px 20px; max-width: 74ch;
+    margin-top: var(--a5); padding: var(--a4) var(--a5); max-width: 74ch;
+    background: var(--uyari-tint); border: 1px solid var(--uyari-kenar); border-left: 3px solid var(--uyari);
+    border-radius: 0 var(--r3) var(--r3) 0;
   }
-  .uyari-kutu h3 { font-size: 17px; margin-bottom: 8px; }
-  .uyari-kutu p { font-size: 14.5px; color: var(--muted); margin-bottom: 10px; }
-  .uyari-kutu a { color: var(--accent); }
+  .uyari-kutu h2, .uyari-kutu h3 { font-size: var(--p-h4); font-weight: 600; margin-bottom: var(--a2); }
+  .uyari-kutu p { font-size: var(--p-kucuk); color: var(--metin-2); margin-bottom: var(--a3); }
+  .uyari-kutu p:last-child { margin-bottom: 0; }
 
-  .yukleniyor { padding: 26px 0; font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-
-  footer { border-top: 3px double var(--line); padding: 26px 0 36px; margin-top: 40px; }
-  .footer-inner {
-    max-width: 1120px; margin: 0 auto; padding: 0 28px;
-    display: flex; justify-content: space-between; align-items: center;
-    gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--muted);
-  }
-  .footer-links { display: flex; gap: 4px 16px; flex-wrap: wrap; }
-  .footer-links a {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
-    text-transform: uppercase; color: var(--muted); text-decoration: none;
-  }
-  .footer-links a:hover { color: var(--accent); }
-  .footer-inner .mono { font-family: var(--mono); }
-
-  .atla {
-    position: absolute; left: -9999px; top: 0; z-index: 60;
-    background: var(--ink); color: var(--bg); padding: 12px 18px;
-    font-family: var(--mono); font-size: 12px;
-  }
-  .atla:focus { left: 12px; top: 12px; }
-
-  /* ---------- Duyarlı ---------- */
-  @media (max-width: 1080px) {
-    .container, .nav-inner, .footer-inner { max-width: 940px; }
-    .sor-izgara { grid-template-columns: minmax(0, 1fr) 290px; gap: 30px; }
-  }
-
-  @media (max-width: 880px) {
-    .sor-izgara { grid-template-columns: minmax(0, 1fr); }
-    .kimlik-band { grid-template-columns: 1fr; }
-    .soz { border-left: none; border-top: 2px solid var(--accent); padding: 14px 0 0; max-width: none; }
-    .ornekler { grid-template-columns: minmax(0, 1fr); }
-  }
-
-  @media (max-width: 640px) {
-    .container, .nav-inner, .footer-inner { padding: 0 18px; }
-    .nav-links a { display: none; }
-    .page-head { padding-top: 92px; }
-    .sor-kutu { padding: 18px 16px 16px; }
-    .rehber { padding: 18px 16px; }
-    .sekme, .cip { font-size: 10.5px; letter-spacing: .1em; }
-    .yanit-yaz { padding: 16px 14px; }
-  }
-
-  @media (max-width: 400px) {
-    .kimlik .yuz, .kimlik .monogram { width: 46px; height: 46px; font-size: 19px; }
-    .btn { padding: 12px 16px; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    * { transition: none !important; animation: none !important; }
+  .yukleniyor {
+    padding: var(--a6) 0; font-family: var(--yazi-mono); font-size: var(--p-mikro);
+    letter-spacing: .06em; text-transform: uppercase; color: var(--metin-soluk);
   }
 </style>
 </head>
@@ -508,71 +322,106 @@
 
 <a class="atla" href="#anaIcerik">İçeriğe atla</a>
 
-<nav id="nav">
-  <div class="nav-inner">
-    <a class="brand" href="/" aria-label="sersoz.com">
-      <span class="mark" aria-hidden="true">S</span>
-      <span class="host">sersoz.com</span>
+<!-- ==================================================================
+     ÜST ÇUBUK
+     .nav-links kapsayıcısı hesap.js'in API'sidir: giriş kutusu ve site
+     sahibine özel "Yönetim" bağlantısı oraya eklenir. Sınıf adı değişirse
+     ikisi de sessizce yok olur.
+     ================================================================== -->
+<header class="ust">
+  <input type="checkbox" id="menuKutu" class="menu-kutu" aria-hidden="true" tabindex="-1">
+  <div class="kap ust-ic">
+    <a class="logo" href="index.html">
+      <span class="isaret" aria-hidden="true">S</span>
+      <span>Sercan Sözer<span class="alt">makine görüşü · İzmir</span></span>
     </a>
+
+    <nav class="ust-menu" aria-label="Ana gezinme">
+      <a href="uygulamalar.html">Uygulamalar</a>
+      <a href="yazilim.html">Yazılım</a>
+      <a href="yazilim.html#uyumluluk">Uyumluluk</a>
+      <a href="surec.html">Nasıl çalışır</a>
+      <a href="fiyat.html">Fiyat</a>
+      <a href="forum.html" aria-current="page">Danışma Masası</a>
+    </nav>
+
     <div class="nav-links">
-      <a href="/">Ana Sayfa</a>
-      <a href="/portfolyo.html">Portfolyo</a>
-      <a href="/magaza.html">Mağaza</a>
-      <a href="/yazilar.html">Yazılar</a>
-      <a class="active" href="/forum.html" aria-current="page">Forum</a>
-    </div>
-  </div>
-</nav>
-
-<header class="page-head">
-  <div class="container">
-    <p class="eyebrow">sersoz.com / danışma masası</p>
-    <h1>Sahadan bir soru sorun — cevabı burada kalsın<span class="nokta">.</span></h1>
-    <p class="tagline">Makine görüşü, <b>PLC haberleşme</b>, 3D ölçüm ve <b>robot kılavuzlama</b>
-      için kamuya açık bir masa. Okumak için giriş gerekmez.</p>
-
-    <div class="kimlik-band">
-      <div class="kimlik">
-        <!-- Depoda fotoğraf yok (ölçüldü: /sercan.jpg → 404), sayfanın kendi
-             .monogram yedeği kullanılıyor. Gerçek fotoğraf eklenince bu satır
-             <img class="yuz" src="/sercan.jpg" alt="Sercan Sözer"
-             width="58" height="58"> ile değiştirilir. -->
-        <span class="monogram" aria-hidden="true">S</span>
-        <div>
-          <p class="kimlik-ad">Sercan Sözer</p>
-          <p class="kimlik-rol">Wenglor 3D + YOLO ile hat kuran mekatronik mühendisi</p>
-          <p class="kimlik-bag">
-            <a href="/vision-detection.html">Kurduğum sistem</a>
-            <a href="/yazilar/el-goz-kalibrasyonu-tsai-lenz.html">El-göz kalibrasyonu yazısı</a>
-          </p>
-        </div>
-      </div>
-      <div class="soz">
-        <p class="soz-etiket">Söz</p>
-        <p>İş günlerinde <b>48 saat</b> içinde ben yanıtlarım.</p>
-        <p class="soz-olcum" id="sozOlcum" hidden></p>
-      </div>
+      <a class="dug dug-1 dug-ust" href="surec.html#talep">Fizibilite talebi</a>
     </div>
 
-    <dl class="sayilar" id="sayilar" hidden>
-      <div><dt>Cevap bekleyen</dt><dd><b id="sayiAcik">—</b></dd></div>
-      <div><dt>Çözülmüş konu</dt><dd><b id="sayiCozulmus">—</b></dd></div>
-    </dl>
+    <label class="menu-dug" for="menuKutu" role="button" tabindex="0"
+           aria-label="Menüyü aç veya kapat" aria-controls="menuKutu">
+      <svg class="ac" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <svg class="kapa" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </label>
   </div>
 </header>
 
 <main id="anaIcerik" tabindex="-1">
 
+  <!-- ================================================================
+       1. BAŞLIK — ne olduğu, kimin yanıtladığı, verilen söz
+       ================================================================ -->
+  <section class="bolum">
+    <div class="kap">
+      <span class="ust-baslik">Danışma masası</span>
+      <h1 style="margin-top:var(--a4);max-width:20ch">Sahadan bir soru sorun — cevabı burada kalsın.</h1>
+      <p class="giris" style="margin-top:var(--a5);max-width:56ch">
+        Makine görüşü, <strong>PLC haberleşme</strong>, 3D ölçüm ve
+        <strong>robot kılavuzlama</strong> için kamuya açık bir masa. Okumak için giriş
+        gerekmez; yazmak için Google girişi yeter.
+      </p>
+
+      <div class="izgara iz-2" style="margin-top:var(--a6)">
+        <div class="kart">
+          <div class="kimlik">
+            <!-- Depoda fotoğraf yok (ölçüldü: /sercan.jpg → 404), sayfanın kendi
+                 .monogram yedeği kullanılıyor. Gerçek fotoğraf eklenince bu satır
+                 <!-- Depoda fotograf yok; sayfanin kendi .monogram yedegi kullaniliyor.
+     Gercek fotograf eklenince buraya <img class="yuz" src="/sercan.jpg"
+     alt="Sercan Sozer" width="58" height="58"> konur. -->
+        <span class="monogram" aria-hidden="true">S</span> ile değiştirilir. -->
+            <span class="monogram" aria-hidden="true">S</span>
+            <div>
+              <p class="kimlik-ad">Sercan Sözer</p>
+              <p class="kimlik-rol">Mekatronik mühendisi — Wenglor 3D + YOLO ile hat kuruyorum.</p>
+              <p class="kimlik-bag">
+                <a href="yazilim.html">Kurduğum sistem</a>
+                <a href="hakkinda.html">Hakkında ve yazılar</a>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="kart">
+          <span class="ust-baslik notr">Söz</span>
+          <p>İş günlerinde <strong>48 saat</strong> içinde ben yanıtlarım. Arada
+            destek ekibi yok; yazan da yanıtlayan da aynı kişi.</p>
+          <p class="soz-olcum" id="sozOlcum" hidden></p>
+          <p class="kucuk soluk">
+            Bu sayfada müşteri logosu, tanıklık, puan ve vaka rakamı yoktur.
+            Aşağıdaki iki sayı ancak konu listesi tam okunduğunda görünür —
+            hesaplanamıyorsa hiç gösterilmez.
+          </p>
+        </div>
+      </div>
+
+      <dl class="sayilar" id="sayilar" style="margin-top:var(--a5)" hidden>
+        <div><dt>Cevap bekleyen</dt><dd><b id="sayiAcik">—</b></dd></div>
+        <div><dt>Çözülmüş konu</dt><dd><b id="sayiCozulmus">—</b></dd></div>
+      </dl>
+    </div>
+  </section>
+
   <!-- ================= LİSTE GÖRÜNÜMÜ ================= -->
   <div id="listeGorunum">
 
-    <section class="section" id="soru-kutusu" aria-labelledby="sorBaslik">
-      <div class="container sor-izgara">
+    <section class="bolum-sik bolum-cizgili" id="soru-kutusu" aria-labelledby="sorBaslik">
+      <div class="kap sor-izgara">
         <div>
-          <p class="kicker"><span class="idx">01</span>Sorunuzu yazın</p>
-          <h2 id="sorBaslik">Ne takıldı<span class="nokta">?</span></h2>
+          <h2 id="sorBaslik">Ne takıldı?</h2>
 
-          <form class="sor-kutu" id="konuForm" novalidate>
+          <form class="sor-kutu" id="konuForm" novalidate style="margin-top:var(--a4)">
             <div class="alan">
               <label for="konuBaslik">Tek satır başlık</label>
               <input type="text" id="konuBaslik" name="konuBaslik" maxlength="120"
@@ -610,7 +459,7 @@
               <span class="sayac" id="baslikSayac" aria-live="off"></span>
               <span class="sayac" id="govdeSayac" aria-live="off"></span>
             </div>
-            <p class="durum-satir" id="konuDurum" role="status" aria-live="polite" style="margin-top:10px"></p>
+            <p class="durum-satir" id="konuDurum" role="status" aria-live="polite" style="margin-top:var(--a3)"></p>
 
             <div class="ipuclari">
               <p>Marka/model ve hata kodunu yazın — firma adına gerek yok.</p>
@@ -624,25 +473,35 @@
         </div>
 
         <aside class="rehber" aria-labelledby="rehberBaslik">
-          <h3 id="rehberBaslik">Cevaplanabilir soru nasıl olur</h3>
+          <h2 id="rehberBaslik">Cevaplanabilir soru nasıl olur</h2>
           <ol>
             <li><b>Marka + model + yazılım sürümü.</b> "PLC" değil, "S7-1200 CPU 1214C, TIA v17".</li>
             <li><b>Ne yaptınız, ne bekliyordunuz, ne oldu.</b> Hata kodu/mesajı aynen.</li>
             <li><b>Fotoğraf veya ekran görüntüsü</b> bağlantısı — parça, HMI ekranı, tarama kesiti.</li>
             <li><b>Denediğiniz şeyler.</b> Neyi elediğinizi bilmek işi hızlandırır.</li>
           </ol>
+
+          <p class="kapsam" style="margin-bottom:var(--a3)">Elimde <b>hazır</b> olan protokoller — sorunuz bunların dışındaysa da yazın,
+            ne yapılabileceğini açıkça söylerim:</p>
+          <div class="etiket-satir">
+            <span class="rozet rozet-hazir" data-isaret="✓">Siemens S7</span>
+            <span class="rozet rozet-hazir" data-isaret="✓">MC / SLMP</span>
+            <span class="rozet rozet-hazir" data-isaret="✓">Modbus TCP</span>
+            <span class="rozet rozet-hazir" data-isaret="✓">PROFINET DCP keşfi</span>
+            <span class="rozet rozet-yol" data-isaret="◔">OPC UA — yol haritasında</span>
+            <span class="rozet rozet-yol" data-isaret="◔">PROFINET IO — yol haritasında</span>
+          </div>
+
           <p class="kapsam">Burası teknik yardımlaşma içindir; <b>iş ilanı, ürün reklamı ve firma
             şikâyeti</b> kapsam dışıdır. Tek kural: kişiye değil probleme yazın.</p>
         </aside>
       </div>
     </section>
 
-    <section class="section" aria-labelledby="listeBaslik">
-      <div class="container">
-        <p class="kicker"><span class="idx">02</span>Masadakiler</p>
-
+    <section class="bolum" aria-labelledby="listeBaslik">
+      <div class="kap">
         <div class="liste-ust">
-          <h2 id="listeBaslik">Konular<span class="nokta">.</span></h2>
+          <h2 id="listeBaslik">Masadakiler</h2>
           <div class="sekmeler" role="group" aria-label="Sıralama">
             <button class="sekme" type="button" id="sekmeBekleyen"
                     data-sekme="bekleyen" aria-pressed="true">Cevap bekleyenler</button>
@@ -659,14 +518,14 @@
 
         <p class="durum-satir" id="listeDurum" role="status" aria-live="polite"></p>
 
-        <div style="margin-top:22px">
+        <div style="margin-top:var(--a5)">
           <button class="btn" id="dahaFazla" hidden>Daha fazla konu</button>
         </div>
 
         <!-- Boş durum -->
         <div class="bos" id="bosDurum" hidden>
           <p class="bos-acilis">Bu masa 9 Ağustos 2026'da açıldı</p>
-          <h3>Şu an sırada kimse yok.</h3>
+          <h2>Şu an sırada kimse yok.</h2>
           <p class="bos-lead">İlk soru sizinse en hızlı yanıtı siz alırsınız. Sorduğunuz şey burada
             kalır: yarın aynı sorunu yaşayan kişi — belki yine siz — arama sonuçlarında bulur.</p>
 
@@ -676,7 +535,7 @@
 
         <!-- Yönetici kurulum kutusu -->
         <div class="kurulum" id="kurulumKutu" hidden>
-          <h3>Kurulum — yalnız site sahibine görünür</h3>
+          <h2>Kurulum — yalnız site sahibine görünür</h2>
           <p>Güvenlik kuralları depodaki <code>/firestore.rules</code> dosyasındadır ve
             <b>Firebase Konsolu → Firestore Database → Rules</b> ekranından <b>elle</b> yayımlanır.
             Kurallar yayımlandıktan sonra <code>forumAyar/genel</code> belgesi bulunmalıdır;
@@ -690,7 +549,7 @@
 
         <!-- Firestore erişilemezse -->
         <div class="uyari-kutu" id="cevrimdisi" hidden>
-          <h3>Forum şu an yüklenemedi</h3>
+          <h2>Forum şu an yüklenemedi</h2>
           <p id="cevrimdisiMetin">Veritabanına ulaşılamıyor. Ağ bağlantınız ya da bir tarayıcı
             eklentisi engelliyor olabilir.</p>
           <p>Soru sormanın iki yedek yolu:
@@ -704,8 +563,8 @@
 
   <!-- ================= KONU GÖRÜNÜMÜ ================= -->
   <div id="konuGorunum" hidden>
-    <section class="section">
-      <div class="container">
+    <section class="bolum">
+      <div class="kap">
         <a class="geri" href="#/">← Tüm konular</a>
         <div id="konuIcerik"></div>
       </div>
@@ -713,10 +572,10 @@
   </div>
 
   <noscript>
-    <section class="section">
-      <div class="container">
+    <section class="bolum">
+      <div class="kap">
         <div class="uyari-kutu">
-          <h3>Bu sayfa JavaScript gerektiriyor</h3>
+          <h2>Bu sayfa JavaScript gerektiriyor</h2>
           <p>Danışma masası tarayıcınızda çalışan bir uygulamadır; konular JavaScript kapalıyken
             yüklenemez. JavaScript'i açabilir ya da sorunuzu doğrudan iletebilirsiniz:</p>
           <p><a href="mailto:sercansozer20@gmail.com?subject=Forum%20sorusu">sercansozer20@gmail.com</a>
@@ -727,18 +586,111 @@
   </noscript>
 </main>
 
-<footer>
-  <div class="footer-inner">
-    <span>© 2026 Sercan Sözer</span>
-    <nav class="footer-links" aria-label="Alt gezinme">
-      <a href="/">Ana Sayfa</a>
-      <a href="/magaza.html">Mağaza</a>
-      <a href="/yazilar.html">Yazılar</a>
-      <a href="/gizlilik.html">Gizlilik</a>
-    </nav>
-    <span class="mono">sersoz.com</span>
+<!-- ==================================================================
+     ALT BİLGİ
+     ================================================================== -->
+<footer class="alt-bilgi">
+  <div class="kap">
+    <div class="alt-izgara">
+      <div>
+        <h2 class="bas">İş</h2>
+        <ul>
+          <li><a href="uygulamalar.html">Uygulamalar</a></li>
+          <li><a href="yazilim.html">Vision Detection App</a></li>
+          <li><a href="yazilim.html#uyumluluk">Uyumluluk ve protokoller</a></li>
+          <li><a href="surec.html">Nasıl çalışır</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Karar</h2>
+        <ul>
+          <li><a href="fiyat.html">Fiyat ve kapsam</a></li>
+          <li><a href="fiyat.html#kazanc">Kazanç hesabı</a></li>
+          <li><a href="fiyat.html#magaza">Satın alma</a></li>
+          <li><a href="surec.html#talep">Fizibilite talebi</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Site</h2>
+        <ul>
+          <li><a href="forum.html">Danışma Masası</a></li>
+          <li><a href="hakkinda.html">Hakkında ve yazılar</a></li>
+          <li><a href="hesabim.html">Hesabım</a></li>
+          <li><a href="gizlilik.html">Gizlilik ve KVKK</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">İletişim</h2>
+        <ul>
+          <li><a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a></li>
+        </ul>
+        <p class="kucuk soluk" style="margin-top:var(--a3);max-width:26ch">
+          Sercan Sözer — mekatronik mühendisi, İzmir. Şahıs olarak, mühendislik hizmeti
+          biçiminde çalışıyorum.
+        </p>
+      </div>
+    </div>
+
+    <div class="alt-son">
+      <span>© <span class="sayi">2026</span> Sercan Sözer</span>
+      <span>Dış font, dış stil ve reklam/analitik izleyicisi yüklenmez.</span>
+      <button type="button" class="tema-dug" id="temaDug" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6 6l1.5 1.5M16.5 16.5L18 18M18 6l-1.5 1.5M7.5 16.5L6 18"/><circle cx="12" cy="12" r="4"/></svg>
+        <span id="temaYazi">Koyu tema</span>
+      </button>
+    </div>
   </div>
 </footer>
+
+<!-- ==================================================================
+     KABUK BETİĞİ — tema anahtarı ve mobil menü.
+     Forum mantığına dokunmaz; foruma ait ad alanı ayrıdır.
+     ================================================================== -->
+<script>
+(function () {
+  'use strict';
+
+  /* --- tema anahtarı --- */
+  var kok = document.documentElement;
+  var dug = document.getElementById('temaDug');
+  var yazi = document.getElementById('temaYazi');
+
+  function koyuMu() {
+    var t = kok.getAttribute('data-tema');
+    if (t) return t === 'koyu';
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  function temaYaz() {
+    var k = koyuMu();
+    dug.setAttribute('aria-pressed', k ? 'true' : 'false');
+    yazi.textContent = k ? 'Açık tema' : 'Koyu tema';
+  }
+  if (dug && yazi) {
+    dug.addEventListener('click', function () {
+      var yeni = koyuMu() ? 'acik' : 'koyu';
+      kok.setAttribute('data-tema', yeni);
+      try { localStorage.setItem('sersoz_tema', yeni); } catch (e) {}
+      temaYaz();
+    });
+    temaYaz();
+  }
+
+  /* --- mobil menü: Escape kapatır, bağlantıya tıklayınca kapanır --- */
+  var mk = document.getElementById('menuKutu');
+  if (!mk) return;
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && mk.checked) { mk.checked = false; }
+  });
+  var menu = document.querySelector('.ust-menu');
+  if (menu) menu.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') mk.checked = false;
+  });
+  var etiketDug = document.querySelector('.menu-dug');
+  if (etiketDug) etiketDug.addEventListener('keydown', function (e) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); mk.checked = !mk.checked; }
+  });
+})();
+</script>
 
 <script>
 /* =============================================================================
@@ -1044,7 +996,10 @@
     });
 
     /* Fotoğraf yedeği: işaretlemede doğrudan .monogram var (bkz. .kimlik).
-       Önceki hâlde <img src="/sercan.jpg"> konup yüklenemezse error olayında
+       Önceki hâlde <!-- Depoda fotograf yok; sayfanin kendi .monogram yedegi kullaniliyor.
+     Gercek fotograf eklenince buraya <img class="yuz" src="/sercan.jpg"
+     alt="Sercan Sozer" width="58" height="58"> konur. -->
+        <span class="monogram" aria-hidden="true">S</span> konup yüklenemezse error olayında
        monogramla değiştiriliyordu — çalışıyordu ama her açılışta 404 üretiyordu.
        Fotoğraf eklenince img geri konur; o zaman bu yedek yeniden gerekir. */
 
@@ -1589,7 +1544,8 @@
     S.konuId = null; S.konu = null;
     goster($('konuGorunum'), false);
     goster($('listeGorunum'), true);
-    document.title = 'Danışma Masası — Sahadan soru sorun · sersoz.com';
+    /* Sekme başlığı sitenin geri kalanıyla aynı kimliği taşır: "· Sercan Sözer". */
+    document.title = 'Danışma Masası — sahadan soru sorun · Sercan Sözer';
   }
 
   function konuAc(id) {
@@ -1628,8 +1584,8 @@
       S.konu = konu;
       /* Gizlenmiş konunun başlığı sekmeye/geçmişe de düşmesin. */
       document.title = (konu.gizli && !S.yoneticiMi)
-        ? 'Görüntülenemeyen konu — sersoz.com danışma masası'
-        : (konu.baslik || 'Konu') + ' — sersoz.com danışma masası';
+        ? 'Görüntülenemeyen konu — Danışma Masası · Sercan Sözer'
+        : (konu.baslik || 'Konu') + ' — Danışma Masası · Sercan Sözer';
       return yanitlariYukle(true);
     }).then(function () {
       if (S.konuId === id && S.konu) konuCiz();
@@ -1668,7 +1624,7 @@
        artık site sahibi dışında kimseye basılmaz. (Kayıt hâlâ herkese açık
        okunabilir; kalıcı kaldırma yöneticinin "Konuyu sil" işlemidir.) */
     if (k.gizli && !S.yoneticiMi) {
-      document.title = 'Görüntülenemeyen konu — sersoz.com danışma masası';
+      document.title = 'Görüntülenemeyen konu — Danışma Masası · Sercan Sözer';
       var gz = dm('div', 'uyari-kutu');
       gz.appendChild(dm('h3', null, 'Bu konu görüntülenemiyor'));
       gz.appendChild(dm('p', null, 'İçerik site kurallarına aykırı bulunduğu için gizlendi. ' +
@@ -1738,7 +1694,7 @@
       setTimeout(function () {
         var g = $('konuGovde');
         var ref = 'İlgili konu: ' + (k.baslik || '') + '\n' +
-                  location.origin + '/forum.html' + konuYolu(k.id, k.baslik) + '\n\n';
+                  location.origin + location.pathname + konuYolu(k.id, k.baslik) + '\n\n';
         if (g.value.indexOf(ref) === -1) g.value = ref + g.value;
         taslakKaydet(); sayaclariGuncelle();
         $('soru-kutusu').scrollIntoView({ block: 'start' });

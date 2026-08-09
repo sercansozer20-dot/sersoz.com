@@ -2,403 +2,955 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gizlilik ve Çerez Bildirimi — sersoz.com</title>
-<meta name="description" content="sersoz.com'da hangi veriler işleniyor, neden işleniyor, ne kadar saklanıyor ve haklarınız neler.">
-<meta property="og:title" content="Gizlilik ve Çerez Bildirimi — sersoz.com">
-<meta property="og:description" content="Hangi veriler işleniyor, neden ve ne kadar süreyle saklanıyor.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gizlilik, KVKK ve çerez tercihleri — Sercan Sözer</title>
+<meta name="description" content="Bu site çerez kullanmaz. Hangi veri neden tutulur, ziyaret kaydının alanları tek tek, üç onay kategorisi, forum yayın onayı ve KVKK haklarınız. Tercihinizi bu sayfadan değiştirebilirsiniz.">
+<meta name="author" content="Sercan Sözer">
+<meta name="theme-color" content="#c2410c">
+<link rel="canonical" href="https://sersoz.com/gizlilik.html">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="Sercan Sözer — Makine Görüşü">
+<meta property="og:title" content="Gizlilik, KVKK ve çerez tercihleri">
+<meta property="og:description" content="Çerez yok. Hangi veri neden tutulur, ziyaret kaydının alanları tek tek, üç onay kategorisi ve KVKK haklarınız.">
+<meta property="og:url" content="https://sersoz.com/gizlilik.html">
 <meta property="og:image" content="https://sersoz.com/og.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:site_name" content="sersoz.com">
 <meta property="og:locale" content="tr_TR">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sersoz.com/og.png">
-<meta property="og:url" content="https://sersoz.com/gizlilik.html">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --bg: #f6f2ea;
-    --ink: #1a1815;
-    --muted: #5b564d;
-    --accent: #c2410c;
-    --green: #14532d;
-    --line: rgba(26, 24, 21, .2);
-    --line-soft: rgba(26, 24, 21, .1);
-    --paper: rgba(255, 253, 248, .6);
-    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
-    --serif: Georgia, 'Times New Roman', Times, serif;
-    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
-  }
-
-  html { scroll-behavior: smooth; }
-  body { background: var(--bg); color: var(--ink); font-family: var(--sans); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
-  ::selection { background: var(--accent); color: var(--bg); }
-  .container { max-width: 820px; margin: 0 auto; padding: 0 28px; }
-
-  nav#nav {
-    position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 40;
-    display: flex; align-items: center;
-    background: rgba(246, 242, 234, .92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--line);
-  }
-  .nav-inner { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; }
-  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
-  .brand .mark {
-    width: 22px; height: 22px; background: var(--accent); color: var(--bg);
-    display: inline-flex; align-items: center; justify-content: center;
-    font-family: var(--serif); font-size: 14px; font-weight: 700;
-  }
-  .brand span.host { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--ink); }
-  .nav-links { display: flex; align-items: center; gap: 4px; }
-  .nav-links a {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
-    color: var(--ink); text-decoration: none; padding: 10px 12px; transition: color .2s;
-  }
-  .nav-links a:hover { color: var(--accent); }
-  @media (max-width: 640px) { .nav-links a { display: none; } }
-
-  header.hero { padding: 122px 0 34px; }
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 14px;
-    font-family: var(--mono); font-size: 12px; letter-spacing: .3em; text-transform: uppercase; margin-bottom: 20px;
-  }
-  .eyebrow::before { content: ''; width: 42px; height: 2px; background: var(--accent); }
-  h1 { font-family: var(--serif); font-size: clamp(30px, 5vw, 46px); font-weight: 700; letter-spacing: -.015em; line-height: 1.08; }
-  h1 .nokta { color: var(--accent); }
-  .tarih { margin-top: 16px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); letter-spacing: .06em; }
-
-  .uyari {
-    margin: 26px 0 0; padding: 16px 20px;
-    border: 1px solid var(--line); border-left: 3px solid var(--accent); background: var(--paper);
-    font-size: 13.5px; line-height: 1.7; color: var(--muted);
-  }
-  .uyari b { color: var(--ink); }
-
-  main { padding-bottom: 40px; }
-  section { padding: 34px 0; border-top: 1px solid var(--line-soft); }
-  section:first-child { border-top: 3px double var(--line); margin-top: 30px; }
-  h2 {
-    font-family: var(--serif); font-size: clamp(21px, 3vw, 27px); font-weight: 700;
-    letter-spacing: -.01em; margin-bottom: 14px;
-  }
-  h2 .no { font-family: var(--mono); font-size: 13px; color: var(--accent); margin-right: 10px; letter-spacing: .1em; }
-  p { font-size: 15px; line-height: 1.78; color: var(--muted); margin-bottom: 12px; }
-  p b, li b { color: var(--ink); font-weight: 600; }
-  ul { list-style: none; margin: 12px 0; }
-  li {
-    position: relative; padding-left: 20px; margin-top: 9px;
-    font-size: 14.5px; line-height: 1.7; color: var(--muted);
-  }
-  li::before { content: ''; position: absolute; left: 0; top: .72em; width: 10px; height: 1px; background: var(--accent); }
-
-  table { width: 100%; border-collapse: collapse; margin-top: 16px; border: 1px solid var(--line); background: var(--paper); }
-  th, td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line-soft); font-size: 13.5px; line-height: 1.6; }
-  th {
-    font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
-    color: var(--muted); font-weight: 400; background: rgba(26, 24, 21, .03);
-  }
-  td { color: var(--muted); }
-  td b { color: var(--ink); }
-  tr:last-child td { border-bottom: none; }
-  .sarma { overflow-x: auto; }
-
-  .kutu {
-    margin-top: 20px; padding: 20px 22px;
-    border: 1px solid var(--line); background: var(--paper);
-  }
-  .kutu h3 { font-family: var(--serif); font-size: 17px; font-weight: 700; margin-bottom: 8px; }
-
-  .btn {
-    display: inline-flex; align-items: center; gap: 9px; padding: 12px 20px; cursor: pointer;
-    border: 1px solid var(--ink); background: transparent; color: var(--ink); text-decoration: none;
-    font-family: var(--mono); font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase;
-    transition: border-color .22s, color .22s;
-  }
-  .btn:hover { border-color: var(--accent); color: var(--accent); }
-  .onay-durum { margin-top: 12px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
-
-  footer { border-top: 3px double var(--line); padding: 24px 0 34px; }
-  .footer-inner {
-    max-width: 1120px; margin: 0 auto; padding: 0 28px;
-    display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap;
-    font-size: 12.5px; color: var(--muted);
-  }
-  .footer-links { display: flex; gap: 4px 16px; flex-wrap: wrap; }
-  .footer-links a { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
-  .footer-links a:hover { color: var(--accent); }
-  .footer-inner .mono { font-family: var(--mono); }
-</style>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23fafaf9'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231c1917' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Consolas,monospace' font-size='36' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="sistem.css">
+<script>
+/* Tema seçimi ilk boyamadan ÖNCE uygulanır — yoksa koyu temada beyaz çakma olur.
+   Anahtar yeni: mevcut sersoz_* anahtarlarının hiçbirine dokunmaz. */
+(function () {
+  try {
+    var t = localStorage.getItem('sersoz_tema');
+    if (t === 'koyu' || t === 'acik') document.documentElement.setAttribute('data-tema', t);
+  } catch (e) {}
+})();
+</script>
 </head>
 <body>
 
-<nav id="nav">
-  <div class="nav-inner">
-    <a class="brand" href="/" aria-label="sersoz.com">
-      <span class="mark" aria-hidden="true">S</span>
-      <span class="host">sersoz.com</span>
+<a class="atla" href="#icerik">İçeriğe atla</a>
+
+<!-- ==================================================================
+     ÜST ÇUBUK
+     .nav-links kapsayıcısı hesap.js'in API'sidir: giriş kutusu ve site
+     sahibine özel "Yönetim" bağlantısı oraya eklenir. Sınıf adı değişirse
+     ikisi de sessizce yok olur.
+     ================================================================== -->
+<header class="ust">
+  <input type="checkbox" id="menuKutu" class="menu-kutu" aria-hidden="true" tabindex="-1">
+  <div class="kap ust-ic">
+    <a class="logo" href="index.html">
+      <span class="isaret" aria-hidden="true">S</span>
+      <span>Sercan Sözer<span class="alt">makine görüşü · İzmir</span></span>
     </a>
+
+    <nav class="ust-menu" aria-label="Ana gezinme">
+      <a href="uygulamalar.html">Uygulamalar</a>
+      <a href="yazilim.html">Yazılım</a>
+      <a href="yazilim.html#uyumluluk">Uyumluluk</a>
+      <a href="surec.html">Nasıl çalışır</a>
+      <a href="fiyat.html">Fiyat</a>
+      <a href="forum.html">Danışma Masası</a>
+    </nav>
+
     <div class="nav-links">
-      <a href="/">Ana Sayfa</a>
-      <a href="/cozumler.html">Çözümler</a>
-      <a href="/vision-detection.html">Ürün</a>
-      <a href="/magaza.html">Mağaza</a>
+      <a class="dug dug-1 dug-ust" href="surec.html#talep">Fizibilite talebi</a>
     </div>
-  </div>
-</nav>
 
-<header class="hero">
-  <div class="container">
-    <p class="eyebrow">Gizlilik</p>
-    <h1>Gizlilik ve Çerez Bildirimi<span class="nokta">.</span></h1>
-    <p class="tarih">Yürürlük tarihi: 1 Ağustos 2026 · Sürüm 2 — 9 Ağustos 2026: forum (danışma masası) bölümü eklendi</p>
-
-    <div class="uyari">
-      <b>Kısaca:</b> Bu site sizi tanımak için çerez kullanmaz. Sitenin çalışması için gereken
-      birkaç bilgi tarayıcınızda tutulur. Ziyaret istatistikleri ve giriş yaptığınızda profil
-      bilgileriniz <b>yalnızca siz izin verirseniz</b> saklanır. İzninizi istediğiniz an
-      geri alabilirsiniz.
-    </div>
+    <label class="menu-dug" for="menuKutu" role="button" tabindex="0"
+           aria-label="Menüyü aç veya kapat" aria-controls="menuKutu">
+      <svg class="ac" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <svg class="kapa" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </label>
   </div>
 </header>
 
-<main>
-  <div class="container">
+<main id="icerik">
 
-    <section>
-      <h2><span class="no">01</span>Veri sorumlusu</h2>
-      <p>Bu siteyi <b>Sercan Sözer</b> (gerçek kişi) işletmektedir. Veri işleme faaliyetlerine
-        ilişkin sorularınız ve talepleriniz için:
-        <b><a href="mailto:sercansozer20@gmail.com" style="color:var(--accent)">sercansozer20@gmail.com</a></b></p>
-      <p>Şu an bir ticari şirket tüzel kişiliği bulunmamaktadır; şirket kuruluşu tamamlandığında
-        bu bölüm unvan, vergi numarası ve adres bilgileriyle güncellenecektir.</p>
-    </section>
+  <!-- ================================================================
+       1. BAŞLIK — tek h1, tek cümlelik söz
+       ================================================================ -->
+  <section class="bolum">
+    <div class="kap">
+      <span class="ust-baslik">Gizlilik ve KVKK</span>
+      <h1 style="margin-top:var(--a4);max-width:20ch">Ne tuttuğum, neden tuttuğum ve nasıl durduracağınız.</h1>
+      <p class="giris" style="margin-top:var(--a5);max-width:54ch">
+        Bu site sizi tanımak için <strong>çerez kullanmaz</strong>. Sitenin çalışması için
+        gereken birkaç bilgi tarayıcınızda kalır. Ziyaret istatistiği ve giriş yaptığınızdaki
+        profil bilgileri <strong>yalnız siz izin verirseniz</strong> saklanır. İzni istediğiniz
+        an geri alabilirsiniz — düğme bu sayfada.
+      </p>
 
-    <section>
-      <h2><span class="no">02</span>Hangi veriler, hangi amaçla</h2>
-      <div class="sarma">
-        <table>
+      <div class="satir" style="margin-top:var(--a6)">
+        <a class="dug dug-2 dug-b" href="#tercih">Onay tercihime git</a>
+        <a class="dug dug-3 dug-b" href="#veriler">Hangi veri tutuluyor?</a>
+      </div>
+
+      <p class="kunye" style="margin-top:var(--a6)">
+        <span>yürürlük <b>1 Ağustos 2026</b></span>
+        <span>sürüm <b class="sayi">3</b> · <b>9 Ağustos 2026</b></span>
+        <span>değişiklik <b>ziyaret kaydı alanları tek tek yazıldı</b></span>
+      </p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       2. VERİ SORUMLUSU
+       ================================================================ -->
+  <section class="bolum-sik bolum-cizgili" aria-labelledby="sorumluBas">
+    <div class="kap">
+      <div class="izgara iz-2">
+        <div>
+          <span class="ust-baslik notr">Veri sorumlusu</span>
+          <h2 id="sorumluBas" class="h3" style="margin-top:var(--a3)">Siteyi bir kişi işletiyor</h2>
+          <p style="margin-top:var(--a3);max-width:var(--olcu)">
+            Bu siteyi <strong>Sercan Sözer</strong> (gerçek kişi, mekatronik mühendisi, İzmir)
+            işletmektedir. Veri işlemeye ilişkin her soru ve talep doğrudan bana gelir:
+            <a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a>
+          </p>
+        </div>
+        <div class="not">
+          <span class="isaret" aria-hidden="true">§</span>
+          <div>
+            <p class="baslik">Şirket kaydı henüz yok</p>
+            <p>
+              Şu an bir ticari tüzel kişilik bulunmuyor; bunu gizlemek yerine yazıyorum.
+              Şirket kuruluşu tamamlandığında bu bölüm unvan, vergi numarası ve tebligat
+              adresiyle güncellenecek, sürüm numarası artacaktır.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       3. HANGİ VERİ NEDEN — ziyaret kaydının ALANLARI TEK TEK
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="veriler" aria-labelledby="veriBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Hangi veri, neden</span>
+        <h2 id="veriBas">Ziyaret kaydında ne var — alan alan</h2>
+        <p>
+          "Anonim istatistik topluyoruz" cümlesi hiçbir şey anlatmaz. Aşağıdaki tablo,
+          istatistik onayı verdiğinizde <code>ziyaretler</code> koleksiyonuna yazılan
+          <strong>kaydın tamamıdır</strong>; başka alan yoktur.
+        </p>
+      </div>
+
+      <div class="tablo-sar kart-kir" tabindex="0" aria-label="Ziyaret kaydı alanları, yatay kaydırılabilir tablo">
+        <table class="spec">
+          <caption>Ziyaret kaydı — yazılan alanların tamamı</caption>
           <thead>
-            <tr><th>Veri</th><th>Amaç</th><th>Hukuki sebep</th><th>Süre</th></tr>
+            <tr>
+              <th scope="col">Alan</th>
+              <th scope="col">Ne yazar</th>
+              <th scope="col">Niçin gerekli</th>
+            </tr>
           </thead>
           <tbody>
             <tr>
-              <td><b>Sepet içeriği</b><br>tarayıcıda</td>
-              <td>Sepetin sayfalar arasında korunması</td>
-              <td>Hizmetin çalışması için zorunlu</td>
-              <td>Siz silene kadar (tarayıcınızda)</td>
+              <th scope="row"><code>sayfa</code></th>
+              <td data-bas="Ne yazar">Adres çubuğundaki yol ve sorgu, en çok 120 karakter. Örnek: <code>/fiyat.html</code></td>
+              <td data-bas="Niçin">Hangi içeriğin okunduğunu görmek</td>
             </tr>
             <tr>
-              <td><b>Oturum kimliği</b><br>rastgele, geçici</td>
-              <td>Aynı ziyaretin sayfalarını birbirine bağlamak</td>
-              <td>Zorunlu / meşru menfaat</td>
-              <td>Sekmeyi kapatınca silinir</td>
+              <th scope="row"><code>zaman</code></th>
+              <td data-bas="Ne yazar">Sayfanın açıldığı an (UTC damgası)</td>
+              <td data-bas="Niçin">Dönem grafiği çizebilmek</td>
             </tr>
             <tr>
-              <td><b>Ziyaret kaydı</b><br>sayfa yolu, zaman, yönlendiren site, ekran genişliği, dil</td>
-              <td>Hangi içeriğin ilgi gördüğünü anlamak</td>
-              <td><b>Açık rıza</b> (İstatistik onayı)</td>
-              <td>En çok 24 ay</td>
+              <th scope="row"><code>kaynak</code></th>
+              <td data-bas="Ne yazar">Yönlendiren sitenin yalnız alan adı. Aynı siteden gelindiyse <code>ic</code>, adres doğrudan yazıldıysa <code>dogrudan</code>. Tam adres <strong>tutulmaz</strong>.</td>
+              <td data-bas="Niçin">Nereden gelindiğini anlamak</td>
             </tr>
             <tr>
-              <td><b>Hesap bilgileri</b><br>ad, e-posta, profil fotoğrafı, kullanıcı kimliği</td>
-              <td>Giriş, hesabınızın tanınması, sipariş geçmişi</td>
-              <td><b>Açık rıza</b> (Kişiselleştirme onayı)</td>
-              <td>Hesabınızı silene kadar</td>
+              <th scope="row"><code>genislik</code></th>
+              <td data-bas="Ne yazar">Tarayıcı penceresinin piksel genişliği (tek sayı)</td>
+              <td data-bas="Niçin">Sayfanın telefonda okunup okunmadığını görmek</td>
             </tr>
             <tr>
-              <td><b>Sipariş bilgileri</b><br>ad, firma, e-posta, telefon, adres, sipariş içeriği</td>
-              <td>Siparişin karşılanması ve iletişim</td>
-              <td>Sözleşmenin ifası / hukuki yükümlülük</td>
-              <td>Mevzuattaki saklama süresi kadar</td>
+              <th scope="row"><code>dil</code></th>
+              <td data-bas="Ne yazar">Tarayıcı dili, en çok 12 karakter. Örnek: <code>tr-TR</code></td>
+              <td data-bas="Niçin">Türkçe dışı ziyaret var mı</td>
             </tr>
             <tr>
-              <td><b>Kayıtlı adresleriniz</b></td>
-              <td>Sipariş formunu tekrar doldurmamanız</td>
-              <td>Talebiniz üzerine</td>
-              <td>Siz silene kadar</td>
+              <th scope="row"><code>oturum</code></th>
+              <td data-bas="Ne yazar">Sekme açıkken üretilen <strong>rastgele</strong> dizi. Kimliğinizden türetilmez, sekme kapanınca kaybolur.</td>
+              <td data-bas="Niçin">Aynı ziyaretin sayfalarını birbirine bağlamak</td>
             </tr>
             <tr>
-              <td><b>Forum yazıları</b><br>yazı metni, görünen ad, profil fotoğrafı,
-                kullanıcı kimliği, zaman</td>
-              <td>Topluluk tartışmasının yayınlanması</td>
-              <td>Talebiniz üzerine yayın + <b>açık rıza</b> (ilk gönderi onayı)</td>
-              <td>Siz silinmesini/anonimleştirilmesini isteyene kadar — <b>herkese açıktır</b></td>
-            </tr>
-            <tr>
-              <td><b>Forum yazma sayacı</b><br>son yazma zamanı, günlük gönderi sayısı,
-                yayın onayınız ve onay zamanı</td>
-              <td>Spam ve seri gönderiyi engellemek; onayın kayda geçmesi</td>
-              <td>Meşru menfaat + açık rıza kaydı</td>
-              <td>Hesabınız silinene kadar — <b>yalnız siz ve site sahibi görür</b></td>
+              <th scope="row"><code>olay</code></th>
+              <td data-bas="Ne yazar">Yalnız iki değerden biri: <code>giris</code> veya <code>cikis</code></td>
+              <td data-bas="Niçin">Sayfada kalma süresini kabaca ölçmek</td>
             </tr>
           </tbody>
+          <tfoot>
+            <tr><td colspan="3">
+              Bu listede olmayan hiçbir şey yazılmaz: IP adresi yok, çerez kimliği yok,
+              parmak izi yok, fare hareketi yok, kaydırma derinliği yok. Kayıt en çok 24 ay
+              tutulur. Tarayıcınızda "izlenmek istemiyorum" (Do Not Track) açıksa,
+              istatistik onayı vermiş olsanız bile hiçbir istek gönderilmez.
+            </td></tr>
+          </tfoot>
         </table>
       </div>
-      <p style="margin-top:14px">Bu sitede <b>reklam takibi, profilleme, üçüncü taraf pazarlama
-        pikseli veya sosyal medya takip kodu bulunmamaktadır.</b></p>
-    </section>
 
-    <section>
-      <h2><span class="no">03</span>Çerez kullanıyor musunuz?</h2>
-      <p><b>Hayır.</b> Bu sitede tanımlama bilgisi (çerez) kullanılmıyor. Bunun yerine
-        tarayıcınızın kendi yerel depolama alanı kullanılıyor; bu bilgiler sunucuya
-        kendiliğinden gönderilmez:</p>
-      <ul>
-        <li><b>localStorage</b> — sepetiniz ve bu sayfadaki onay tercihiniz</li>
-        <li><b>sessionStorage</b> — yalnız sekme açık kaldığı sürece yaşayan rastgele ziyaret kimliği</li>
-      </ul>
-      <p>Giriş yaptığınızda Google’ın kimlik doğrulama altyapısı, oturumunuzu açık tutmak için
-        kendi teknik kayıtlarını tarayıcınızda tutar. Bunlar oturumun sürmesi için zorunludur.</p>
-    </section>
-
-    <section>
-      <h2><span class="no">04</span>Verileriniz nerede tutuluyor</h2>
-      <p>Site içeriği <b>GitHub Pages</b> üzerinde yayınlanır. Hesap ve kayıt verileri
-        <b>Google Firebase</b> (Authentication ve Cloud Firestore) hizmetinde saklanır.
-        Veritabanı bölgesi <b>Avrupa (eur3)</b> olarak seçilmiştir.</p>
-      <p>Bu hizmetler kullanıldığı için verileriniz Google tarafından, kendi gizlilik koşulları
-        kapsamında yurt dışında işlenebilir. Bunun dışında verileriniz <b>hiçbir üçüncü tarafla
-        paylaşılmaz, satılmaz, reklam amacıyla kullanılmaz.</b></p>
-    </section>
-
-    <section>
-      <h2><span class="no">05</span>Google ile giriş yaptığınızda ne alınıyor</h2>
-      <p>Google bize yalnızca <b>temel profil bilgilerinizi</b> verir: adınız, e-posta adresiniz,
-        profil fotoğrafınızın adresi ve size ait bir kullanıcı kimliği.</p>
-      <p><b>Şifreniz bize hiçbir zaman ulaşmaz.</b> Kişi listeniz, takviminiz, dosyalarınız,
-        konumunuz veya diğer Google verilerinize erişimimiz yoktur.</p>
-      <p>Kişiselleştirme onayı vermezseniz giriş yine çalışır; ancak profil bilgileriniz
-        kayıt altına alınmaz.</p>
-    </section>
-
-    <section id="forum">
-      <h2><span class="no">06</span>Forum ve topluluk</h2>
-      <p>Forumda (<a href="/forum.html" style="color:var(--accent)">danışma masası</a>) yazdığınız
-        her konu ve yanıt <b>herkese açıktır</b>: giriş yapmayan ziyaretçiler de okuyabilir,
-        arama motorları dizinleyebilir. Yazınızın yanında <b>Google hesabınızdaki adınız ve
-        profil fotoğrafınız</b> görünür. Bu bilgiler yazıya sizin tarafınızdan uydurulamayacak
-        biçimde, Google’ın kimlik doğrulama bilgisinden alınarak eklenir.</p>
-
-      <p><b>E-posta adresiniz forumda hiçbir yerde görünmez</b> ve forum kayıtlarında tutulmaz;
-        yalnız hesap kaydınızda, yalnız site sahibinin erişebileceği şekilde saklanır. Forumda
-        IP adresi, çerez veya izleme kimliği tutulmaz; forum yazmak ziyaret istatistiği üretmez.</p>
-
-      <p>İlk yazınızı göndermeden önce, adınızın ve fotoğrafınızın herkese açık yayınlanacağına
-        dair onayınız istenir ve bu onay zaman damgasıyla kaydedilir. Bu onay, çerez bandındaki
-        “Kişiselleştirme” onayından <b>ayrıdır</b>: kişiselleştirmeye izin vermeseniz de foruma
-        yazabilirsiniz, çünkü yazmak sizin kendi yayınınızdır.</p>
-
-      <div class="kutu">
-        <h3>“Adım görünmesin” seçeneği ne yapar, ne yapmaz</h3>
-        <p><b>Yapar:</b> Gönderinizin yanında gerçek adınız ve fotoğrafınız yerine seçtiğiniz
-          rol adı (örneğin “Bakım Mühendisi”) görünür; fotoğraf hiç yayınlanmaz.</p>
-        <p style="margin-bottom:0"><b>Yapmaz:</b> Bu bir tam anonimlik değildir. Yazıya, adınızı
-          ve e-postanızı içermeyen bir <b>hesap kimliği</b> (rastgele bir dizi) iliştirilir ve bu
-          kimlik kayıtta herkese açık durur. Yani aynı hesabın yazdığı iki gönderi teknik olarak
-          eşleştirilebilir; ayrıca <b>site sahibi</b> bu kimlik üzerinden kimin yazdığını görebilir
-          (kural ihlali ve moderasyon için gereklidir). Gerçekten kimliksiz kalmak istiyorsanız
-          soruyu forum yerine e-posta ile gönderin.</p>
+      <div class="bolum-bas" style="margin-top:var(--a7)">
+        <h2 class="h3">Sitenin işlediği diğer veriler</h2>
+        <p>
+          Ziyaret kaydı dışında kalanlar. Her satırda hukuki sebebi ve saklama süresi
+          yazılıdır.
+        </p>
       </div>
 
-      <p>Bir yazıyı kural dışı bulup bildirdiğinizde, bildiriminiz ve kullanıcı kimliğiniz
-        yalnız site sahibine görünür; şikâyet ettiğiniz kişiye iletilmez. Kural ihlalinde yazı
-        gizlenebilir, konu kilitlenebilir veya hesabınızın yazma yetkisi kaldırılabilir.</p>
-
-      <div class="kutu">
-        <h3>Forum yazılarınızın silinmesi</h3>
-        <p>Kendi yazınızı sayfadan doğrudan silebilirsiniz: yanıtlarda metin boşaltılır ve yerinde
-          “silindi” notu kalır (konunun akışı kopmasın diye); hiç yanıt almamış konularınızı
-          tümüyle silebilirsiniz.</p>
-        <p style="margin-bottom:0">Bunun ötesi için iki seçenekten birini talep edebilirsiniz:
-          <b>anonimleştirme</b> — yazının teknik içeriği toplulukta kalır, adınız, fotoğrafınız ve
-          kimlik bağınız silinir; ya da <b>tam silme</b> — yazılarınız kalıcı olarak kaldırılır.
-          Talebinizi
-          <a href="mailto:sercansozer20@gmail.com?subject=Forum%20silme%20talebi" style="color:var(--accent)">sercansozer20@gmail.com</a>
-          adresine yazmanız yeterlidir; en geç 30 gün içinde sonuçlandırılır. Yazılar herkese açık
-          yayınlandığı için arama motorlarının önbelleğinde bir süre daha görünebilir; bu
-          önbellekler üzerinde denetimimiz yoktur, yalnız kaldırma talebi iletebiliriz.</p>
+      <div class="tablo-sar kart-kir" tabindex="0" aria-label="İşlenen diğer veriler, yatay kaydırılabilir tablo">
+        <table class="spec">
+          <caption>Veri · amaç · hukuki sebep · süre</caption>
+          <thead>
+            <tr>
+              <th scope="col">Veri</th>
+              <th scope="col">Amaç</th>
+              <th scope="col">Hukuki sebep</th>
+              <th scope="col">Süre</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Sepet içeriği<br><span class="kucuk soluk">tarayıcınızda</span></th>
+              <td data-bas="Amaç">Sepetin sayfalar arasında korunması</td>
+              <td data-bas="Sebep">Hizmetin çalışması için zorunlu</td>
+              <td data-bas="Süre">Siz silene kadar</td>
+            </tr>
+            <tr>
+              <th scope="row">Oturum kimliği<br><span class="kucuk soluk">rastgele, geçici</span></th>
+              <td data-bas="Amaç">Aynı ziyaretin sayfalarını bağlamak</td>
+              <td data-bas="Sebep">Zorunlu / meşru menfaat</td>
+              <td data-bas="Süre">Sekmeyi kapatınca silinir</td>
+            </tr>
+            <tr class="vurgu">
+              <th scope="row">Ziyaret kaydı<br><span class="kucuk soluk">yukarıdaki 7 alan</span></th>
+              <td data-bas="Amaç">Hangi içeriğin ilgi gördüğünü anlamak</td>
+              <td data-bas="Sebep"><strong>Açık rıza</strong> — İstatistik</td>
+              <td data-bas="Süre">En çok 24 ay</td>
+            </tr>
+            <tr class="vurgu">
+              <th scope="row">Hesap bilgileri<br><span class="kucuk soluk">ad, e-posta, fotoğraf adresi, kullanıcı kimliği</span></th>
+              <td data-bas="Amaç">Giriş, hesabın tanınması, sipariş geçmişi</td>
+              <td data-bas="Sebep"><strong>Açık rıza</strong> — Kişiselleştirme</td>
+              <td data-bas="Süre">Hesabınızı silene kadar</td>
+            </tr>
+            <tr>
+              <th scope="row">Sipariş bilgileri<br><span class="kucuk soluk">ad, firma, e-posta, telefon, adres, içerik</span></th>
+              <td data-bas="Amaç">Siparişin karşılanması ve iletişim</td>
+              <td data-bas="Sebep">Sözleşmenin ifası / hukuki yükümlülük</td>
+              <td data-bas="Süre">Mevzuattaki saklama süresi kadar</td>
+            </tr>
+            <tr>
+              <th scope="row">Kayıtlı adresleriniz</th>
+              <td data-bas="Amaç">Formu her seferinde doldurmamanız</td>
+              <td data-bas="Sebep">Talebiniz üzerine</td>
+              <td data-bas="Süre">Siz silene kadar</td>
+            </tr>
+            <tr>
+              <th scope="row">Forum yazıları<br><span class="kucuk soluk">metin, görünen ad, fotoğraf, kullanıcı kimliği, zaman</span></th>
+              <td data-bas="Amaç">Topluluk tartışmasının yayınlanması</td>
+              <td data-bas="Sebep">Talebiniz üzerine yayın + <strong>açık rıza</strong> (ilk gönderi onayı)</td>
+              <td data-bas="Süre">Silme/anonimleştirme isteyene kadar — <strong>herkese açıktır</strong></td>
+            </tr>
+            <tr>
+              <th scope="row">Forum yazma sayacı<br><span class="kucuk soluk">son yazma zamanı, günlük sayı, onay ve onay zamanı</span></th>
+              <td data-bas="Amaç">Seri gönderiyi engellemek, onayın kayda geçmesi</td>
+              <td data-bas="Sebep">Meşru menfaat + açık rıza kaydı</td>
+              <td data-bas="Süre">Hesap silinene kadar — <strong>yalnız siz ve ben görürüm</strong></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr><td colspan="4">
+              Bu sitede reklam takibi, profilleme, üçüncü taraf pazarlama pikseli ve sosyal
+              medya takip kodu <strong>bulunmamaktadır</strong>. Veriler hiçbir üçüncü tarafla
+              paylaşılmaz, satılmaz, reklam amacıyla kullanılmaz.
+            </td></tr>
+          </tfoot>
+        </table>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section>
-      <h2><span class="no">07</span>Haklarınız</h2>
-      <p>KVKK kapsamında; verilerinizin işlenip işlenmediğini öğrenme, bilgi talep etme,
-        işlenme amacını öğrenme, yurt içinde/yurt dışında aktarıldığı tarafları bilme,
-        eksik veya yanlış işlenmişse düzeltilmesini isteme, silinmesini veya yok edilmesini
-        isteme, işlemeye itiraz etme ve zararın giderilmesini talep etme haklarına sahipsiniz.</p>
-      <p>Bu haklarınızı kullanmak için
-        <b><a href="mailto:sercansozer20@gmail.com?subject=KVKK%20talebi" style="color:var(--accent)">sercansozer20@gmail.com</a></b>
-        adresine yazmanız yeterlidir. Talebiniz en geç 30 gün içinde sonuçlandırılır.</p>
-
-      <div class="kutu">
-        <h3>Hesabınızı ve verilerinizi silmek</h3>
-        <p>Yukarıdaki adrese “hesabımı silin” yazmanız yeterlidir; hesabınız,
-          kayıtlı adresleriniz ve profil kaydınız silinir. Yasal saklama yükümlülüğü bulunan sipariş
-          kayıtları, süresi dolana kadar saklanmaya devam eder.</p>
-        <p style="margin-bottom:0"><b>Forum yazılarınız hesap silme ile kendiliğinden
-          kaldırılmaz</b>; nasıl işlem yapılmasını istediğiniz (anonimleştirme veya tam silme)
-          talebinizde ayrıca sorulur. Ayrıntı: <a href="#forum" style="color:var(--accent)">Forum ve
-          topluluk</a> bölümü.</p>
+  <!-- ================================================================
+       4. ÜÇ KATEGORİ
+       ================================================================ -->
+  <section class="bolum" id="kategoriler" aria-labelledby="katBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Onay kategorileri</span>
+        <h2 id="katBas">Üç kutu — biri kapatılamaz, ikisi tamamen sizin</h2>
+        <p>
+          Alt banttaki üç seçenek budur. Kabul etmemeniz hâlinde site aynen çalışır;
+          yalnız kayıt tutulmaz.
+        </p>
       </div>
-    </section>
 
-    <section>
-      <h2><span class="no">08</span>Onay tercihiniz</h2>
-      <p>Aşağıdaki düğmeyle onay tercihinizi görebilir ve istediğiniz an değiştirebilirsiniz.
-        İzni geri aldığınızda yeni kayıt oluşturulmaz.</p>
-      <p class="onay-durum" id="onayDurum">Tercih okunuyor…</p>
-      <button class="btn" id="onayDegistir" type="button">Onay tercihimi değiştir</button>
-    </section>
+      <div class="izgara iz-3">
 
-    <section>
-      <h2><span class="no">09</span>Değişiklikler</h2>
-      <p>Bu bildirim güncellenebilir. Önemli bir değişiklikte onay bandı yeniden gösterilir ve
-        yukarıdaki sürüm numarası artırılır.</p>
-      <p style="font-size:13.5px"><b>Not:</b> Bu metin, sitenin gerçekte ne yaptığını dürüstçe
-        anlatmak üzere hazırlanmış bir bilgilendirmedir; hukuki danışmanlık yerine geçmez.
-        Ticari faaliyet başladığında bir hukukçu tarafından gözden geçirilmesi önerilir.</p>
-    </section>
+        <article class="kart">
+          <span class="rozet rozet-hazir" data-isaret="✓" style="align-self:flex-start">HER ZAMAN AÇIK</span>
+          <h3 class="h4">Gerekli</h3>
+          <p class="kucuk">
+            Oturumun açık kalması, sepetin sayfalar arasında korunması ve tema tercihiniz.
+            Tamamı tarayıcınızda kalır, kimlik bilgisi içermez.
+          </p>
+          <div class="kart-alt">
+            <p class="kucuk soluk">
+              Kapatılamaz, çünkü kapatılırsa sepet ve giriş çalışmaz. Onay gerektirmez.
+            </p>
+          </div>
+        </article>
 
-  </div>
+        <article class="kart">
+          <span class="rozet rozet-bilgi" data-isaret="◔" style="align-self:flex-start">SİZE BAĞLI</span>
+          <h3 class="h4">İstatistik</h3>
+          <p class="kucuk">
+            Yukarıdaki tabloda alan alan yazılı ziyaret kaydı. İzin vermezseniz
+            <strong>tek bir istek bile</strong> gönderilmez — kayıt boş yazılmaz, hiç
+            yazılmaz.
+          </p>
+          <div class="kart-alt">
+            <p class="kucuk soluk">
+              Kapalıyken kaybettiğiniz bir şey yok; kaybeden benim, hangi sayfanın işe
+              yaradığını göremem.
+            </p>
+          </div>
+        </article>
+
+        <article class="kart">
+          <span class="rozet rozet-bilgi" data-isaret="◔" style="align-self:flex-start">SİZE BAĞLI</span>
+          <h3 class="h4">Kişiselleştirme</h3>
+          <p class="kucuk">
+            Google ile giriş yaptığınızda adınız, e-postanız ve profil fotoğrafınızın
+            adresi hesabınıza bağlı olarak saklanır.
+          </p>
+          <div class="kart-alt">
+            <p class="kucuk soluk">
+              Kapalıyken giriş <strong>yine çalışır</strong>; yalnız profil kaydı
+              oluşturulmaz. Sipariş vermek için de zorunlu değildir.
+            </p>
+          </div>
+        </article>
+
+      </div>
+
+      <div class="not not-bilgi" style="margin-top:var(--a6)">
+        <span class="isaret" aria-hidden="true">i</span>
+        <div>
+          <p class="baslik">Tercihiniz sunucuda değil, bu tarayıcıda durur</p>
+          <p>
+            Seçim <code>sersoz_onay_v1</code> anahtarıyla tarayıcınızın yerel depolamasına
+            yazılır. Başka bir tarayıcı, başka bir cihaz veya gizli sekme kullanırsanız
+            bant yeniden çıkar — çünkü orada sizi tanıyan bir kimlik yok.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       5. TERCİH KUTUSU — #onayDurum + #onayDegistir (Onay API'si)
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="tercih" aria-labelledby="tercihBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Tercihiniz</span>
+        <h2 id="tercihBas">Şu anki seçiminiz ve değiştirme düğmesi</h2>
+        <p>
+          Aşağıdaki kutu, bu tarayıcıda kayıtlı gerçek tercihinizi gösterir. İzni geri
+          aldığınızda yeni kayıt oluşturulmaz; geçmiş kayıtların silinmesini isterseniz
+          e-posta yeterlidir.
+        </p>
+      </div>
+
+      <div class="izgara iz-yan">
+        <div class="kart">
+          <span class="ust-baslik notr">Kayıtlı tercih</span>
+          <div id="onayDurum" style="margin-top:var(--a3)">
+            <p class="kucuk soluk">Tercih okunuyor…</p>
+          </div>
+          <div class="kart-alt">
+            <button type="button" class="dug dug-2" id="onayDegistir">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 10-2.3 5.7M20 5v6h-6"/></svg>
+              Onay tercihimi değiştir
+            </button>
+            <p class="kucuk soluk" style="margin-top:var(--a3)">
+              Düğme kayıtlı seçimi siler ve onay bandını yeniden açar; ardından üç kutuyu
+              baştan işaretlersiniz.
+            </p>
+          </div>
+        </div>
+
+        <div class="yigin">
+          <div class="not">
+            <span class="isaret" aria-hidden="true">◆</span>
+            <div>
+              <p class="baslik">Çerez kullanıyor musunuz? Hayır.</p>
+              <p>
+                Bu sitede tanımlama bilgisi (çerez) yok. Yerine tarayıcınızın kendi
+                depolaması kullanılıyor; oradaki bilgiler sunucuya kendiliğinden
+                gönderilmez. Giriş yaptığınızda Google'ın kimlik altyapısı oturumu açık
+                tutmak için kendi teknik kayıtlarını tutar — bunlar oturumun sürmesi için
+                zorunludur.
+              </p>
+            </div>
+          </div>
+
+          <div class="tablo-sar kart-kir" tabindex="0" aria-label="Tarayıcıda tutulan anahtarlar, yatay kaydırılabilir tablo">
+            <table class="spec" style="min-width:0">
+              <caption>Tarayıcınızda tutulan anahtarlar</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Anahtar</th>
+                  <th scope="col">İçerik</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row"><code>sersoz_onay_v1</code></th><td data-bas="İçerik">Onay tercihiniz ve seçim tarihi</td></tr>
+                <tr><th scope="row"><code>sersoz_sepet_v1</code></th><td data-bas="İçerik">Sepetinizdeki kalemler ve adetleri</td></tr>
+                <tr><th scope="row"><code>sersoz_adresler</code></th><td data-bas="İçerik">Kayıtlı adreslerinizin yerel yedeği</td></tr>
+                <tr><th scope="row"><code>sersoz_forum_taslak_v1</code></th><td data-bas="İçerik">Yarım kalan forum yazınızın taslağı</td></tr>
+                <tr><th scope="row"><code>sersoz_tema</code></th><td data-bas="İçerik">Açık/koyu tema seçiminiz</td></tr>
+                <tr><th scope="row"><code>sersoz_oturum</code></th><td data-bas="İçerik">Sekme kapanınca silinen rastgele ziyaret kimliği</td></tr>
+              </tbody>
+              <tfoot>
+                <tr><td colspan="2">
+                  Hepsini tarayıcı ayarlarından tek tıkla silebilirsiniz; site bundan
+                  bozulmaz, yalnız sepetiniz ve tercihiniz sıfırlanır.
+                </td></tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <noscript>
+        <div class="not not-uyari" style="margin-top:var(--a5)">
+          <span class="isaret" aria-hidden="true">!</span>
+          <div>
+            <p class="baslik">JavaScript kapalı</p>
+            <p>
+              Bu sayfanın bütün metni okunur durumdadır. Yalnız yukarıdaki tercih kutusu
+              çalışmaz — çünkü tercih tarayıcınızda saklanır ve okumak için betik gerekir.
+              JavaScript kapalıyken zaten hiçbir ziyaret kaydı da yazılmaz.
+            </p>
+          </div>
+        </div>
+      </noscript>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       6. FORUM VE TOPLULUK
+       ================================================================ -->
+  <section class="bolum" id="forum" aria-labelledby="forumBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Forum</span>
+        <h2 id="forumBas">Yazdığınız an herkese açık olur</h2>
+        <p>
+          <a href="forum.html">Danışma Masası</a>'nda yazdığınız her konu ve yanıt
+          herkese açıktır: giriş yapmayan ziyaretçiler okuyabilir, arama motorları
+          dizinleyebilir. Bunu yazının altına küçük harflerle değil, buraya yazıyorum.
+        </p>
+      </div>
+
+      <div class="izgara iz-2">
+        <div class="yigin">
+          <p style="max-width:var(--olcu)">
+            Yazınızın yanında <strong>Google hesabınızdaki adınız ve profil fotoğrafınız</strong>
+            görünür. Bu bilgiler yazıya sizin tarafınızdan uydurulamayacak biçimde, kimlik
+            doğrulama bilgisinden alınarak eklenir.
+          </p>
+          <p style="max-width:var(--olcu)">
+            <strong>E-posta adresiniz forumda hiçbir yerde görünmez</strong> ve forum
+            kayıtlarında tutulmaz; yalnız hesap kaydınızda, yalnız benim erişebileceğim
+            biçimde durur. Forumda IP adresi, çerez veya izleme kimliği tutulmaz; forum
+            yazmak ziyaret istatistiği üretmez.
+          </p>
+
+          <div class="not not-marka">
+            <span class="isaret" aria-hidden="true">◆</span>
+            <div>
+              <p class="baslik">İlk gönderi onayı ve zaman damgası</p>
+              <p>
+                İlk yazınızı göndermeden önce, adınızın ve fotoğrafınızın herkese açık
+                yayınlanacağına dair onay kutucuğunu işaretlemeniz istenir. Bu onay
+                <strong>zaman damgasıyla bir kez kaydedilir</strong> ve sonraki
+                gönderilerde korunur — yani onay tarihiniz her yazıda ileri kaymaz, ilk
+                verdiğiniz an olarak kalır.
+              </p>
+              <p>
+                Bu onay, banttaki <strong>Kişiselleştirme</strong> onayından ayrıdır:
+                kişiselleştirmeye izin vermeseniz de foruma yazabilirsiniz, çünkü yazmak
+                sizin kendi yayınınızdır.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="sss">
+          <details>
+            <summary>"Adım görünmesin" seçeneği ne yapar, ne yapmaz?</summary>
+            <div class="cevap kucuk">
+              <p>
+                <strong>Yapar:</strong> Gönderinizin yanında gerçek adınız ve fotoğrafınız
+                yerine seçtiğiniz rol adı (örneğin "Bakım Mühendisi") görünür; fotoğraf hiç
+                yayınlanmaz.
+              </p>
+              <p>
+                <strong>Yapmaz:</strong> Bu tam anonimlik değildir. Yazıya, adınızı ve
+                e-postanızı içermeyen bir <strong>hesap kimliği</strong> (rastgele dizi)
+                iliştirilir ve bu kimlik kayıtta herkese açık durur. Aynı hesabın yazdığı
+                iki gönderi teknik olarak eşleştirilebilir; ayrıca site sahibi olarak ben bu
+                kimlik üzerinden kimin yazdığını görebilirim — moderasyon için gereklidir.
+                Gerçekten kimliksiz kalmak istiyorsanız soruyu forum yerine e-posta ile
+                gönderin.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>Yazımı silebilir miyim?</summary>
+            <div class="cevap kucuk">
+              <p>
+                Kendi yazınızı sayfadan doğrudan silebilirsiniz: yanıtlarda metin boşaltılır
+                ve yerinde "silindi" notu kalır (konunun akışı kopmasın diye); hiç yanıt
+                almamış konularınızı tümüyle silebilirsiniz.
+              </p>
+              <p>
+                Ötesi için iki seçenekten birini talep edebilirsiniz:
+                <strong>anonimleştirme</strong> — yazının teknik içeriği toplulukta kalır,
+                adınız, fotoğrafınız ve kimlik bağınız silinir; ya da <strong>tam silme</strong>
+                — yazılarınız kalıcı olarak kaldırılır. Bir e-posta yeterlidir, en geç 30 gün
+                içinde sonuçlandırılır.
+              </p>
+              <p>
+                Yazılar herkese açık yayınlandığı için arama motorlarının önbelleğinde bir
+                süre daha görünebilir; bu önbellekler üzerinde denetimim yok, yalnız kaldırma
+                talebi iletebilirim.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>Bir yazıyı bildirirsem ne oluyor?</summary>
+            <div class="cevap kucuk">
+              <p>
+                Bildiriminiz ve kullanıcı kimliğiniz yalnız bana görünür; şikâyet ettiğiniz
+                kişiye iletilmez. Kural ihlalinde yazı gizlenebilir, konu kilitlenebilir veya
+                hesabın yazma yetkisi kaldırılabilir.
+              </p>
+            </div>
+          </details>
+          <details>
+            <summary>Forum spam sayacında ne tutuluyor?</summary>
+            <div class="cevap kucuk">
+              <p>
+                Hesabınıza bağlı tek bir kayıt: son yazma zamanınız, o günkü gönderi
+                sayınız, yayın onayınız ve onay zamanı. Amacı seri gönderiyi engellemek ve
+                onayın kayda geçmesidir. Bu kaydı yalnız siz ve ben görürüz; içerik
+                barındırmaz.
+              </p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       7. ÜÇÜNCÜ TARAF
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="ucuncu" aria-labelledby="ucuncuBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Üçüncü taraf</span>
+        <h2 id="ucuncuBas">Sayfa açıldığında dışarıya ne gidiyor?</h2>
+        <p>
+          Bu site dış yazı tipi, dış stil dosyası, harita, video gömme, sosyal medya
+          düğmesi ve reklam/analitik izleyicisi <strong>yüklemez</strong>. Dışarıya giden
+          <strong>tek şey</strong> Firebase SDK dosyalarıdır: giriş kutusu her sayfada
+          durduğu için bu üç dosya <strong>gstatic.com</strong> adresinden her açılışta
+          indirilir. Dosyanın kendisi kişisel veri taşımaz; hesap ve veritabanı istekleri
+          ancak siz giriş yapınca ya da forum gibi veri okuyan bir sayfayı açınca çıkar.
+          Tarayıcınızın ağ sekmesini açıp aşağıdaki tabloyu satır satır doğrulayabilirsiniz —
+          iddia değil, ölçülebilir bir sözdür.
+        </p>
+      </div>
+
+      <div class="tablo-sar kart-kir" tabindex="0" aria-label="Dış istekler, yatay kaydırılabilir tablo">
+        <table class="spec">
+          <caption>Dışarıya çıkan istekler — tamamı</caption>
+          <thead>
+            <tr>
+              <th scope="col">Hedef</th>
+              <th scope="col">Ne zaman</th>
+              <th scope="col">Durum</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Google (gstatic.com) — Firebase SDK dosyaları<br><span class="kucuk soluk">firebase-app · firebase-auth · firebase-firestore</span></th>
+              <td data-bas="Ne zaman">Her sayfa açılışında — üst çubuktaki giriş kutusu bu dosyalarla çalışır</td>
+              <td data-bas="Durum"><span class="rozet rozet-bilgi" data-isaret="●">HER SAYFADA</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Google Firebase — Authentication</th>
+              <td data-bas="Ne zaman">Yalnız "Giriş" düğmesine bastığınızda</td>
+              <td data-bas="Durum"><span class="rozet rozet-bilgi" data-isaret="◔">EYLEMLE</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Google Firebase — Cloud Firestore</th>
+              <td data-bas="Ne zaman">Forum, mağaza ve hesap sayfaları açılınca veri okurken; istatistik onayı verdiyseniz ziyaret kaydında</td>
+              <td data-bas="Durum"><span class="rozet rozet-bilgi" data-isaret="◑">SAYFAYLA</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Yazı tipi servisi (Google Fonts vb.)</th>
+              <td data-bas="Ne zaman">—</td>
+              <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">YOK</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Dış stil dosyası, 3B kütüphanesi (three.js)</th>
+              <td data-bas="Ne zaman">— <span class="kucuk soluk">three.js bu sitenin kendi sunucusundan gelir</span></td>
+              <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">YOK</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Analitik / reklam / sosyal piksel</th>
+              <td data-bas="Ne zaman">—</td>
+              <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">YOK</span></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr><td colspan="3">
+              HER SAYFADA = her açılışta indirilir · SAYFAYLA = yalnız o sayfa açılınca çıkar ·
+              EYLEMLE = yalnız siz bir şey yaptığınızda çıkar · YOK = hiç yüklenmez.
+              Yazı tipleri işletim sisteminizden gelir; sayfa hiçbir font indirmez.
+            </td></tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="izgara iz-2" style="margin-top:var(--a6)">
+        <div class="not">
+          <span class="isaret" aria-hidden="true">§</span>
+          <div>
+            <p class="baslik">Veriler nerede duruyor</p>
+            <p>
+              Site içeriği <strong>GitHub Pages</strong> üzerinde yayınlanır. Hesap ve kayıt
+              verileri <strong>Google Firebase</strong> (Authentication ve Cloud Firestore)
+              hizmetinde saklanır; veritabanı bölgesi <strong>Avrupa (eur3)</strong> olarak
+              seçilmiştir. Bu hizmetler kullanıldığı için verileriniz Google tarafından kendi
+              koşulları kapsamında yurt dışında işlenebilir.
+            </p>
+          </div>
+        </div>
+        <div class="not not-bilgi">
+          <span class="isaret" aria-hidden="true">i</span>
+          <div>
+            <p class="baslik">Google ile giriş yaptığınızda ne alınıyor</p>
+            <p>
+              Yalnız temel profil: adınız, e-posta adresiniz, profil fotoğrafınızın adresi ve
+              size ait bir kullanıcı kimliği. <strong>Şifreniz bana hiçbir zaman ulaşmaz.</strong>
+              Kişi listenize, takviminize, dosyalarınıza ve konumunuza erişimim yoktur.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       8. HAKLAR
+       ================================================================ -->
+  <section class="bolum" id="haklar" aria-labelledby="haklarBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Haklarınız</span>
+        <h2 id="haklarBas">KVKK kapsamında ne isteyebilirsiniz</h2>
+        <p>
+          Talebiniz için form doldurmanız gerekmez; bir e-posta yeterlidir ve en geç
+          <strong>30 gün</strong> içinde sonuçlandırılır.
+        </p>
+      </div>
+
+      <div class="izgara iz-2">
+        <ul class="metin-blok">
+          <li>Verilerinizin işlenip işlenmediğini <strong>öğrenme</strong> ve bilgi talep etme</li>
+          <li>İşlenme <strong>amacını</strong> ve amaca uygun kullanılıp kullanılmadığını öğrenme</li>
+          <li>Yurt içinde veya yurt dışında <strong>aktarıldığı tarafları</strong> bilme</li>
+          <li>Eksik veya yanlış işlenmişse <strong>düzeltilmesini</strong> isteme</li>
+        </ul>
+        <ul class="metin-blok">
+          <li><strong>Silinmesini</strong> veya yok edilmesini isteme</li>
+          <li>Otomatik sistemlerle analiz sonucu aleyhinize çıkan sonuca <strong>itiraz etme</strong></li>
+          <li>Hukuka aykırı işleme nedeniyle doğan <strong>zararın giderilmesini</strong> talep etme</li>
+          <li>Verdiğiniz <strong>rızayı geri alma</strong> — bu sayfadaki düğmeyle, anında</li>
+        </ul>
+      </div>
+
+      <div class="izgara iz-2" style="margin-top:var(--a6)">
+        <div class="not">
+          <span class="isaret" aria-hidden="true">×</span>
+          <div>
+            <p class="baslik">Hesabınızı ve verilerinizi silmek</p>
+            <p>
+              "Hesabımı silin" yazmanız yeterlidir; hesabınız, kayıtlı adresleriniz ve profil
+              kaydınız silinir. Yasal saklama yükümlülüğü bulunan sipariş kayıtları, süresi
+              dolana kadar saklanmaya devam eder.
+            </p>
+            <p>
+              <strong>Forum yazılarınız hesap silmeyle kendiliğinden kaldırılmaz</strong>;
+              anonimleştirme mi tam silme mi istediğiniz ayrıca sorulur.
+              Ayrıntı: <a href="#forum">Forum ve topluluk</a> bölümü.
+            </p>
+          </div>
+        </div>
+        <div class="not not-uyari">
+          <span class="isaret" aria-hidden="true">!</span>
+          <div>
+            <p class="baslik">Bu metin hukuki danışmanlık değildir</p>
+            <p>
+              Burada yazanlar, sitenin gerçekte ne yaptığını dürüstçe anlatmak için
+              hazırlanmış bir bilgilendirmedir. Ticari faaliyet başladığında metnin bir
+              hukukçu tarafından gözden geçirilmesi gerekir; o güncelleme yapıldığında sürüm
+              numarası artacaktır.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       9. CTA — sayfa başına BİR kez, tek eylem
+       ================================================================ -->
+  <section class="bolum" id="iletisim" aria-labelledby="ctaBas">
+    <div class="kap">
+      <div class="cta">
+        <span class="ust-baslik">Tek eylem</span>
+        <h2 id="ctaBas" style="margin-top:var(--a3)">Verinizle ilgili bir talebiniz mi var?</h2>
+        <p>
+          Konu satırına ne istediğinizi yazın yeter: erişim, düzeltme, silme,
+          anonimleştirme veya rıza geri alma. Talebi ben okur, ben yanıtlarım — arada
+          destek katmanı yok.
+        </p>
+        <div class="eylem">
+          <a class="dug dug-1 dug-b" href="mailto:sercansozer20@gmail.com?subject=KVKK%20talebi">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM4 6l8 6 8-6"/></svg>
+            KVKK talebi gönder
+          </a>
+          <span class="ikincil">
+            sercansozer20@gmail.com · en geç 30 gün içinde yanıt
+          </span>
+        </div>
+      </div>
+
+      <p class="kucuk soluk" style="margin-top:var(--a5);max-width:var(--olcu)">
+        Bu bildirim güncellenebilir. Önemli bir değişiklikte onay bandı yeniden gösterilir ve
+        sayfanın başındaki sürüm numarası artırılır.
+      </p>
+    </div>
+  </section>
+
 </main>
 
-<footer>
-  <div class="footer-inner">
-    <span>© 2026 Sercan Sözer</span>
-    <nav class="footer-links" aria-label="Alt gezinme">
-      <a href="/">Ana Sayfa</a>
-      <a href="/cozumler.html">Çözümler</a>
-      <a href="/vision-detection.html">Ürün</a>
-      <a href="/magaza.html">Mağaza</a>
-      <a href="/gizlilik.html">Gizlilik</a>
-    </nav>
-    <span class="mono">sersoz.com</span>
+<!-- ==================================================================
+     ALT BİLGİ
+     ================================================================== -->
+<footer class="alt-bilgi">
+  <div class="kap">
+    <div class="alt-izgara">
+      <div>
+        <h2 class="bas">İş</h2>
+        <ul>
+          <li><a href="uygulamalar.html">Uygulamalar</a></li>
+          <li><a href="yazilim.html">Vision Detection App</a></li>
+          <li><a href="yazilim.html#uyumluluk">Uyumluluk ve protokoller</a></li>
+          <li><a href="surec.html">Nasıl çalışır</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Karar</h2>
+        <ul>
+          <li><a href="fiyat.html">Fiyat ve kapsam</a></li>
+          <li><a href="fiyat.html#kazanc">Kazanç hesabı</a></li>
+          <li><a href="fiyat.html#magaza">Satın alma</a></li>
+          <li><a href="surec.html#talep">Fizibilite talebi</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Site</h2>
+        <ul>
+          <li><a href="forum.html">Danışma Masası</a></li>
+          <li><a href="hakkinda.html">Hakkında ve yazılar</a></li>
+          <li><a href="hesabim.html">Hesabım</a></li>
+          <li><a href="gizlilik.html" aria-current="page">Gizlilik ve KVKK</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">İletişim</h2>
+        <ul>
+          <li><a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a></li>
+        </ul>
+        <p class="kucuk soluk" style="margin-top:var(--a3);max-width:26ch">
+          Sercan Sözer — mekatronik mühendisi, İzmir. Şahıs olarak, mühendislik hizmeti
+          biçiminde çalışıyorum.
+        </p>
+      </div>
+    </div>
+
+    <div class="alt-son">
+      <span>© <span class="sayi">2026</span> Sercan Sözer</span>
+      <span>Dış font, dış stil ve reklam/analitik izleyicisi yüklenmez.</span>
+      <button type="button" class="tema-dug" id="temaDug" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6 6l1.5 1.5M16.5 16.5L18 18M18 6l-1.5 1.5M7.5 16.5L6 18"/><circle cx="12" cy="12" r="4"/></svg>
+        <span id="temaYazi">Koyu tema</span>
+      </button>
+    </div>
   </div>
 </footer>
 
+<!-- ==================================================================
+     SAYFA BETİKLERİ
+     ================================================================== -->
 <script>
+/* ---------------------------------------------------------------
+   Tema anahtarı, mobil menü ve onay tercihi kutusu.
+   Klasik betik — defer'lı ortak betiklerden ÖNCE koşar, bu yüzden
+   window.Onay'ı beklemek zorundadır (setTimeout 300 ms).
+   --------------------------------------------------------------- */
 (function () {
-  function yaz() {
-    var el = document.getElementById('onayDurum');
-    var s = (window.Onay && window.Onay.durum()) || null;
-    if (!s) { el.textContent = 'Henüz bir tercih kaydedilmemiş.'; return; }
-    var t = s.tarih ? new Date(s.tarih).toLocaleString('tr-TR') : '—';
-    el.textContent = 'İstatistik: ' + (s.istatistik ? 'izin verildi' : 'kapalı') +
-      '  ·  Kişiselleştirme: ' + (s.kisisel ? 'izin verildi' : 'kapalı') +
-      '  ·  Tarih: ' + t;
+  'use strict';
+
+  /* --- tema anahtarı --- */
+  var kok = document.documentElement;
+  var dug = document.getElementById('temaDug');
+  var yazi = document.getElementById('temaYazi');
+
+  function koyuMu() {
+    var t = kok.getAttribute('data-tema');
+    if (t) return t === 'koyu';
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
   }
-  document.getElementById('onayDegistir').onclick = function () {
-    if (window.Onay) { window.Onay.yenidenSor(); setTimeout(yaz, 400); }
-  };
+  function temaYaz() {
+    var k = koyuMu();
+    dug.setAttribute('aria-pressed', k ? 'true' : 'false');
+    yazi.textContent = k ? 'Açık tema' : 'Koyu tema';
+  }
+  dug.addEventListener('click', function () {
+    var yeni = koyuMu() ? 'acik' : 'koyu';
+    kok.setAttribute('data-tema', yeni);
+    try { localStorage.setItem('sersoz_tema', yeni); } catch (e) {}
+    temaYaz();
+  });
+  temaYaz();
+
+  /* --- mobil menü: Escape kapatır, bağlantıya tıklayınca kapanır --- */
+  var mk = document.getElementById('menuKutu');
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && mk.checked) { mk.checked = false; }
+  });
+  var menu = document.querySelector('.ust-menu');
+  if (menu) menu.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') mk.checked = false;
+  });
+  var etiketDug = document.querySelector('.menu-dug');
+  if (etiketDug) etiketDug.addEventListener('keydown', function (e) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); mk.checked = !mk.checked; }
+  });
+
+  /* ---------------------------------------------------------------
+     ONAY TERCİHİ — onay.js'in kamuya açık yüzü.
+     Kimlikler sözleşmedir: #onayDurum okunur, #onayDegistir
+     Onay.yenidenSor() çağırır. Metin ASLA innerHTML ile basılmaz.
+     --------------------------------------------------------------- */
+  var kutu = document.getElementById('onayDurum');
+  var degistir = document.getElementById('onayDegistir');
+
+  function el(etiket, sinif, metin) {
+    var d = document.createElement(etiket);
+    if (sinif) d.className = sinif;
+    if (metin !== undefined) d.textContent = metin;
+    return d;
+  }
+
+  /* Renk tek sinyal değil: her rozet işaret + metin taşır. */
+  function rozet(acik, ad) {
+    var s = el('span', 'rozet ' + (acik ? 'rozet-hazir' : 'rozet-yok'));
+    s.setAttribute('data-isaret', acik ? '✓' : '—');
+    s.textContent = ad + ' · ' + (acik ? 'İZİN VERİLDİ' : 'KAPALI');
+    return s;
+  }
+
+  function bosalt(n) { while (n.firstChild) n.removeChild(n.firstChild); }
+
+  function yaz() {
+    bosalt(kutu);
+
+    if (!window.Onay || typeof window.Onay.durum !== 'function') {
+      kutu.appendChild(el('p', 'kucuk soluk',
+        'Tercih okunamadı: onay betiği yüklenmedi. Bu durumda hiçbir istatistik kaydı ' +
+        'yazılmaz — güvenli taraf zaten budur.'));
+      return;
+    }
+
+    var s = window.Onay.durum();
+
+    if (!s) {
+      kutu.appendChild(el('p', 'kucuk soluk',
+        'Bu tarayıcıda henüz bir tercih kaydedilmemiş. Onay bandı bir sonraki ' +
+        'açılışta çıkar; dilerseniz aşağıdaki düğmeyle hemen açabilirsiniz.'));
+      return;
+    }
+
+    var satir = el('div', 'etiket-satir');
+    satir.appendChild(rozet(true, 'Gerekli'));
+    satir.appendChild(rozet(s.istatistik === true, 'İstatistik'));
+    satir.appendChild(rozet(s.kisisel === true, 'Kişiselleştirme'));
+    kutu.appendChild(satir);
+
+    var t = '—';
+    if (s.tarih) {
+      var d = new Date(s.tarih);
+      if (!isNaN(d.getTime())) t = d.toLocaleString('tr-TR');
+    }
+    var p = el('p', 'kucuk soluk', 'Seçim tarihi: ' + t + ' · yalnız bu tarayıcıda geçerlidir.');
+    p.style.marginTop = 'var(--a3)';
+    kutu.appendChild(p);
+  }
+
+  degistir.addEventListener('click', function () {
+    if (window.Onay && typeof window.Onay.yenidenSor === 'function') {
+      window.Onay.yenidenSor();
+      /* Bant animasyonu ve yazma bitsin diye kısa bekleme */
+      setTimeout(yaz, 400);
+    } else {
+      bosalt(kutu);
+      kutu.appendChild(el('p', 'kucuk soluk',
+        'Onay betiği yüklenmediği için bant açılamadı. Sayfayı yenilemeyi deneyin.'));
+    }
+  });
+
+  /* onay.js defer ile yüklenir; window.Onay bu betikten SONRA kurulur. */
   setTimeout(yaz, 300);
 })();
 </script>
+
+<!-- ORTAK BETİKLER — sıra sözleşmedir, bozulmaz:
+     onay.js window.Onay'ı kurar; hesap.js ve iz.js ona bakar.
+     Sıra bozulursa hata çıkmaz, işlevler SESSİZCE ölür. -->
 <script src="/onay.js" defer></script>
 <script src="/hesap.js" defer></script>
 <script src="/iz.js" defer></script>
+
 </body>
 </html>

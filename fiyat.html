@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fiyat, kazanç ve satın alma — Vision Detection App | Sercan Sözer</title>
+<meta name="description" content="Vision Detection App tek hat lisansı 64.000 TL. Kapsam ve kapsam dışı yan yana yazılı, ek maliyet kalemleri açık. Kendi hattınızın rakamlarıyla geri ödeme süresini hesaplayın, katalogdan sipariş verin.">
+<meta name="author" content="Sercan Sözer">
+<meta name="theme-color" content="#c2410c">
+<link rel="canonical" href="https://sersoz.com/fiyat.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sercan Sözer — Makine Görüşü">
+<meta property="og:title" content="Fiyat, kazanç ve satın alma — tek hat lisansı 64.000 TL">
+<meta property="og:description" content="Fiyat form arkasında değil: kapsam, kapsam dışı ve ek maliyet kalemleri açık. Geri ödeme hesabını kendi rakamlarınızla yapın.">
+<meta property="og:url" content="https://sersoz.com/fiyat.html">
+<meta property="og:image" content="https://sersoz.com/og.png">
+<meta property="og:locale" content="tr_TR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23fafaf9'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231c1917' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Consolas,monospace' font-size='36' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="sistem.css">
+<script>
+/* Tema seçimi ilk boyamadan ÖNCE uygulanır — yoksa koyu temada beyaz çakma olur. */
+(function () {
+  try {
+    var t = localStorage.getItem('sersoz_tema');
+    if (t === 'koyu' || t === 'acik') document.documentElement.setAttribute('data-tema', t);
+  } catch (e) {}
+})();
+</script>
+<style>
+/* ============================================================================
+   SAYFAYA ÖZEL — yalnız sistem.css'te KARŞILIĞI OLMAYAN üç parça:
+   (1) hesaplayıcı kaydırıcısı ve sonuç paneli, (2) kümülatif net grafiği,
+   (3) sepet çekmecesi / sipariş kipi / yüzen düğme.
+   Tek bir yeni renk uydurulmadı: her değer sistem tokenından gelir.
+   Açılıp kapanan katmanlar display ile çalışır — kaydırma animasyonu YOK
+   (sistemin "hareket iki yerde" kuralı) ve yatay taşma üretmez.
+   ========================================================================== */
+
+/* --- 1. HESAPLAYICI --------------------------------------------------- */
+.girdi-satir { display: flex; align-items: center; gap: var(--a2); }
+.girdi-satir input { max-width: 9.5rem; }
+.girdi-satir .birim {
+  font-family: var(--yazi-mono); font-size: var(--p-mikro);
+  color: var(--metin-soluk); white-space: nowrap;
+}
+.kaydirici {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 32px; margin-top: var(--a1);   /* 32px = rahat dokunma hedefi */
+  background: transparent; cursor: pointer;
+}
+.kaydirici::-webkit-slider-runnable-track {
+  height: 4px; background: var(--cizgi-2); border-radius: var(--r-tam);
+}
+.kaydirici::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 20px; height: 20px; margin-top: -8px; border-radius: 50%;
+  background: var(--marka); border: 2px solid var(--yuzey);
+}
+.kaydirici::-moz-range-track { height: 4px; background: var(--cizgi-2); border-radius: var(--r-tam); }
+.kaydirici::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--marka); border: 2px solid var(--yuzey);
+}
+.kaydirici:focus-visible { outline: 2px solid var(--odak); outline-offset: 2px; }
+
+.sonuc { position: sticky; top: 5.25rem; }
+@media (max-width: 860px) { .sonuc { position: static; } }
+
+.buyuk-deger {
+  font-size: clamp(2.25rem, 1.6rem + 2.6vw, 3rem); font-weight: 600;
+  letter-spacing: -.03em; line-height: 1.05;
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+.buyuk-deger small {
+  font-size: var(--p-govde); font-weight: 500; letter-spacing: 0;
+  color: var(--metin-soluk); margin-left: .35rem;
+}
+.mini { border: 1px solid var(--cizgi); border-radius: var(--r2); background: var(--yuzey-2); padding: var(--a3); }
+.mini .e {
+  font-family: var(--yazi-mono); font-size: var(--p-mikro); line-height: 1.4;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--metin-soluk);
+}
+.mini .v {
+  margin-top: var(--a1); font-size: var(--p-h4); font-weight: 600;
+  letter-spacing: -.015em; font-variant-numeric: tabular-nums slashed-zero;
+}
+.mini .v.arti { color: var(--ok); }
+.mini .v.eksi { color: var(--hata); }
+.mini .k { margin-top: var(--a1); font-size: var(--p-mikro); color: var(--metin-soluk); line-height: 1.45; }
+
+.cubuk-satir + .cubuk-satir { margin-top: var(--a3); }
+.cubuk-ust { display: flex; justify-content: space-between; gap: var(--a3); font-size: var(--p-kucuk); }
+.cubuk-ust .tut { font-weight: 500; font-variant-numeric: tabular-nums slashed-zero; }
+.cubuk-yol {
+  margin-top: var(--a1); height: 10px; overflow: hidden;
+  background: var(--yuzey-2); border: 1px solid var(--cizgi); border-radius: var(--r1);
+}
+.cubuk-dolgu { height: 100%; width: 0; }
+.cubuk-dolgu.once  { background: var(--hata); }
+.cubuk-dolgu.sonra { background: var(--ok); }
+
+/* --- 2. ÜÇ YILLIK KÜMÜLATİF GRAFİK ------------------------------------ */
+.grafik { width: 100%; height: auto; }
+.grafik .taban, .grafik .sifir { stroke: var(--cizgi-guclu); stroke-width: 1; }
+.grafik .sifir { stroke-dasharray: 4 4; }
+.grafik .cubuk.p { fill: var(--ok); }
+.grafik .cubuk.n { fill: var(--hata); }
+.grafik text { font-family: var(--yazi-mono); fill: var(--metin-2); }
+.grafik .deger { font-size: 12px; font-weight: 600; fill: var(--metin); }
+.grafik .deger.ic { fill: var(--zemin); }
+.grafik .yil { font-size: 11px; letter-spacing: .08em; fill: var(--metin-soluk); }
+.grafik .sifir-etiket { font-size: 10px; fill: var(--metin-soluk); }
+.gosterge { display: flex; flex-wrap: wrap; gap: var(--a2) var(--a4); font-family: var(--yazi-mono); font-size: var(--p-mikro); color: var(--metin-soluk); }
+.gosterge span { display: inline-flex; align-items: center; gap: .4rem; }
+.gosterge i { width: 12px; height: 12px; border-radius: var(--r1); }
+.gosterge i.p { background: var(--ok); }
+.gosterge i.n { background: var(--hata); }
+
+/* --- 3. SEPET / SİPARİŞ KATMANLARI ------------------------------------ */
+.perde { display: none; position: fixed; inset: 0; z-index: 60; background: rgba(12, 10, 9, .55); }
+.perde.acik { display: block; }
+
+.cekmece {
+  display: none; position: fixed; top: 0; right: 0; bottom: 0; z-index: 70;
+  width: min(27rem, 100%); flex-direction: column;
+  background: var(--yuzey); border-left: 1px solid var(--cizgi-2);
+}
+.cekmece.acik { display: flex; }
+.katman-bas {
+  display: flex; align-items: center; gap: var(--a3);
+  padding: var(--a4); border-bottom: 1px solid var(--cizgi);
+}
+.katman-govde { flex: 1; overflow-y: auto; padding: var(--a4); }
+.katman-alt { border-top: 1px solid var(--cizgi); background: var(--yuzey-2); padding: var(--a4); }
+.katman-alt > * + * { margin-top: var(--a2); }
+.kapat-dug {
+  margin-left: auto; flex: none;
+  width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--cizgi-2); border-radius: var(--r2);
+  font-size: 1.25rem; line-height: 1; color: var(--metin-2);
+}
+.kapat-dug:hover { border-color: var(--marka); color: var(--marka-metin); }
+
+.kip {
+  display: none; position: fixed; left: 50%; top: 50%; z-index: 80;
+  transform: translate(-50%, -50%);
+  width: min(38rem, calc(100% - 1.5rem)); max-height: 88vh; overflow-y: auto;
+  background: var(--yuzey); border: 1px solid var(--cizgi-2);
+  border-radius: var(--r4); box-shadow: var(--golge-2);
+}
+.kip.acik { display: block; }
+.kip .katman-bas { position: sticky; top: 0; background: var(--yuzey); }
+.kip-govde { padding: var(--a5); }
+
+.sepet-satir { padding-bottom: var(--a4); border-bottom: 1px solid var(--cizgi); }
+.sepet-satir + .sepet-satir { padding-top: var(--a4); }
+.sepet-satir h3 { font-size: var(--p-govde); font-weight: 500; letter-spacing: -.01em; }
+.sepet-satir .meta { font-family: var(--yazi-mono); font-size: var(--p-mikro); color: var(--metin-soluk); margin-top: var(--a1); }
+.sepet-satir .tutar { margin-top: var(--a2); font-weight: 600; font-variant-numeric: tabular-nums slashed-zero; }
+.adet-kut { display: flex; align-items: center; gap: var(--a2); margin-top: var(--a3); }
+.adet-dug {
+  width: 44px; height: 44px; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--cizgi-guclu); border-radius: var(--r2);
+  font-family: var(--yazi-mono); font-size: var(--p-govde); color: var(--metin);
+}
+.adet-dug:hover { border-color: var(--marka); color: var(--marka-metin); }
+.adet-kut .say { min-width: 2.5rem; text-align: center; font-family: var(--yazi-mono); font-variant-numeric: tabular-nums slashed-zero; }
+.adet-kut .sil { margin-left: auto; font-size: var(--p-kucuk); color: var(--metin-soluk); text-decoration: underline; text-underline-offset: .18em; }
+.adet-kut .sil:hover { color: var(--hata); }
+
+.toplam-satir { display: flex; justify-content: space-between; gap: var(--a3); font-size: var(--p-kucuk); }
+.toplam-satir .v { font-variant-numeric: tabular-nums slashed-zero; }
+.toplam-satir.genel {
+  font-size: var(--p-govde); font-weight: 600;
+  border-top: 1px solid var(--cizgi-2); margin-top: var(--a3); padding-top: var(--a3);
+}
+
+.fab-sar { position: fixed; right: var(--a4); bottom: var(--a4); z-index: 65; display: flex; flex-direction: column; align-items: flex-end; gap: var(--a2); }
+.fab {
+  display: none; align-items: center; gap: var(--a2);
+  min-height: 48px; padding: .6rem 1.1rem; border-radius: var(--r-tam);
+  background: var(--marka); color: var(--marka-kontrast);
+  box-shadow: var(--golge-2); font-size: var(--p-kucuk); font-weight: 500;
+}
+.fab.var { display: inline-flex; }
+.fab svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.fab .adet { background: rgba(255, 255, 255, .24); border-radius: var(--r-tam); padding: .05rem .5rem; font-family: var(--yazi-mono); font-size: var(--p-mikro); }
+.hizli {
+  display: none; width: min(21rem, calc(100vw - 2rem)); overflow: hidden;
+  background: var(--yuzey); border: 1px solid var(--cizgi-2);
+  border-radius: var(--r3); box-shadow: var(--golge-2);
+}
+.hizli.acik { display: block; }
+.hizli-satir { display: flex; justify-content: space-between; gap: var(--a3); font-size: var(--p-kucuk); padding: .4rem 0; }
+.hizli-satir small { display: block; font-family: var(--yazi-mono); font-size: var(--p-mikro); color: var(--metin-soluk); }
+.hizli-satir .tut { font-variant-numeric: tabular-nums slashed-zero; white-space: nowrap; }
+
+.bildirim {
+  position: fixed; left: 50%; bottom: var(--a5); z-index: 90;
+  transform: translate(-50%, 0); max-width: min(30rem, calc(100% - 2rem));
+  background: var(--metin); color: var(--zemin);
+  padding: .7rem 1rem; border-radius: var(--r2);
+  font-size: var(--p-kucuk); line-height: 1.45;
+  opacity: 0; pointer-events: none; transition: opacity var(--sure-o) linear;
+}
+.bildirim.gorun { opacity: 1; }
+
+.fiyat { font-size: var(--p-h4); font-weight: 600; font-variant-numeric: tabular-nums slashed-zero; letter-spacing: -.015em; }
+.fiyat small { display: block; font-size: var(--p-mikro); font-weight: 400; color: var(--metin-soluk); letter-spacing: 0; }
+</style>
+</head>
+<body>
+
+<a class="atla" href="#icerik">İçeriğe atla</a>
+
+<!-- ==================================================================
+     ÜST ÇUBUK — .nav-links hesap.js'in API'sidir (giriş kutusu +
+     site sahibine özel "Yönetim" bağlantısı oraya eklenir).
+     Bu sayfada BİLEREK loginBtn/girisBtn kimliği yoktur: olsaydı
+     hesap.js kutuyu hiç çizmezdi.
+     ================================================================== -->
+<header class="ust">
+  <input type="checkbox" id="menuKutu" class="menu-kutu" aria-hidden="true" tabindex="-1">
+  <div class="kap ust-ic">
+    <a class="logo" href="index.html">
+      <span class="isaret" aria-hidden="true">S</span>
+      <span>Sercan Sözer<span class="alt">makine görüşü · İzmir</span></span>
+    </a>
+
+    <nav class="ust-menu" aria-label="Ana gezinme">
+      <a href="uygulamalar.html">Uygulamalar</a>
+      <a href="yazilim.html">Yazılım</a>
+      <a href="yazilim.html#uyumluluk">Uyumluluk</a>
+      <a href="surec.html">Nasıl çalışır</a>
+      <a href="fiyat.html" aria-current="page">Fiyat</a>
+      <a href="forum.html">Danışma Masası</a>
+    </nav>
+
+    <div class="nav-links">
+      <a class="dug dug-1 dug-ust" href="surec.html#talep">Fizibilite talebi</a>
+    </div>
+
+    <label class="menu-dug" for="menuKutu" role="button" tabindex="0"
+           aria-label="Menüyü aç veya kapat" aria-controls="menuKutu">
+      <svg class="ac" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <svg class="kapa" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </label>
+  </div>
+</header>
+
+<main id="icerik">
+
+  <!-- ================================================================
+       1. BAŞLIK — tek h1
+       ================================================================ -->
+  <section class="bolum">
+    <div class="kap">
+      <span class="ust-baslik">Fiyat</span>
+      <h1 style="margin-top:var(--a4);max-width:20ch">Fiyat, kazanç ve satın alma</h1>
+      <p class="giris" style="margin-top:var(--a5);max-width:54ch">
+        Bu sektörde fiyat sorulunca form doldurtulur. Elimde net bir rakam var, o yüzden
+        yazıyorum: <strong class="n-b">64.000&nbsp;TL</strong> tek üretim hattı yazılım
+        lisansı. Neyin dahil olduğu, neyin olmadığı ve bu rakamın kendini kaç ayda
+        ödediği aşağıda — sırayla.
+      </p>
+
+      <div class="satir" style="margin-top:var(--a6)">
+        <a class="dug dug-1 dug-b" href="#kazanc">Geri ödeme hesabını yapın</a>
+        <a class="dug dug-2 dug-b" href="#magaza">Katalog ve sipariş</a>
+      </div>
+
+      <p class="kucuk soluk" style="margin-top:var(--a5);max-width:62ch">
+        Sayfadaki hesaplayıcı <strong>sizin girdiğiniz</strong> rakamların aritmetiğidir;
+        ölçülmüş bir vaka değildir. Müşteri logosu, tanıklık, vaka rakamı ya da "N kat
+        kazanç" iddiası bu sitede yoktur.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       2. FİYAT KARTI — kapsam / kapsam dışı yan yana
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="lisans" aria-labelledby="lisansBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Lisans</span>
+        <h2 id="lisansBas">Rakam formun arkasında değil, burada</h2>
+        <p>
+          Tek satır fiyat yanıltıcıdır: yazılım bir sistemin parçasıdır. O yüzden lisansın
+          yanına ne satın almanız gerektiğini de yazdım.
+        </p>
+      </div>
+
+      <div class="izgara iz-yan">
+
+        <div class="kart">
+          <span class="ust-baslik">Vision Detection App</span>
+          <p class="buyuk-deger"><span class="sayi n-b">64.000&nbsp;TL</span></p>
+          <p class="kucuk soluk">tek üretim hattı lisansı · KDV hariç</p>
+
+          <div class="izgara iz-2" style="margin-top:var(--a5)">
+            <div>
+              <span class="ust-baslik notr">Kapsam</span>
+              <ul class="metin-blok kucuk" style="margin-top:var(--a3)">
+                <li>Tek üretim hattı için yazılım lisansı</li>
+                <li>Kurulum paketi (uygulama ve bağımlılıkları)</li>
+                <li>Teknik doküman: veri sayfası ve sistem gereksinimleri</li>
+                <li>Mevcut sürücülerle PLC bağlantısı (S7 · MC/SLMP · Modbus TCP)</li>
+                <li>Mevcut kamera ailelerinin sürücüleri (LMI Gocator · Wenglor MLBS115)</li>
+              </ul>
+            </div>
+            <div>
+              <span class="ust-baslik notr">Kapsam dışı</span>
+              <ul class="metin-blok kucuk" style="margin-top:var(--a3)">
+                <li>Kamera, aydınlatma, optik ve endüstriyel PC donanımı</li>
+                <li>Saha kurulumu, mekanik montaj, kablolama, devreye alma</li>
+                <li>Hatta özel geliştirme ve yeni kamera sürücüsü</li>
+                <li>Yol haritasındaki protokoller (OPC UA, PROFINET IO)</li>
+                <li>İkinci üretim hattı — ayrı lisanslanır</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="kart-alt">
+            <p class="kucuk soluk">
+              Vergi, ödeme koşulu ve teslim biçimi teklifte yazılı olarak sabitlenir.
+              Kapsam dışı kalemler ve fizibilite ayrı fiyatlanır — sürpriz kalem çıkmaz.
+            </p>
+          </div>
+        </div>
+
+        <div class="yigin">
+          <div class="not not-uyari">
+            <span class="isaret" aria-hidden="true">!</span>
+            <div>
+              <p class="baslik">64.000 TL toplam proje bedeli değildir</p>
+              <p>
+                Yalnızca yazılımdır. Bir hattın çalışır hâle gelmesi için kamera, aydınlatma,
+                endüstriyel PC, montaj aparatı ve devreye alma gerekir. Aşağıdaki hesaplayıcıda
+                "Sistem yatırımı" alanına <strong>toplam proje bedelini</strong> yazın; geri
+                ödeme süresi gerçekçi olsun.
+              </p>
+            </div>
+          </div>
+
+          <div class="not not-bilgi">
+            <span class="isaret" aria-hidden="true">i</span>
+            <div>
+              <p class="baslik">Neyin kimden alınacağı aşağıda tablo hâlinde</p>
+              <p>
+                Lisansın içinde olan, ayrıca fiyatlanan ve başka bir tedarikçiden alınacak
+                kalemler tek tabloda ayrıştırıldı — teklif aşamasında sürpriz çıkmasın.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="margin-top:var(--a6)">
+        <div class="tablo-sar kart-kir" tabindex="0" aria-label="Ek maliyet kalemleri tablosu">
+            <table class="spec">
+              <caption>Lisans dışında bütçelenecek kalemler</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Kalem</th>
+                  <th scope="col">Kimden</th>
+                  <th scope="col">Durum</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">3D kamera / profil sensörü</th>
+                  <td data-bas="Kimden">Üretici veya distribütör</td>
+                  <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">KAPSAM DIŞI</span></td>
+                </tr>
+                <tr>
+                  <th scope="row">Aydınlatma ve optik</th>
+                  <td data-bas="Kimden">Tarifi fizibilite raporunda</td>
+                  <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">KAPSAM DIŞI</span></td>
+                </tr>
+                <tr>
+                  <th scope="row">Endüstriyel PC</th>
+                  <td data-bas="Kimden">Gereksinimi belgede yazılı</td>
+                  <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">KAPSAM DIŞI</span></td>
+                </tr>
+                <tr>
+                  <th scope="row">Mekanik montaj ve kablolama</th>
+                  <td data-bas="Kimden">Tesis bakım ekibi veya taşeron</td>
+                  <td data-bas="Durum"><span class="rozet rozet-yok" data-isaret="—">KAPSAM DIŞI</span></td>
+                </tr>
+                <tr>
+                  <th scope="row">Fizibilite (numune taraması + rapor)</th>
+                  <td data-bas="Kimden">Benden — ayrı fiyatlanır</td>
+                  <td data-bas="Durum"><span class="rozet rozet-bilgi" data-isaret="i">AYRI KALEM</span></td>
+                </tr>
+                <tr>
+                  <th scope="row">S7 · MC/SLMP · Modbus TCP bağlantısı</th>
+                  <td data-bas="Kimden">Lisansın içinde</td>
+                  <td data-bas="Durum"><span class="rozet rozet-hazir" data-isaret="✓">KAPSAMDA</span></td>
+                </tr>
+                <tr>
+                  <th scope="row">OPC UA · PROFINET IO</th>
+                  <td data-bas="Kimden">Planlı, tarih verilmez</td>
+                  <td data-bas="Durum"><span class="rozet rozet-yol" data-isaret="◔">YOL HARİTASINDA</span></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr><td colspan="3">
+                  KAPSAMDA = 64.000 TL'ye dahil · AYRI KALEM = ayrıca fiyatlanır ·
+                  KAPSAM DIŞI = başka bir tedarikçiden alınır ·
+                  YOL HARİTASINDA = bugün yok, planlı.
+                </td></tr>
+              </tfoot>
+            </table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================================================================
+       3. KAZANÇ HESAPLAYICI (kazanc.html'den taşındı)
+       ================================================================ -->
+  <section class="bolum" id="kazanc" aria-labelledby="kazancBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Kazanç hesabı</span>
+        <h2 id="kazancBas">Hattınızın rakamları</h2>
+        <p>
+          Soldaki alanlar <strong>sizin bildiğiniz</strong> rakamlardır — üretim adedi, hata
+          oranı, personel maliyeti. Alttaki grup ise <strong>tahmin</strong> gerektiren üç
+          değerdir; onları da siz ayarlarsınız. Sağdaki panel her değişiklikte güncellenir.
+        </p>
+      </div>
+
+      <div class="izgara iz-yan">
+
+        <!-- ------------------ girdiler ------------------ -->
+        <div class="yigin">
+
+          <div class="kart">
+            <div class="satir">
+              <h3 class="h4">Üretim ve hata</h3>
+              <span class="rozet satir-son" data-isaret="●">SİZİN VERİNİZ</span>
+            </div>
+
+            <div class="alan">
+              <label class="etiket" for="adet">Günlük üretim adedi</label>
+              <div class="girdi-satir">
+                <input type="number" id="adet" min="50" max="200000" step="50" value="2000" inputmode="numeric">
+                <span class="birim">adet/gün</span>
+              </div>
+              <input type="range" class="kaydirici" data-hedef="adet" min="50" max="20000" step="50" value="2000" aria-label="Günlük üretim adedi kaydırıcı">
+              <span class="ipucu">Bütün vardiyaların toplamı. Tek bir istasyondan geçen parça sayısını yazın.</span>
+            </div>
+
+            <div class="alan">
+              <label class="etiket" for="vardiya">Vardiya sayısı</label>
+              <div class="girdi-satir">
+                <input type="number" id="vardiya" min="1" max="3" step="1" value="2" inputmode="numeric">
+                <span class="birim">vardiya</span>
+              </div>
+              <input type="range" class="kaydirici" data-hedef="vardiya" min="1" max="3" step="1" value="2" aria-label="Vardiya sayısı kaydırıcı">
+              <span class="ipucu">Üretim adedini değil, işgücü maliyetini etkiler. Vardiya süresi 8 saat kabul edilir.</span>
+            </div>
+
+            <div class="alan">
+              <label class="etiket" for="gun">Çalışma günü</label>
+              <div class="girdi-satir">
+                <input type="number" id="gun" min="1" max="31" step="1" value="22" inputmode="numeric">
+                <span class="birim">gün/ay</span>
+              </div>
+              <input type="range" class="kaydirici" data-hedef="gun" min="1" max="31" step="1" value="22" aria-label="Aylık çalışma günü kaydırıcı">
+              <span class="ipucu">Planlı duruşlar ve tatiller düşülmüş, fiilen üretim yapılan gün sayısı.</span>
+            </div>
+
+            <div class="alan">
+              <label class="etiket" for="hataOran">Mevcut hata oranı</label>
+              <div class="girdi-satir">
+                <input type="number" id="hataOran" min="0" max="30" step="0.1" value="1.5" inputmode="decimal">
+                <span class="birim">%</span>
+              </div>
+              <input type="range" class="kaydirici" data-hedef="hataOran" min="0" max="15" step="0.1" value="1.5" aria-label="Mevcut hata oranı kaydırıcı">
+              <span class="ipucu">Üretilen 100 parçanın kaçı hatalı çıkıyor? Hurda + yeniden işleme + iade toplamı.</span>
+            </div>
+
+            <div class="alan">
+              <label class="etiket" for="hataTL">Hatalı ürünün <strong>iç</strong> maliyeti</label>
+              <div class="girdi-satir">
+                <input type="number" id="hataTL" min="0" max="500000" step="5" value="45" inputmode="numeric">
+                <span class="birim">₺/adet</span>
+              </div>
+              <input type="range" class="kaydirici" data-hedef="hataTL" min="0" max="3000" step="5" value="45" aria-label="Hatalı ürünün iç maliyeti kaydırıcı">
+              <span class="ipucu">Fabrikada yakalanan hatanın bedeli: hurda malzeme + harcanan işçilik + yeniden işleme.</span>
+            </div>
+
+            <div class="alan">
+              <label class="etiket" for="kacakTL">Müşteriye kaçan hatanın maliyeti</label>
+              <div class="girdi-satir">
+                <input type="number" id="kacakTL" min="0" max="5000000" step="100" value="500" inputmode="numeric">
+                <span class="birim">₺/adet</span>
+              </div>
+              <input type="range" class="kaydirici" data-hedef="kacakTL" min="0" max="100000" step="100" value="500" aria-label="Müşteriye kaçan hatanın maliyeti kaydırıcı">
+              <span class="ipucu">İade, nakliye, sıralama, 8D raporu, ceza ve müşteri nezdinde itibar kaybı. Genelde iç maliyetin katları olur.</span>
+            </div>
+          </div>
+
+          <div class="kart">
+            <div class="satir">
+              <h3 class="h4">Manuel kontrol ve yatırım</h3>
+              <span class="rozet satir-son" data-isaret="●">SİZİN VERİNİZ</span>
+            </div>
+
+            <div class="alan">
+              <label class="etiket" for="kisi">Kontrol personeli (vardiya başına)</label>
+              <div class="girdi-satir">
+                <input type="number" id="kisi" min="0" max="50" step="1" value="1" inputmode="numeric">
+                <span class="birim">kişi</span>
+              </div>
+              <input type="range" class="kaydirici" data-hedef="kisi" min="0" max="10" step="1" value="1" aria-label="Vardiya başına kontrol personeli kaydırıcı">
+              <span class="ipucu">Bu istasyonda gözle kontrol için ayrılan kişi sayısı. Toplam kişi = bu değer × vardiya sayısı.</span>
+            </div>
+
+            <div class="alan">
+              <label class="etiket" for="saatTL">Personelin saatlik işveren maliyeti</label>
+              <div class="girdi-satir">
+                <input type="number" id="saatTL" min="0" max="5000" step="5" value="240" inputmode="numeric">
+                <span class="birim">₺/saat</span>
+              </div>
+              <input type="range" class="kaydirici" data-hedef="saatTL" min="0" max="1200" step="5" value="240" aria-label="Personelin saatlik işveren maliyeti kaydırıcı">
+              <span class="ipucu">Net maaş değil, <strong>işverene toplam maliyet</strong> (SGK + işsizlik dahil). 2026 asgari ücrette imalat için ≈ 39.223 ₺/ay ÷ 176 saat ≈ 223 ₺/saat (176 saat = 22 gün × 8 saat; her yıl güncellenmelidir).</span>
+            </div>
+
+            <div class="alan">
+              <label class="etiket" for="yatirim">Sistem yatırımı (toplam proje)</label>
+              <div class="girdi-satir">
+                <input type="number" id="yatirim" min="0" max="20000000" step="1000" value="250000" inputmode="numeric">
+                <span class="birim">₺</span>
+              </div>
+              <input type="range" class="kaydirici" data-hedef="yatirim" min="0" max="2000000" step="1000" value="250000" aria-label="Sistem yatırımı kaydırıcı">
+              <span class="ipucu">64.000 ₺ <strong>yalnızca yazılım lisansıdır</strong>. Kamera, optik, aydınlatma, endüstriyel PC, montaj aparatı ve devreye alma bu tutarın dışındadır — gerçekçi bir sonuç için toplam proje bedelinizi yazın.</span>
+            </div>
+          </div>
+
+          <div class="kart">
+            <div class="satir">
+              <h3 class="h4">Varsayımlar</h3>
+              <span class="rozet rozet-yol satir-son" data-isaret="◔">TAHMİN</span>
+            </div>
+            <p class="kucuk soluk">
+              Aşağıdaki üç değer <strong>ölçülmüş değil, tahmindir</strong>. Gerçek değerleri
+              yalnız fizibilite belirler. İhtiyatlı bir tablo görmek için bunları düşürün —
+              hesabın güvenilirliği buradan gelir.
+            </p>
+
+            <div class="alan">
+              <label class="etiket" for="kacakOran">Bugün müşteriye kaçan hata oranı</label>
+              <div class="girdi-satir">
+                <input type="number" id="kacakOran" min="0" max="100" step="0.5" value="4" inputmode="decimal">
+                <span class="birim">%</span>
+              </div>
+              <input type="range" class="kaydirici" data-hedef="kacakOran" min="0" max="50" step="0.5" value="4" aria-label="Bugün müşteriye kaçan hata oranı kaydırıcı">
+              <span class="ipucu">Hatalı parçaların yüzde kaçı mevcut kontrolden sıyrılıp müşteriye ulaşıyor? Kalan kısım fabrikada yakalanıyor kabul edilir.</span>
+            </div>
+
+            <div class="alan">
+              <label class="etiket" for="yakalama">Sistemin yakalama oranı</label>
+              <div class="girdi-satir">
+                <input type="number" id="yakalama" min="0" max="100" step="1" value="80" inputmode="numeric">
+                <span class="birim">%</span>
+              </div>
+              <input type="range" class="kaydirici" data-hedef="yakalama" min="0" max="100" step="1" value="80" aria-label="Sistemin yakalama oranı kaydırıcı">
+              <span class="ipucu">Bugün kaçan hataların yüzde kaçını sistem durdurur? <strong>%100 gerçekçi değildir</strong>; hiçbir görsel denetim her kusuru göremez. Varsayılan %80 ihtiyatlı bir başlangıçtır.</span>
+            </div>
+
+            <div class="alan">
+              <label class="etiket" for="isgucuAzalma">Manuel kontrol yükünde azalma</label>
+              <div class="girdi-satir">
+                <input type="number" id="isgucuAzalma" min="0" max="100" step="5" value="40" inputmode="numeric">
+                <span class="birim">%</span>
+              </div>
+              <input type="range" class="kaydirici" data-hedef="isgucuAzalma" min="0" max="100" step="5" value="40" aria-label="Manuel kontrol yükünde azalma kaydırıcı">
+              <span class="ipucu">Personel çoğu hatta <strong>tamamen kalkmaz</strong>; NOK ayıklama, kurulum ve numune kontrolü insan ister. %40 çoğu kurulumda savunulabilir bir başlangıçtır.</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ------------------ sonuç paneli ------------------ -->
+        <div class="sonuc">
+          <div class="kart" aria-live="polite" role="status">
+            <span class="ust-baslik">Sonuç · canlı</span>
+
+            <div>
+              <p class="kucuk soluk">Geri ödeme süresi</p>
+              <p class="buyuk-deger" id="oGeri" style="margin-top:var(--a1)">—</p>
+              <p class="kucuk soluk" id="oGeriAlt" style="margin-top:var(--a2)">
+                Yatırım, aylık tasarrufla kendini bu sürede öder.
+              </p>
+            </div>
+
+            <div class="not not-uyari gizli" id="oNot">
+              <span class="isaret" aria-hidden="true">!</span>
+              <div><p id="oNotYazi"></p></div>
+            </div>
+
+            <div class="izgara iz-2">
+              <div class="mini">
+                <p class="e">Aylık toplam tasarruf</p>
+                <p class="v arti" id="oAylik">—</p>
+                <p class="k">Hata maliyeti + işgücü</p>
+              </div>
+              <div class="mini">
+                <p class="e">Yıllık tasarruf tahmini</p>
+                <p class="v arti" id="oYillik">—</p>
+                <p class="k">12 ay üzerinden</p>
+              </div>
+              <div class="mini">
+                <p class="e">İşgücü tasarrufu</p>
+                <p class="v" id="oIsgucu">—</p>
+                <p class="k" id="oIsgucuAlt">—</p>
+              </div>
+              <div class="mini">
+                <p class="e">Müşteriye ulaşmayan hatalı parça</p>
+                <p class="v" id="oKacak">—</p>
+                <p class="k" id="oKacakAlt">—</p>
+              </div>
+            </div>
+
+            <div>
+              <span class="ust-baslik notr">Aylık hata maliyeti · önce / sonra</span>
+              <div style="margin-top:var(--a3)">
+                <div class="cubuk-satir">
+                  <div class="cubuk-ust"><span>Bugün</span><span class="tut" id="oOnce">—</span></div>
+                  <div class="cubuk-yol"><div class="cubuk-dolgu once" id="cOnce"></div></div>
+                </div>
+                <div class="cubuk-satir">
+                  <div class="cubuk-ust"><span>Sistemle</span><span class="tut" id="oSonra">—</span></div>
+                  <div class="cubuk-yol"><div class="cubuk-dolgu sonra" id="cSonra"></div></div>
+                </div>
+              </div>
+              <p class="kucuk soluk" id="oFark" style="margin-top:var(--a3)">—</p>
+            </div>
+
+            <div class="kart-alt">
+              <p class="kucuk soluk">
+                Bu tablo sizin girdiğiniz rakamların aritmetiğidir. Gerçek olup olmadığını
+                <strong>kendi parçanızla</strong> ölçelim.
+              </p>
+              <a class="dug dug-1 dug-tam" id="ctaFizibilite" style="margin-top:var(--a4)"
+                 href="mailto:sercansozer20@gmail.com">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM4 6l8 6 8-6"/></svg>
+                Bu hesabı fizibilite ile doğrulayalım
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       4. ÜÇ YILLIK KÜMÜLATİF NET
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="ucyil" aria-labelledby="ucyilBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Üç yıllık görünüm</span>
+        <h2 id="ucyilBas">Kümülatif net kazanç</h2>
+        <p>
+          Yatırım bir kere yapılır, tasarruf her ay tekrar eder. Aşağıdaki çubuklar
+          <strong>birikimli</strong> nettir: o yılın sonuna kadarki toplam tasarruftan
+          yatırım düşülmüştür. Çubuk sıfırın altındaysa yatırım o yıl henüz kendini
+          ödememiştir.
+        </p>
+      </div>
+
+      <div class="izgara iz-yan">
+        <figure class="sema-kutu">
+          <div class="bas">
+            <span class="baslik">Kümülatif net · yatırım düşülmüş</span>
+            <span class="sema-rozet">Örnek veri · sizin girdiniz</span>
+          </div>
+          <div class="govde">
+            <svg class="grafik" id="grafik" viewBox="0 0 640 290" role="img" aria-labelledby="grafikBaslik">
+              <title id="grafikBaslik">Üç yıllık kümülatif net kazanç çubuk grafiği. Sayısal değerler aşağıdaki tabloda da yazılıdır.</title>
+              <line class="taban" id="gTaban" x1="24" y1="248" x2="616" y2="248"></line>
+              <line class="sifir" id="gSifir" x1="24" y1="248" x2="616" y2="248"></line>
+              <text class="sifir-etiket" id="gSifirEtiket" x="24" y="244">0 ₺</text>
+
+              <rect class="cubuk p" id="gC1" x="80" y="248" width="110" height="0"></rect>
+              <rect class="cubuk p" id="gC2" x="265" y="248" width="110" height="0"></rect>
+              <rect class="cubuk p" id="gC3" x="450" y="248" width="110" height="0"></rect>
+
+              <text class="deger" id="gD1" x="135" y="240" text-anchor="middle">—</text>
+              <text class="deger" id="gD2" x="320" y="240" text-anchor="middle">—</text>
+              <text class="deger" id="gD3" x="505" y="240" text-anchor="middle">—</text>
+
+              <text class="yil" x="135" y="278" text-anchor="middle">YIL 1</text>
+              <text class="yil" x="320" y="278" text-anchor="middle">YIL 2</text>
+              <text class="yil" x="505" y="278" text-anchor="middle">YIL 3</text>
+            </svg>
+            <div class="gosterge" style="margin-top:var(--a3)">
+              <span><i class="p" aria-hidden="true"></i> Kâra geçmiş (artı)</span>
+              <span><i class="n" aria-hidden="true"></i> Henüz zararda (eksi)</span>
+            </div>
+          </div>
+          <figcaption>
+            Değerler yukarıdaki hesaplayıcının girdilerinden üretilir; sayfaya elle yazılmaz.
+            Eksi işareti U+2212 (−) ile gösterilir.
+          </figcaption>
+        </figure>
+
+        <div class="not">
+          <span class="isaret" aria-hidden="true">§</span>
+          <div>
+            <p class="baslik">Hesabın tamamı üç kalemden ibarettir</p>
+            <p>
+              <strong>1.</strong> Kaçak hatanın önlenmesi: kaçan parçanın pahalı dış maliyeti
+              ile fabrikada yakalanınca ödenen ucuz iç maliyeti arasındaki fark. Sistem hata
+              <em>üretmeyi</em> engellemez, hatalı parçanın müşteriye ulaşmasını engeller.
+            </p>
+            <p>
+              <strong>2.</strong> İşgücü: kişi × vardiya × 8 saat × gün × saatlik maliyet,
+              azalma yüzdesiyle çarpılır.
+            </p>
+            <p>
+              <strong>3.</strong> Geri ödeme: yatırım ÷ aylık tasarruf. Gizli katsayı,
+              "sektör ortalaması" çarpanı ya da arka planda iyimserleştirilmiş varsayım yok.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tablo-sar kart-kir" tabindex="0" style="margin-top:var(--a6)"
+           aria-label="Üç yıllık tasarruf ve kümülatif net tablosu">
+            <table class="spec">
+              <caption>Yıllık tasarruf · yatırım · kümülatif net</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Dönem</th>
+                  <th scope="col">Yıllık tasarruf</th>
+                  <th scope="col">Yatırım</th>
+                  <th scope="col">Kümülatif net</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">YIL 1</th>
+                  <td class="sayi" data-bas="tasarruf" id="tY1">—</td>
+                  <td class="sayi" data-bas="yatırım" id="tYat">—</td>
+                  <td class="sayi" data-bas="net" id="tN1">—</td>
+                </tr>
+                <tr>
+                  <th scope="row">YIL 2</th>
+                  <td class="sayi" data-bas="tasarruf" id="tY2">—</td>
+                  <td class="sayi" data-bas="yatırım">—</td>
+                  <td class="sayi" data-bas="net" id="tN2">—</td>
+                </tr>
+                <tr>
+                  <th scope="row">YIL 3</th>
+                  <td class="sayi" data-bas="tasarruf" id="tY3">—</td>
+                  <td class="sayi" data-bas="yatırım">—</td>
+                  <td class="sayi" data-bas="net" id="tN3">—</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr><td colspan="4">
+                  Yatırım yalnız birinci yıla yazılır. Enflasyon, faiz ve para değeri
+                  düzeltmesi uygulanmaz — model kasten basittir.
+                </td></tr>
+              </tfoot>
+            </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       5. MAĞAZA — katalog, sepet, sipariş (magaza.html'den taşındı)
+       ================================================================ -->
+  <section class="bolum" id="magaza" aria-labelledby="magazaBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Satın alma</span>
+        <h2 id="magazaBas">Katalog ve sipariş</h2>
+        <p>
+          Lisans, hizmet ve dijital kalemler. Sepetinize ekleyin, sipariş talebinizi tek
+          adımda iletin. Sepet yalnız kendi tarayıcınızda tutulur.
+        </p>
+      </div>
+
+      <div class="not not-uyari" style="margin-bottom:var(--a5)">
+        <span class="isaret" aria-hidden="true">!</span>
+        <div>
+          <p class="baslik">Kart ile ödeme henüz bağlı değil</p>
+          <p>
+            Ödeme sağlayıcısı ve otomatik bildirim anahtarı bu sayfada <strong>boştur</strong>;
+            uydurma bir "güvenli ödeme" rozeti koymadım. Siparişi gönderdiğinizde özet
+            <strong>e-posta uygulamanızda</strong> hazırlanır. Cihazınızda kurulu bir posta
+            uygulaması yoksa taslak açılmaz — bu durumda doğrudan
+            <a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a> adresine
+            yazın, sipariş kaybolmasın.
+          </p>
+        </div>
+      </div>
+
+      <div class="satir" style="margin-bottom:var(--a5)">
+        <div class="dug-grup" id="suzgecler" role="group" aria-label="Katalog süzgeci">
+          <button type="button" class="dug-kip" data-f="all" aria-pressed="true">TÜMÜ</button>
+          <button type="button" class="dug-kip" data-f="urun" aria-pressed="false">ÜRÜN</button>
+          <button type="button" class="dug-kip" data-f="hizmet" aria-pressed="false">HİZMET</button>
+          <button type="button" class="dug-kip" data-f="dijital" aria-pressed="false">DİJİTAL</button>
+        </div>
+        <label class="sr-only" for="arama">Katalogda ara</label>
+        <input type="search" id="arama" placeholder="Katalogda ara…" style="max-width:16rem">
+        <button type="button" class="dug dug-2 satir-son gizli" id="urunEkleDug">Ürün ekle</button>
+      </div>
+
+      <div class="izgara iz-3" id="katalog">
+        <p class="kucuk soluk">Katalog yükleniyor…</p>
+      </div>
+
+      <p class="kucuk soluk" style="margin-top:var(--a5)">
+        Fiyatlar KDV hariçtir; sepette %20 KDV eklenir. Katalog canlı bir veritabanından
+        okunur — okunamazsa sayfadaki yedek liste gösterilir ve bu durum ayrıca yazılır.
+        Katalogda ürün yayınlamak yalnız site sahibine açıktır.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       6. SSS
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="sss" aria-labelledby="sssBas">
+    <div class="kap kap-dar" style="max-width:52rem">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Sık sorulanlar</span>
+        <h2 id="sssBas">Lisans, fatura ve ikinci hat</h2>
+      </div>
+
+      <div class="sss">
+        <details>
+          <summary>Lisans tam olarak neyi kapsıyor?</summary>
+          <div class="cevap kucuk">
+            <p>
+              Bir üretim hattında çalışan yazılımı. Aynı hattaki istasyon sayısı değil,
+              <strong>hat</strong> sayısı esastır. Yazılım yerelde çalışır, buluta veri
+              göndermez; hattın internet bağlantısı olmasa da çalışır. Uzaktan destek
+              istenirse ayrıca ve sizin kontrolünüzdeki bir kanalla kurulur.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>İkinci hat için ne ödeyeceğim?</summary>
+          <div class="cevap kucuk">
+            <p>
+              İkinci hat ayrı lisanslanır. Aynı parça ve aynı kamera ailesiyse ikinci hattın
+              kurulum eforu belirgin biçimde düşer; bu teklife yansır. Farklı bir parça
+              ailesi söz konusuysa fizibilite yeniden gerekir — çünkü ölçülmemiş bir işe
+              fiyat vermek ikimize de zarar verir.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>Fatura nasıl kesiliyor, şirketiniz var mı?</summary>
+          <div class="cevap kucuk">
+            <p>
+              Tek kişiyim: mekatronik mühendisiyim, İzmir'de çalışıyorum ve
+              <strong>kurumsal bir tüzel kişilik yok</strong> — bunu gizlemek yerine
+              yazıyorum. Faturalandırma biçimi ve vergi işleyişi işin başında, teklifle
+              birlikte yazılı olarak netleştirilir. Sayfadaki tutarlar KDV hariçtir.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>Ödeme koşulu nedir, kartla ödeyebilir miyim?</summary>
+          <div class="cevap kucuk">
+            <p>
+              Kartla ödeme altyapısı bugün <strong>bağlı değildir</strong>. Sipariş bir
+              <em>talep</em> olarak iletilir; ödeme koşulu (peşinat, teslimde ödeme, taksit)
+              teklifte yazılır. Kart bilgisi bu sitede hiçbir zaman toplanmaz — ileride
+              ödeme sağlayıcısı bağlanırsa da kart ekranı sağlayıcının kendi güvenli
+              sayfasında açılır.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>Hesaplayıcının çıkardığı rakama güvenebilir miyim?</summary>
+          <div class="cevap kucuk">
+            <p>
+              Aritmetiğine güvenebilirsiniz, girdilerine kadar. Üç değer tahmindir: kaçan
+              hata oranı, sistemin yakalama oranı ve işgücündeki azalma. Bunlar hattınıza
+              göre değişir ve yalnız fizibilite ölçer. Hesap %95 yakalama ya da %90 işgücü
+              azalması girdiğinizde sizi <strong>uyarır</strong> — çünkü o değerler nadir
+              görülür.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>Fiyat neden açıkça yazılı?</summary>
+          <div class="cevap kucuk">
+            <p>
+              Çünkü rakamı saklamak alıcının zamanını çalıyor. Bütçesi tutmayan bir alıcının
+              üç toplantı sonra bunu öğrenmesi ikimiz için de kayıp. Kapsam ve kapsam dışı
+              da bu yüzden yan yana duruyor: sonradan çıkan kalem güveni fiyattan daha çok
+              yıpratır.
+            </p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       7. CTA BANDI — sayfa başına BİR kez, tek eylem
+       ================================================================ -->
+  <section class="bolum" aria-labelledby="ctaBas">
+    <div class="kap">
+      <div class="cta">
+        <span class="ust-baslik">Tek eylem</span>
+        <h2 id="ctaBas" style="margin-top:var(--a3)">Rakamı gördünüz; sıra ispatta</h2>
+        <p>
+          Bir iyi ve bir kusurlu numune, bir de "şunu ölçmek istiyorum" cümlesi yeter.
+          Fizibilite ne sonuç verirse versin yazılı gelir — "bu parça bu yöntemle güvenilir
+          ölçülmez" cümlesi de bir sonuçtur ve size satın almadan önce lazımdır.
+        </p>
+        <div class="eylem">
+          <a class="dug dug-1 dug-b" href="surec.html#talep">Fizibilite talebi gönderin</a>
+          <span class="ikincil">
+            veya doğrudan
+            <a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a>
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <noscript>
+    <div class="kap" style="padding-bottom:var(--a7)">
+      <div class="not not-uyari">
+        <span class="isaret" aria-hidden="true">!</span>
+        <div>
+          <p class="baslik">JavaScript kapalı</p>
+          <p>
+            Fiyat, kapsam/kapsam dışı listesi, ek maliyet tablosu ve SSS bölümü çalışmaya
+            devam eder. Gelmeyenler: kazanç hesaplayıcısı, üç yıllık grafik ve katalog/sepet.
+            Sipariş için doğrudan
+            <a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a> adresine
+            yazabilirsiniz.
+          </p>
+        </div>
+      </div>
+    </div>
+  </noscript>
+
+</main>
+
+<!-- ==================================================================
+     ALT BİLGİ
+     ================================================================== -->
+<footer class="alt-bilgi">
+  <div class="kap">
+    <div class="alt-izgara">
+      <div>
+        <h2 class="bas">İş</h2>
+        <ul>
+          <li><a href="uygulamalar.html">Uygulamalar</a></li>
+          <li><a href="yazilim.html">Vision Detection App</a></li>
+          <li><a href="yazilim.html#uyumluluk">Uyumluluk ve protokoller</a></li>
+          <li><a href="surec.html">Nasıl çalışır</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Karar</h2>
+        <ul>
+          <li><a href="fiyat.html">Fiyat ve kapsam</a></li>
+          <li><a href="fiyat.html#kazanc">Kazanç hesabı</a></li>
+          <li><a href="fiyat.html#magaza">Satın alma</a></li>
+          <li><a href="surec.html#talep">Fizibilite talebi</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Site</h2>
+        <ul>
+          <li><a href="forum.html">Danışma Masası</a></li>
+          <li><a href="hakkinda.html">Hakkında ve yazılar</a></li>
+          <li><a href="hesabim.html">Hesabım</a></li>
+          <li><a href="gizlilik.html">Gizlilik ve KVKK</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">İletişim</h2>
+        <ul>
+          <li><a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a></li>
+        </ul>
+        <p class="kucuk soluk" style="margin-top:var(--a3);max-width:26ch">
+          Sercan Sözer — mekatronik mühendisi, İzmir. Şahıs olarak, mühendislik hizmeti
+          biçiminde çalışıyorum.
+        </p>
+      </div>
+    </div>
+
+    <div class="alt-son">
+      <span>© <span class="sayi">2026</span> Sercan Sözer</span>
+      <span>Dış font, dış stil ve reklam/analitik izleyicisi yüklenmez.</span>
+      <span>Fiyatlar KDV hariçtir · sepet yalnız tarayıcınızda tutulur.</span>
+      <button type="button" class="tema-dug" id="temaDug" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6 6l1.5 1.5M16.5 16.5L18 18M18 6l-1.5 1.5M7.5 16.5L6 18"/><circle cx="12" cy="12" r="4"/></svg>
+        <span id="temaYazi">Koyu tema</span>
+      </button>
+    </div>
+  </div>
+</footer>
+
+<!-- ==================================================================
+     SEPET / SİPARİŞ KATMANLARI
+     ================================================================== -->
+<div class="perde" id="perde"></div>
+
+<aside class="cekmece" id="cekmece" aria-label="Sepet">
+  <div class="katman-bas">
+    <h2 class="h4">Sepet</h2>
+    <button type="button" class="kapat-dug" id="cekmeceKapat" aria-label="Sepeti kapat">×</button>
+  </div>
+  <div class="katman-govde" id="sepetGovde"></div>
+  <div class="katman-alt">
+    <div class="toplam-satir"><span>Ara toplam</span><span class="v" id="araToplam">—</span></div>
+    <div class="toplam-satir"><span>KDV (%20)</span><span class="v" id="kdv">—</span></div>
+    <div class="toplam-satir genel"><span>Toplam</span><span class="v" id="genelToplam">—</span></div>
+    <button type="button" class="dug dug-1 dug-tam" id="siparisDug" disabled>Siparişi tamamla</button>
+    <button type="button" class="dug dug-3 dug-tam" id="sepetBosalt">Sepeti boşalt</button>
+  </div>
+</aside>
+
+<div class="kip" id="siparisKip" role="dialog" aria-modal="true" aria-labelledby="siparisBas">
+  <div class="katman-bas">
+    <h2 class="h4" id="siparisBas">Sipariş talebi</h2>
+    <button type="button" class="kapat-dug" data-kapat aria-label="Kapat">×</button>
+  </div>
+  <div class="kip-govde">
+    <div id="siparisOzet" style="margin-bottom:var(--a5)"></div>
+    <form class="form" id="siparisForm">
+      <div class="alan gizli" id="adresSecSar">
+        <label class="etiket" for="adresSec">Kayıtlı adreslerim</label>
+        <select id="adresSec">
+          <option value="">— Bilgileri elle gireceğim —</option>
+        </select>
+      </div>
+      <div class="izgara iz-2">
+        <label class="alan" for="oAd">
+          <span class="etiket">Ad soyad <span class="gerek" aria-hidden="true">*</span></span>
+          <input type="text" id="oAd" name="name" required maxlength="60" autocomplete="name">
+        </label>
+        <label class="alan" for="oFirma">
+          <span class="etiket">Firma</span>
+          <input type="text" id="oFirma" name="company" maxlength="60" autocomplete="organization">
+        </label>
+      </div>
+      <div class="izgara iz-2">
+        <label class="alan" for="oMail">
+          <span class="etiket">E-posta <span class="gerek" aria-hidden="true">*</span></span>
+          <input type="email" id="oMail" name="mail" required maxlength="80" autocomplete="email">
+        </label>
+        <label class="alan" for="oTel">
+          <span class="etiket">Telefon</span>
+          <input type="tel" id="oTel" name="phone" maxlength="24" autocomplete="tel">
+        </label>
+      </div>
+      <label class="alan" for="oAdres">
+        <span class="etiket">Adres</span>
+        <textarea id="oAdres" name="adres" maxlength="300" placeholder="Teslimat / fatura adresi"></textarea>
+      </label>
+      <label class="alan" for="oMusteriNot">
+        <span class="etiket">Not (isteğe bağlı)</span>
+        <textarea id="oMusteriNot" name="note" maxlength="400"></textarea>
+      </label>
+      <label class="secim gizli" id="adresKaydetSar" for="adresKaydet">
+        <input type="checkbox" id="adresKaydet">
+        <span class="yazi">Bu adresi hesabıma kaydet</span>
+      </label>
+      <p class="kucuk soluk" id="siparisNot"></p>
+      <button type="submit" class="dug dug-1 dug-tam dug-b" id="siparisGonder" style="margin-top:var(--a4)">
+        Siparişi gönder
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="kip" id="urunKip" role="dialog" aria-modal="true" aria-labelledby="urunKipBas">
+  <div class="katman-bas">
+    <h2 class="h4" id="urunKipBas">Kataloga kalem ekle</h2>
+    <button type="button" class="kapat-dug" data-kapat aria-label="Kapat">×</button>
+  </div>
+  <div class="kip-govde">
+    <form class="form" id="urunForm">
+      <label class="alan" for="pBaslik">
+        <span class="etiket">Başlık <span class="gerek" aria-hidden="true">*</span></span>
+        <input type="text" id="pBaslik" name="title" required maxlength="80" placeholder="Örn. Kalibrasyon hedef plakası">
+      </label>
+      <div class="izgara iz-2">
+        <label class="alan" for="pTur">
+          <span class="etiket">Tür</span>
+          <select id="pTur" name="type">
+            <option value="urun">Ürün</option>
+            <option value="hizmet">Hizmet</option>
+            <option value="dijital">Dijital</option>
+          </select>
+        </label>
+        <label class="alan" for="pFiyat">
+          <span class="etiket">Fiyat (₺, KDV hariç) <span class="gerek" aria-hidden="true">*</span></span>
+          <input type="number" id="pFiyat" name="price" min="0" step="1" required placeholder="0">
+        </label>
+      </div>
+      <label class="alan" for="pAciklama">
+        <span class="etiket">Kısa açıklama <span class="gerek" aria-hidden="true">*</span></span>
+        <textarea id="pAciklama" name="desc" required maxlength="260" placeholder="Kalemi iki cümleyle anlatın."></textarea>
+      </label>
+      <label class="alan" for="pSatici">
+        <span class="etiket">Satıcı adı <span class="gerek" aria-hidden="true">*</span></span>
+        <input type="text" id="pSatici" name="seller" required maxlength="40" value="Sercan Sözer">
+      </label>
+      <p class="kucuk soluk" id="urunNot"></p>
+      <button type="submit" class="dug dug-1 dug-tam" style="margin-top:var(--a4)">Kataloga ekle</button>
+    </form>
+  </div>
+</div>
+
+<div class="fab-sar">
+  <div class="hizli" id="hizli" role="dialog" aria-label="Hızlı sepet">
+    <div class="katman-bas">
+      <h2 class="h4">Sepetim</h2>
+      <span class="rozet satir-son" id="hizliAdet" data-isaret="●">0 KALEM</span>
+    </div>
+    <div style="padding:var(--a4)" id="hizliListe"></div>
+    <div class="katman-alt">
+      <div class="toplam-satir genel" style="margin-top:0;border-top:0;padding-top:0">
+        <span>Toplam (KDV dahil)</span><span class="v" id="hizliToplam">—</span>
+      </div>
+      <button type="button" class="dug dug-1 dug-tam" id="hizliOde">Hızlı ödemeye geç</button>
+      <button type="button" class="dug dug-3 dug-tam" id="hizliDuzenle">Sepeti düzenle</button>
+    </div>
+  </div>
+  <button type="button" class="fab" id="fab" aria-label="Sepetim">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/></svg>
+    <span>Sepetim</span>
+    <span class="sayi" id="fabTutar"></span>
+    <span class="adet" id="fabAdet">0</span>
+  </button>
+</div>
+
+<div class="bildirim" id="bildirim" role="status" aria-live="polite"></div>
+
+<!-- ==================================================================
+     BETİKLER
+     ================================================================== -->
+<script>
+/* ============================================================================
+   A. SAYFA ETKİLEŞİMLERİ + KAZANÇ HESAPLAYICISI
+   kazanc.html'den taşındı. Reveal deseni TAŞINMADI: gözlemci ateşlemezse
+   sayfayı boş bırakan hata artık mümkün değil.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  /* ---------------------------------------------------------- tema anahtarı */
+  var kok = document.documentElement;
+  var tDug = document.getElementById('temaDug');
+  var tYazi = document.getElementById('temaYazi');
+
+  function koyuMu() {
+    var t = kok.getAttribute('data-tema');
+    if (t) return t === 'koyu';
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  function temaYaz() {
+    var k = koyuMu();
+    tDug.setAttribute('aria-pressed', k ? 'true' : 'false');
+    tYazi.textContent = k ? 'Açık tema' : 'Koyu tema';
+  }
+  tDug.addEventListener('click', function () {
+    var yeni = koyuMu() ? 'acik' : 'koyu';
+    kok.setAttribute('data-tema', yeni);
+    try { localStorage.setItem('sersoz_tema', yeni); } catch (e) {}
+    temaYaz();
+  });
+  temaYaz();
+
+  /* ------------------------------------------------------------ mobil menü */
+  var mk = document.getElementById('menuKutu');
+  var menu = document.querySelector('.ust-menu');
+  if (menu) menu.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') mk.checked = false;
+  });
+  var etiketDug = document.querySelector('.menu-dug');
+  if (etiketDug) etiketDug.addEventListener('keydown', function (e) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); mk.checked = !mk.checked; }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && mk.checked) mk.checked = false;
+  });
+
+  /* --------------------------------------------------------- biçimlendirme */
+  var nfTam, nfBir;
+  try {
+    nfTam = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
+    nfBir = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  } catch (e) {
+    nfTam = { format: function (v) { return String(Math.round(v)); } };
+    nfBir = { format: function (v) { return (Math.round(v * 10) / 10).toString().replace('.', ','); } };
+  }
+
+  /* eksi işareti U+2212 — tire değil */
+  function tl(v) {
+    if (!isFinite(v)) return '—';
+    return (v < 0 ? '−' : '') + '₺' + nfTam.format(Math.abs(Math.round(v)));
+  }
+  function say(v) { return nfTam.format(Math.round(v)); }
+  function say1(v) { return nfBir.format(v); }
+
+  /* grafik etiketi: kısaltma değil tam sözcük (B / M karışmasın) */
+  function tlKisa(v) {
+    var a = Math.abs(v), i = v < 0 ? '−' : '';
+    if (a >= 1e9) return i + '₺' + nfBir.format(a / 1e9) + ' milyar';
+    if (a >= 1e6) return i + '₺' + nfBir.format(a / 1e6) + ' milyon';
+    if (a >= 1e4) return i + '₺' + nfTam.format(Math.round(a / 1000)) + ' bin';
+    return i + '₺' + nfTam.format(Math.round(a));
+  }
+
+  /* ---------------------------------------------------------- girdi bağlama */
+  var alanlar = ['adet', 'vardiya', 'gun', 'hataOran', 'hataTL', 'kacakTL',
+                 'kisi', 'saatTL', 'yatirim', 'kacakOran', 'yakalama', 'isgucuAzalma'];
+  var kutu = {};
+  alanlar.forEach(function (id) { kutu[id] = document.getElementById(id); });
+  if (!kutu.adet) return;   /* hesaplayıcı sayfada yoksa sessizce çık */
+
+  var kaydiricilar = document.querySelectorAll('input[type="range"][data-hedef]');
+
+  function sayiOku(el) {
+    var v = parseFloat(String(el.value).replace(',', '.'));
+    if (!isFinite(v)) v = parseFloat(el.getAttribute('min')) || 0;
+    var mn = parseFloat(el.getAttribute('min'));
+    var mx = parseFloat(el.getAttribute('max'));
+    if (isFinite(mn) && v < mn) v = mn;
+    if (isFinite(mx) && v > mx) v = mx;
+    return v;
+  }
+
+  function kaydiriciSenkron() {
+    Array.prototype.forEach.call(kaydiricilar, function (k) {
+      var hedef = kutu[k.getAttribute('data-hedef')];
+      if (!hedef) return;
+      var v = sayiOku(hedef);
+      var mn = parseFloat(k.getAttribute('min'));
+      var mx = parseFloat(k.getAttribute('max'));
+      /* sayı kutusu kaydırıcı aralığının dışındaysa kaydırıcıyı uca yasla */
+      k.value = String(Math.min(Math.max(v, mn), mx));
+    });
+  }
+
+  Array.prototype.forEach.call(kaydiricilar, function (k) {
+    k.addEventListener('input', function () {
+      var hedef = kutu[k.getAttribute('data-hedef')];
+      if (!hedef) return;
+      hedef.value = k.value;
+      hesapla();
+    });
+  });
+
+  alanlar.forEach(function (id) {
+    var el = kutu[id];
+    if (!el) return;
+    el.addEventListener('input', function () { kaydiriciSenkron(); hesapla(); });
+    el.addEventListener('blur', function () {
+      el.value = String(sayiOku(el));
+      kaydiriciSenkron();
+      hesapla();
+    });
+  });
+
+  /* --------------------------------------------------------- DOM kısayolları */
+  function $(id) { return document.getElementById(id); }
+  var oGeri = $('oGeri'), oGeriAlt = $('oGeriAlt'),
+      oNot = $('oNot'), oNotYazi = $('oNotYazi'),
+      oAylik = $('oAylik'), oYillik = $('oYillik'),
+      oIsgucu = $('oIsgucu'), oIsgucuAlt = $('oIsgucuAlt'),
+      oKacak = $('oKacak'), oKacakAlt = $('oKacakAlt'),
+      oOnce = $('oOnce'), oSonra = $('oSonra'), oFark = $('oFark'),
+      cOnce = $('cOnce'), cSonra = $('cSonra');
+
+  var gSifir = $('gSifir'), gSifirEtiket = $('gSifirEtiket');
+  var gC = [$('gC1'), $('gC2'), $('gC3')];
+  var gD = [$('gD1'), $('gD2'), $('gD3')];
+  var tY = [$('tY1'), $('tY2'), $('tY3')];
+  var tN = [$('tN1'), $('tN2'), $('tN3')];
+  var tYat = $('tYat');
+  var cta1 = $('ctaFizibilite');
+
+  /* grafik geometrisi */
+  var UST = 40, ALT = 248, YUK = ALT - UST;
+
+  /* ------------------------------------------------------------------ hesap */
+  function hesapla() {
+    var adet = sayiOku(kutu.adet),
+        vardiya = sayiOku(kutu.vardiya),
+        gun = sayiOku(kutu.gun),
+        hataOran = sayiOku(kutu.hataOran),
+        hataTL = sayiOku(kutu.hataTL),
+        kacakTL = sayiOku(kutu.kacakTL),
+        kisi = sayiOku(kutu.kisi),
+        saatTL = sayiOku(kutu.saatTL),
+        yatirim = sayiOku(kutu.yatirim),
+        kacakOran = sayiOku(kutu.kacakOran),
+        yakalama = sayiOku(kutu.yakalama),
+        isgucuAzalma = sayiOku(kutu.isgucuAzalma);
+
+    var aylikUretim = adet * gun;
+    var hataliAdet = aylikUretim * (hataOran / 100);
+
+    var kacak0 = hataliAdet * (kacakOran / 100);
+    var ic0 = hataliAdet - kacak0;
+    var maliyet0 = ic0 * hataTL + kacak0 * kacakTL;
+
+    var kacak1 = kacak0 * (1 - yakalama / 100);
+    var ic1 = hataliAdet - kacak1;
+    var maliyet1 = ic1 * hataTL + kacak1 * kacakTL;
+
+    var hataTasarruf = maliyet0 - maliyet1;
+    var onlenenKacak = kacak0 - kacak1;
+
+    var isgucuAylikToplam = kisi * vardiya * 8 * gun * saatTL;
+    var isgucuTasarruf = isgucuAylikToplam * (isgucuAzalma / 100);
+
+    var aylikTasarruf = hataTasarruf + isgucuTasarruf;
+    var yillikTasarruf = aylikTasarruf * 12;
+    var geriAy = aylikTasarruf > 0 ? (yatirim / aylikTasarruf) : Infinity;
+
+    /* ---- geri ödeme ---- */
+    var geriMetin;
+    if (!(aylikTasarruf > 0)) {
+      geriMetin = 'hesaplanamadi';
+      oGeri.textContent = '—';
+      oGeriAlt.textContent = 'Girilen değerlerle aylık tasarruf çıkmıyor; geri ödeme hesaplanamaz.';
+    } else if (yatirim <= 0) {
+      geriMetin = '0 ay';
+      oGeri.innerHTML = '0<small>ay</small>';
+      oGeriAlt.textContent = 'Yatırım tutarı sıfır girildi.';
+    } else if (geriAy < 1) {
+      geriMetin = say(Math.max(1, geriAy * 30)) + ' gun';
+      oGeri.innerHTML = say(Math.max(1, geriAy * 30)) + '<small>gün</small>';
+      oGeriAlt.textContent = 'Aylık tasarruf yatırımı bir aydan kısa sürede karşılıyor.';
+    } else {
+      geriMetin = say1(geriAy) + ' ay';
+      oGeri.innerHTML = say1(geriAy) + '<small>ay</small>';
+      oGeriAlt.textContent = 'Yatırım, aylık ' + tl(aylikTasarruf) + ' tasarrufla kendini bu sürede öder.';
+    }
+
+    /* ---- bağlama duyarlı dürüstlük notu ---- */
+    var not = '';
+    if (!(aylikTasarruf > 0)) {
+      not = '<strong>Tasarruf çıkmıyor.</strong> Bu rakamlarla görsel denetim yatırımı kendini ' +
+            'ödemiyor. Girdileri gözden geçirin — ya kaçak maliyeti iç maliyetin altında kalmış ' +
+            'ya da hata oranı ile işgücü kalemleri sıfıra yakın. Sonuç gerçekten böyleyse, bu hat ' +
+            'için yatırımı önermem.';
+    } else if (geriAy < 3 && yatirim > 0) {
+      not = '<strong>Bu kadar kısa geri ödeme dikkatle okunmalı.</strong> 64.000 ₺ yalnız yazılım ' +
+            'lisansıdır; kamera, aydınlatma, endüstriyel PC, montaj ve devreye alma dahil değildir. ' +
+            'Gerçekçi bir tablo için <strong>Sistem yatırımı</strong> alanına toplam proje bedelini ' +
+            'yazın; geri ödeme genelde belirgin şekilde uzar.';
+    } else if (geriAy > 36) {
+      not = '<strong>Geri ödeme 3 yılı aşıyor.</strong> Bu rakamlarla yatırım gerekçesi zayıf ' +
+            'görünüyor. Ya kapsamı daraltmak (tek istasyon, tek kusur tipi) ya da önce daha yüksek ' +
+            'hacimli bir hatta başlamak daha doğru olur.';
+    } else if (yakalama >= 95) {
+      not = '<strong>%' + say(yakalama) + ' yakalama oranı iyimser.</strong> Hiçbir görsel denetim ' +
+            'sistemi her kusuru göremez; kusur tipine, yüzeye ve aydınlatmaya göre değişir. ' +
+            'İhtiyatlı bir tablo için bu değeri %75-85 bandına çekip sonuca tekrar bakın.';
+    } else if (isgucuAzalma >= 90) {
+      not = '<strong>İşgücünde %' + say(isgucuAzalma) + ' azalma nadir görülür.</strong> NOK ' +
+            'parçanın ayıklanması, ürün değişiminde kurulum ve numune kontrolü çoğu hatta insan ' +
+            'gerektirir. Daha savunulabilir bir tablo için bu değeri %30-50 bandına çekin.';
+    }
+
+    if (not) { oNotYazi.innerHTML = not; oNot.classList.remove('gizli'); }
+    else { oNot.classList.add('gizli'); oNotYazi.textContent = ''; }
+
+    /* ---- özet kutuları ---- */
+    oAylik.textContent = tl(aylikTasarruf);
+    oYillik.textContent = tl(yillikTasarruf);
+    /* zarar yeşil gösterilmesin — dürüstlük */
+    oAylik.className = 'v ' + (aylikTasarruf >= 0 ? 'arti' : 'eksi');
+    oYillik.className = 'v ' + (yillikTasarruf >= 0 ? 'arti' : 'eksi');
+
+    oIsgucu.textContent = tl(isgucuTasarruf);
+    oIsgucuAlt.textContent = kisi > 0
+      ? say(kisi * vardiya) + ' kişilik toplam yükün %' + say(isgucuAzalma) + ' kadarı · yılda ' + tl(isgucuTasarruf * 12)
+      : 'Kontrol personeli girilmedi.';
+
+    oKacak.textContent = say(onlenenKacak) + ' adet/ay';
+    oKacakAlt.textContent = 'Bugün ayda ' + say(kacak0) + ' adet kaçtığı varsayımıyla · yılda ' +
+      say(onlenenKacak * 12) + ' adet';
+
+    /* ---- önce / sonra çubukları ---- */
+    var enB = Math.max(maliyet0, maliyet1, 1);
+    oOnce.textContent = tl(maliyet0);
+    oSonra.textContent = tl(maliyet1);
+    cOnce.style.width = (maliyet0 / enB * 100) + '%';
+    cSonra.style.width = (maliyet1 / enB * 100) + '%';
+
+    if (hataTasarruf > 0) {
+      var yuzde = maliyet0 > 0 ? (hataTasarruf / maliyet0 * 100) : 0;
+      oFark.textContent = 'Aylık hata maliyetinde ' + tl(hataTasarruf) + ' azalma (%' + say1(yuzde) + ')';
+    } else if (hataTasarruf === 0) {
+      oFark.textContent = 'Hata maliyetinde değişim yok — kazanç yalnız işgücü kaleminden geliyor.';
+    } else {
+      oFark.textContent = 'Kaçak maliyeti iç maliyetin altında girildi; bu kalemde kazanç çıkmıyor.';
+    }
+
+    /* ---- 3 yıllık kümülatif ---- */
+    var netler = [
+      yillikTasarruf * 1 - yatirim,
+      yillikTasarruf * 2 - yatirim,
+      yillikTasarruf * 3 - yatirim
+    ];
+
+    var enBuyuk = Math.max.apply(null, netler.concat([0]));
+    var enKucuk = Math.min.apply(null, netler.concat([0]));
+    var aralik = enBuyuk - enKucuk;
+    /* her şey sıfırsa sıfır çizgisini tabana yasla */
+    if (!(aralik > 0)) { aralik = 1; enBuyuk = 1; }
+
+    var sifirY = UST + (enBuyuk / aralik) * YUK;
+    var olcek = YUK / aralik;
+
+    gSifir.setAttribute('y1', sifirY);
+    gSifir.setAttribute('y2', sifirY);
+    gSifirEtiket.setAttribute('y', sifirY - 5);
+
+    for (var i = 0; i < 3; i++) {
+      var v = netler[i];
+      var h = Math.abs(v) * olcek;
+      if (h < 1) h = 1;
+      var y = v >= 0 ? (sifirY - h) : sifirY;
+
+      gC[i].setAttribute('y', y);
+      gC[i].setAttribute('height', h);
+      gC[i].setAttribute('class', 'cubuk ' + (v >= 0 ? 'p' : 'n'));
+
+      /* Etiket yerleşimi: pozitifte çubuğun üstünde, negatifte çubuğun İÇİNDE.
+         Negatif etiketi çubuğun altına yazmak "YIL n" satırıyla çakışıyordu. */
+      var etiketY, icerde = false;
+      if (v >= 0) {
+        etiketY = y - 9;
+        if (etiketY < 18) etiketY = 18;
+      } else if (h >= 26) {
+        etiketY = y + h - 9;                    /* çubuk yeterince uzun: içine yaz */
+        icerde = true;
+      } else {
+        etiketY = Math.min(y + h + 15, 260);    /* kısa çubuk: altına ama YIL üstünde */
+      }
+      gD[i].setAttribute('y', etiketY);
+      gD[i].setAttribute('class', 'deger' + (icerde ? ' ic' : ''));
+      gD[i].textContent = tlKisa(v);
+
+      tY[i].textContent = tl(yillikTasarruf);
+      tN[i].textContent = tl(netler[i]);
+      tN[i].className = 'sayi';
+    }
+    tYat.textContent = '− ' + tl(yatirim);
+
+    /* ---- CTA mailto: hesabın tamamı gövdeye yazılır ---- */
+    var g = [
+      'Merhaba Sercan Bey,',
+      '',
+      'sersoz.com/fiyat.html sayfasindaki hesaplayiciyi kendi hattimizin rakamlariyla doldurdum.',
+      'Bu tahmini fizibilite ile dogrulamak istiyorum.',
+      '',
+      '--- GIRDIGIM DEGERLER ---',
+      'Gunluk uretim adedi      : ' + say(adet) + ' adet/gun',
+      'Vardiya sayisi           : ' + say(vardiya),
+      'Calisma gunu             : ' + say(gun) + ' gun/ay',
+      'Mevcut hata orani        : %' + say1(hataOran),
+      'Hatali urunun ic maliyeti: ' + say(hataTL) + ' TL/adet',
+      'Kacak hatanin maliyeti   : ' + say(kacakTL) + ' TL/adet',
+      'Kontrol personeli        : ' + say(kisi) + ' kisi/vardiya',
+      'Saatlik isveren maliyeti : ' + say(saatTL) + ' TL/saat',
+      'Sistem yatirimi          : ' + say(yatirim) + ' TL',
+      '',
+      '--- VARSAYIMLAR (tahmin) ---',
+      'Bugun musteriye kacan    : %' + say1(kacakOran),
+      'Sistemin yakalama orani  : %' + say(yakalama),
+      'Isgucunde azalma         : %' + say(isgucuAzalma),
+      '',
+      '--- HESAPLANAN SONUC ---',
+      'Aylik hata maliyeti (bugun) : ' + say(maliyet0) + ' TL',
+      'Aylik hata maliyeti (sistem): ' + say(maliyet1) + ' TL',
+      'Isgucu tasarrufu            : ' + say(isgucuTasarruf) + ' TL/ay',
+      'Aylik toplam tasarruf       : ' + say(aylikTasarruf) + ' TL',
+      'Yillik tasarruf             : ' + say(yillikTasarruf) + ' TL',
+      'Geri odeme suresi           : ' + geriMetin,
+      '3. yil sonu kumulatif net   : ' + say(netler[2]) + ' TL',
+      '',
+      'Not: Bu rakamlar sayfadaki tahmin modelinden gelmektedir, olculmus degildir.',
+      '',
+      'Parca / hat bilgisi:',
+      '- Parca:',
+      '- Aranan kusur tipi:',
+      '- Hattin cevrim suresi:',
+      '- Tesis / sehir:',
+      '',
+      'Iyi calismalar.'
+    ].join('\n');
+
+    var konu = 'Fizibilite talebi - geri odeme ' + geriMetin +
+               ' / yillik ' + say(yillikTasarruf) + ' TL';
+
+    if (cta1) {
+      cta1.setAttribute('href', 'mailto:sercansozer20@gmail.com?subject=' +
+        encodeURIComponent(konu) + '&body=' + encodeURIComponent(g));
+    }
+  }
+
+  kaydiriciSenkron();
+  hesapla();
+})();
+</script>
+
+<script>
+/* ============================================================================
+   B. KATALOG · SEPET · SİPARİŞ   (magaza.html'den taşındı)
+   ----------------------------------------------------------------------------
+   KORUNAN SÖZLEŞMELER
+   · localStorage 'sersoz_sepet_v1'  — sepeti YALNIZ siparis-sonuc.html temizler
+   · localStorage 'sersoz_urunler_v1' — yerel yedek katalog
+   · Firestore 'urunler' / 'siparisler' / 'kullanicilar/{uid}/adresler'
+   · Sipariş sırası: ODEME -> BILDIRIM -> mailto (ilk ikisi bugün null)
+   DEĞİŞEN TEK ŞEY: "kendi ürününüzü listeleyin" vaadi kaldırıldı — firestore.rules
+   'urunler' yazmayı yalnız yöneticiye açıyor, arayüz artık bununla tutarlı.
+   Bu sayfada loginBtn/girisBtn KİMLİĞİ YOKTUR: giriş kutusunu hesap.js çizer.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  var FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48",
+    authDomain: "sersoz-f93c3.firebaseapp.com",
+    projectId: "sersoz-f93c3",
+    storageBucket: "sersoz-f93c3.firebasestorage.app",
+    messagingSenderId: "173131115543",
+    appId: "1:173131115543:web:f0313dd00ac0f2d3f80052"
+  };
+
+  /* Kartla ödeme sağlayıcısı. Üye işyeri hesabı ve sunucu tarafı hazır olunca
+     doldurulur; kart bilgisi ASLA bu sayfada toplanmaz. */
+  var ODEME = { saglayici: null, baslatUrl: null };
+
+  /* Sipariş bildirimi. Web3Forms anahtarı girilirse sipariş doğrudan e-posta
+     olur; boşken yedek mailto kullanılır. */
+  var BILDIRIM = { web3formsKey: null, yedekAdres: 'sercansozer20@gmail.com' };
+
+  var YONETICI = 'sercansozer20@gmail.com';
+
+  var LS_SEPET = 'sersoz_sepet_v1';
+  var LS_URUNLER = 'sersoz_urunler_v1';
+  var KDV = 0.20;
+
+  var user = null;
+  var urunler = [];
+  var sepet = oku(LS_SEPET, {});
+  var suzgec = 'all';
+  var sorgu = '';
+  var adresler = [];
+  var sonOdak = null;
+
+  var TRY = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 });
+  var TUR = { urun: 'Ürün', hizmet: 'Hizmet', dijital: 'Dijital' };
+
+  /* Katalog okunamazsa gösterilecek yedek liste. Fiyatlar KDV hariçtir. */
+  var YEDEK = [
+    { id: 'vd1', type: 'dijital', title: 'Vision Detection App — tek hat lisansı', price: 64000,
+      desc: '3D tarama, ölçüm, kusur denetimi ve PLC haberleşmesini tek uygulamada toplayan endüstriyel görüş yazılımı. Kapsam ve kapsam dışı bu sayfanın başında yazılıdır.',
+      seller: 'Sercan Sözer', url: 'yazilim.html' },
+    { id: 's1', type: 'hizmet', title: '3D tarama fizibilite analizi', price: 12500,
+      desc: 'Parçanızın 3D taranabilirliğini ölçer, sensör ve ölçüm yöntemi önerisiyle raporlarım. Sonuç olumsuzsa bu da yazılı gelir.',
+      seller: 'Sercan Sözer' },
+    { id: 's2', type: 'hizmet', title: 'Görsel denetim başlangıç paketi', price: 45000,
+      desc: 'Kamera seçimi, aydınlatma tarifi, model eğitimi ve hat üstünde devreye alma desteği.',
+      seller: 'Sercan Sözer' },
+    { id: 's3', type: 'dijital', title: 'PLC–vizyon haberleşme modülü', price: 8900,
+      desc: 'Denetim sonucunu heartbeat ve el sıkışma bitleriyle PLC’ye taşıyan hazır yazılım modülü.',
+      seller: 'Sercan Sözer' },
+    { id: 's4', type: 'urun', title: 'Kalibrasyon hedef plakası 100×100', price: 3400,
+      desc: 'El-göz kalibrasyonu için işlenmiş, satranç desenli hedef plaka.',
+      seller: 'Sercan Sözer' },
+    { id: 's5', type: 'hizmet', title: 'Ürün öğretme eğitimi (2 gün)', price: 18000,
+      desc: 'Operatör ve bakım ekibine yeni ürün tanıtma, eşik ayarı ve kusur örnekleme eğitimi.',
+      seller: 'Sercan Sözer' },
+    { id: 's6', type: 'dijital', title: 'Anomali tespiti lisansı — 1 hat', price: 24000,
+      desc: 'Yalnız sağlam örneklerle öğrenen kusur tespiti motoru; tek üretim hattı için lisans.',
+      seller: 'Sercan Sözer' }
+  ];
+
+  /* ------------------------------------------------------------ yardımcılar */
+  function $(id) { return document.getElementById(id); }
+  function oku(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }
+  function yaz(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var bildirimSayac;
+  function bildir(mesaj) {
+    var b = $('bildirim');
+    b.textContent = mesaj;
+    b.classList.add('gorun');
+    clearTimeout(bildirimSayac);
+    bildirimSayac = setTimeout(function () { b.classList.remove('gorun'); }, 4200);
+  }
+
+  /* ---------------------------------------------------------------- katalog */
+  function katalogCiz() {
+    var kap = $('katalog');
+    var liste = urunler.filter(function (p) {
+      if (suzgec !== 'all' && p.type !== suzgec) return false;
+      if (!sorgu) return true;
+      var hay = (p.title + ' ' + p.desc + ' ' + p.seller).toLocaleLowerCase('tr');
+      return hay.indexOf(sorgu) !== -1;
+    });
+
+    if (!liste.length) {
+      kap.innerHTML = '<p class="kucuk soluk">Bu ölçütlere uyan kayıt yok.</p>';
+      return;
+    }
+
+    var yonetici = !!(user && user.email === YONETICI);
+
+    kap.innerHTML = liste.map(function (p) {
+      return '<article class="kart">' +
+        '<div class="satir">' +
+          '<span class="rozet" data-isaret="◆">' + (TUR[p.type] || 'KALEM').toLocaleUpperCase('tr') + '</span>' +
+          '<span class="kucuk soluk satir-son">' + esc(p.seller) + '</span>' +
+        '</div>' +
+        '<h3 class="h4">' + esc(p.title) + '</h3>' +
+        '<p class="kucuk">' + esc(p.desc) + '</p>' +
+        (p.url ? '<p class="kucuk"><a href="' + esc(p.url) + '">Ayrıntılı sayfa →</a></p>' : '') +
+        '<div class="kart-alt">' +
+          '<p class="fiyat">' + TRY.format(p.price) + '<small>KDV hariç</small></p>' +
+          '<button type="button" class="dug dug-1 dug-tam" data-ekle="' + esc(p.id) + '" style="margin-top:var(--a3)">Sepete ekle</button>' +
+          (yonetici ? '<button type="button" class="dug dug-3 dug-tam" data-sil="' + esc(p.id) + '" style="margin-top:var(--a2)">Katalogdan kaldır</button>' : '') +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  /* ------------------------------------------------------------------ sepet */
+  function satirlar() {
+    return Object.keys(sepet).map(function (id) {
+      var p = urunler.filter(function (x) { return x.id === id; })[0];
+      return p ? { p: p, adet: sepet[id] } : null;
+    }).filter(Boolean);
+  }
+
+  function toplamlar() {
+    var ara = satirlar().reduce(function (a, l) { return a + l.p.price * l.adet; }, 0);
+    return { ara: ara, kdv: ara * KDV, genel: ara * (1 + KDV) };
+  }
+
+  function sepetCiz() {
+    var ls = satirlar();
+    var govde = $('sepetGovde');
+    var adet = ls.reduce(function (a, l) { return a + l.adet; }, 0);
+
+    if (!ls.length) {
+      govde.innerHTML = '<p class="kucuk soluk">Sepetiniz boş.</p>';
+    } else {
+      govde.innerHTML = ls.map(function (l) {
+        return '<div class="sepet-satir">' +
+          '<h3>' + esc(l.p.title) + '</h3>' +
+          '<p class="meta">' + (TUR[l.p.type] || '') + ' · ' + esc(l.p.seller) + '</p>' +
+          '<p class="tutar">' + TRY.format(l.p.price * l.adet) + '</p>' +
+          '<div class="adet-kut">' +
+            '<button type="button" class="adet-dug" data-q="-" data-id="' + esc(l.p.id) + '" aria-label="Azalt">−</button>' +
+            '<span class="say">' + l.adet + '</span>' +
+            '<button type="button" class="adet-dug" data-q="+" data-id="' + esc(l.p.id) + '" aria-label="Artır">+</button>' +
+            '<button type="button" class="sil" data-rm="' + esc(l.p.id) + '">Sil</button>' +
+          '</div></div>';
+      }).join('');
+    }
+
+    var t = toplamlar();
+    $('araToplam').textContent = ls.length ? TRY.format(t.ara) : '—';
+    $('kdv').textContent = ls.length ? TRY.format(t.kdv) : '—';
+    $('genelToplam').textContent = ls.length ? TRY.format(t.genel) : '—';
+    $('siparisDug').disabled = !ls.length;
+
+    yaz(LS_SEPET, sepet);
+    hizliCiz(ls, adet, t);
+  }
+
+  function hizliCiz(ls, adet, t) {
+    var fab = $('fab');
+    fab.classList.toggle('var', adet > 0);
+    $('fabAdet').textContent = adet;
+    $('fabTutar').textContent = adet ? TRY.format(t.genel) : '';
+
+    if (!adet) { $('hizli').classList.remove('acik'); return; }
+
+    $('hizliAdet').textContent = adet + ' KALEM';
+    $('hizliToplam').textContent = TRY.format(t.genel);
+    $('hizliListe').innerHTML = ls.map(function (l) {
+      return '<div class="hizli-satir"><span>' + esc(l.p.title) +
+        '<small>' + (TUR[l.p.type] || '') + ' · ' + l.adet + ' adet</small></span>' +
+        '<span class="tut">' + TRY.format(l.p.price * l.adet) + '</span></div>';
+    }).join('');
+  }
+
+  function sepeteEkle(id) {
+    sepet[id] = (sepet[id] || 0) + 1;
+    sepetCiz();
+    var d = document.querySelector('[data-ekle="' + id + '"]');
+    if (d) {
+      var eski = d.textContent;
+      d.textContent = 'Eklendi ✓';
+      setTimeout(function () { d.textContent = eski; }, 1400);
+    }
+    /* Yüzen sepet açılır: kalemin nereye gittiği görünsün — sepete giden
+       tek yol bu düğme, sessizce eklemek kullanıcıyı kör bırakır. */
+    $('hizli').classList.add('acik');
+    bildir('Sepete eklendi.');
+  }
+
+  /* --------------------------------------------------------- katman yönetimi */
+  function perde(ac) { $('perde').classList.toggle('acik', ac); }
+
+  function cekmeceAc(ac) {
+    if (ac) sonOdak = document.activeElement;
+    $('cekmece').classList.toggle('acik', ac);
+    perde(ac || $('siparisKip').classList.contains('acik') || $('urunKip').classList.contains('acik'));
+    if (ac) $('cekmeceKapat').focus();
+  }
+
+  function kipAc(el, ac) {
+    if (ac) sonOdak = document.activeElement;
+    el.classList.toggle('acik', ac);
+    perde(ac || $('cekmece').classList.contains('acik'));
+    if (ac) { var k = el.querySelector('[data-kapat]'); if (k) k.focus(); }
+  }
+
+  function hepsiniKapat() {
+    $('cekmece').classList.remove('acik');
+    $('siparisKip').classList.remove('acik');
+    $('urunKip').classList.remove('acik');
+    $('hizli').classList.remove('acik');
+    perde(false);
+    if (sonOdak && sonOdak.focus) { try { sonOdak.focus(); } catch (e) {} }
+    sonOdak = null;
+  }
+
+  /* ---------------------------------------------------------------- sipariş */
+  function siparisMetni(f) {
+    var ls = satirlar(), t = toplamlar();
+    var s = 'SİPARİŞ TALEBİ\n\n';
+    ls.forEach(function (l) {
+      s += '• ' + l.p.title + ' (' + (TUR[l.p.type] || '') + ') × ' + l.adet +
+           ' — ' + TRY.format(l.p.price * l.adet) + '\n';
+    });
+    s += '\nAra toplam: ' + TRY.format(t.ara) +
+         '\nKDV (%20): ' + TRY.format(t.kdv) +
+         '\nToplam: ' + TRY.format(t.genel) +
+         '\n\nAd soyad: ' + f.name +
+         '\nFirma: ' + (f.company || '-') +
+         '\nE-posta: ' + f.mail +
+         '\nTelefon: ' + (f.phone || '-') +
+         '\nAdres: ' + (f.adres || '-') +
+         '\nNot: ' + (f.note || '-');
+    return s;
+  }
+
+  /* Girişli kullanıcının siparişi hesabına yazılır (Hesabım > Siparişlerim). */
+  function siparisiKaydet(f, no) {
+    if (!user || !window.__sersoz) return Promise.resolve();
+    var S = window.__sersoz, t = toplamlar();
+
+    var kayit = S.fsMod.addDoc(S.fsMod.collection(S.db, 'siparisler'), {
+      ownerId: user.uid,
+      no: no,
+      tarih: S.fsMod.serverTimestamp(),
+      durum: 'beklemede',
+      kalemler: satirlar().map(function (l) {
+        return { id: l.p.id, ad: l.p.title, adet: l.adet, birimFiyat: l.p.price };
+      }),
+      araToplam: t.ara,
+      kdv: t.kdv,
+      toplam: t.genel,
+      musteri: { ad: f.name, firma: f.company || '', mail: f.mail, telefon: f.phone || '' },
+      adres: f.adres || '',
+      not: f.note || ''
+    }).catch(function () { /* sipariş akışını bloklamaz */ });
+
+    if ($('adresKaydet').checked && f.adres) {
+      S.fsMod.addDoc(S.fsMod.collection(S.db, 'kullanicilar', user.uid, 'adresler'), {
+        baslik: f.company ? String(f.company).slice(0, 40) : 'Adresim',
+        adSoyad: f.name, firma: f.company || '', telefon: f.phone || '',
+        il: '', ilce: '', postaKodu: '', adres: String(f.adres).slice(0, 300),
+        varsayilan: !adresler.length
+      }).catch(function () {});
+    }
+    return kayit;
+  }
+
+  function siparisGonder(e) {
+    e.preventDefault();
+    var fd = new FormData(e.target);
+    var f = {
+      name: fd.get('name'), company: fd.get('company'), mail: fd.get('mail'),
+      phone: fd.get('phone'), note: fd.get('note'), adres: fd.get('adres')
+    };
+
+    /* 1) Ödeme sağlayıcısı bağlıysa sunucuda oturum açılır, kullanıcı
+          sağlayıcının güvenli ekranına yönlendirilir. Kart bilgisi burada
+          hiçbir zaman toplanmaz. */
+    if (ODEME.saglayici && ODEME.baslatUrl) {
+      var yuk = {
+        musteri: f,
+        kalemler: satirlar().map(function (l) {
+          return { id: l.p.id, ad: l.p.title, adet: l.adet, birimFiyat: l.p.price };
+        }),
+        toplam: toplamlar().genel
+      };
+      fetch(ODEME.baslatUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(yuk)
+      }).then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.odemeUrl) location.href = d.odemeUrl;
+          else bildir('Ödeme başlatılamadı, lütfen tekrar deneyin.');
+        })
+        .catch(function () { bildir('Ödeme sunucusuna ulaşılamadı.'); });
+      return;
+    }
+
+    var no = 'SRS-' + Date.now();
+    siparisiKaydet(f, no);
+    var konu = 'Sipariş talebi ' + no + ' — ' + f.name + (f.company ? ' / ' + f.company : '');
+
+    /* 2) Bildirim anahtarı varsa doğrudan e-posta gönderilir. */
+    if (BILDIRIM.web3formsKey) {
+      var dug = $('siparisGonder');
+      dug.disabled = true;
+      dug.textContent = 'Gönderiliyor…';
+
+      fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: BILDIRIM.web3formsKey,
+          subject: konu,
+          from_name: 'sersoz.com fiyat sayfası',
+          replyto: f.mail,
+          'Siparis no': no,
+          'Ad soyad': f.name,
+          'Firma': f.company || '-',
+          'E-posta': f.mail,
+          'Telefon': f.phone || '-',
+          'Adres': f.adres || '-',
+          'Not': f.note || '-',
+          'Ozet': siparisMetni(f)
+        })
+      }).then(function (r) { return r.json(); })
+        .then(function (d) {
+          dug.disabled = false;
+          dug.textContent = 'Siparişi gönder';
+          if (d && d.success) {
+            bildir('Siparişiniz iletildi — en kısa sürede dönüş yapılacak.');
+            e.target.reset();
+            sepet = {};
+            sepetCiz();
+            hepsiniKapat();
+          } else {
+            bildir('Gönderilemedi — lütfen e-posta ile ulaşın.');
+          }
+        })
+        .catch(function () {
+          dug.disabled = false;
+          dug.textContent = 'Siparişi gönder';
+          bildir('Bağlantı kurulamadı, lütfen tekrar deneyin.');
+        });
+      return;
+    }
+
+    /* 3) Yedek: posta uygulaması açılır. */
+    location.href = 'mailto:' + BILDIRIM.yedekAdres + '?subject=' + encodeURIComponent(konu) +
+                    '&body=' + encodeURIComponent(siparisMetni(f));
+    bildir(user
+      ? 'Sipariş kaydedildi — Hesabım > Siparişlerim. Posta taslağı açılmadıysa doğrudan yazın.'
+      : 'Sipariş özeti e-posta uygulamanızda açıldı. Açılmadıysa doğrudan sercansozer20@gmail.com adresine yazın.');
+    hepsiniKapat();
+  }
+
+  function siparisAc() {
+    if (!satirlar().length) { bildir('Sepetiniz boş.'); return; }
+    $('cekmece').classList.remove('acik');
+    $('hizli').classList.remove('acik');
+
+    var t = toplamlar();
+    $('siparisOzet').innerHTML = satirlar().map(function (l) {
+      return '<div class="toplam-satir"><span>' + esc(l.p.title) + ' × ' + l.adet +
+             '</span><span class="v">' + TRY.format(l.p.price * l.adet) + '</span></div>';
+    }).join('') +
+      '<div class="toplam-satir"><span>KDV (%20)</span><span class="v">' + TRY.format(t.kdv) + '</span></div>' +
+      '<div class="toplam-satir genel"><span>Toplam</span><span class="v">' + TRY.format(t.genel) + '</span></div>';
+
+    $('siparisNot').textContent = (ODEME.saglayici && ODEME.baslatUrl)
+      ? 'Devam ettiğinizde güvenli ödeme ekranına yönlendirilirsiniz. Kart bilgileriniz bu sitede saklanmaz.'
+      : 'Kart ile ödeme altyapısı henüz bağlı değil. Gönderdiğinizde sipariş özeti e-posta uygulamanızda hazırlanır; açılmazsa doğrudan sercansozer20@gmail.com adresine yazın.';
+    $('siparisGonder').textContent = (ODEME.saglayici && ODEME.baslatUrl) ? 'Ödemeye geç' : 'Siparişi gönder';
+
+    kipAc($('siparisKip'), true);
+  }
+
+  /* --------------------------------------------------------- adres defteri */
+  function adresleriDinle() {
+    if (!user || !window.__sersoz) return;
+    var S = window.__sersoz;
+    S.fsMod.onSnapshot(
+      S.fsMod.collection(S.db, 'kullanicilar', user.uid, 'adresler'),
+      function (snap) {
+        adresler = snap.docs.map(function (d) { var v = d.data(); v.id = d.id; return v; });
+        adresler.sort(function (a, b) { return (b.varsayilan ? 1 : 0) - (a.varsayilan ? 1 : 0); });
+        adresSecimiDoldur();
+      },
+      function () { /* sessiz geç — sipariş elle de doldurulabilir */ }
+    );
+  }
+
+  function adresSecimiDoldur() {
+    var sar = $('adresSecSar'), sec = $('adresSec');
+    if (!user || !adresler.length) { sar.classList.add('gizli'); return; }
+    sar.classList.remove('gizli');
+    sec.innerHTML = '<option value="">— Bilgileri elle gireceğim —</option>' +
+      adresler.map(function (a) {
+        return '<option value="' + esc(a.id) + '">' + esc(a.baslik) +
+               (a.varsayilan ? ' (varsayılan)' : '') + '</option>';
+      }).join('');
+    var vars = adresler.filter(function (a) { return a.varsayilan; })[0];
+    if (vars) { sec.value = vars.id; adresDoldur(vars.id); }
+  }
+
+  function adresDoldur(id) {
+    var a = adresler.filter(function (x) { return x.id === id; })[0];
+    if (!a) return;
+    $('oAd').value = a.adSoyad || '';
+    $('oFirma').value = a.firma || '';
+    $('oTel').value = a.telefon || '';
+    $('oAdres').value = [a.adres, [a.ilce, a.il, a.postaKodu].filter(Boolean).join(' / ')]
+      .filter(Boolean).join('\n');
+  }
+
+  /* ------------------------------------------------------------- kullanıcı */
+  function kullaniciAyarla(u) {
+    user = u;
+    var yonetici = !!(u && u.email === YONETICI);
+    $('urunEkleDug').classList.toggle('gizli', !yonetici);
+    $('adresKaydetSar').classList.toggle('gizli', !u);
+    if (!u) adresler = [];
+    adresSecimiDoldur();
+    if (u) adresleriDinle();
+    katalogCiz();
+  }
+
+  /* --------------------------------------------------------------- katalog IO */
+  function yerelKatalog() {
+    var kayitli = oku(LS_URUNLER, null);
+    urunler = (kayitli && kayitli.length) ? kayitli : YEDEK.slice();
+    katalogCiz();
+  }
+
+  function urunEkle(e) {
+    e.preventDefault();
+    var fd = new FormData(e.target);
+    var p = {
+      type: fd.get('type'),
+      title: String(fd.get('title')).trim(),
+      price: Math.max(0, parseInt(fd.get('price'), 10) || 0),
+      desc: String(fd.get('desc')).trim(),
+      seller: String(fd.get('seller')).trim()
+    };
+
+    if (user && window.__sersoz) {
+      var S = window.__sersoz;
+      p.ownerId = user.uid;
+      p.createdAt = S.fsMod.serverTimestamp();
+      S.fsMod.addDoc(S.fsMod.collection(S.db, 'urunler'), p)
+        .then(function () { bildir('Kalem kataloga eklendi.'); })
+        .catch(function () { bildir('Eklenemedi — güvenlik kuralları izin vermiyor olabilir.'); });
+    } else {
+      bildir('Kataloga yazmak için site sahibi hesabıyla giriş gerekir.');
+      return;
+    }
+    e.target.reset();
+    hepsiniKapat();
+  }
+
+  function urunSil(id) {
+    if (!(user && window.__sersoz)) { bildir('Bu işlem için giriş gerekir.'); return; }
+    var S = window.__sersoz;
+    S.fsMod.deleteDoc(S.fsMod.doc(S.db, 'urunler', id))
+      .then(function () { bildir('Kalem kaldırıldı.'); })
+      .catch(function () { bildir('Kaldırılamadı.'); });
+  }
+
+  /* ------------------------------------------------------------- Firebase */
+  function firebaseKur() {
+    var base = 'https://www.gstatic.com/firebasejs/10.12.2/';
+    import(base + 'firebase-app.js').then(function (appMod) {
+      /* ÇİFT BAŞLATMA KORUMASI: hesap.js de aynı app'i arıyor. */
+      var mevcut = (appMod.getApps && appMod.getApps()) || [];
+      var app = mevcut.length ? mevcut[0] : appMod.initializeApp(FIREBASE_CONFIG);
+      return Promise.all([app, import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+    }).then(function (r) {
+      var app = r[0], authMod = r[1], fsMod = r[2];
+      var auth = authMod.getAuth(app);
+      var db = fsMod.getFirestore(app);
+
+      window.__sersoz = { auth: auth, db: db, authMod: authMod, fsMod: fsMod };
+
+      /* Giriş/çıkış arayüzü hesap.js'in üst çubuktaki kutusudur; burada
+         yalnız durumu dinliyoruz. */
+      authMod.onAuthStateChanged(auth, function (u) { kullaniciAyarla(u); });
+
+      fsMod.onSnapshot(
+        fsMod.query(fsMod.collection(db, 'urunler'), fsMod.orderBy('createdAt', 'desc')),
+        function (snap) {
+          urunler = snap.docs.map(function (d) {
+            var v = d.data();
+            return { id: d.id, type: v.type, title: v.title, price: v.price,
+                     desc: v.desc, seller: v.seller, ownerId: v.ownerId, url: v.url };
+          });
+          if (!urunler.length) urunler = YEDEK.slice();
+          katalogCiz();
+          sepetCiz();
+        },
+        function () {
+          urunler = YEDEK.slice();
+          katalogCiz();
+          bildir('Canlı katalog okunamadı; sayfadaki yedek liste gösteriliyor.');
+        }
+      );
+    }).catch(function () {
+      bildir('Katalog servisi yüklenemedi; yedek liste ve sepet çalışmaya devam ediyor.');
+    });
+  }
+
+  /* ----------------------------------------------------------------- bağla */
+  function bagla() {
+    $('perde').addEventListener('click', hepsiniKapat);
+    $('cekmeceKapat').addEventListener('click', hepsiniKapat);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-kapat]'), function (b) {
+      b.addEventListener('click', hepsiniKapat);
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hepsiniKapat(); });
+
+    $('sepetBosalt').addEventListener('click', function () {
+      sepet = {}; sepetCiz(); bildir('Sepet boşaltıldı.');
+    });
+
+    $('katalog').addEventListener('click', function (e) {
+      var ekle = e.target.closest('[data-ekle]');
+      if (ekle) { sepeteEkle(ekle.getAttribute('data-ekle')); return; }
+      var sil = e.target.closest('[data-sil]');
+      if (sil) urunSil(sil.getAttribute('data-sil'));
+    });
+
+    $('sepetGovde').addEventListener('click', function (e) {
+      var q = e.target.closest('[data-q]');
+      if (q) {
+        var id = q.getAttribute('data-id');
+        sepet[id] += q.getAttribute('data-q') === '+' ? 1 : -1;
+        if (sepet[id] <= 0) delete sepet[id];
+        sepetCiz();
+        return;
+      }
+      var rm = e.target.closest('[data-rm]');
+      if (rm) { delete sepet[rm.getAttribute('data-rm')]; sepetCiz(); }
+    });
+
+    $('suzgecler').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-f]');
+      if (!b) return;
+      Array.prototype.forEach.call(this.querySelectorAll('[data-f]'), function (x) {
+        x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+      });
+      suzgec = b.getAttribute('data-f');
+      katalogCiz();
+    });
+
+    $('arama').addEventListener('input', function () {
+      sorgu = this.value.trim().toLocaleLowerCase('tr');
+      katalogCiz();
+    });
+
+    $('fab').addEventListener('click', function (e) {
+      e.stopPropagation();
+      $('hizli').classList.toggle('acik');
+    });
+    /* Dışarı tıklayınca kapanır. "Sepete ekle" HARİÇ: o düğme paneli yeni
+       açtı, aynı tıklama belgeye kadar kabarıp hemen kapatmasın. */
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('.fab-sar') || e.target.closest('[data-ekle]')) return;
+      $('hizli').classList.remove('acik');
+    });
+    $('hizliDuzenle').addEventListener('click', function () {
+      $('hizli').classList.remove('acik');
+      cekmeceAc(true);
+    });
+    $('hizliOde').addEventListener('click', siparisAc);
+
+    $('siparisDug').addEventListener('click', siparisAc);
+    $('siparisForm').addEventListener('submit', siparisGonder);
+    $('adresSec').addEventListener('change', function () { if (this.value) adresDoldur(this.value); });
+
+    $('urunEkleDug').addEventListener('click', function () {
+      $('urunNot').textContent = 'Kataloga yazma yalnız site sahibi hesabına açıktır (firestore.rules).';
+      kipAc($('urunKip'), true);
+    });
+    $('urunForm').addEventListener('submit', urunEkle);
+  }
+
+  /* ---------------------------------------------------------------- başlat */
+  bagla();
+  yerelKatalog();
+  sepetCiz();
+  firebaseKur();
+})();
+</script>
+
+<script src="/onay.js" defer></script>
+<script src="/hesap.js" defer></script>
+<script src="/iz.js" defer></script>
+</body>
+</html>

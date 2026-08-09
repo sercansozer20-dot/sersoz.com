@@ -2,10 +2,9 @@
 User-agent: *
 Allow: /
 
-# Tasarim denemeleri ve arsiv — indekslenmemeli
+# Tasarim denemeleri ve arsiv
 Disallow: /taslak/
-Disallow: /varyant-
-Disallow: /onceki-anasayfa.html
+Disallow: /arsiv/
 Disallow: /yonetim.html
 Disallow: /hesabim.html
 Disallow: /siparis-sonuc.html

@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Uygulamalar — hangi işi yapıyor | Sercan Sözer</title>
+<meta name="description" content="Dört gerçek uygulama: kaynak ağzı ölçümü, paletlemede eksik ürün, kolileme adet ve oturma kontrolü, yüzey kalite denetimi. Her biri için problem, yöntem, gereken donanım, çıktı ve sınırlar yazılı. Hattınızın uygunluğunu altı soruda değerlendirin.">
+<meta name="author" content="Sercan Sözer">
+<meta name="theme-color" content="#c2410c">
+<link rel="canonical" href="https://sersoz.com/uygulamalar.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sercan Sözer — Makine Görüşü">
+<meta property="og:title" content="Uygulamalar — ürün adını değil, probleminizi arayın">
+<meta property="og:description" content="Kaynak ağzı ölçümü, paletlemede eksik ürün, kolileme adet ve oturma kontrolü, yüzey denetimi. Her uygulamada yöntem, donanım, çıktı ve sınırlar açık yazılı.">
+<meta property="og:url" content="https://sersoz.com/uygulamalar.html">
+<meta property="og:image" content="https://sersoz.com/og.png">
+<meta property="og:locale" content="tr_TR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23fafaf9'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231c1917' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Consolas,monospace' font-size='36' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="sistem.css">
+<script>
+/* Tema seçimi ilk boyamadan ÖNCE uygulanır — yoksa koyu temada beyaz çakma olur.
+   Anahtar yeni: mevcut sersoz_* anahtarlarının hiçbirine dokunmaz. */
+(function () {
+  try {
+    var t = localStorage.getItem('sersoz_tema');
+    if (t === 'koyu' || t === 'acik') document.documentElement.setAttribute('data-tema', t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body>
+
+<a class="atla" href="#icerik">İçeriğe atla</a>
+
+<!-- ==================================================================
+     ÜST ÇUBUK
+     .nav-links kapsayıcısı hesap.js'in API'sidir: giriş kutusu ve site
+     sahibine özel "Yönetim" bağlantısı oraya eklenir. Sınıf adı değişirse
+     ikisi de sessizce yok olur.
+     ================================================================== -->
+<header class="ust">
+  <input type="checkbox" id="menuKutu" class="menu-kutu" aria-hidden="true" tabindex="-1">
+  <div class="kap ust-ic">
+    <a class="logo" href="index.html">
+      <span class="isaret" aria-hidden="true">S</span>
+      <span>Sercan Sözer<span class="alt">makine görüşü · İzmir</span></span>
+    </a>
+
+    <nav class="ust-menu" aria-label="Ana gezinme">
+      <a href="uygulamalar.html" aria-current="page">Uygulamalar</a>
+      <a href="yazilim.html">Yazılım</a>
+      <a href="yazilim.html#uyumluluk">Uyumluluk</a>
+      <a href="surec.html">Nasıl çalışır</a>
+      <a href="fiyat.html">Fiyat</a>
+      <a href="forum.html">Danışma Masası</a>
+    </nav>
+
+    <div class="nav-links">
+      <a class="dug dug-1 dug-ust" href="surec.html#talep">Fizibilite talebi</a>
+    </div>
+
+    <label class="menu-dug" for="menuKutu" role="button" tabindex="0"
+           aria-label="Menüyü aç veya kapat" aria-controls="menuKutu">
+      <svg class="ac" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <svg class="kapa" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </label>
+  </div>
+</header>
+
+<main id="icerik">
+
+  <!-- ================================================================
+       1. GİRİŞ
+       ================================================================ -->
+  <section class="bolum">
+    <div class="kap">
+      <span class="ust-baslik">Uygulamalar</span>
+      <h1 style="margin-top:var(--a4);max-width:20ch">Hangi işi yapıyor</h1>
+      <p class="giris" style="margin-top:var(--a5);max-width:54ch">
+        Kimse "bana 3D lazer profil sensörü lazım" diye aramaz; "kaynak ağzım tutarsız
+        ölçülüyor" ya da "palet eksik çıkıyor" der. Aşağıdaki dört iş bugün
+        <strong>yapılabilenlerdir</strong>. Her birinde problem, yöntem, gereken donanım,
+        hattınıza çıkan sonuç ve <strong>sınırlar</strong> ayrı ayrı yazılıdır.
+      </p>
+      <p class="kucuk soluk" style="margin-top:var(--a5);max-width:62ch">
+        Sektör adı bazen yanıltır: asıl belirleyici problemin şeklidir. Yine de hattınızı
+        hızlı bulmanız için uygulamaları sektör etiketiyle süzebilirsiniz. Listede olmayan
+        bir işiniz varsa bu "yapılamaz" demek değildir, "henüz ölçülmedi" demektir.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       2. SEKTÖR SÜZGECİ + VİTRİN
+       Süzgeç istemci taraflıdır. JS kapalıyken hiçbir şey gizlenmez,
+       dört uygulama da alt alta okunur.
+       ================================================================ -->
+  <section class="bolum-sik" aria-labelledby="vitrinBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <h2 id="vitrinBas">Dört iş</h2>
+        <p>
+          Kartın üstüne tıklayınca o uygulamanın ayrıntısına inersiniz — hepsi bu sayfada,
+          başka bir yere gitmez.
+        </p>
+      </div>
+
+      <div class="satir" style="margin-bottom:var(--a4)">
+        <span class="ust-baslik notr" id="filtreBas">Sektör süzgeci</span>
+      </div>
+      <div class="dug-grup" id="filtreGrup" role="group" aria-labelledby="filtreBas">
+        <button type="button" class="dug-kip" data-sektor="hepsi" aria-pressed="true">HEPSİ</button>
+        <button type="button" class="dug-kip" data-sektor="otomotiv" aria-pressed="false">OTOMOTİV</button>
+        <button type="button" class="dug-kip" data-sektor="metal" aria-pressed="false">METAL İŞLEME</button>
+        <button type="button" class="dug-kip" data-sektor="gida" aria-pressed="false">GIDA · AMBALAJ</button>
+        <button type="button" class="dug-kip" data-sektor="lojistik" aria-pressed="false">LOJİSTİK · DEPO</button>
+      </div>
+      <p class="kucuk soluk" id="filtreDurum" aria-live="polite" style="margin-top:var(--a3)">
+        Dört uygulamanın dördü de gösteriliyor.
+      </p>
+
+      <div class="izgara iz-2" style="margin-top:var(--a5)">
+
+        <a class="kart kart-bag uyg-kart" href="#kaynak-agzi" data-sektor="otomotiv metal">
+          <p class="no">01 · ÖLÇÜM</p>
+          <h3>Kaynak ağzı ölçümü</h3>
+          <div class="sema" aria-hidden="true">
+            <svg viewBox="0 0 220 92">
+              <path d="M10 62 H78 L100 30 L118 30 L140 62 H210" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M10 62 V74 H210 V62" stroke="currentColor" stroke-width="1.5" opacity=".4" fill="none"/>
+              <path d="M78 18 H140" style="stroke:var(--marka-metin)" stroke-width="1.5"/>
+              <path d="M78 14 v8 M140 14 v8" style="stroke:var(--marka-metin)" stroke-width="1.5"/>
+              <path d="M100 30 V62" style="stroke:var(--marka-metin)" stroke-width="1.5" stroke-dasharray="3 3"/>
+              <text x="106" y="26" font-family="Consolas,monospace" font-size="9" style="fill:var(--marka-metin)">genişlik</text>
+              <text x="104" y="52" font-family="Consolas,monospace" font-size="9" style="fill:var(--marka-metin)">derinlik</text>
+            </svg>
+          </div>
+          <p class="kucuk">
+            Ağız derinliği, genişliği ve açısı kumpasla noktadan ölçülüyor, operatöre göre
+            değişiyor. 3D tarama ağzın tamamını tek geçişte çıkarır.
+          </p>
+          <div class="kart-alt">
+            <div class="etiket-satir">
+              <span class="rozet" data-isaret="▪">otomotiv</span>
+              <span class="rozet" data-isaret="▪">metal işleme</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="kart kart-bag uyg-kart" href="#paletleme" data-sektor="gida lojistik">
+          <p class="no">02 · VARLIK-YOKLUK</p>
+          <h3>Paletlemede eksik ürün</h3>
+          <div class="sema" aria-hidden="true">
+            <svg viewBox="0 0 220 92">
+              <g stroke="currentColor" stroke-width="1.5" fill="none">
+                <rect x="20" y="18" width="42" height="26"/><rect x="66" y="18" width="42" height="26"/>
+                <rect x="112" y="18" width="42" height="26"/><rect x="158" y="18" width="42" height="26"/>
+                <rect x="20" y="48" width="42" height="26"/><rect x="66" y="48" width="42" height="26"/>
+                <rect x="158" y="48" width="42" height="26"/>
+              </g>
+              <rect x="112" y="48" width="42" height="26" style="stroke:var(--marka-metin)" stroke-width="1.5"
+                    stroke-dasharray="4 3" fill="none"/>
+              <path d="M120 56 l26 10 M146 56 l-26 10" style="stroke:var(--marka-metin)" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <p class="kucuk">
+            Katman tamamlanmadan sarılan palet, müşteriye eksik giden bir sevkiyattır.
+            Yükseklik verisi "kutu yok mu, etiketi mi ters?" sorusunu ayırır.
+          </p>
+          <div class="kart-alt">
+            <div class="etiket-satir">
+              <span class="rozet" data-isaret="▪">gıda · ambalaj</span>
+              <span class="rozet" data-isaret="▪">lojistik</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="kart kart-bag uyg-kart" href="#kolileme" data-sektor="gida lojistik">
+          <p class="no">03 · ADET + OTURMA</p>
+          <h3>Kolileme adet ve oturma kontrolü</h3>
+          <div class="sema" aria-hidden="true">
+            <svg viewBox="0 0 220 92">
+              <path d="M24 24 V76 H196 V24" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <g stroke="currentColor" stroke-width="1.5" fill="none">
+                <rect x="34" y="40" width="24" height="36"/><rect x="62" y="40" width="24" height="36"/>
+                <rect x="90" y="40" width="24" height="36"/><rect x="146" y="40" width="24" height="36"/>
+              </g>
+              <rect x="118" y="30" width="24" height="46" style="stroke:var(--marka-metin)" stroke-width="1.5" fill="none"/>
+              <path d="M118 30 H142" style="stroke:var(--marka-metin)" stroke-width="2.5"/>
+              <text x="150" y="24" font-family="Consolas,monospace" font-size="9" style="fill:var(--marka-metin)">oturmadı</text>
+            </svg>
+          </div>
+          <p class="kucuk">
+            Adet doğru olabilir ama bir şişe tam oturmamıştır; koli kapanınca ezilir.
+            Kot farkı milimetrik bir sinyaldir ve kapak kapanmadan yakalanabilir.
+          </p>
+          <div class="kart-alt">
+            <div class="etiket-satir">
+              <span class="rozet" data-isaret="▪">gıda · ambalaj</span>
+              <span class="rozet" data-isaret="▪">lojistik</span>
+            </div>
+          </div>
+        </a>
+
+        <a class="kart kart-bag uyg-kart" href="#yuzey" data-sektor="otomotiv metal gida">
+          <p class="no">04 · KUSUR TESPİTİ</p>
+          <h3>Yüzey kalite kontrolü</h3>
+          <div class="sema" aria-hidden="true">
+            <svg viewBox="0 0 220 92">
+              <path d="M14 66 C60 58 74 70 108 62 C142 54 168 66 206 58" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M14 44 C60 36 74 48 108 40 C142 32 168 44 206 36" stroke="currentColor" stroke-width="1.5" opacity=".35" fill="none"/>
+              <ellipse cx="120" cy="55" rx="17" ry="9" style="stroke:var(--marka-metin)" stroke-width="1.5" fill="none"/>
+              <path d="M120 46 v-14" style="stroke:var(--marka-metin)" stroke-width="1.5"/>
+              <text x="130" y="30" font-family="Consolas,monospace" font-size="9" style="fill:var(--marka-metin)">kusur</text>
+              <rect x="40" y="24" width="150" height="52" stroke="currentColor" stroke-width="1"
+                    stroke-dasharray="3 4" opacity=".5" fill="none"/>
+            </svg>
+          </div>
+          <p class="kucuk">
+            Çizik, göçük, sıçrak, eksik kaplama. Bir kısmı 3D'de yükseklik farkıdır, bir
+            kısmı yalnız görüntüde bir dokudur — ikisi ayrı yöntemdir.
+          </p>
+          <div class="kart-alt">
+            <div class="etiket-satir">
+              <span class="rozet" data-isaret="▪">otomotiv</span>
+              <span class="rozet" data-isaret="▪">metal işleme</span>
+              <span class="rozet" data-isaret="▪">gıda · ambalaj</span>
+            </div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       3.1 KAYNAK AĞZI ÖLÇÜMÜ
+       ================================================================ -->
+  <section class="bolum bolum-cizgili" id="kaynak-agzi" data-sektor="otomotiv metal" aria-labelledby="kaBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">01 · Ölçüm</span>
+        <h2 id="kaBas">Kaynak ağzı ölçümü</h2>
+        <div class="etiket-satir">
+          <span class="rozet" data-isaret="▪">otomotiv</span>
+          <span class="rozet" data-isaret="▪">metal işleme</span>
+          <span class="rozet rozet-bilgi" data-isaret="i">3D profil taraması</span>
+        </div>
+        <p>
+          Kaynak öncesi ağız geometrisi, kaynağın kendisinden daha belirleyicidir. Ağız
+          dar kalırsa dolgu tutmaz, geniş kalırsa fazla tel yakılır; ikisi de kaynak
+          bittikten sonra ortaya çıkar.
+        </p>
+      </div>
+
+      <div class="izgara iz-yan">
+
+        <div class="yigin">
+          <div>
+            <h3 class="h4">Problem</h3>
+            <p style="margin-top:var(--a3);max-width:var(--olcu)">
+              Profil bugün kumpasla, birkaç noktadan ölçülüyor. Ölçen kişiye ve ölçtüğü
+              noktaya göre sonuç değişiyor, kayda geçmiyor. Parti içinde ağız yavaşça
+              kayarsa bu kayma ancak sınır aşıldığında fark ediliyor — arada bütün bir
+              parti üretilmiş oluyor.
+            </p>
+          </div>
+
+          <div>
+            <h3 class="h4">Neden zor</h3>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              <li><strong>Parlak metal yüzey</strong> — lazer çizgisi taşar, aynasal yansıma veri boşluğu açar.</li>
+              <li><strong>Değişken pah ve kök aralığı</strong> — ölçüm parçanın kendisine göre hizalanmalı, sabit bir koordinata göre değil.</li>
+              <li><strong>Kıvılcım, cüruf, yağ</strong> — yüzeyi kirletir; ölçüm noktası değil, ölçüm bölgesi gerekir.</li>
+              <li><strong>Kaynak sonrası çarpılma</strong> — ölçüm ne zaman alınacak sorusu, hangi büyüklüğün ölçüleceği kadar önemlidir.</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="h4">Yöntem</h3>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              <li>Parça tek geçişte 3D taranır, profil kesitleri nokta bulutundan çıkarılır.</li>
+              <li>Zemin/taşıyıcı kaldırılır, ilgi alanı (ROI) ağzın etrafına kırpılır.</li>
+              <li><strong>Çapalama</strong> — parça her seferinde aynı yere gelmez; ölçüm ağzın kendi kenarlarına göre hizalanır.</li>
+              <li>Ağız derinliği, üst genişliği, kök aralığı, ağız açısı ve komşu yüzeyin düzlemselliği ölçülür.</li>
+              <li>Her ölçü kendi alt/üst limitiyle karşılaştırılır; karar üç durumlu üretilir: OK / NOK / belirsiz.</li>
+              <li>Karar ve ölçü değerleri PLC'ye yazılır, tarama diske kaydedilir — sonradan açılıp bakılabilir.</li>
+            </ul>
+          </div>
+
+          <div class="not not-bilgi">
+            <span class="isaret" aria-hidden="true">i</span>
+            <div>
+              <p class="baslik">Hattınıza çıkan sonuç</p>
+              <p>
+                Örnekleme yerine her parçanın ölçüsü kayda geçer · kalıp ve takım kaynaklı
+                kayma sınır aşılmadan eğilim olarak görülür · şablonla ölçen operatörün
+                yerini kişiden bağımsız, tekrarlanabilir bir ölçüm alır.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="yigin">
+          <figure class="sema-kutu">
+            <div class="bas">
+              <span class="baslik">Ağız kesiti ve ölçülen büyüklükler</span>
+              <span class="sema-rozet">Şema</span>
+            </div>
+            <div class="govde">
+              <svg viewBox="0 0 460 210" role="img"
+                   aria-label="Kaynak ağzı kesit şeması: üstte 3D profil sensörü, lazer düzlemi iki sac levhanın oluşturduğu V ağza düşüyor. Ölçülen büyüklükler ağız üst genişliği, ağız derinliği, kök aralığı ve ağız açısıdır."
+                   style="width:100%;height:auto;color:var(--metin-2)">
+                <!-- sensör -->
+                <rect x="196" y="8" width="72" height="24" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/>
+                <path d="M226 32 v6 M238 32 v6" stroke="currentColor" stroke-width="1.4"/>
+                <text x="232" y="24" font-family="Consolas,monospace" font-size="10" text-anchor="middle" style="fill:var(--metin-soluk)">sensör</text>
+                <!-- lazer düzlemi -->
+                <path d="M232 38 L150 168 M232 38 L314 168" style="stroke:var(--marka-metin)" stroke-width="1" stroke-dasharray="4 4" opacity=".75"/>
+                <text x="330" y="60" font-family="Consolas,monospace" font-size="10" style="fill:var(--marka-metin)">lazer düzlemi</text>
+                <!-- levhalar -->
+                <path d="M40 120 H186 L216 168 H40 Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <path d="M420 120 H278 L248 168 H420 Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <path d="M40 168 H420" stroke="currentColor" stroke-width="1.5" opacity=".45"/>
+                <!-- üst genişlik ölçüsü -->
+                <path d="M186 98 H278" style="stroke:var(--marka-metin)" stroke-width="1.4"/>
+                <path d="M186 92 v12 M278 92 v12" style="stroke:var(--marka-metin)" stroke-width="1.4"/>
+                <text x="232" y="88" font-family="Consolas,monospace" font-size="10" text-anchor="middle" style="fill:var(--marka-metin)">üst genişlik</text>
+                <!-- derinlik ölçüsü -->
+                <path d="M348 120 V168" style="stroke:var(--marka-metin)" stroke-width="1.4"/>
+                <path d="M342 120 h12 M342 168 h12" style="stroke:var(--marka-metin)" stroke-width="1.4"/>
+                <text x="356" y="148" font-family="Consolas,monospace" font-size="10" style="fill:var(--marka-metin)">derinlik</text>
+                <!-- kök aralığı -->
+                <path d="M216 186 H248" style="stroke:var(--marka-metin)" stroke-width="1.4"/>
+                <path d="M216 180 v12 M248 180 v12" style="stroke:var(--marka-metin)" stroke-width="1.4"/>
+                <text x="256" y="190" font-family="Consolas,monospace" font-size="10" style="fill:var(--marka-metin)">kök aralığı</text>
+                <!-- açı -->
+                <path d="M186 120 A 34 34 0 0 1 206 146" style="stroke:var(--marka-metin)" stroke-width="1.2" fill="none"/>
+                <text x="150" y="140" font-family="Consolas,monospace" font-size="10" style="fill:var(--marka-metin)">ağız açısı</text>
+                <!-- düzlemsellik -->
+                <path d="M52 112 H150" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3"/>
+                <text x="52" y="106" font-family="Consolas,monospace" font-size="10" style="fill:var(--metin-soluk)">komşu yüzey · düzlemsellik</text>
+              </svg>
+            </div>
+            <figcaption>
+              Kesit anlatım için çizilmiştir, ölçekli teknik resim değildir ve gerçek bir
+              müşteri parçası göstermez. Sizin ağzınızın gerçek davranışı fizibilite
+              taramasında görülür.
+            </figcaption>
+          </figure>
+
+          <div class="kart uyg-kart kart-sik">
+            <span class="ust-baslik notr">Gereken donanım ve girdi</span>
+            <dl>
+              <dt>Sensör</dt><dd>3D lazer profil sensörü (LMI Gocator · Wenglor MLBS115)</dd>
+              <dt>Hareket</dt><dd>Sabit tarama ekseni ya da parçayı bilinen hızla geçiren taşıyıcı</dd>
+              <dt>Tetik</dt><dd>Hattan tarama başlat sinyali (PLC dijital çıkışı yeterlidir)</dd>
+              <dt>Yerleşim</dt><dd>Titreşimsiz montaj konsolu, kablo yolu, enerji</dd>
+              <dt>Girdi</dt><dd>Ağız toleransı ya da OK/NOK örnek parça</dd>
+              <dt>Tolerans</dt><dd>Parçaya özel — fizibilitede ölçülür, sitede rakam verilmez</dd>
+            </dl>
+          </div>
+
+          <div class="not not-uyari">
+            <span class="isaret" aria-hidden="true">!</span>
+            <div>
+              <p class="baslik">Sınırlar</p>
+              <ul class="metin-blok kucuk">
+                <li>Ayna gibi parlak ve saydam yüzeyler taramada zorlar; yerleşim ve yüzey hazırlığı fizibilitede denenmelidir.</li>
+                <li>Mikron altı tolerans isteyen işler koordinat ölçüm makinesinin (CMM) alanıdır; hat üstü 3D onun yerini almaz.</li>
+                <li>Tek taramada yükseklik alanı görülür: alt oyuk ve ters açı görünmez, ikinci bir bakış açısı gerekir.</li>
+                <li>Kaynak sırasındaki ark ışığı altında ölçüm yapılmaz; ölçüm kaynak öncesi ya da sonrasıdır.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       3.2 PALETLEMEDE EKSİK ÜRÜN
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="paletleme" data-sektor="gida lojistik" aria-labelledby="paBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">02 · Varlık-yokluk</span>
+        <h2 id="paBas">Paletlemede eksik ürün</h2>
+        <div class="etiket-satir">
+          <span class="rozet" data-isaret="▪">gıda · ambalaj</span>
+          <span class="rozet" data-isaret="▪">lojistik</span>
+          <span class="rozet rozet-bilgi" data-isaret="i">üstten 3D + iz takip</span>
+        </div>
+        <p>
+          Katman tamamlanmadan sarılan bir palet, müşteriye eksik giden bir sevkiyattır.
+          Fark edildiği yer genelde hattın kendisi değil, karşı tarafın kabul deposudur.
+        </p>
+      </div>
+
+      <div class="izgara iz-yan">
+
+        <div class="yigin">
+          <div>
+            <h3 class="h4">Problem</h3>
+            <p style="margin-top:var(--a3);max-width:var(--olcu)">
+              Katmanda bir göz boş kalıyor ya da kutu yarım oturuyor; palet sarılıp
+              çıkıyor. Elle sayım hızlı hatta güvenilmez, fotoselle sayım ise birbirine
+              değen, üst üste gelen veya duraklayan ürünlerde şaşırır. En sık görülen
+              hata, bant durup ürün geri kayınca aynı ürünün <strong>iki kez
+              sayılmasıdır</strong>.
+            </p>
+          </div>
+
+          <div>
+            <h3 class="h4">Neden zor</h3>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              <li><strong>Aynı renkli kutular</strong> — 2D görüntüde komşu kutuların sınırı kaybolur.</li>
+              <li><strong>Gölge ve streç film yansıması</strong> — parlama "kutu var" ya da "kutu yok" yanılsaması üretir.</li>
+              <li><strong>Yarım oturma</strong> — 2D "var" der ama "tam oturdu mu" diyemez; fark yüksekliktedir.</li>
+              <li><strong>Palet konumu oynar</strong> — ölçüm sabit koordinata değil, paletin kendi kenarına göre yapılmalıdır.</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="h4">Yöntem</h3>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              <li>Katman üstten 3D taranır; yükseklik haritası çıkarılır.</li>
+              <li>Palet kenarı bulunur, ızgara paletin kendisine çapalanır — palet kaysa da göz numaraları kaymaz.</li>
+              <li>Her göz için doluluk ve üst yüzey kotu ölçülür; boş göz ile yarım oturmuş kutu ayrı iki durumdur.</li>
+              <li>Beklenen adet reçeteden gelir; tespit + iz takibi ile duraklayan veya geri kayan ürün bir kez sayılır.</li>
+              <li>Karar ve <strong>eksik göz konumu</strong> PLC'ye yazılır; sarma istasyonu katman tamamlanmadan başlamaz.</li>
+              <li>Her palet için sayım kaydı ve tarama görüntüsü yerelde saklanır.</li>
+            </ul>
+          </div>
+
+          <div class="not not-bilgi">
+            <span class="isaret" aria-hidden="true">i</span>
+            <div>
+              <p class="baslik">Hattınıza çıkan sonuç</p>
+              <p>
+                Eksik katman sarılmadan durur · hangi gözün eksik olduğu ekranda görünür ·
+                duraklama ve geri kaymada mükerrer sayım engellenir · her palet için kayıt
+                ve zaman damgası kalır.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="yigin">
+          <figure class="sema-kutu">
+            <div class="bas">
+              <span class="baslik">Katman ızgarası ve yükseklik profili</span>
+              <span class="sema-rozet">Şema</span>
+            </div>
+            <div class="govde">
+              <svg viewBox="0 0 460 210" role="img"
+                   aria-label="Paletleme şeması: üstten bakan 3D kamera bir palet katmanını görüyor. Üç sıra dört sütunluk ızgarada bir göz boş, sağdaki yükseklik profilinde o gözün üzerinde kot sıfıra düşüyor."
+                   style="width:100%;height:auto;color:var(--metin-2)">
+                <!-- kamera -->
+                <rect x="112" y="8" width="66" height="22" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/>
+                <text x="145" y="23" font-family="Consolas,monospace" font-size="10" text-anchor="middle" style="fill:var(--metin-soluk)">3D kamera</text>
+                <path d="M145 30 L36 62 M145 30 L254 62" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity=".6"/>
+                <!-- palet çerçevesi -->
+                <rect x="30" y="62" width="230" height="132" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <text x="30" y="206" font-family="Consolas,monospace" font-size="10" style="fill:var(--metin-soluk)">palet kenarı = çapa</text>
+                <!-- dolu gözler -->
+                <g stroke="currentColor" stroke-width="1.4" fill="none">
+                  <rect x="40" y="72" width="50" height="36"/><rect x="96" y="72" width="50" height="36"/>
+                  <rect x="152" y="72" width="50" height="36"/><rect x="208" y="72" width="42" height="36"/>
+                  <rect x="40" y="114" width="50" height="36"/><rect x="96" y="114" width="50" height="36"/>
+                  <rect x="208" y="114" width="42" height="36"/>
+                  <rect x="40" y="156" width="50" height="30"/><rect x="96" y="156" width="50" height="30"/>
+                  <rect x="152" y="156" width="50" height="30"/><rect x="208" y="156" width="42" height="30"/>
+                </g>
+                <!-- eksik göz -->
+                <rect x="152" y="114" width="50" height="36" style="stroke:var(--marka-metin)" stroke-width="1.6" stroke-dasharray="5 3" fill="none"/>
+                <path d="M162 122 l30 20 M192 122 l-30 20" style="stroke:var(--marka-metin)" stroke-width="1.6"/>
+                <text x="152" y="110" font-family="Consolas,monospace" font-size="10" style="fill:var(--marka-metin)">göz 2-3 boş</text>
+                <!-- yükseklik profili -->
+                <path d="M300 190 H446 M300 190 V70" stroke="currentColor" stroke-width="1.3"/>
+                <text x="300" y="62" font-family="Consolas,monospace" font-size="10" style="fill:var(--metin-soluk)">yükseklik profili</text>
+                <path d="M306 100 H352 V190 H360 V100 H406" style="stroke:var(--marka-metin)" stroke-width="1.6" fill="none"/>
+                <path d="M406 100 H440" style="stroke:var(--marka-metin)" stroke-width="1.6"/>
+                <path d="M300 100 H446" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>
+                <text x="360" y="96" font-family="Consolas,monospace" font-size="10" style="fill:var(--metin-soluk)">beklenen kot</text>
+                <text x="330" y="182" font-family="Consolas,monospace" font-size="10" style="fill:var(--marka-metin)">kot = 0</text>
+              </svg>
+            </div>
+            <figcaption>
+              Izgara, gözenek ve profil anlatım için üretilmiştir; ekran kaydı değildir.
+              Gerçek taramada streç film ve gölge profili bozar — bu davranış ancak sizin
+              paletinizle ölçülür.
+            </figcaption>
+          </figure>
+
+          <div class="kart uyg-kart kart-sik">
+            <span class="ust-baslik notr">Gereken donanım ve girdi</span>
+            <dl>
+              <dt>Sensör</dt><dd>Üstten 3D kamera (katmanın tamamını gören çalışma mesafesi)</dd>
+              <dt>Tetik</dt><dd>Katman tamamlandı sinyali ya da sarma öncesi durak</dd>
+              <dt>Aydınlatma</dt><dd>Kontrollü üst aydınlatma; ortam ışığına bırakılmaz</dd>
+              <dt>Yerleşim</dt><dd>Sensörün paletin üstünde titreşimsiz asılabileceği bir nokta</dd>
+              <dt>Girdi</dt><dd>Katman reçetesi: göz sayısı, düzen, kutu ölçüsü</dd>
+              <dt>Çıktı</dt><dd>Katman kararı + eksik göz numarası (PLC)</dd>
+            </dl>
+          </div>
+
+          <div class="not not-uyari">
+            <span class="isaret" aria-hidden="true">!</span>
+            <div>
+              <p class="baslik">Sınırlar</p>
+              <ul class="metin-blok kucuk">
+                <li>Streç film sarıldıktan sonra ölçüm güvenilmez; denetim sarma <strong>öncesine</strong> konumlanmalıdır.</li>
+                <li>Kutu içeriği görülmez — "kutu var" ile "kutu dolu" ayrı sorulardır, ikincisi bu uygulamanın kapsamı dışındadır.</li>
+                <li>Etiket, barkod ve tarih kodu okuma (OCR) standart kapsamda değildir; gerekiyorsa ayrıca konuşulur.</li>
+                <li>Palet üstünde sürekli hareket varsa tarama için kısa bir durak ya da bilinen sabit hız gerekir.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       3.3 KOLİLEME ADET VE OTURMA
+       ================================================================ -->
+  <section class="bolum bolum-cizgili" id="kolileme" data-sektor="gida lojistik" aria-labelledby="koBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">03 · Adet + oturma</span>
+        <h2 id="koBas">Kolileme adet ve oturma kontrolü</h2>
+        <div class="etiket-satir">
+          <span class="rozet" data-isaret="▪">gıda · ambalaj</span>
+          <span class="rozet" data-isaret="▪">lojistik</span>
+          <span class="rozet rozet-bilgi" data-isaret="i">kot farkı + sayım</span>
+        </div>
+        <p>
+          Adet doğru olabilir ama bir şişe tam oturmamıştır. Kapak kapanırken ezilir;
+          hata koliden değil, kapanma anından çıkar.
+        </p>
+      </div>
+
+      <div class="izgara iz-yan">
+
+        <div class="yigin">
+          <div>
+            <h3 class="h4">Problem</h3>
+            <p style="margin-top:var(--a3);max-width:var(--olcu)">
+              Kolide adet eksik ya da fazla; ya da adet tamdır ama bir ürün gözüne tam
+              inmemiştir. İkisi de kapak kapandıktan sonra fark edilir: ezilmiş ürün,
+              şişmiş koli, iade. Bu hata türü en sinsi olanıdır — sayım kontrolünden
+              geçer, çünkü <strong>sayı doğrudur</strong>.
+            </p>
+          </div>
+
+          <div>
+            <h3 class="h4">Neden zor</h3>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              <li><strong>Şeffaf ve parlak ambalaj</strong> — cam ve PET yüzeyler lazeri geçirir veya aynasal yansıtır.</li>
+              <li><strong>Hızlı çevrim</strong> — denetime ayrılan süre saniyenin altına inerse sensör seçimi ve maliyet değişir.</li>
+              <li><strong>Titreşim</strong> — dolum hattında sensör konsolu titrerse ölçüm gürültüsü sinyali yutar.</li>
+              <li><strong>Sinyal küçüktür</strong> — oturmama farkı milimetre düzeyindedir; gürültü payı ölçülmeden eşik konamaz.</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="h4">Yöntem</h3>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              <li>Koli, kapak kapanmadan önceki durakta üstten taranır.</li>
+              <li>Koli kenarı bulunur ve göz ızgarası koliye çapalanır.</li>
+              <li>Her göz için doluluk (adet) ve üst yüzey kotu ölçülür.</li>
+              <li>Kot farkı <strong>Δh</strong>, komşu ürünlerin ortalama kotuna göre hesaplanır — mutlak yüksekliğe değil, kolinin kendi düzlemine bakılır.</li>
+              <li>Eşik pilot sırasında gerçek ürünle ayarlanır; yanlış ret sayısı ölçülerek raporlanır.</li>
+              <li>Geçti / kaldı sinyali ve hatalı göz numarası PLC'ye yazılır; kapak kapanmaz.</li>
+            </ul>
+          </div>
+
+          <div class="not not-bilgi">
+            <span class="isaret" aria-hidden="true">i</span>
+            <div>
+              <p class="baslik">Hattınıza çıkan sonuç</p>
+              <p>
+                Eksik adet koli kapanmadan yakalanır · yarım oturmuş ürün ezilmeden durur ·
+                hatalı gözün numarası operatöre gösterilir · her koli için sayım ve kot
+                kaydı kalır.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="yigin">
+          <figure class="sema-kutu">
+            <div class="bas">
+              <span class="baslik">Koli kesiti ve oturma farkı</span>
+              <span class="sema-rozet">Şema</span>
+            </div>
+            <div class="govde">
+              <svg viewBox="0 0 460 210" role="img"
+                   aria-label="Kolileme kesit şeması: koli içinde beş ürün var, dördü aynı kotta oturmuş, ortadaki yukarıda kalmış. Aradaki delta h farkı kapak yolunun altında ölçülüyor."
+                   style="width:100%;height:auto;color:var(--metin-2)">
+                <!-- sensör -->
+                <rect x="196" y="6" width="72" height="22" rx="2" stroke="currentColor" stroke-width="1.4" fill="none"/>
+                <text x="232" y="21" font-family="Consolas,monospace" font-size="10" text-anchor="middle" style="fill:var(--metin-soluk)">3D kamera</text>
+                <path d="M232 28 L92 62 M232 28 L372 62" stroke="currentColor" stroke-width="1" stroke-dasharray="4 4" opacity=".55"/>
+                <!-- koli -->
+                <path d="M64 64 V186 H396 V64" stroke="currentColor" stroke-width="1.6" fill="none"/>
+                <!-- kapak yolu -->
+                <path d="M64 72 H396" stroke="currentColor" stroke-width="1.2" stroke-dasharray="5 4" opacity=".8"/>
+                <text x="300" y="66" font-family="Consolas,monospace" font-size="10" style="fill:var(--metin-soluk)">kapak yolu</text>
+                <!-- oturmuş ürünler -->
+                <g stroke="currentColor" stroke-width="1.4" fill="none">
+                  <rect x="80" y="106" width="48" height="80"/>
+                  <rect x="136" y="106" width="48" height="80"/>
+                  <rect x="272" y="106" width="48" height="80"/>
+                  <rect x="328" y="106" width="48" height="80"/>
+                </g>
+                <!-- oturmamış ürün -->
+                <rect x="204" y="82" width="48" height="104" style="stroke:var(--marka-metin)" stroke-width="1.7" fill="none"/>
+                <!-- nominal kot çizgisi -->
+                <path d="M72 106 H392" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity=".8"/>
+                <text x="72" y="102" font-family="Consolas,monospace" font-size="10" style="fill:var(--metin-soluk)">komşu ürünlerin ortalama kotu</text>
+                <!-- delta h -->
+                <path d="M264 82 V106" style="stroke:var(--marka-metin)" stroke-width="1.5"/>
+                <path d="M258 82 h12 M258 106 h12" style="stroke:var(--marka-metin)" stroke-width="1.5"/>
+                <text x="274" y="98" font-family="Consolas,monospace" font-size="11" style="fill:var(--marka-metin)">Δh = oturma farkı</text>
+                <!-- taban -->
+                <path d="M64 186 H396" stroke="currentColor" stroke-width="1.6"/>
+                <text x="64" y="204" font-family="Consolas,monospace" font-size="10" style="fill:var(--metin-soluk)">ölçüm kapak kapanmadan önce alınır</text>
+              </svg>
+            </div>
+            <figcaption>
+              Kesit anlatım içindir; ürün, göz sayısı ve fark ölçüleri temsilîdir. Şeffaf
+              ambalajın gerçek tarama davranışı numuneyle denenmeden bilinmez.
+            </figcaption>
+          </figure>
+
+          <div class="kart uyg-kart kart-sik">
+            <span class="ust-baslik notr">Gereken donanım ve girdi</span>
+            <dl>
+              <dt>Sensör</dt><dd>Üstten 3D kamera; şeffaf ambalajda 2D kamera ikinci kanıt olarak eklenir</dd>
+              <dt>Tetik</dt><dd>Kapak kapanmadan önceki durakta hat tetiği</dd>
+              <dt>Aydınlatma</dt><dd>Parlamayı kıran kontrollü aydınlatma (projenin parçası)</dd>
+              <dt>Yerleşim</dt><dd>Titreşimden yalıtılmış konsol; dolum hattında kritik kalemdir</dd>
+              <dt>Girdi</dt><dd>Koli reçetesi: göz düzeni, beklenen adet, kabul edilebilir Δh</dd>
+              <dt>Çıktı</dt><dd>Geçti / kaldı + hatalı göz numarası (PLC)</dd>
+            </dl>
+          </div>
+
+          <div class="not not-uyari">
+            <span class="isaret" aria-hidden="true">!</span>
+            <div>
+              <p class="baslik">Sınırlar</p>
+              <ul class="metin-blok kucuk">
+                <li>Saydam ve aynasal ambalaj 3D taramanın en zorlandığı yerdir; fizibilitede gerçek ürünle denenmeden söz verilmez.</li>
+                <li>Çok yüksek hızlı hatlarda (yüzlerce parça/dakika) tarama yerine farklı bir denetim kurgusu gerekir.</li>
+                <li>Kapak kapandıktan sonra içeri bakılamaz; denetim noktası kapanmadan önce olmalıdır.</li>
+                <li>Ürünün kendi içeriği (dolum seviyesi, sızdırma) bu uygulamanın kapsamı değildir.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       3.4 YÜZEY KALİTE KONTROLÜ
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="yuzey" data-sektor="otomotiv metal gida" aria-labelledby="yuBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">04 · Kusur tespiti</span>
+        <h2 id="yuBas">Yüzey kalite kontrolü</h2>
+        <div class="etiket-satir">
+          <span class="rozet" data-isaret="▪">otomotiv</span>
+          <span class="rozet" data-isaret="▪">metal işleme</span>
+          <span class="rozet" data-isaret="▪">gıda · ambalaj</span>
+          <span class="rozet rozet-bilgi" data-isaret="i">anomali motoru + yükseklik</span>
+        </div>
+        <p>
+          Çizik, ezik, gözenek, sıçrak, eksik kaplama. Kusur çeşidi çok, örneği az —
+          ve kusurun bir kısmı gerçek bir çukurluk iken bir kısmı yalnızca renk farkıdır.
+        </p>
+      </div>
+
+      <div class="izgara iz-yan">
+
+        <div class="yigin">
+          <div>
+            <h3 class="h4">Problem</h3>
+            <p style="margin-top:var(--a3);max-width:var(--olcu)">
+              Klasik yaklaşım her kusur sınıfı için yüzlerce, binlerce etiketli görüntü
+              ister; o veri sahada yoktur ve toplaması aylar sürer. Yeni model geldiğinde
+              iş baştan başlar. Bu arada "kabul edilebilir kusur" tanımı da çoğu hatta
+              <strong>sözlü</strong> kalır: kişiye göre değişir, kayda geçmez.
+            </p>
+          </div>
+
+          <div>
+            <h3 class="h4">Neden zor</h3>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              <li><strong>Kusur tanımı sözlü</strong> — "kötü olanı ayıklayın" bir kabul kriteri değildir.</li>
+              <li><strong>İki ayrı fizik</strong> — derinliği olan kusur ile renk farkını aynı yöntemle aramak yanlış ret oranını yükseltir.</li>
+              <li><strong>Etiketli veri yok</strong> — kusur örneği biriktirmeyi beklemek projeyi aylarca durdurur.</li>
+              <li><strong>Kontrolsüz ışık</strong> — makine görüşü projelerinin çoğu algoritmadan değil, ışıktan başarısız olur.</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="h4">Yöntem</h3>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              <li>Aydınlatma ve yerleşim kusur tipine göre tasarlanır; bu adım atlanırsa hiçbir algoritma sonucu kurtarmaz.</li>
+              <li><strong>Anomali motoru</strong> yalnız sağlam parçalardan öğrenir: "normal"i tarif eder, sapmayı işaretler. Kusur örneği toplama zorunluluğu ortadan kalkar.</li>
+              <li>Derinliği olan kusurlar (ezik, gözenek, çekinti) 3D yükseklik haritasında ayrıca ölçülür — böylece "leke mi, ezik mi" ayrışır.</li>
+              <li>Kabul bandı nominale göre tanımlanır; bandı aşan bölge işaretlenir ve alanı ölçülür.</li>
+              <li>Eşik, pilot sırasında gerçek parçalarla ayarlanır; <strong>yanlış ret sayısı ölçülerek</strong> yazılı raporlanır.</li>
+              <li>NOK görüntüleri biriktikçe istenirse "hangi kusur tipi" sınıflandırma katmanı eklenir.</li>
+            </ul>
+          </div>
+
+          <div class="not not-bilgi">
+            <span class="isaret" aria-hidden="true">i</span>
+            <div>
+              <p class="baslik">Hattınıza çıkan sonuç</p>
+              <p>
+                Kusur örneği birikmesini beklemeden başlanır · derinlikli kusur ile renk
+                farkı ayrışır · yanlış ret oranı pilotta ölçülerek yazılı verilir · her NOK
+                için görüntü ve zaman damgası yerelde saklanır.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="yigin">
+          <figure class="sema-kutu">
+            <div class="bas">
+              <span class="baslik">Yüzey profili, kabul bandı ve sapma</span>
+              <span class="sema-rozet">Şema</span>
+            </div>
+            <div class="govde">
+              <svg viewBox="0 0 460 210" role="img"
+                   aria-label="Yüzey denetimi şeması: nominal yüzey çizgisi ve onun etrafında kesikli kabul bandı. Ölçülen profil bandın içinde kalırken bir noktada aşağı doğru bandı aşıyor; o bölge kusur olarak işaretleniyor. Sağda renk farkı olarak görünen ama derinliği olmayan bir leke gösteriliyor."
+                   style="width:100%;height:auto;color:var(--metin-2)">
+                <!-- ROI -->
+                <rect x="36" y="40" width="388" height="118" stroke="currentColor" stroke-width="1"
+                      stroke-dasharray="4 5" opacity=".55" fill="none"/>
+                <text x="36" y="34" font-family="Consolas,monospace" font-size="10" style="fill:var(--metin-soluk)">ilgi alanı (ROI)</text>
+                <!-- nominal -->
+                <path d="M44 100 H416" stroke="currentColor" stroke-width="1.4"/>
+                <text x="44" y="94" font-family="Consolas,monospace" font-size="10" style="fill:var(--metin-soluk)">nominal yüzey</text>
+                <!-- kabul bandı -->
+                <path d="M44 86 H416 M44 114 H416" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity=".8"/>
+                <text x="330" y="128" font-family="Consolas,monospace" font-size="10" style="fill:var(--metin-soluk)">kabul bandı</text>
+                <!-- ölçülen profil -->
+                <path d="M44 100 C 80 96 96 104 124 100 C 150 96 160 104 176 101
+                         L 190 101 C 198 101 202 138 214 138 C 226 138 230 101 238 101
+                         L 252 101 C 280 101 292 94 316 99 C 344 105 360 96 416 100"
+                      style="stroke:var(--marka-metin)" stroke-width="1.8" fill="none"/>
+                <!-- kusur işareti -->
+                <ellipse cx="214" cy="130" rx="30" ry="18" style="stroke:var(--marka-metin)" stroke-width="1.3"
+                         stroke-dasharray="4 3" fill="none"/>
+                <path d="M214 148 V172" style="stroke:var(--marka-metin)" stroke-width="1.3"/>
+                <text x="214" y="188" font-family="Consolas,monospace" font-size="11" text-anchor="middle" style="fill:var(--marka-metin)">|d| &gt; bant → NOK</text>
+                <!-- derinliksiz leke -->
+                <path d="M330 96 h34" stroke="currentColor" stroke-width="4" opacity=".45"/>
+                <path d="M347 88 V64" stroke="currentColor" stroke-width="1.2"/>
+                <text x="347" y="58" font-family="Consolas,monospace" font-size="10" text-anchor="middle" style="fill:var(--metin-soluk)">leke: derinliği yok</text>
+                <text x="347" y="46" font-family="Consolas,monospace" font-size="10" text-anchor="middle" style="fill:var(--metin-soluk)">2D tarafın işi</text>
+              </svg>
+            </div>
+            <figcaption>
+              Profil ve kusur anlatım için üretilmiştir. Sapma ekseni okunurluk için
+              abartılmıştır; kabul bandı sizin parçanızda pilot sırasında ölçülerek
+              belirlenir, burada rakam verilmez.
+            </figcaption>
+          </figure>
+
+          <div class="kart uyg-kart kart-sik">
+            <span class="ust-baslik notr">Gereken donanım ve girdi</span>
+            <dl>
+              <dt>Sensör</dt><dd>3D tarama ve/veya 2D endüstriyel kamera — kusur tipine göre</dd>
+              <dt>Aydınlatma</dt><dd>Kusur tipine göre tasarlanan kontrollü aydınlatma (zorunlu)</dd>
+              <dt>Tetik</dt><dd>Parça denetim noktasında dururken ya da bilinen hızla geçerken</dd>
+              <dt>Girdi</dt><dd><strong>İyi VE kusurlu numune</strong> — kusursuz veri tek başına yetmez</dd>
+              <dt>Girdi</dt><dd>Kabul edilebilir kusurun sınırı: yazılı ya da örnek parça</dd>
+              <dt>Çıktı</dt><dd>OK / NOK / belirsiz + kusur konumu ve alanı</dd>
+            </dl>
+          </div>
+
+          <div class="not not-uyari">
+            <span class="isaret" aria-hidden="true">!</span>
+            <div>
+              <p class="baslik">Sınırlar</p>
+              <ul class="metin-blok kucuk">
+                <li>Aydınlatma ve yerleşim tasarlanmadan hiçbir algoritma sonucu kurtarmaz; bu kalem projeye dahildir, uygulaması kapsam dışıdır.</li>
+                <li>Kusur tanımı sözlü kaldığı sürece eşik konamaz — kabul sınırı yazılı ya da numuneyle verilmelidir.</li>
+                <li>Yalnız sağlam numune gönderilirse sistemin kusuru yakalayıp yakalamadığı <strong>ölçülemez</strong>.</li>
+                <li>Metin ve tarih kodu okuma (OCR) standart kapsamda değildir; gerekiyorsa ayrı olarak konuşulur.</li>
+                <li>"Sıfır kaçak" taahhüdü verilmez; verilen şey pilotta ölçülmüş yakalama ve yanlış ret oranıdır.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       4. PROBLEM TİPİ — ARIA sekme bileşeni
+       Paneller HTML'de durur, JS yalnız [hidden] çevirir; JS kapalıyken
+       altı panel de alt alta okunur.
+       ================================================================ -->
+  <section class="bolum bolum-cizgili" id="problem-tipi" aria-labelledby="ptBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Problem tipi</span>
+        <h2 id="ptBas">Sektör değil, problemin şekli belirler</h2>
+        <p>
+          Yukarıdaki dört uygulama farklı hatlardan geliyor ama altlarında altı problem
+          şekli var. Hangi sektörde olursanız olun bunlar aynı yöntemle çözülür; değişen
+          taraf ölçüm aracı, aydınlatma ve çevrim süresidir.
+        </p>
+      </div>
+
+      <div class="sekmeler" role="tablist" aria-label="Problem tipi">
+        <button type="button" class="sekme" role="tab" id="sk-eksik" aria-selected="true" aria-controls="pn-eksik">Eksik parça</button>
+        <button type="button" class="sekme" role="tab" id="sk-montaj" aria-selected="false" aria-controls="pn-montaj" tabindex="-1">Yanlış montaj</button>
+        <button type="button" class="sekme" role="tab" id="sk-yuzey" aria-selected="false" aria-controls="pn-yuzey" tabindex="-1">Yüzey kusuru</button>
+        <button type="button" class="sekme" role="tab" id="sk-olcu" aria-selected="false" aria-controls="pn-olcu" tabindex="-1">Ölçü sapması</button>
+        <button type="button" class="sekme" role="tab" id="sk-sayim" aria-selected="false" aria-controls="pn-sayim" tabindex="-1">Sayım hatası</button>
+        <button type="button" class="sekme" role="tab" id="sk-robot" aria-selected="false" aria-controls="pn-robot" tabindex="-1">Robot kılavuzlama</button>
+      </div>
+
+      <div class="sekme-panel" role="tabpanel" id="pn-eksik" aria-labelledby="sk-eksik">
+        <h3 class="h4">Eksik parça — 2D tespit + 3D doğrulama</h3>
+        <div class="izgara iz-2" style="margin-top:var(--a4)">
+          <div>
+            <span class="ust-baslik notr">Belirti</span>
+            <p class="kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              Montaj sonrası klips, somun, conta ya da kapak eksik çıkıyor; hata hattın
+              ilerisinde veya müşteride fark ediliyor. 2D ile kurulan basit çözümler
+              parlama ve gölge yüzünden yanlış ret üretir, operatör bir süre sonra sistemi
+              baypas etmeye başlar.
+            </p>
+          </div>
+          <div>
+            <span class="ust-baslik notr">Nasıl çözülür</span>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3)">
+              <li>Ürün öğretilir: hangi modelde hangi bileşen nerede olmalı — operatör kendi ekler, entegratör çağırmaya gerek yoktur.</li>
+              <li>2D tespit her bileşenin konumunu ve sayısını kontrol eder.</li>
+              <li>Şüpheli durumda (parça var ama tam oturmamış) 3D yükseklik farkı ikinci kanıttır.</li>
+              <li>Karar üç durumlu: OK / NOK / belirsiz. Belirsiz durum operatöre sorulur, sessizce geçilmez.</li>
+              <li>NOK PLC'ye yazılır ve o karenin görüntüsü kayda alınır.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="sekme-panel" role="tabpanel" id="pn-montaj" aria-labelledby="sk-montaj" hidden>
+        <h3 class="h4">Yanlış montaj — yön, duruş, oturma</h3>
+        <div class="izgara iz-2" style="margin-top:var(--a4)">
+          <div>
+            <span class="ust-baslik notr">Belirti</span>
+            <p class="kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              Parça takılı ama ters, çevrik ya da yarım oturmuş; ya da benzer görünen iki
+              varyanttan yanlış olanı takılmış. En sinsi hata türüdür: adet doğru olduğu
+              için sayım kontrolünden geçer. Ters takılmış parça yukarıdan çoğu zaman aynı
+              görünür — fark yükseklikte ve yöndedir.
+            </p>
+          </div>
+          <div>
+            <span class="ust-baslik notr">Nasıl çözülür</span>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3)">
+              <li>Doğru montajın referansı öğretilir: yön, açı ve beklenen yükseklik profili kaydedilir.</li>
+              <li>2D tarafta yönlü tespit (döndürülmüş sınır kutusu / duruş) varyantı ve açıyı ayırır.</li>
+              <li>3D tarafta yükseklik profili referansla karşılaştırılır; yarım oturma milimetrik fark olarak görünür.</li>
+              <li>Karar, hatanın türüyle birlikte üretilir: yön hatası mı, oturma hatası mı, varyant hatası mı.</li>
+              <li>PLC'ye hata kodu yazılır; istasyon durur ya da parça ayırma hattına yönlendirilir.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="sekme-panel" role="tabpanel" id="pn-yuzey" aria-labelledby="sk-yuzey" hidden>
+        <h3 class="h4">Yüzey kusuru — anomali motoru + yükseklik</h3>
+        <div class="izgara iz-2" style="margin-top:var(--a4)">
+          <div>
+            <span class="ust-baslik notr">Belirti</span>
+            <p class="kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              Çizik, ezik, gözenek, leke, boya kusuru. Kusur çeşidi çok, örneği az. İkinci
+              zorluk: kusurun bir kısmı gerçek bir çukurluk, bir kısmı sadece renk farkı;
+              ikisini aynı yöntemle aramak yanlış ret oranını yükseltir.
+            </p>
+          </div>
+          <div>
+            <span class="ust-baslik notr">Nasıl çözülür</span>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3)">
+              <li>Ayrıntı bu sayfadaki <a href="#yuzey">Yüzey kalite kontrolü</a> bölümündedir.</li>
+              <li>Anomali motoru sağlam parçadan öğrenir; kusur örneği toplama zorunluluğu kalkar.</li>
+              <li>Derinlikli kusur 3D yükseklik haritasında ayrıca ölçülür.</li>
+              <li>Eşik pilotta gerçek parçalarla ayarlanır, yanlış ret sayısı ölçülür.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="sekme-panel" role="tabpanel" id="pn-olcu" aria-labelledby="sk-olcu" hidden>
+        <h3 class="h4">Ölçü sapması — 3D metroloji ve CAD karşılaştırma</h3>
+        <div class="izgara iz-2" style="margin-top:var(--a4)">
+          <div>
+            <span class="ust-baslik notr">Belirti</span>
+            <p class="kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              Delik konumu kayıyor, cep derinliği tutmuyor, parça düzlemsel değil, kaynak
+              sonrası çarpılma var. Ölçüm hattan uzakta ve numune üzerinden yapıldığı için
+              geri bildirim geç geliyor. Tolerans içinde kalan ama sürekli aynı yöne kayan
+              ölçüler kimsenin dikkatini çekmiyor — ta ki sınır aşılana kadar.
+            </p>
+          </div>
+          <div>
+            <span class="ust-baslik notr">Nasıl çözülür</span>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3)">
+              <li>Parça 3D taranır; nokta bulutunda düzlem/silindir/küre uydurma, düzlemsellik, paralellik ve diklik ölçülür.</li>
+              <li>Referans hizalaması yapılır, ardından CAD modeliyle karşılaştırılıp sapma haritası çıkarılır.</li>
+              <li>Her ölçüm limitiyle kaydedilir; vardiya boyunca izlenir ve kayma yönü görülür.</li>
+              <li>Tolerans dışı parça NOK verir; sınıra yaklaşan eğilim uyarı üretir.</li>
+              <li>Tekrarlanabilirlik, aynı parçanın tekrarlı taramasıyla pilotta ölçülür ve rapora yazılır.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="sekme-panel" role="tabpanel" id="pn-sayim" aria-labelledby="sk-sayim" hidden>
+        <h3 class="h4">Sayım hatası — tespit + iz takibi</h3>
+        <div class="izgara iz-2" style="margin-top:var(--a4)">
+          <div>
+            <span class="ust-baslik notr">Belirti</span>
+            <p class="kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              Kolide ya da katmanda adet eksik veya fazla. Fotoselle sayım birbirine
+              değen, üst üste gelen ya da duraklayan ürünlerde şaşırır. En sık görülen
+              hata, bant durup ürün geri kayarken aynı ürünün iki kez sayılmasıdır.
+            </p>
+          </div>
+          <div>
+            <span class="ust-baslik notr">Nasıl çözülür</span>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3)">
+              <li>Ürün öğretilir; benzer görünen varyantlar ayrı sınıf olarak tanımlanabilir.</li>
+              <li>Tespit her karede çalışır, iz takibi her ürüne bir kimlik verir — duraklayan ürün bir kez sayılır.</li>
+              <li>Sayım bir bölge veya çizgi geçişine bağlanır; yön kontrolüyle geri kayan ürün tekrar sayılmaz.</li>
+              <li>Beklenen adet reçeteden gelir; eksik/fazla durumunda karar PLC'ye yazılır.</li>
+              <li>Katmanlı paletlerde 3D yükseklikle katman doğrulaması eklenir.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="sekme-panel" role="tabpanel" id="pn-robot" aria-labelledby="sk-robot" hidden>
+        <h3 class="h4">Robot kılavuzlama — el-göz ve koordinat aktarımı</h3>
+        <div class="izgara iz-2" style="margin-top:var(--a4)">
+          <div>
+            <span class="ust-baslik notr">Belirti</span>
+            <p class="kucuk" style="margin-top:var(--a3);max-width:var(--olcu)">
+              Robot sabit noktaya gidiyor; parça birkaç milimetre kaydığında ya da
+              fikstüre tam oturmadığında hata üretiyor. Her yeni parça için özel fikstür
+              gerekiyor, alternatifte operatör robotu her seferinde yeniden öğretiyor —
+              bu da duruş süresi ve kişiye bağımlılık demek.
+            </p>
+          </div>
+          <div>
+            <span class="ust-baslik notr">Nasıl çözülür</span>
+            <ul class="metin-blok kucuk" style="margin-top:var(--a3)">
+              <li>Parça 3D taranır, nokta bulutu çıkarılır.</li>
+              <li>Hedef özellik bulunur: kaynak noktası, delik ekseni, tutuş yüzeyi ya da parçanın duruşu.</li>
+              <li>El-göz kalibrasyonuyla kamera koordinatı robot koordinatına çevrilir; dönüşümün doğruluğu ölçülerek doğrulanır.</li>
+              <li>Noktalar el sıkışmalı protokolle sayfalı biçimde yazılır — yarım veri robota gitmez.</li>
+              <li>Yol önizlemesi operatör ekranında gösterilir; devreye alma sırasında robot körlemesine hareket etmez.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="not" style="margin-top:var(--a6)">
+        <span class="isaret" aria-hidden="true">§</span>
+        <div>
+          <p class="baslik">Karar hattınıza nasıl gider</p>
+          <p>
+            Karar üç durumludur (OK / NOK / belirsiz) ve el sıkışma bitleriyle PLC'ye
+            yazılır. Siemens S7, Mitsubishi MC/SLMP ve Modbus TCP <strong>hazır
+            gelir</strong>; PROFINET DCP ile ağdaki cihazlar keşfedilir. OPC UA ve
+            PROFINET IO <strong>yol haritasındadır</strong> — tarih verilmez, proje bazında
+            konuşulur. Tam liste
+            <a href="yazilim.html#uyumluluk">uyumluluk tablosundadır</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       5. UYGUNLUK TESTİ — 6 soru, istemci tarafı
+       ================================================================ -->
+  <section class="bolum bolum-alt bolum-cizgili" id="uygunluk" aria-labelledby="uyBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Uygunluk testi</span>
+        <h2 id="uyBas">Hattınız uygun mu</h2>
+        <p>
+          Altı soru. Doğru cevap aramıyoruz, <strong>hattın hazır olup olmadığını</strong>
+          birlikte görüyoruz. Eksik çıkan maddeler projenin iptali değil, fizibilitede
+          önce konuşulacak başlıklardır.
+        </p>
+      </div>
+
+      <div class="izgara iz-yan">
+
+        <div id="sorular">
+          <label class="secim" for="s1">
+            <input type="checkbox" id="s1" data-soru="1">
+            <span class="yazi">
+              <strong>Denetlenecek parça istasyonda duruyor ya da bilinen bir hızla geçiyor.</strong><br>
+              Sabit duruş en kolayı; sabit hızda geçiş de olur. Sorun, hem hızın hem
+              konumun rastgele olmasıdır.
+            </span>
+          </label>
+          <label class="secim" for="s2">
+            <input type="checkbox" id="s2" data-soru="2">
+            <span class="yazi">
+              <strong>Kabul sınırı tanımlı: tolerans yazılı veya elimde OK/NOK örnek parça var.</strong><br>
+              "Kötü olanı ayıklayın" bir kabul kriteri değildir. Ölçü toleransı ya da
+              fiziksel örnek gerekir.
+            </span>
+          </label>
+          <label class="secim" for="s3">
+            <input type="checkbox" id="s3" data-soru="3">
+            <span class="yazi">
+              <strong>Çevrim süresinde denetim için pay var (yaklaşık bir saniye veya üzeri).</strong><br>
+              Daha kısa çevrimler de mümkün ama bu, sensör seçimini ve maliyeti belirgin
+              biçimde değiştirir.
+            </span>
+          </label>
+          <label class="secim" for="s4">
+            <input type="checkbox" id="s4" data-soru="4">
+            <span class="yazi">
+              <strong>Hatta PLC var ve Ethernet üzerinden veri alışverişine açık.</strong><br>
+              Siemens S7 · Mitsubishi MC/SLMP · Modbus TCP hazır gelir; PROFINET DCP ile
+              cihaz keşfi yapılır. OPC UA ve PROFINET IO yol haritasındadır. PLC yoksa
+              dijital çıkış da kurgulanabilir.
+            </span>
+          </label>
+          <label class="secim" for="s5">
+            <input type="checkbox" id="s5" data-soru="5">
+            <span class="yazi">
+              <strong>Sensör ve endüstriyel PC için montaj yeri, kablo yolu ve enerji sağlanabilir.</strong><br>
+              Gecikme genelde buradan çıkar: yer var ama kablo yolu yok, ya da titreşimli
+              bir konsola montaj isteniyor.
+            </span>
+          </label>
+          <label class="secim" for="s6">
+            <input type="checkbox" id="s6" data-soru="6">
+            <span class="yazi">
+              <strong>Ortam koşulları biliniyor ve paylaşılabiliyor (titreşim, buhar, toz, yağ sisi, Ex bölgesi).</strong><br>
+              Bilinmiyor olması sorun değil; fizibilitede ölçeriz. Sorun, hiç konuşulmadan
+              kurulum yapılmasıdır.
+            </span>
+          </label>
+        </div>
+
+        <aside class="kart" id="sonucKutu" aria-live="polite">
+          <span class="ust-baslik notr">Değerlendirme</span>
+          <p class="deger sayi" style="font-size:clamp(1.75rem,1.35rem+1.6vw,2.25rem);font-weight:600;letter-spacing:-.025em;line-height:1.1">
+            <span id="skorSayi">0</span><span class="birim" style="font-size:var(--p-govde);font-weight:500;color:var(--metin-soluk)"> / 6 madde</span>
+          </p>
+          <p><span class="rozet rozet-yok" id="sonucDurum" data-isaret="—">HENÜZ İŞARETLENMEDİ</span></p>
+          <p class="kucuk" id="sonucMetin">
+            Soruları işaretledikçe hattınızın uygunluk değerlendirmesi burada güncellenir.
+          </p>
+          <a class="dug dug-1 dug-tam" id="fizibiliteCta"
+             href="mailto:sercansozer20@gmail.com?subject=Fizibilite%20talebi%20%E2%80%94%20sersoz.com%2Fuygulamalar">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM4 6l8 6 8-6"/></svg>
+            Fizibilite iste
+          </a>
+          <div class="kart-alt">
+            <p class="kucuk soluk">
+              Bu değerlendirme yalnızca sizin işaretlediğiniz maddelerden hesaplanır;
+              saha ölçümü ya da taahhüt değildir. Hiçbir sunucuya veri gönderilmez —
+              düğme yalnız e-posta taslağı hazırlar.
+            </p>
+          </div>
+        </aside>
+
+      </div>
+
+      <div class="not not-uyari" style="margin-top:var(--a6)">
+        <span class="isaret" aria-hidden="true">!</span>
+        <div>
+          <p class="baslik">Genel sınırlar — baştan yazıyorum</p>
+          <ul class="metin-blok kucuk">
+            <li>Ayna gibi parlak ve saydam yüzeyler 3D taramada zorlar; yerleşim ve yüzey hazırlığı fizibilitede denenmelidir.</li>
+            <li>Mikron altı tolerans isteyen işler koordinat ölçüm makinesinin (CMM) alanıdır; hat üstü 3D onun yerini almaz.</li>
+            <li>Çok yüksek hızlı hatlarda (yüzlerce parça/dakika) tarama yerine farklı bir denetim kurgusu gerekir.</li>
+            <li>Ex sertifikalı ekipman üretmiyorum; Atex sahalarında çözüm, ekipmanı bölge dışında tutacak biçimde tasarlanır.</li>
+            <li>Metin ve tarih kodu okuma (OCR) standart kapsamda değildir; gerekiyorsa ayrı olarak konuşulur.</li>
+            <li>Aydınlatma ve yerleşim tasarlanmadan hiçbir algoritma sonucu kurtarmaz — bu kalem projeye dahildir.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       6. CTA BANDI — sayfa başına BİR kez, tek eylem
+       ================================================================ -->
+  <section class="bolum" aria-labelledby="ctaBas">
+    <div class="kap">
+      <div class="cta">
+        <span class="ust-baslik">Tek eylem</span>
+        <h2 id="ctaBas" style="margin-top:var(--a3)">Listede olmayan bir işiniz mi var?</h2>
+        <p>
+          "Yapılamaz" demiyorum, "henüz ölçülmedi" diyorum. Bir iyi ve bir kusurlu numune,
+          bir de "şunu ölçmek istiyorum" cümlesi yeter — cevabı tahminle değil denemeyle
+          veririm. Fizibilite ne sonuç verirse versin yazılı gelir; "bu parça bu
+          aydınlatmayla güvenilir ölçülmez" cümlesi de bir sonuçtur.
+        </p>
+        <div class="eylem">
+          <a class="dug dug-1 dug-b" href="surec.html#talep">Parçanızla fizibilite başlatın</a>
+          <a class="dug dug-2 dug-b" href="fiyat.html">Fiyat ve kapsam</a>
+        </div>
+        <p class="ikincil" style="margin-top:var(--a4)">
+          Doğrudan e-posta:
+          <a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <noscript>
+    <div class="kap" style="padding-bottom:var(--a7)">
+      <div class="not not-bilgi">
+        <span class="isaret" aria-hidden="true">i</span>
+        <div>
+          <p class="baslik">JavaScript kapalı</p>
+          <p>
+            Sayfanın tamamı okunur: dört uygulama, şemalar, sınırlar ve altı soruluk
+            liste yerinde durur. Yalnız üç şey gelmez: sektör süzgeci (hepsi görünür),
+            problem tipi sekmelerinin gizlenmesi (altı panel de alt alta okunur) ve
+            uygunluk testinin puanı. Fizibilite talebini
+            <a href="mailto:sercansozer20@gmail.com">e-posta ile</a> doğrudan
+            yazabilirsiniz.
+          </p>
+        </div>
+      </div>
+    </div>
+  </noscript>
+
+</main>
+
+<!-- ==================================================================
+     ALT BİLGİ
+     ================================================================== -->
+<footer class="alt-bilgi">
+  <div class="kap">
+    <div class="alt-izgara">
+      <div>
+        <h2 class="bas">İş</h2>
+        <ul>
+          <li><a href="uygulamalar.html">Uygulamalar</a></li>
+          <li><a href="yazilim.html">Vision Detection App</a></li>
+          <li><a href="yazilim.html#uyumluluk">Uyumluluk ve protokoller</a></li>
+          <li><a href="surec.html">Nasıl çalışır</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Karar</h2>
+        <ul>
+          <li><a href="fiyat.html">Fiyat ve kapsam</a></li>
+          <li><a href="fiyat.html#kazanc">Kazanç hesabı</a></li>
+          <li><a href="fiyat.html#magaza">Satın alma</a></li>
+          <li><a href="surec.html#talep">Fizibilite talebi</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Site</h2>
+        <ul>
+          <li><a href="forum.html">Danışma Masası</a></li>
+          <li><a href="hakkinda.html">Hakkında ve yazılar</a></li>
+          <li><a href="hesabim.html">Hesabım</a></li>
+          <li><a href="gizlilik.html">Gizlilik ve KVKK</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">İletişim</h2>
+        <ul>
+          <li><a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a></li>
+        </ul>
+        <p class="kucuk soluk" style="margin-top:var(--a3);max-width:26ch">
+          Sercan Sözer — mekatronik mühendisi, İzmir. Şahıs olarak, mühendislik hizmeti
+          biçiminde çalışıyorum.
+        </p>
+      </div>
+    </div>
+
+    <div class="alt-son">
+      <span>© <span class="sayi">2026</span> Sercan Sözer</span>
+      <span>Dış font, dış stil ve reklam/analitik izleyicisi yüklenmez.</span>
+      <button type="button" class="tema-dug" id="temaDug" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6 6l1.5 1.5M16.5 16.5L18 18M18 6l-1.5 1.5M7.5 16.5L6 18"/><circle cx="12" cy="12" r="4"/></svg>
+        <span id="temaYazi">Koyu tema</span>
+      </button>
+    </div>
+  </div>
+</footer>
+
+<!-- ==================================================================
+     SAYFA BETİKLERİ
+     ================================================================== -->
+<script>
+/* ---------------------------------------------------------------
+   Sayfa etkileşimleri: tema anahtarı, mobil menü, sektör süzgeci,
+   ARIA sekmeleri, uygunluk testi.
+   Klasik betik — defer'lı ortak betiklerden ÖNCE koşar.
+   --------------------------------------------------------------- */
+(function () {
+  'use strict';
+
+  function qs(s, k) { return (k || document).querySelector(s); }
+  function qsa(s, k) { return [].slice.call((k || document).querySelectorAll(s)); }
+
+  /* --- tema anahtarı --- */
+  var kok = document.documentElement;
+  var tDug = document.getElementById('temaDug');
+  var tYazi = document.getElementById('temaYazi');
+
+  function koyuMu() {
+    var t = kok.getAttribute('data-tema');
+    if (t) return t === 'koyu';
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  function temaYaz() {
+    var k = koyuMu();
+    tDug.setAttribute('aria-pressed', k ? 'true' : 'false');
+    tYazi.textContent = k ? 'Açık tema' : 'Koyu tema';
+  }
+  tDug.addEventListener('click', function () {
+    var yeni = koyuMu() ? 'acik' : 'koyu';
+    kok.setAttribute('data-tema', yeni);
+    try { localStorage.setItem('sersoz_tema', yeni); } catch (e) {}
+    temaYaz();
+  });
+  temaYaz();
+
+  /* --- mobil menü --- */
+  var mk = document.getElementById('menuKutu');
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && mk.checked) { mk.checked = false; }
+  });
+  var menu = qs('.ust-menu');
+  if (menu) menu.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') mk.checked = false;
+  });
+  var etiketDug = qs('.menu-dug');
+  if (etiketDug) etiketDug.addEventListener('keydown', function (e) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); mk.checked = !mk.checked; }
+  });
+
+  /* ------------------------------------------------ sektör süzgeci
+     İstemci taraflı. JS kapalıyken hiçbir şey gizlenmez — [data-sektor]
+     taşıyan kart ve bölümlerin hepsi görünür kalır. */
+  var filtreGrup = document.getElementById('filtreGrup');
+  var filtreDurum = document.getElementById('filtreDurum');
+  var suzulenler = qsa('[data-sektor]');
+  var kartlar = suzulenler.filter(function (o) { return o.classList.contains('uyg-kart'); });
+  var ADLAR = {
+    hepsi: 'Bütün sektörler',
+    otomotiv: 'Otomotiv',
+    metal: 'Metal işleme',
+    gida: 'Gıda ve ambalaj',
+    lojistik: 'Lojistik ve depo'
+  };
+  var aktifSektor = 'hepsi';
+
+  function uyarMi(oge, s) {
+    if (s === 'hepsi') return true;
+    var v = ' ' + (oge.getAttribute('data-sektor') || '') + ' ';
+    return v.indexOf(' ' + s + ' ') > -1;
+  }
+
+  /* .kart display:flex olduğu için tarayıcının [hidden] kuralını EZER —
+     bu yüzden hidden ile birlikte satır içi display de kapatılır. Yoksa
+     süzülen kart gizlenmiş görünmez, yalnız erişilebilirlik ağacından düşer. */
+  function suz(s, duyur) {
+    aktifSektor = s;
+    suzulenler.forEach(function (o) {
+      var goster = uyarMi(o, s);
+      o.hidden = !goster;
+      o.style.display = goster ? '' : 'none';
+    });
+
+    var n = kartlar.filter(function (o) { return !o.hidden; }).length;
+    if (filtreGrup) qsa('button', filtreGrup).forEach(function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-sektor') === s ? 'true' : 'false');
+    });
+    if (filtreDurum && duyur !== false) {
+      filtreDurum.textContent = (s === 'hepsi')
+        ? 'Dört uygulamanın dördü de gösteriliyor.'
+        : (ADLAR[s] + ' etiketiyle ' + n + ' uygulama gösteriliyor; ' +
+           (kartlar.length - n) + ' tanesi gizlendi.');
+    }
+    if (typeof ctaGuncelle === 'function') ctaGuncelle();
+  }
+
+  if (filtreGrup) filtreGrup.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (!b || !b.getAttribute('data-sektor')) return;
+    suz(b.getAttribute('data-sektor'), true);
+  });
+
+  /* Gizli bir bölüme çapa ile gidilirse süzgeç kendini açar —
+     yoksa bağlantı boşluğa düşmüş gibi görünür. */
+  function capaKontrol() {
+    var h = location.hash;
+    if (!h || h.length < 2) return;
+    var hedef;
+    try { hedef = document.querySelector(h); } catch (e) { return; }
+    if (!hedef) return;
+    var kapsayici = hedef.closest ? hedef.closest('[data-sektor]') : null;
+    if (kapsayici && kapsayici.hidden) {
+      suz('hepsi', true);
+      setTimeout(function () { hedef.scrollIntoView(); }, 0);
+    }
+  }
+  window.addEventListener('hashchange', capaKontrol);
+  capaKontrol();
+
+  /* ------------------------------------------------ ARIA sekmeleri
+     Paneller HTML'de durur; JS yalnız hidden çevirir. */
+  function seciciKur(kapsayici, geriCagri) {
+    var kap = typeof kapsayici === 'string' ? qs(kapsayici) : kapsayici;
+    if (!kap) return null;
+    var dugmeler = qsa('.sekme[role="tab"]', kap);
+    if (!dugmeler.length) return null;
+    var durum = { ad: null };
+
+    function sec(d, odakla) {
+      dugmeler.forEach(function (b) {
+        var aktif = (b === d);
+        b.setAttribute('aria-selected', aktif ? 'true' : 'false');
+        b.tabIndex = aktif ? 0 : -1;
+        var p = document.getElementById(b.getAttribute('aria-controls'));
+        if (p) p.hidden = !aktif;
+      });
+      durum.ad = (d.textContent || '').trim();
+      if (odakla) d.focus();
+      if (geriCagri) geriCagri(durum);
+    }
+
+    kap.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('.sekme[role="tab"]') : null;
+      if (b && dugmeler.indexOf(b) !== -1) sec(b, false);
+    });
+    kap.addEventListener('keydown', function (e) {
+      var i = dugmeler.indexOf(document.activeElement);
+      if (i === -1) return;
+      var y = -1;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') y = (i + 1) % dugmeler.length;
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') y = (i - 1 + dugmeler.length) % dugmeler.length;
+      else if (e.key === 'Home') y = 0;
+      else if (e.key === 'End') y = dugmeler.length - 1;
+      if (y === -1) return;
+      e.preventDefault();
+      sec(dugmeler[y], true);
+    });
+
+    var ilk = dugmeler.filter(function (b) { return b.getAttribute('aria-selected') === 'true'; })[0] || dugmeler[0];
+    sec(ilk, false);
+    return durum;
+  }
+
+  /* ------------------------------------------------ uygunluk testi
+     Not: sekme kurulurken ctaGuncelle() çağrılıyor; bu yüzden test
+     değişkenleri sekmelerden ÖNCE tanımlanmak zorunda. */
+  var kutular = qsa('#sorular input[type="checkbox"]');
+  var skorSayi = document.getElementById('skorSayi');
+  var sonucDurum = document.getElementById('sonucDurum');
+  var sonucMetin = document.getElementById('sonucMetin');
+  var cta = document.getElementById('fizibiliteCta');
+
+  var METIN = {
+    baslangic: 'Soruları işaretledikçe hattınızın uygunluk değerlendirmesi burada güncellenir.',
+    yuksek: 'Hattınız standart bir kurulum için hazır görünüyor. Bu noktadan sonrası ölçü işi: birkaç örnek parçayla fizibilite yapıp hassasiyet ve çevrim süresini rakamla koyalım.',
+    orta: 'Temel şartlar var, birkaç başlık netleşmeli. Eksik işaretlediğiniz maddeler kurulumun önünde engel değil ama fizibilitede önce konuşulmalı — genelde yerleşim, kabul kriteri ya da çevrim süresi çıkar.',
+    dusuk: 'Şu an eksik olan maddeler denetimin nasıl kurulacağını doğrudan belirliyor. Yine de yazın: çoğu zaman problem tarifi netleştiğinde soruların yarısı kendiliğinden cevaplanıyor.'
+  };
+  /* Rozet renginin yanında İŞARET ve METİN de değişir — renk tek sinyal değildir. */
+  var ROZET = {
+    yok:    { sinif: 'rozet rozet-yok',   isaret: '—', yazi: 'HENÜZ İŞARETLENMEDİ' },
+    dusuk:  { sinif: 'rozet rozet-yol',   isaret: '◔', yazi: 'UYGUNLUK DÜŞÜK' },
+    orta:   { sinif: 'rozet rozet-bilgi', isaret: '◑', yazi: 'UYGUNLUK ORTA' },
+    yuksek: { sinif: 'rozet rozet-hazir', isaret: '✓', yazi: 'UYGUNLUK YÜKSEK' }
+  };
+
+  function degerlendir() {
+    var isaretli = kutular.filter(function (k) { return k.checked; });
+    var n = isaretli.length;
+    var durum = n >= 5 ? 'yuksek' : (n >= 3 ? 'orta' : 'dusuk');
+    var r = ROZET[n === 0 ? 'yok' : durum];
+
+    if (skorSayi) skorSayi.textContent = String(n);
+    if (sonucDurum) {
+      sonucDurum.className = r.sinif;
+      sonucDurum.setAttribute('data-isaret', r.isaret);
+      sonucDurum.textContent = r.yazi;
+    }
+    if (sonucMetin) sonucMetin.textContent = n === 0 ? METIN.baslangic : METIN[durum];
+    return { sayi: n, durum: r.yazi, isaretli: isaretli };
+  }
+
+  /* --- mailto gövdesi: hiçbir sunucuya veri gitmez --- */
+  function ctaGuncelle() {
+    var d = degerlendir();
+    if (!cta) return;
+    var satir = [];
+    satir.push('Merhaba Sercan,');
+    satir.push('');
+    satir.push('Sektör: ' + (ADLAR[aktifSektor] || '-'));
+    satir.push('Problem tipi: ' + ((problem && problem.ad) || '-'));
+    satir.push('Uygunluk testi: ' + d.sayi + '/6 — ' + d.durum);
+    satir.push('');
+    satir.push('İşaretlediğim maddeler:');
+    if (d.isaretli.length) {
+      d.isaretli.forEach(function (k) {
+        var b = qs('strong', k.parentNode);
+        satir.push('- ' + (b ? b.textContent.replace(/\s+/g, ' ').trim() : ''));
+      });
+    } else {
+      satir.push('- (işaretlenmedi)');
+    }
+    satir.push('');
+    satir.push('Hat / istasyon: ');
+    satir.push('Parça ve denetlenecek özellik: ');
+    satir.push('Çevrim süresi: ');
+    satir.push('PLC / haberleşme: ');
+    satir.push('');
+
+    var konu = 'Fizibilite talebi — ' + (ADLAR[aktifSektor] || 'sersoz.com/uygulamalar');
+    cta.href = 'mailto:sercansozer20@gmail.com'
+             + '?subject=' + encodeURIComponent(konu)
+             + '&body=' + encodeURIComponent(satir.join('\n'));
+  }
+
+  var problem = seciciKur('#problem-tipi', function () { ctaGuncelle(); });
+
+  kutular.forEach(function (k) { k.addEventListener('change', ctaGuncelle); });
+  suz('hepsi', false);
+  ctaGuncelle();
+})();
+</script>
+
+<!-- ORTAK BETİKLER — sıra sözleşmedir, bozulmaz:
+     onay.js window.Onay'ı kurar; hesap.js ve iz.js ona bakar.
+     Sıra bozulursa hata çıkmaz, işlevler SESSİZCE ölür. -->
+<script src="/onay.js" defer></script>
+<script src="/hesap.js" defer></script>
+<script src="/iz.js" defer></script>
+
+</body>
+</html>

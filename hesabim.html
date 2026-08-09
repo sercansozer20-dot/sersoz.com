@@ -2,605 +2,914 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hesabım — Sercan Sözer</title>
-<meta name="description" content="Kayıtlı adresleriniz ve sipariş geçmişiniz.">
-<meta name="robots" content="noindex">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --bg: #f6f2ea;
-    --ink: #1a1815;
-    --muted: #5b564d;
-    --accent: #c2410c;
-    --green: #14532d;
-    --line: rgba(26, 24, 21, .2);
-    --line-soft: rgba(26, 24, 21, .1);
-    --paper: rgba(255, 253, 248, .6);
-    --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
-    --serif: Georgia, 'Times New Roman', Times, serif;
-    --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
-  }
-
-  body {
-    background: var(--bg); color: var(--ink); font-family: var(--sans);
-    overflow-x: hidden; -webkit-font-smoothing: antialiased;
-  }
-  ::selection { background: var(--accent); color: var(--bg); }
-
-  .container { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
-
-  /* Nav */
-  nav#nav {
-    position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 40;
-    display: flex; align-items: center;
-    background: rgba(246, 242, 234, .92);
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--line);
-  }
-  .nav-inner {
-    width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 28px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
-  .brand .mark {
-    width: 22px; height: 22px; background: var(--accent); color: var(--bg);
-    display: inline-flex; align-items: center; justify-content: center;
-    font-family: var(--serif); font-size: 14px; font-weight: 700; line-height: 1;
-  }
-  .brand span.host { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; }
-  .nav-links { display: flex; align-items: center; gap: 4px; }
-  .nav-links a {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
-    color: var(--ink); text-decoration: none; padding: 10px 12px; transition: color .2s;
-  }
-  .nav-links a:hover, .nav-links a.active { color: var(--accent); }
-
-  /* Başlık */
-  .page-hero { padding: 128px 0 40px; }
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 14px;
-    font-family: var(--mono); font-size: 12px; letter-spacing: .3em;
-    text-transform: uppercase; margin-bottom: 20px;
-  }
-  .eyebrow::before { content: ''; width: 42px; height: 2px; background: var(--accent); }
-  h1 { font-family: var(--serif); font-size: clamp(32px, 5.4vw, 54px); font-weight: 700; letter-spacing: -.015em; line-height: 1.06; }
-  h1 .nokta { color: var(--accent); }
-
-  .kimlik {
-    margin-top: 22px; display: inline-flex; align-items: center; gap: 12px;
-    padding: 10px 16px 10px 10px; border: 1px solid var(--line); background: var(--paper);
-  }
-  .kimlik img { width: 34px; height: 34px; border-radius: 50%; }
-  .kimlik .ad { font-size: 14px; font-weight: 600; }
-  .kimlik .mail { font-family: var(--mono); font-size: 11px; color: var(--muted); }
-  .kimlik button {
-    margin-left: 10px; background: none; border: none; cursor: pointer;
-    font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
-  }
-  .kimlik button:hover { color: var(--accent); }
-
-  /* Giriş gerekli */
-  .giris-kutu {
-    max-width: 520px; margin: 40px 0 90px; padding: 40px 34px;
-    border: 1px solid var(--line); background: var(--paper); text-align: center;
-  }
-  .giris-kutu h2 { font-family: var(--serif); font-size: 25px; font-weight: 700; margin-bottom: 12px; }
-  .giris-kutu p { color: var(--muted); line-height: 1.7; font-size: 15px; margin-bottom: 26px; }
-
-  /* Bölümler */
-  .section { padding: 46px 0; border-top: 3px double var(--line); }
-  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; }
-  h2.blok { font-family: var(--serif); font-size: clamp(24px, 3.4vw, 34px); font-weight: 700; letter-spacing: -.012em; }
-  h2.blok::after { content: '.'; color: var(--accent); }
-  .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-
-  .btn {
-    display: inline-flex; align-items: center; gap: 9px; padding: 12px 20px; cursor: pointer;
-    border: 1px solid var(--ink); background: transparent; color: var(--ink);
-    font-family: var(--mono); font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase;
-    text-decoration: none; transition: border-color .22s, background .22s, color .22s;
-  }
-  .btn:hover { border-color: var(--accent); color: var(--accent); }
-  .btn.primary { background: var(--ink); color: var(--bg); }
-  .btn.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
-  .btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-
-  /* Adres kartları */
-  .adres-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-  .adres {
-    position: relative; padding: 22px 20px; border: 1px solid var(--line); background: var(--paper);
-    transition: border-color .25s, transform .25s cubic-bezier(.2,.7,.3,1), box-shadow .25s;
-  }
-  .adres:hover { border-color: rgba(194,65,12,.4); transform: translateY(-3px); box-shadow: 0 10px 26px rgba(26,24,21,.07); }
-  .adres h3 { font-family: var(--serif); font-size: 17px; font-weight: 700; margin-bottom: 4px; }
-  .adres .vars {
-    display: inline-block; margin-left: 8px; padding: 2px 8px; vertical-align: middle;
-    border: 1px solid rgba(20,83,45,.4); color: var(--green);
-    font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
-  }
-  .adres p { margin-top: 8px; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
-  .adres .tel { margin-top: 8px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
-  .adres-ops { margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--line-soft); display: flex; gap: 14px; }
-  .adres-ops button {
-    background: none; border: none; padding: 0; cursor: pointer;
-    font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
-  }
-  .adres-ops button:hover { color: var(--accent); }
-
-  /* Sipariş satırları */
-  .siparis {
-    border: 1px solid var(--line); background: var(--paper); margin-bottom: 16px;
-  }
-  .siparis-ust {
-    padding: 16px 20px; border-bottom: 1px solid var(--line-soft);
-    display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
-  }
-  .siparis-no { font-family: var(--mono); font-size: 12.5px; font-weight: 600; }
-  .siparis-tarih { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .06em; }
-  .rozet {
-    padding: 4px 11px; border: 1px solid var(--line);
-    font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
-  }
-  .rozet.odendi { border-color: rgba(20,83,45,.45); color: var(--green); }
-  .rozet.beklemede { border-color: rgba(194,65,12,.45); color: var(--accent); }
-  .siparis-govde { padding: 14px 20px 18px; }
-  .s-kalem { display: flex; justify-content: space-between; gap: 14px; padding: 7px 0; font-size: 13.5px; color: var(--muted); }
-  .s-kalem b { color: var(--ink); font-family: var(--mono); font-size: 13px; white-space: nowrap; }
-  .s-toplam {
-    margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--line-soft);
-    display: flex; justify-content: space-between; align-items: baseline;
-  }
-  .s-toplam span { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-  .s-toplam b { font-family: var(--mono); font-size: 18px; }
-
-  .bos {
-    padding: 44px 0; text-align: center;
-    font-family: var(--serif); font-style: italic; font-size: 16px; color: var(--muted);
-  }
-
-  /* Modal */
-  .scrim { position: fixed; inset: 0; z-index: 50; background: rgba(26,24,21,.45); opacity: 0; pointer-events: none; transition: opacity .3s; }
-  .scrim.open { opacity: 1; pointer-events: auto; }
-  .modal {
-    position: fixed; z-index: 51; top: 50%; left: 50%;
-    width: min(560px, calc(100% - 32px)); max-height: 88vh; overflow-y: auto;
-    background: var(--bg); border: 1px solid var(--line);
-    transform: translate(-50%, -46%) scale(.97); opacity: 0; pointer-events: none;
-    transition: opacity .28s, transform .28s cubic-bezier(.2,.7,.3,1);
-  }
-  .modal.open { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
-  .modal-head { padding: 20px 24px; border-bottom: 3px double var(--line); display: flex; justify-content: space-between; align-items: center; }
-  .modal-head h2 { font-family: var(--serif); font-size: 22px; font-weight: 700; }
-  .modal-head h2::after { content: '.'; color: var(--accent); }
-  .x-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 22px; line-height: 1; padding: 4px; }
-  .x-btn:hover { color: var(--accent); }
-  .modal-body { padding: 20px 24px 24px; }
-
-  .field { margin-bottom: 15px; }
-  .field label { display: block; margin-bottom: 6px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
-  .field input, .field textarea {
-    width: 100%; padding: 11px 13px; border: 1px solid var(--line); background: var(--paper);
-    font-family: var(--sans); font-size: 14.5px; color: var(--ink);
-  }
-  .field input:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
-  .field textarea { resize: vertical; min-height: 74px; }
-  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
-  .onay { display: flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--muted); margin: 4px 0 16px; }
-  .onay input { width: 16px; height: 16px; accent-color: var(--accent); }
-  .wide-btn {
-    width: 100%; padding: 14px; cursor: pointer;
-    border: 1px solid var(--ink); background: var(--ink); color: var(--bg);
-    font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
-    transition: background .22s, border-color .22s;
-  }
-  .wide-btn:hover { background: var(--accent); border-color: var(--accent); }
-
-  .toast {
-    position: fixed; z-index: 60; left: 50%; bottom: 26px;
-    transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
-    padding: 13px 22px; background: var(--ink); color: var(--bg);
-    font-family: var(--mono); font-size: 12px; letter-spacing: .08em;
-    transition: opacity .3s, transform .3s cubic-bezier(.2,.7,.3,1);
-  }
-  .toast.show { opacity: 1; transform: translate(-50%, 0); }
-
-  footer { margin-top: 40px; border-top: 3px double var(--line); padding: 24px 0 32px; }
-  .footer-inner {
-    max-width: 1120px; margin: 0 auto; padding: 0 28px;
-    display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap;
-    font-size: 12.5px; color: var(--muted);
-  }
-  .footer-links { display: flex; gap: 4px 16px; flex-wrap: wrap; }
-  .footer-links a { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
-  .footer-links a:hover { color: var(--accent); }
-  .footer-inner .mono { font-family: var(--mono); }
-
-  @media (max-width: 1080px) { .adres-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 720px) { .adres-grid { grid-template-columns: 1fr; } .field-row { grid-template-columns: 1fr; } }
-  @media (max-width: 640px) { .nav-links a { display: none; } .nav-links a.nav-hep { display: inline-block; } .page-hero { padding-top: 108px; } }
-  @media (prefers-reduced-motion: reduce) {
-    .adres, .modal, .scrim, .toast { transition: none; }
-  }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hesabım — adres defteri ve siparişlerim | Sercan Sözer</title>
+<meta name="description" content="Kayıtlı teslimat adreslerinizi düzenleyin, verdiğiniz siparişleri ve tutarlarını görün. Google hesabıyla giriş gerekir; veri tercihlerinizi de buradan değiştirebilirsiniz.">
+<meta name="author" content="Sercan Sözer">
+<meta name="theme-color" content="#c2410c">
+<link rel="canonical" href="https://sersoz.com/hesabim.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sercan Sözer — Makine Görüşü">
+<meta property="og:title" content="Hesabım — adres defteri ve siparişlerim">
+<meta property="og:description" content="Kayıtlı adresleriniz ve sipariş geçmişiniz. Giriş gerektirir.">
+<meta property="og:url" content="https://sersoz.com/hesabim.html">
 <meta property="og:image" content="https://sersoz.com/og.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:site_name" content="sersoz.com">
 <meta property="og:locale" content="tr_TR">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sersoz.com/og.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23fafaf9'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231c1917' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Consolas,monospace' font-size='36' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="sistem.css">
+<style>
+/* İki tamir kuralı — yeni bileşen ya da yeni renk YOK.
+
+   1) sistem.css'te .kart/.not/.izgara display bildirdiği için [hidden]
+      özniteliğini eziyorlardı; gizlenmesi gereken kutular görünüyordu.
+   2) Yan yana duran iki alan grid hücresindeyken ".alan + .alan" kuralından
+      16px üst boşluk alıp hizasını kaybediyor. Hücrede sıfırlanır.
+      (Aynı sorun grid içinde form kuran her sayfada çıkar — sistem.css'e
+      taşınması gereken bir düzeltmedir.) */
+[hidden] { display: none !important; }
+.izgara > .alan + .alan { margin-top: 0; }
+</style>
+<script>
+/* Tema seçimi ilk boyamadan ÖNCE uygulanır — yoksa koyu temada beyaz çakma olur. */
+(function () {
+  try {
+    var t = localStorage.getItem('sersoz_tema');
+    if (t === 'koyu' || t === 'acik') document.documentElement.setAttribute('data-tema', t);
+  } catch (e) {}
+})();
+</script>
 </head>
 <body>
 
-<nav id="nav">
-  <div class="nav-inner">
-    <a class="brand" href="/" aria-label="sersoz.com">
-      <span class="mark" aria-hidden="true">S</span>
-      <span class="host">sersoz.com</span>
-    </a>
-    <div class="nav-links">
-      <a href="/">Ana Sayfa</a>
-      <a class="nav-hep" href="/magaza.html">Mağaza</a>
-      <a class="active nav-hep" href="/hesabim.html" aria-current="page">Hesabım</a>
-      <a href="/portfolyo.html">Portfolyo</a>
-      <a href="/yazilar.html">Yazılar</a>
-      <a href="/forum.html">Forum</a>
-    </div>
-  </div>
-</nav>
+<a class="atla" href="#icerik">İçeriğe atla</a>
 
-<header class="page-hero">
-  <div class="container">
-    <p class="eyebrow">Hesabım</p>
-    <h1>Adreslerim ve siparişlerim<span class="nokta">.</span></h1>
-    <div id="kimlik"></div>
+<!-- ==================================================================
+     ÜST ÇUBUK
+     .nav-links kapsayıcısı hesap.js'in API'sidir. DİKKAT: bu sayfada
+     hesap.js kutu ÇİZMEZ, çünkü sayfanın kendi #girisBtn düğmesi var
+     (hesap.js:12 KENDI_GIRISI kontrolü). Kapsayıcı yine de durur:
+     "Yönetim" bağlantısı ona ekleniyor.
+     ================================================================== -->
+<header class="ust">
+  <input type="checkbox" id="menuKutu" class="menu-kutu" aria-hidden="true" tabindex="-1">
+  <div class="kap ust-ic">
+    <a class="logo" href="index.html">
+      <span class="isaret" aria-hidden="true">S</span>
+      <span>Sercan Sözer<span class="alt">makine görüşü · İzmir</span></span>
+    </a>
+
+    <nav class="ust-menu" aria-label="Ana gezinme">
+      <a href="uygulamalar.html">Uygulamalar</a>
+      <a href="yazilim.html">Yazılım</a>
+      <a href="yazilim.html#uyumluluk">Uyumluluk</a>
+      <a href="surec.html">Nasıl çalışır</a>
+      <a href="fiyat.html">Fiyat</a>
+      <a href="forum.html">Danışma Masası</a>
+    </nav>
+
+    <div class="nav-links">
+      <a class="dug dug-1 dug-ust" href="surec.html#talep">Fizibilite talebi</a>
+    </div>
+
+    <label class="menu-dug" for="menuKutu" role="button" tabindex="0"
+           aria-label="Menüyü aç veya kapat" aria-controls="menuKutu">
+      <svg class="ac" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <svg class="kapa" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </label>
   </div>
 </header>
 
-<main class="container" id="icerik">
-  <div class="giris-kutu" id="girisKutu" style="display:none">
-    <h2>Giriş yapın</h2>
-    <p>Kayıtlı adreslerinizi ve sipariş geçmişinizi görmek için Google hesabınızla
-      giriş yapmanız gerekiyor.</p>
-    <button class="btn primary" id="girisBtn" type="button">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg>
-      Google ile giriş yap
-    </button>
-  </div>
+<main id="icerik">
 
-  <div id="panel" style="display:none">
-    <section class="section" id="adresler">
-      <div class="section-head">
-        <div>
-          <p class="kicker">01 — Kayıtlı adresler</p>
-          <h2 class="blok">Adreslerim</h2>
-        </div>
-        <button class="btn" id="yeniAdres" type="button">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          Yeni adres
+  <!-- ================================================================
+       1. BAŞLIK + OTURUM DURUMU
+       ================================================================ -->
+  <section class="bolum">
+    <div class="kap">
+      <span class="ust-baslik">Hesap</span>
+      <h1 style="margin-top:var(--a4);max-width:20ch">Adresleriniz ve siparişleriniz</h1>
+      <p class="giris" style="margin-top:var(--a5);max-width:56ch">
+        Teslimat adreslerinizi burada tutar, verdiğiniz siparişleri ve tutarlarını
+        görürsünüz. Bu sayfa yalnız size açıktır; kayıtlar Google hesabınıza bağlıdır.
+      </p>
+
+      <div id="kimlik" style="margin-top:var(--a5)"></div>
+
+      <p class="kucuk soluk" id="durumSatir" style="margin-top:var(--a4)" role="status" aria-live="polite">
+        Oturum durumu kontrol ediliyor…
+      </p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       2. GİRİŞ KUTUSU
+       #girisBtn bir SÖZLEŞMEDİR: hesap.js bu kimliği görünce üst çubuğa
+       kendi hesap kutusunu çizmez. Kimlik değişirse çift giriş arayüzü çıkar.
+       ================================================================ -->
+  <section class="bolum-sik" id="girisBolum" hidden aria-labelledby="girisBas">
+    <div class="kap">
+      <div class="kart" style="max-width:36rem">
+        <span class="ust-baslik">Giriş gerekli</span>
+        <h2 id="girisBas" class="h3">Google hesabınızla girin</h2>
+        <p class="kucuk">
+          Kayıtlı adreslerinizi ve sipariş geçmişinizi görmek için giriş yapmanız
+          gerekiyor. Şifre bu sitede tutulmaz; doğrulamayı Google yapar.
+        </p>
+        <button class="dug dug-1 dug-b" id="girisBtn" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21c0-3.6 3.6-6 8-6s8 2.4 8 6"/></svg>
+          Google ile giriş yap
         </button>
+        <div class="kart-alt">
+          <p class="kucuk soluk">
+            Giriş yalnız adres ve sipariş kayıtlarınızı size bağlamak için kullanılır.
+            Ad, e-posta ve profil fotoğrafınızın ayrıca <strong>kaydedilmesi</strong>
+            kişiselleştirme onayına bağlıdır — <a href="#kvkk">aşağıdan</a> açıp
+            kapatabilirsiniz.
+          </p>
+        </div>
       </div>
-      <div class="adres-grid" id="adresGrid"></div>
-      <p class="bos" id="adresBos" style="display:none">Henüz kayıtlı adresiniz yok.</p>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       3. DURUM MESAJI
+       PANELİN DIŞINDA durur: giriş hatası çıkışta da gösterilmeli, ama
+       panel açılmamalı. İçeride olsaydı hatayı göstermek için paneli
+       açmak gerekirdi — o da adresleri oturumsuz açığa çıkarırdı.
+       ================================================================ -->
+  <div class="kap">
+    <div class="not not-bilgi" id="mesajKutu" hidden role="status" aria-live="polite">
+      <span class="isaret" aria-hidden="true" id="mesajIsaret">i</span>
+      <div><p class="baslik" id="mesajYazi"></p></div>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       4. PANEL — giriş yapılınca açılır
+       ================================================================ -->
+  <div id="panel" hidden>
+
+    <!-- --- 4a. ADRES DEFTERİ --- -->
+    <section class="bolum bolum-cizgili" id="adresler" aria-labelledby="adresBas">
+      <div class="kap">
+        <div class="bolum-bas">
+          <span class="ust-baslik">01 · Adres defteri</span>
+          <h2 id="adresBas">Kayıtlı adresler</h2>
+          <p>
+            Sipariş verirken adresi baştan yazmazsınız; listeden seçilir.
+            <strong>Varsayılan</strong> işaretlediğiniz adres listenin başına gelir ve
+            formda önce o dolar — ikinci bir adresi varsayılan yaparsanız eskisinin
+            işareti otomatik kalkar.
+          </p>
+        </div>
+
+        <div class="satir" style="margin-bottom:var(--a5)">
+          <button class="dug dug-2" id="yeniAdres" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            Yeni adres
+          </button>
+          <span class="kucuk soluk sayi" id="adresSayac"></span>
+        </div>
+
+        <form class="kart form" id="adresForm" hidden style="max-width:46rem;margin-bottom:var(--a5)"
+              aria-labelledby="formBaslik">
+          <h3 class="h4" id="formBaslik">Yeni adres</h3>
+          <input type="hidden" name="id" id="aId">
+
+          <label class="alan" for="aBaslik">
+            <span class="etiket">Adres başlığı <span class="gerek" aria-hidden="true">*</span></span>
+            <input type="text" id="aBaslik" name="baslik" required maxlength="40"
+                   placeholder="Örn. Fabrika, Ofis, Ev">
+            <span class="ipucu">Listede bu adı görürsünüz.</span>
+          </label>
+
+          <div class="izgara iz-2">
+            <label class="alan" for="aAd">
+              <span class="etiket">Ad soyad <span class="gerek" aria-hidden="true">*</span></span>
+              <input type="text" id="aAd" name="adSoyad" required maxlength="60" autocomplete="name">
+            </label>
+            <label class="alan" for="aFirma">
+              <span class="etiket">Firma</span>
+              <input type="text" id="aFirma" name="firma" maxlength="60" autocomplete="organization">
+            </label>
+          </div>
+
+          <div class="izgara iz-2">
+            <label class="alan" for="aTel">
+              <span class="etiket">Telefon</span>
+              <input type="tel" id="aTel" name="telefon" maxlength="24" autocomplete="tel">
+            </label>
+            <label class="alan" for="aPk">
+              <span class="etiket">Posta kodu</span>
+              <input type="text" id="aPk" name="postaKodu" maxlength="10" autocomplete="postal-code"
+                     inputmode="numeric">
+            </label>
+          </div>
+
+          <div class="izgara iz-2">
+            <label class="alan" for="aIl">
+              <span class="etiket">İl</span>
+              <input type="text" id="aIl" name="il" maxlength="30" autocomplete="address-level1">
+            </label>
+            <label class="alan" for="aIlce">
+              <span class="etiket">İlçe</span>
+              <input type="text" id="aIlce" name="ilce" maxlength="30" autocomplete="address-level2">
+            </label>
+          </div>
+
+          <label class="alan" for="aAdres">
+            <span class="etiket">Açık adres <span class="gerek" aria-hidden="true">*</span></span>
+            <textarea id="aAdres" name="adres" required maxlength="300"
+                      autocomplete="street-address"></textarea>
+            <span class="ipucu">Kapı, blok, organize sanayi bölgesi ve ada/parsel bilgisi işe yarar.</span>
+          </label>
+
+          <label class="secim" for="aVars">
+            <input type="checkbox" id="aVars" name="varsayilan">
+            <span class="yazi">Varsayılan adresim olsun</span>
+          </label>
+
+          <div class="satir">
+            <button class="dug dug-1" type="submit" id="kaydetDug">Kaydet</button>
+            <button class="dug dug-3" type="button" id="vazgecDug">Vazgeç</button>
+          </div>
+        </form>
+
+        <div class="izgara iz-3" id="adresIzgara"></div>
+
+        <p class="kucuk soluk" id="adresBos" hidden style="max-width:var(--olcu)">
+          Henüz kayıtlı adresiniz yok. "Yeni adres" ile ekleyebilir ya da sipariş
+          formunda "bu adresi kaydet" kutucuğunu işaretleyebilirsiniz.
+        </p>
+      </div>
     </section>
 
-    <section class="section" id="siparisler">
-      <div class="section-head">
-        <div>
-          <p class="kicker">02 — Geçmiş</p>
-          <h2 class="blok">Siparişlerim</h2>
+    <!-- --- 4b. SİPARİŞLER --- -->
+    <section class="bolum bolum-alt bolum-cizgili" id="siparisler" aria-labelledby="siparisBas">
+      <div class="kap">
+        <div class="bolum-bas">
+          <span class="ust-baslik">02 · Geçmiş</span>
+          <h2 id="siparisBas">Siparişlerim</h2>
+          <p>
+            Giriş yaptıktan sonra verdiğiniz siparişler burada listelenir; en yeni
+            üstte olur. Sipariş durumu ödeme onayı geldikçe değişir.
+          </p>
         </div>
-        <a class="btn" href="/magaza.html">Mağazaya git</a>
+
+        <div class="yigin" id="siparisListe"></div>
+
+        <p class="kucuk soluk" id="siparisBos" hidden style="max-width:var(--olcu)">
+          Henüz siparişiniz yok. Lisans kapsamı ve fiyat
+          <a href="fiyat.html">fiyat sayfasında</a> yazılıdır.
+        </p>
+
+        <div class="satir" style="margin-top:var(--a5)">
+          <a class="dug dug-2" href="fiyat.html#magaza">Fiyat ve satın alma</a>
+        </div>
       </div>
-      <div id="siparisListe"></div>
-      <p class="bos" id="siparisBos" style="display:none">Henüz siparişiniz yok.</p>
     </section>
+
   </div>
+
+  <!-- ================================================================
+       5. KVKK TERCİHLERİ KISAYOLU
+       Onay.durum() / Onay.yenidenSor() — onay.js'in API'si.
+       ================================================================ -->
+  <section class="bolum bolum-cizgili" id="kvkk" aria-labelledby="kvkkBas">
+    <div class="kap">
+      <div class="bolum-bas">
+        <span class="ust-baslik">Veri tercihleri</span>
+        <h2 id="kvkkBas">Neyin kaydedildiğine siz karar verirsiniz</h2>
+      </div>
+
+      <div class="izgara iz-2">
+        <div class="not not-bilgi">
+          <span class="isaret" aria-hidden="true">i</span>
+          <div>
+            <p class="baslik">Şu anki seçiminiz</p>
+            <p id="onayDurum">Tercih okunuyor…</p>
+            <div class="satir">
+              <button class="dug dug-2" id="onayDegistir" type="button">Tercihleri yeniden seç</button>
+              <a class="dug dug-3" href="gizlilik.html">Gizlilik ve KVKK metni</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="not">
+          <span class="isaret" aria-hidden="true">§</span>
+          <div>
+            <p class="baslik">Bu sayfa hangi veriyi tutuyor</p>
+            <p>
+              Adres ve sipariş kayıtları hesabınıza bağlı olarak saklanır; bunlar
+              siparişin kendisi için <strong>gereklidir</strong> ve onay kapsamına
+              girmez. Ad, e-posta ve profil fotoğrafınızın ayrıca profil kaydına
+              yazılması ise yalnız <strong>kişiselleştirme</strong> onayı verilmişse
+              olur. Ziyaret istatistiği ayrı bir onaydır ve reddedilirse hiçbir kayıt
+              yazılmaz.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <noscript>
+    <div class="kap" style="padding-bottom:var(--a7)">
+      <div class="not not-uyari">
+        <span class="isaret" aria-hidden="true">!</span>
+        <div>
+          <p class="baslik">JavaScript kapalı</p>
+          <p>
+            Hesap sayfası giriş doğrulaması ve kayıt okuması yaptığı için JavaScript
+            olmadan çalışamaz. Sitenin geri kalanı — uygulamalar, uyumluluk tablosu,
+            fiyat ve süreç — JavaScript kapalıyken de tam okunur.
+          </p>
+        </div>
+      </div>
+    </div>
+  </noscript>
+
 </main>
 
-<footer>
-  <div class="footer-inner">
-    <span>© 2026 Sercan Sözer</span>
-    <nav class="footer-links" aria-label="Alt gezinme">
-      <a href="/">Ana Sayfa</a>
-      <a href="/magaza.html">Mağaza</a>
-      <a href="/portfolyo.html">Portfolyo</a>
-      <a href="/yazilar.html">Yazılar</a>
-      <a href="/forum.html">Forum</a>
-      <a href="/#iletisim">İletişim</a>
-      <a href="/gizlilik.html">Gizlilik</a>
-    </nav>
-    <span class="mono">sersoz.com</span>
+<!-- ==================================================================
+     ALT BİLGİ
+     ================================================================== -->
+<footer class="alt-bilgi">
+  <div class="kap">
+    <div class="alt-izgara">
+      <div>
+        <h2 class="bas">İş</h2>
+        <ul>
+          <li><a href="uygulamalar.html">Uygulamalar</a></li>
+          <li><a href="yazilim.html">Vision Detection App</a></li>
+          <li><a href="yazilim.html#uyumluluk">Uyumluluk ve protokoller</a></li>
+          <li><a href="surec.html">Nasıl çalışır</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Karar</h2>
+        <ul>
+          <li><a href="fiyat.html">Fiyat ve kapsam</a></li>
+          <li><a href="fiyat.html#kazanc">Kazanç hesabı</a></li>
+          <li><a href="fiyat.html#magaza">Satın alma</a></li>
+          <li><a href="surec.html#talep">Fizibilite talebi</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">Site</h2>
+        <ul>
+          <li><a href="forum.html">Danışma Masası</a></li>
+          <li><a href="hakkinda.html">Hakkında ve yazılar</a></li>
+          <li><a href="hesabim.html" aria-current="page">Hesabım</a></li>
+          <li><a href="gizlilik.html">Gizlilik ve KVKK</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="bas">İletişim</h2>
+        <ul>
+          <li><a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a></li>
+        </ul>
+        <p class="kucuk soluk" style="margin-top:var(--a3);max-width:26ch">
+          Sercan Sözer — mekatronik mühendisi, İzmir. Şahıs olarak, mühendislik hizmeti
+          biçiminde çalışıyorum.
+        </p>
+      </div>
+    </div>
+
+    <div class="alt-son">
+      <span>© <span class="sayi">2026</span> Sercan Sözer</span>
+      <span>Dış font, dış stil ve reklam/analitik izleyicisi yüklenmez.</span>
+      <button type="button" class="tema-dug" id="temaDug" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6 6l1.5 1.5M16.5 16.5L18 18M18 6l-1.5 1.5M7.5 16.5L6 18"/><circle cx="12" cy="12" r="4"/></svg>
+        <span id="temaYazi">Koyu tema</span>
+      </button>
+    </div>
   </div>
 </footer>
 
-<div class="scrim" id="scrim"></div>
-<div class="modal" id="adresModal" role="dialog" aria-modal="true" aria-labelledby="amTitle">
-  <div class="modal-head">
-    <h2 id="amTitle">Yeni adres</h2>
-    <button class="x-btn" data-close type="button" aria-label="Kapat">×</button>
-  </div>
-  <div class="modal-body">
-    <form id="adresForm">
-      <input type="hidden" name="id" id="aId">
-      <div class="field">
-        <label for="aBaslik">Adres başlığı</label>
-        <input id="aBaslik" name="baslik" required maxlength="40" placeholder="Örn. Fabrika, Ofis, Ev">
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="aAd">Ad soyad</label>
-          <input id="aAd" name="adSoyad" required maxlength="60">
-        </div>
-        <div class="field">
-          <label for="aFirma">Firma (isteğe bağlı)</label>
-          <input id="aFirma" name="firma" maxlength="60">
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="aTel">Telefon</label>
-          <input id="aTel" name="telefon" maxlength="24">
-        </div>
-        <div class="field">
-          <label for="aPk">Posta kodu</label>
-          <input id="aPk" name="postaKodu" maxlength="10">
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="aIl">İl</label>
-          <input id="aIl" name="il" maxlength="30">
-        </div>
-        <div class="field">
-          <label for="aIlce">İlçe</label>
-          <input id="aIlce" name="ilce" maxlength="30">
-        </div>
-      </div>
-      <div class="field">
-        <label for="aAdres">Açık adres</label>
-        <textarea id="aAdres" name="adres" required maxlength="300"></textarea>
-      </div>
-      <label class="onay"><input type="checkbox" name="varsayilan" id="aVars"> Varsayılan adresim olsun</label>
-      <button class="wide-btn" type="submit">Kaydet</button>
-    </form>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
+<!-- ==================================================================
+     SAYFA BETİĞİ
+     Firebase başlatması getApps() korumalıdır — hesap.js aynı sayfada
+     aynı uygulamayı kurmaya çalışır; korumasız iki initializeApp çağrısı
+     "already exists" ile girişi komple çökertir.
+     KULLANICI VERİSİ innerHTML İLE BASILMAZ: adres ve sipariş satırları
+     createElement/textContent ile kurulur.
+     NOT: siparis-sonuc.html AYRI DOSYA OLARAK KALIR — ödeme sağlayıcısının
+     dönüş adresi ve 'sersoz_sepet_v1' sepetini temizleyen TEK yer orasıdır.
+     ================================================================== -->
 <script>
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48",
-  authDomain: "sersoz-f93c3.firebaseapp.com",
-  projectId: "sersoz-f93c3",
-  storageBucket: "sersoz-f93c3.firebasestorage.app",
-  messagingSenderId: "173131115543",
-  appId: "1:173131115543:web:f0313dd00ac0f2d3f80052"
-};
-
 (function () {
   'use strict';
 
-  var S = null, user = null, adresler = [];
-  var TRY = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 });
-  var TARIH = new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' });
+  var FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48",
+    authDomain: "sersoz-f93c3.firebaseapp.com",
+    projectId: "sersoz-f93c3",
+    storageBucket: "sersoz-f93c3.firebasestorage.app",
+    messagingSenderId: "173131115543",
+    appId: "1:173131115543:web:f0313dd00ac0f2d3f80052"
+  };
+
+  var S = null, user = null, adresler = [], hazir = false;
+
+  var TRY = new Intl.NumberFormat('tr-TR', {
+    style: 'currency', currency: 'TRY', maximumFractionDigits: 0
+  });
+  var TARIH = new Intl.DateTimeFormat('tr-TR', {
+    day: '2-digit', month: 'long', year: 'numeric'
+  });
 
   function $(id) { return document.getElementById(id); }
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
-  var tTimer;
-  function toast(m) {
-    var t = $('toast'); t.textContent = m; t.classList.add('show');
-    clearTimeout(tTimer); tTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
-  }
-  function kapat() {
-    $('adresModal').classList.remove('open');
-    $('scrim').classList.remove('open');
-  }
-  function ac() {
-    $('adresModal').classList.add('open');
-    $('scrim').classList.add('open');
+  function goster(id, ac) { $(id).hidden = !ac; }
+
+  function el(etiket, sinif, yazi) {
+    var d = document.createElement(etiket);
+    if (sinif) d.className = sinif;
+    if (yazi != null) d.textContent = yazi;
+    return d;
   }
 
-  /* ------------------------------------------------------------- adresler */
+  /* ------------------------------------------------------------- mesaj */
+  var mesajZaman;
+  function mesaj(metin, tur) {
+    var kutu = $('mesajKutu');
+    kutu.className = 'not ' + (tur === 'hata' ? 'not-uyari' : 'not-bilgi');
+    $('mesajIsaret').textContent = tur === 'hata' ? '!' : 'i';
+    $('mesajYazi').textContent = metin;
+    kutu.hidden = false;
+    clearTimeout(mesajZaman);
+    /* Hata mesajı kendiliğinden kaybolmaz; bilgi mesajı kaybolur. */
+    if (tur !== 'hata') mesajZaman = setTimeout(function () { kutu.hidden = true; }, 6000);
+  }
+
+  /* ==================================================== TEMA + MENÜ */
+  var kok = document.documentElement;
+  var temaDug = $('temaDug'), temaYazi = $('temaYazi');
+  function koyuMu() {
+    var t = kok.getAttribute('data-tema');
+    if (t) return t === 'koyu';
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  function temaYaz() {
+    var k = koyuMu();
+    temaDug.setAttribute('aria-pressed', k ? 'true' : 'false');
+    temaYazi.textContent = k ? 'Açık tema' : 'Koyu tema';
+  }
+  temaDug.addEventListener('click', function () {
+    var yeni = koyuMu() ? 'acik' : 'koyu';
+    kok.setAttribute('data-tema', yeni);
+    try { localStorage.setItem('sersoz_tema', yeni); } catch (e) {}
+    temaYaz();
+  });
+  temaYaz();
+
+  var mk = $('menuKutu');
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && mk.checked) mk.checked = false;
+  });
+  var menu = document.querySelector('.ust-menu');
+  if (menu) menu.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') mk.checked = false;
+  });
+  var etiketDug = document.querySelector('.menu-dug');
+  if (etiketDug) etiketDug.addEventListener('keydown', function (e) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); mk.checked = !mk.checked; }
+  });
+
+  /* ==================================================== ADRES DEFTERİ */
+  function adresKarti(a) {
+    var k = el('article', 'kart kart-sik');
+
+    var bas = el('div', 'satir');
+    bas.style.gap = 'var(--a2)';
+    bas.appendChild(el('h3', 'h4', a.baslik || 'Adres'));
+    if (a.varsayilan) {
+      var r = el('span', 'rozet rozet-hazir', 'VARSAYILAN');
+      r.setAttribute('data-isaret', '✓');
+      bas.appendChild(r);
+    }
+    k.appendChild(bas);
+
+    var kisi = [a.adSoyad, a.firma].filter(Boolean).join(' · ');
+    if (kisi) k.appendChild(el('p', 'kucuk', kisi));
+    if (a.adres) k.appendChild(el('p', 'kucuk soluk', a.adres));
+
+    var yer = [a.ilce, a.il, a.postaKodu].filter(Boolean).join(' / ');
+    if (yer) k.appendChild(el('p', 'kucuk soluk', yer));
+    if (a.telefon) k.appendChild(el('p', 'kucuk soluk mono', a.telefon));
+
+    var alt = el('div', 'kart-alt satir');
+    var d = el('button', 'dug dug-3', 'Düzenle');
+    d.type = 'button';
+    d.setAttribute('data-duzenle', a.id);
+    d.setAttribute('aria-label', 'Düzenle: ' + (a.baslik || 'adres'));
+    var s = el('button', 'dug dug-3', 'Sil');
+    s.type = 'button';
+    s.setAttribute('data-sil', a.id);
+    s.setAttribute('aria-label', 'Sil: ' + (a.baslik || 'adres'));
+    alt.appendChild(d); alt.appendChild(s);
+    k.appendChild(alt);
+
+    return k;
+  }
+
   function adresCiz() {
-    var g = $('adresGrid');
-    $('adresBos').style.display = adresler.length ? 'none' : 'block';
-    g.innerHTML = adresler.map(function (a) {
-      return '<article class="adres">' +
-        '<h3>' + esc(a.baslik) + (a.varsayilan ? '<span class="vars">Varsayılan</span>' : '') + '</h3>' +
-        '<p>' + esc(a.adSoyad) + (a.firma ? ' · ' + esc(a.firma) : '') + '<br>' +
-          esc(a.adres) + '<br>' + esc([a.ilce, a.il, a.postaKodu].filter(Boolean).join(' / ')) + '</p>' +
-        (a.telefon ? '<p class="tel">' + esc(a.telefon) + '</p>' : '') +
-        '<div class="adres-ops">' +
-          '<button data-duzenle="' + a.id + '" type="button">Düzenle</button>' +
-          '<button data-sil="' + a.id + '" type="button">Sil</button>' +
-        '</div></article>';
-    }).join('');
+    var g = $('adresIzgara');
+    g.textContent = '';
+    adresler.forEach(function (a) { g.appendChild(adresKarti(a)); });
+    goster('adresBos', adresler.length === 0);
+    $('adresSayac').textContent = adresler.length
+      ? adresler.length + ' kayıtlı adres'
+      : '';
   }
 
   function adresDinle() {
-    var col = S.fsMod.collection(S.db, 'kullanicilar', user.uid, 'adresler');
-    S.fsMod.onSnapshot(col, function (snap) {
-      adresler = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
-      adresler.sort(function (a, b) { return (b.varsayilan ? 1 : 0) - (a.varsayilan ? 1 : 0); });
+    var col = S.fs.collection(S.db, 'kullanicilar', user.uid, 'adresler');
+    S.fs.onSnapshot(col, function (snap) {
+      adresler = snap.docs.map(function (d) {
+        return Object.assign({ id: d.id }, d.data());
+      });
+      /* Varsayılan adres her zaman başa. */
+      adresler.sort(function (a, b) {
+        return (b.varsayilan ? 1 : 0) - (a.varsayilan ? 1 : 0);
+      });
       adresCiz();
+      /* Yerel yedek: ağ gidince en azından son hâli elde kalır. */
       try { localStorage.setItem('sersoz_adresler', JSON.stringify(adresler)); } catch (e) {}
-    }, function () { toast('Adresler okunamadı.'); });
+    }, function () {
+      mesaj('Adresler okunamadı. Bağlantınızı kontrol edip sayfayı yenileyin.', 'hata');
+    });
   }
+
+  function formAc(a) {
+    var f = $('adresForm');
+    f.reset();
+    $('aId').value = '';
+    if (a) {
+      $('formBaslik').textContent = 'Adresi düzenle';
+      $('aId').value = a.id;
+      $('aBaslik').value = a.baslik || '';
+      $('aAd').value = a.adSoyad || '';
+      $('aFirma').value = a.firma || '';
+      $('aTel').value = a.telefon || '';
+      $('aPk').value = a.postaKodu || '';
+      $('aIl').value = a.il || '';
+      $('aIlce').value = a.ilce || '';
+      $('aAdres').value = a.adres || '';
+      $('aVars').checked = !!a.varsayilan;
+    } else {
+      $('formBaslik').textContent = 'Yeni adres';
+      if (user) $('aAd').value = user.displayName || '';
+      /* İlk adres kendiliğinden varsayılan olsun. */
+      $('aVars').checked = adresler.length === 0;
+    }
+    f.hidden = false;
+    $('aBaslik').focus();
+  }
+
+  function formKapat() {
+    var f = $('adresForm');
+    f.hidden = true;
+    f.reset();
+    $('aId').value = '';
+    $('yeniAdres').focus();
+  }
+
+  function adresBelge(id) {
+    return S.fs.doc(S.db, 'kullanicilar', user.uid, 'adresler', id);
+  }
+  function adresKoleksiyon() {
+    return S.fs.collection(S.db, 'kullanicilar', user.uid, 'adresler');
+  }
+
+  var kaydediyor = false;
 
   function adresKaydet(e) {
     e.preventDefault();
+    if (!S || !user || kaydediyor) return;
+
     var fd = new FormData(e.target);
+    function al(ad) { return String(fd.get(ad) || '').trim(); }
+
     var veri = {
-      baslik: String(fd.get('baslik')).trim(),
-      adSoyad: String(fd.get('adSoyad')).trim(),
-      firma: String(fd.get('firma') || '').trim(),
-      telefon: String(fd.get('telefon') || '').trim(),
-      il: String(fd.get('il') || '').trim(),
-      ilce: String(fd.get('ilce') || '').trim(),
-      postaKodu: String(fd.get('postaKodu') || '').trim(),
-      adres: String(fd.get('adres')).trim(),
+      baslik: al('baslik'), adSoyad: al('adSoyad'), firma: al('firma'),
+      telefon: al('telefon'), il: al('il'), ilce: al('ilce'),
+      postaKodu: al('postaKodu'), adres: al('adres'),
       varsayilan: !!fd.get('varsayilan')
     };
-    var id = fd.get('id');
-    var col = S.fsMod.collection(S.db, 'kullanicilar', user.uid, 'adresler');
+    var id = fd.get('id') || '';
 
+    kaydediyor = true;
+    $('kaydetDug').setAttribute('aria-disabled', 'true');
+
+    /* Varsayılan işaretlendiyse ÖNCE diğerlerinin işareti kalkar —
+       yoksa iki varsayılan adres oluşur ve sıralama belirsizleşir. */
     var oncekiler = veri.varsayilan
-      ? Promise.all(adresler.filter(function (a) { return a.varsayilan && a.id !== id; })
-          .map(function (a) {
-            return S.fsMod.updateDoc(S.fsMod.doc(S.db, 'kullanicilar', user.uid, 'adresler', a.id),
-              { varsayilan: false });
-          }))
+      ? Promise.all(adresler.filter(function (a) {
+          return a.varsayilan && a.id !== id;
+        }).map(function (a) {
+          return S.fs.updateDoc(adresBelge(a.id), { varsayilan: false });
+        }))
       : Promise.resolve();
 
     oncekiler.then(function () {
-      return id
-        ? S.fsMod.setDoc(S.fsMod.doc(S.db, 'kullanicilar', user.uid, 'adresler', id), veri)
-        : S.fsMod.addDoc(col, veri);
+      return id ? S.fs.setDoc(adresBelge(id), veri) : S.fs.addDoc(adresKoleksiyon(), veri);
     }).then(function () {
-      toast(id ? 'Adres güncellendi.' : 'Adres kaydedildi.');
-      e.target.reset(); $('aId').value = '';
-      kapat();
-    }).catch(function () { toast('Kaydedilemedi.'); });
+      mesaj(id ? 'Adres güncellendi.' : 'Adres kaydedildi.');
+      formKapat();
+    }).catch(function () {
+      mesaj('Adres kaydedilemedi. Kayıt sunucuya yazılamadı; yeniden deneyin.', 'hata');
+    }).then(function () {
+      kaydediyor = false;
+      $('kaydetDug').removeAttribute('aria-disabled');
+    });
   }
 
   function adresSil(id) {
-    S.fsMod.deleteDoc(S.fsMod.doc(S.db, 'kullanicilar', user.uid, 'adresler', id))
-      .then(function () { toast('Adres silindi.'); })
-      .catch(function () { toast('Silinemedi.'); });
-  }
-
-  function adresDuzenle(id) {
     var a = adresler.filter(function (x) { return x.id === id; })[0];
-    if (!a) return;
-    $('amTitle').textContent = 'Adresi düzenle';
-    $('aId').value = a.id;
-    $('aBaslik').value = a.baslik || '';
-    $('aAd').value = a.adSoyad || '';
-    $('aFirma').value = a.firma || '';
-    $('aTel').value = a.telefon || '';
-    $('aPk').value = a.postaKodu || '';
-    $('aIl').value = a.il || '';
-    $('aIlce').value = a.ilce || '';
-    $('aAdres').value = a.adres || '';
-    $('aVars').checked = !!a.varsayilan;
-    ac();
+    var ad = a && a.baslik ? a.baslik : 'Bu adres';
+    /* Geri alınamaz işlem: onaysız silinmez. */
+    if (!window.confirm(ad + ' silinecek. Onaylıyor musunuz?')) return;
+    S.fs.deleteDoc(adresBelge(id))
+      .then(function () { mesaj('Adres silindi.'); })
+      .catch(function () { mesaj('Adres silinemedi.', 'hata'); });
   }
 
-  /* ----------------------------------------------------------- siparisler */
+  $('yeniAdres').addEventListener('click', function () { formAc(null); });
+  $('vazgecDug').addEventListener('click', formKapat);
+  $('adresForm').addEventListener('submit', adresKaydet);
+  $('adresIzgara').addEventListener('click', function (e) {
+    var d = e.target.closest('[data-duzenle]');
+    if (d) {
+      var a = adresler.filter(function (x) {
+        return x.id === d.getAttribute('data-duzenle');
+      })[0];
+      if (a) formAc(a);
+      return;
+    }
+    var s = e.target.closest('[data-sil]');
+    if (s) adresSil(s.getAttribute('data-sil'));
+  });
+
+  /* ==================================================== SİPARİŞLER */
+  function tarihMetni(t) {
+    if (!t) return '';
+    var ms = null;
+    if (typeof t.toDate === 'function') ms = t.toDate().getTime();
+    else if (t.seconds) ms = t.seconds * 1000;
+    return ms ? TARIH.format(new Date(ms)) : '';
+  }
+
+  function siparisKarti(s) {
+    var k = el('article', 'kart kart-sik');
+
+    var bas = el('div', 'satir');
+    var no = el('span', 'mono', s.no || s.id);
+    no.style.fontWeight = '600';
+    bas.appendChild(no);
+
+    var t = tarihMetni(s.tarih);
+    if (t) bas.appendChild(el('span', 'kucuk soluk', '· ' + t));
+
+    var odendi = s.durum === 'odendi';
+    var r = el('span', 'rozet satir-son ' + (odendi ? 'rozet-hazir' : 'rozet-yol'),
+               odendi ? 'ÖDENDİ' : 'BEKLEMEDE');
+    r.setAttribute('data-isaret', odendi ? '✓' : '◔');
+    bas.appendChild(r);
+    k.appendChild(bas);
+
+    var liste = el('div', 'yigin-sik');
+    (s.kalemler || []).forEach(function (kl) {
+      var sat = el('div', 'satir kucuk');
+      sat.style.justifyContent = 'space-between';
+      sat.appendChild(el('span', null, (kl.ad || 'Kalem') + ' × ' + (kl.adet || 1)));
+      var b = el('b', 'sayi mono',
+                 TRY.format((kl.birimFiyat || 0) * (kl.adet || 1)));
+      sat.appendChild(b);
+      liste.appendChild(sat);
+    });
+    k.appendChild(liste);
+
+    var alt = el('div', 'kart-alt');
+    if (s.araToplam != null) {
+      var ara = el('div', 'satir kucuk soluk');
+      ara.style.justifyContent = 'space-between';
+      ara.appendChild(el('span', null, 'Ara toplam'));
+      ara.appendChild(el('span', 'sayi mono', TRY.format(s.araToplam || 0)));
+      alt.appendChild(ara);
+    }
+    if (s.kdv != null) {
+      var kdv = el('div', 'satir kucuk soluk');
+      kdv.style.justifyContent = 'space-between';
+      kdv.appendChild(el('span', null, 'KDV'));
+      kdv.appendChild(el('span', 'sayi mono', TRY.format(s.kdv || 0)));
+      alt.appendChild(kdv);
+    }
+    var top = el('div', 'satir');
+    top.style.justifyContent = 'space-between';
+    top.style.marginTop = 'var(--a2)';
+    top.appendChild(el('span', 'ust-baslik notr', 'Toplam · KDV dahil'));
+    var tb = el('b', 'sayi mono n-b', TRY.format(s.toplam || 0));
+    tb.style.fontSize = 'var(--p-govde-l)';
+    top.appendChild(tb);
+    alt.appendChild(top);
+    k.appendChild(alt);
+
+    if (s.adres) {
+      var ad = el('p', 'kucuk soluk', 'Teslimat: ' + s.adres);
+      k.appendChild(ad);
+    }
+    return k;
+  }
+
+  function siparisCiz(list) {
+    var g = $('siparisListe');
+    g.textContent = '';
+    list.forEach(function (s) { g.appendChild(siparisKarti(s)); });
+    goster('siparisBos', list.length === 0);
+  }
+
   function siparisDinle() {
-    var q = S.fsMod.query(
-      S.fsMod.collection(S.db, 'siparisler'),
-      S.fsMod.where('ownerId', '==', user.uid)
+    /* orderBy YOK: bileşik indeks gerektirmesin diye sıralama istemcide. */
+    var q = S.fs.query(
+      S.fs.collection(S.db, 'siparisler'),
+      S.fs.where('ownerId', '==', user.uid)
     );
-    S.fsMod.onSnapshot(q, function (snap) {
-      var list = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+    S.fs.onSnapshot(q, function (snap) {
+      var list = snap.docs.map(function (d) {
+        return Object.assign({ id: d.id }, d.data());
+      });
       list.sort(function (a, b) {
         var ta = a.tarih && a.tarih.seconds ? a.tarih.seconds : 0;
         var tb = b.tarih && b.tarih.seconds ? b.tarih.seconds : 0;
         return tb - ta;
       });
       siparisCiz(list);
-    }, function () { toast('Siparişler okunamadı.'); });
+    }, function () {
+      mesaj('Siparişler okunamadı. Bağlantınızı kontrol edip sayfayı yenileyin.', 'hata');
+    });
   }
 
-  function siparisCiz(list) {
-    $('siparisBos').style.display = list.length ? 'none' : 'block';
-    $('siparisListe').innerHTML = list.map(function (s) {
-      var d = s.tarih && s.tarih.seconds ? TARIH.format(new Date(s.tarih.seconds * 1000)) : '';
-      var durum = s.durum === 'odendi' ? 'odendi' : 'beklemede';
-      var durumYazi = s.durum === 'odendi' ? 'Ödendi' : 'Beklemede';
-      return '<article class="siparis">' +
-        '<div class="siparis-ust">' +
-          '<div><span class="siparis-no">' + esc(s.no || s.id) + '</span>' +
-            (d ? ' <span class="siparis-tarih">· ' + d + '</span>' : '') + '</div>' +
-          '<span class="rozet ' + durum + '">' + durumYazi + '</span>' +
-        '</div>' +
-        '<div class="siparis-govde">' +
-          (s.kalemler || []).map(function (k) {
-            return '<div class="s-kalem"><span>' + esc(k.ad) + ' × ' + (k.adet || 1) + '</span>' +
-                   '<b>' + TRY.format((k.birimFiyat || 0) * (k.adet || 1)) + '</b></div>';
-          }).join('') +
-          '<div class="s-toplam"><span>Toplam (KDV dahil)</span><b>' + TRY.format(s.toplam || 0) + '</b></div>' +
-        '</div></article>';
-    }).join('');
+  /* ==================================================== OTURUM */
+  function kimlikCiz(u) {
+    var k = $('kimlik');
+    k.textContent = '';
+    if (!u) return;
+
+    var dis = el('div', 'kart kart-sik');
+    dis.style.maxWidth = '32rem';
+    var kutu = el('div', 'satir');
+    dis.appendChild(kutu);
+
+    if (u.photoURL) {
+      var img = document.createElement('img');
+      img.src = u.photoURL;
+      img.alt = '';
+      img.width = 40; img.height = 40;
+      img.referrerPolicy = 'no-referrer';
+      img.style.width = '40px';
+      img.style.height = '40px';
+      img.style.borderRadius = '50%';
+      img.style.flex = 'none';
+      kutu.appendChild(img);
+    }
+
+    var ic = el('div');
+    ic.style.minWidth = '0';
+    var ad = el('p', null, u.displayName || 'Kullanıcı');
+    ad.style.fontWeight = '500';
+    ic.appendChild(ad);
+    ic.appendChild(el('p', 'kucuk soluk mono', u.email || ''));
+    kutu.appendChild(ic);
+
+    var cik = el('button', 'dug dug-2 satir-son', 'Çıkış');
+    cik.type = 'button';
+    cik.addEventListener('click', function () {
+      S.authMod.signOut(S.auth).catch(function () {
+        mesaj('Çıkış yapılamadı.', 'hata');
+      });
+    });
+    kutu.appendChild(cik);
+
+    k.appendChild(dis);
   }
 
-  /* ---------------------------------------------------------------- oturum */
   function oturum(u) {
+    hazir = true;
     user = u;
-    $('girisKutu').style.display = u ? 'none' : 'block';
-    $('panel').style.display = u ? 'block' : 'none';
-
-    if (!u) { $('kimlik').innerHTML = ''; return; }
-
-    $('kimlik').innerHTML =
-      '<div class="kimlik">' +
-        (u.photoURL ? '<img src="' + esc(u.photoURL) + '" alt="">' : '') +
-        '<span><span class="ad">' + esc(u.displayName || 'Kullanıcı') + '</span><br>' +
-        '<span class="mail">' + esc(u.email || '') + '</span></span>' +
-        '<button id="cikisBtn" type="button">Çıkış</button>' +
-      '</div>';
-    $('cikisBtn').onclick = function () { S.authMod.signOut(S.auth); };
-
+    kimlikCiz(u);
+    goster('girisBolum', !u);
+    goster('panel', !!u);
+    $('durumSatir').textContent = u
+      ? 'Oturum açık. Adres ve sipariş kayıtlarınız yalnız size gösterilir.'
+      : 'Oturum açık değil.';
+    if (!u) return;
     adresDinle();
     siparisDinle();
   }
 
-  /* ---------------------------------------------------------------- kurulum */
+  /* ==================================================== KURULUM */
   var base = 'https://www.gstatic.com/firebasejs/10.12.2/';
-  import(base + 'firebase-app.js').then(function (appMod) {
-    return Promise.all([
-      appMod.initializeApp(FIREBASE_CONFIG),
-      import(base + 'firebase-auth.js'),
-      import(base + 'firebase-firestore.js')
-    ]);
-  }).then(function (r) {
-    var app = r[0], authMod = r[1], fsMod = r[2];
+  Promise.all([
+    import(base + 'firebase-app.js'),
+    import(base + 'firebase-auth.js'),
+    import(base + 'firebase-firestore.js')
+  ]).then(function (r) {
+    var appMod = r[0], authMod = r[1], fsMod = r[2];
+    /* hesap.js de aynı uygulamayı kurmaya çalışır — koruma şart. */
+    var mevcut = (appMod.getApps && appMod.getApps()) || [];
+    var app = mevcut.length ? mevcut[0] : appMod.initializeApp(FIREBASE_CONFIG);
+
     S = {
-      auth: authMod.getAuth(app), db: fsMod.getFirestore(app),
-      authMod: authMod, fsMod: fsMod, provider: new authMod.GoogleAuthProvider()
+      auth: authMod.getAuth(app),
+      db: fsMod.getFirestore(app),
+      authMod: authMod,
+      fs: fsMod,
+      saglayici: new authMod.GoogleAuthProvider()
     };
+
     authMod.onAuthStateChanged(S.auth, oturum);
-    $('girisBtn').onclick = function () {
-      authMod.signInWithPopup(S.auth, S.provider).catch(function (e) { toast('Giriş yapılamadı: ' + e.code); });
-    };
+
+    $('girisBtn').addEventListener('click', function () {
+      authMod.signInWithPopup(S.auth, S.saglayici).catch(function (e) {
+        var kod = e && e.code ? e.code : '';
+        if (kod.indexOf('cancelled-popup') > -1 || kod.indexOf('popup-closed') > -1) return;
+        mesaj(kod.indexOf('popup-blocked') > -1
+          ? 'Tarayıcı açılır pencereyi engelledi. Bu site için açılır pencereye izin verip yeniden deneyin.'
+          : 'Giriş yapılamadı (' + (kod || 'bilinmeyen hata') + ').', 'hata');
+      });
+    });
   }).catch(function () {
-    $('girisKutu').style.display = 'block';
-    toast('Bağlantı kurulamadı.');
+    hazir = true;
+    goster('girisBolum', true);
+    $('durumSatir').textContent =
+      'Giriş servisine bağlanılamadı. İnternet bağlantınızı kontrol edip sayfayı yenileyin.';
   });
 
-  /* etkileşimler */
-  $('yeniAdres').onclick = function () {
-    $('amTitle').textContent = 'Yeni adres';
-    $('adresForm').reset();
-    $('aId').value = '';
-    if (user) $('aAd').value = user.displayName || '';
-    ac();
-  };
-  $('adresForm').onsubmit = adresKaydet;
-  $('scrim').onclick = kapat;
-  document.querySelector('[data-close]').onclick = kapat;
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') kapat(); });
+  /* GÜVENLİK YEDEĞİ: oturum durumu hiç gelmezse sayfa sonsuza kadar boş
+     kalmasın — 8 saniye sonra en azından giriş kutusu görünür. */
+  setTimeout(function () {
+    if (hazir) return;
+    goster('girisBolum', true);
+    $('durumSatir').textContent =
+      'Oturum durumu okunamadı. Giriş yapmayı deneyebilir ya da sayfayı yenileyebilirsiniz.';
+  }, 8000);
 
-  $('adresGrid').addEventListener('click', function (e) {
-    var d = e.target.closest('[data-duzenle]');
-    if (d) { adresDuzenle(d.getAttribute('data-duzenle')); return; }
-    var s = e.target.closest('[data-sil]');
-    if (s) adresSil(s.getAttribute('data-sil'));
-  });
+  /* ==================================================== KVKK KISAYOLU */
+  var ONAY_AD = { istatistik: 'ziyaret istatistiği', kisisel: 'kişiselleştirme' };
+
+  function onayYaz() {
+    var p = $('onayDurum');
+    if (!window.Onay) {
+      p.textContent = 'Onay bileşeni yüklenemedi; tercihlerinizi gizlilik sayfasından yönetebilirsiniz.';
+      return;
+    }
+    var s = window.Onay.durum();
+    if (!s) {
+      p.textContent = 'Henüz bir seçim yapmadınız. Zorunlu olmayan hiçbir kayıt yazılmıyor.';
+      window.Onay.bekle(onayYaz);
+      return;
+    }
+    var acik = [], kapali = [];
+    ['istatistik', 'kisisel'].forEach(function (k) {
+      (s[k] === true ? acik : kapali).push(ONAY_AD[k]);
+    });
+    var t = '';
+    try {
+      if (s.tarih) t = ' (' + new Date(s.tarih).toLocaleDateString('tr-TR') + ')';
+    } catch (e) {}
+    p.textContent =
+      'Gerekli kayıtlar her zaman açıktır. ' +
+      (acik.length ? 'İzin verilen: ' + acik.join(', ') + '. ' : '') +
+      (kapali.length ? 'Kapalı: ' + kapali.join(', ') + '.' : '') + t;
+  }
+
+  function onayKur() {
+    onayYaz();
+    $('onayDegistir').addEventListener('click', function () {
+      if (!window.Onay) return;
+      window.Onay.yenidenSor();
+      /* bekle() kuyruğu tek atışlıktır: yeni seçimi duymak için yeniden kaydol. */
+      window.Onay.bekle(onayYaz);
+    });
+  }
+
+  /* onay.js defer ile yüklenir; DOMContentLoaded'da hazırdır. */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onayKur);
+  } else {
+    onayKur();
+  }
 })();
 </script>
+
+<!-- ORTAK BETİKLER — sıra sözleşmedir, bozulmaz:
+     onay.js window.Onay'ı kurar; hesap.js ve iz.js ona bakar.
+     Sıra bozulursa hata çıkmaz, işlevler SESSİZCE ölür. -->
 <script src="/onay.js" defer></script>
 <script src="/hesap.js" defer></script>
 <script src="/iz.js" defer></script>
+
 </body>
 </html>

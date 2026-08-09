@@ -6,44 +6,39 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://sersoz.com/cozumler.html</loc>
+    <loc>https://sersoz.com/uygulamalar.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://sersoz.com/vision-detection.html</loc>
+    <loc>https://sersoz.com/yazilim.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://sersoz.com/kazanc.html</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://sersoz.com/magaza.html</loc>
+    <loc>https://sersoz.com/fiyat.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sersoz.com/portfolyo.html</loc>
+    <loc>https://sersoz.com/surec.html</loc>
     <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://sersoz.com/forum.html</loc>
+    <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://sersoz.com/yazilar.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <loc>https://sersoz.com/hakkinda.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://sersoz.com/yazilar/el-goz-kalibrasyonu-tsai-lenz.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://sersoz.com/forum.html</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://sersoz.com/gizlilik.html</loc>
