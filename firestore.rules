@@ -1,0 +1,526 @@
+rules_version = '2';
+
+/* =============================================================================
+   sersoz.com — Cloud Firestore güvenlik kuralları
+   Proje: sersoz-f93c3   ·   Bölge: eur3 (Avrupa)
+
+   BU DOSYA ELLE YAYIMLANIR.
+     Firebase Konsolu → Firestore Database → Rules → içeriği yapıştır → Publish.
+   Dosya deponun içinde durur ki değişiklik geçmişi görülebilsin; GitHub Pages
+   statik bir barındırma olduğu için dağıtım otomatik DEĞİLDİR.
+
+   BU DOSYA TÜM VERİTABANINI KAPSAR. Yayınlamadan önce konsoldaki mevcut
+   kurallarla karşılaştırın: forum bölümünün altında ziyaretler / urunler /
+   siparisler / kullanicilar için var olan davranış birebir modellenmiştir.
+
+   ---------------------------------------------------------------------------
+   KURULUM ŞARTI (kurallardan SONRA, ilk gönderiden ÖNCE):
+
+       forumAyar/genel  =  { yazmaAcik: true, yasakli: [] }
+
+   Bu belge yoksa kural içindeki get() hata verir ve HİÇ KİMSE foruma yazamaz.
+   Belgeyi elle oluşturabilirsiniz; ya da site sahibi hesabıyla /forum.html
+   sayfasını açıp "Kurulum" kutusundaki düğmeye basmanız yeterlidir.
+   ---------------------------------------------------------------------------
+   İSTEMCİ SÖZLEŞMESİ (kurallar bunu zorunlu kılar, forum.html buna uyar):
+
+     Konu açma   = writeBatch: set(forumKonular/{yeniId})
+                              + set(forumHiz/{uid})
+     Yanıt yazma = writeBatch: set(forumKonular/{k}/yanitlar/{yeniId})
+                              + update(forumKonular/{k})   (sayaç + sonEtkinlik)
+                              + set(forumHiz/{uid})
+
+   Toplu yazmada request.time tüm işlemler için AYNIDIR; bütün zaman damgası
+   eşitlikleri buna dayanır. Sayaç istemciden yazılmaz: increment(1) sunucu
+   tarafında uygulanır, kural sonucu (eski + 1) olarak doğrular.
+   ---------------------------------------------------------------------------
+   DİZİNLER: forum.html tek alanlı sıralama kullanır
+   (forumKonular orderBy sonEtkinlik DESC, yanitlar orderBy olusturma ASC).
+   Bunlar Firestore'un otomatik tek-alan dizinleriyle karşılanır; ELLE DİZİN
+   OLUŞTURMAK GEREKMEZ. Kategori süzgeci ve "çözülmüş" sekmesi istemcide,
+   yüklenmiş sayfa üzerinde çalışır.
+
+   Hacim büyüyünce (yüzlerce konu) sunucu tarafı süzmeye geçmek isterseniz
+   şu bileşik dizinler gerekir — bugün gerekmez:
+     (1) kategori ASC + sonEtkinlik DESC
+     (2) gizli ASC   + sonEtkinlik DESC
+     (3) cozuldu ASC + sonEtkinlik DESC
+     (4) yazarUid ASC + olusturma DESC          (Hesabım > yazılarım / KVKK)
+     (5) koleksiyon grubu: yanitlar → yazarUid ASC + olusturma DESC  (KVKK)
+============================================================================= */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ----------------------------------------------------- ortak yardımcılar */
+
+    function girisli()  { return request.auth != null; }
+    function benim()    { return request.auth.uid; }
+    function yeni()     { return request.resource.data; }
+    function eski()     { return resource.data; }
+    function degisenler() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    function dogrulanmis() {
+      return girisli()
+             && request.auth.token.email is string
+             && request.auth.token.email_verified == true;
+    }
+
+    function yonetici() {
+      return girisli()
+             && request.auth.token.email_verified == true
+             && request.auth.token.email == 'sercansozer20@gmail.com';
+    }
+
+    /* Yazarın adı ve fotoğrafı İSTEMCİDEN DEĞİL, imzalı kimlik jetonundan gelir.
+       Kullanıcı başkasının adıyla yazamaz; adını da uyduramaz. */
+    function sunucuAd() {
+      return ('name' in request.auth.token)
+             && (request.auth.token.name is string)
+             && (request.auth.token.name.size() > 0)
+             && (request.auth.token.name.size() <= 80)
+             ? request.auth.token.name
+             : 'İsimsiz katılımcı';
+    }
+
+    function sunucuFoto() {
+      return ('picture' in request.auth.token)
+             && (request.auth.token.picture is string)
+             && (request.auth.token.picture.size() <= 400)
+             ? request.auth.token.picture
+             : '';
+    }
+
+    /* --------------------------------------------------------- forum ortakları */
+
+    function kategoriler() {
+      return ['genel', 'plc-haberlesme', 'kamera-aydinlatma', '3d-vizyon',
+              'goruntu-isleme', 'robotik', 'kalibrasyon', 'saha-sorunlari'];
+    }
+
+    /* "Adım görünmesin" seçeneği: gönderide görünen ad, gerçek ad yerine bu
+       SABİT rol adlarından biri olabilir. Serbest metin verilmez — kullanıcı
+       kendine "Yönetici" veya başkasının adını takamaz. Kimlik yine kayıtlıdır:
+       yazarUid her zaman gerçek hesaptır ve site sahibi uid üzerinden
+       kullanicilar/{uid} belgesinden kimin yazdığını görebilir. */
+    function rolAdlari() {
+      return ['Bakım Mühendisi', 'Otomasyon Mühendisi', 'Kalite Mühendisi',
+              'PLC Programcısı', 'Sistem Entegratörü', 'Makine İmalatçısı',
+              'Elektrik Teknisyeni', 'İsimsiz katılımcı'];
+    }
+
+    /* Görünen kimlik iki halden BİRİ olmak zorunda:
+       açık kimlik  -> ad ve foto jetondan aynen,
+       gizli kimlik -> ad sabit rol listesinden, foto boş. Arası yok. */
+    function gorunenKimlik() {
+      return (yeni().takmaMi == false
+                && yeni().yazarAd   == sunucuAd()
+                && yeni().yazarFoto == sunucuFoto())
+          || (yeni().takmaMi == true
+                && yeni().yazarAd in rolAdlari()
+                && yeni().yazarFoto == '');
+    }
+
+    function ayarYolu() { return /databases/$(database)/documents/forumAyar/genel; }
+    function hizYolu()  { return /databases/$(database)/documents/forumHiz/$(benim()); }
+
+    /* Acil kilit + yasaklı kullanıcı — tek belge, tek okuma. */
+    function forumAcik() {
+      return get(ayarYolu()).data.yazmaAcik == true
+             && !(benim() in get(ayarYolu()).data.yasakli);
+    }
+
+    function bugunKodu() {
+      return request.time.year() * 10000 + request.time.month() * 100 + request.time.day();
+    }
+
+    /* Gönderi ile aynı toplu yazmada hız belgesi damgalanmak ZORUNDA:
+       sayaç kaçırılamaz. Ayrıca herkese açık yayın onayı burada aranır. */
+    function hizDamgasi() {
+      return getAfter(hizYolu()).data.sonYazi == request.time
+             && getAfter(hizYolu()).data.forumOnay == true;
+    }
+
+    /* Önceki gönderinin üzerinden en az N saniye geçmiş olmalı. */
+    function bekleme(saniye) {
+      return !exists(hizYolu())
+             || get(hizYolu()).data.sonYazi + duration.value(saniye, 's') < request.time;
+    }
+
+    function yazabilir(saniye) {
+      return dogrulanmis() && forumAcik() && hizDamgasi() && bekleme(saniye);
+    }
+
+    /* =========================================================================
+       1) FORUM AYARI — acil kilit ve yasak listesi
+       Kural içindeki get() kuralları atladığı için bu belgenin herkese açık
+       okunur olması gerekmez; yasaklı uid listesi gizli kalır.
+    ========================================================================= */
+    match /forumAyar/{belge} {
+      allow read, write: if yonetici();
+    }
+
+    /* =========================================================================
+       2) HIZ SINIRI / YAYIN ONAYI — kullanıcının kendi sayaç belgesi
+    ========================================================================= */
+    match /forumHiz/{kimlik} {
+
+      function hizAlanlari() {
+        return ['sonYazi', 'gunKodu', 'bugunSayi', 'forumOnay', 'onayZaman'];
+      }
+
+      allow read: if yonetici() || (girisli() && kimlik == benim());
+
+      allow create: if dogrulanmis() && kimlik == benim()
+        && yeni().keys().hasOnly(hizAlanlari())
+        && yeni().keys().hasAll(hizAlanlari())
+        && yeni().sonYazi   == request.time
+        && yeni().gunKodu   == bugunKodu()
+        && yeni().bugunSayi == 1
+        && yeni().forumOnay is bool
+        && yeni().onayZaman == request.time;
+
+      allow update: if dogrulanmis() && kimlik == benim()
+        && yeni().keys().hasOnly(hizAlanlari())
+        && yeni().keys().hasAll(hizAlanlari())
+        && yeni().sonYazi == request.time
+        && yeni().gunKodu == bugunKodu()
+        && yeni().forumOnay is bool
+        && (yeni().onayZaman == eski().onayZaman || yeni().onayZaman == request.time)
+        && yeni().bugunSayi is int
+        && yeni().bugunSayi >= 1
+        && yeni().bugunSayi <= 20                       /* GÜNLÜK TAVAN */
+        && (eski().gunKodu == bugunKodu()
+              ? yeni().bugunSayi == eski().bugunSayi + 1  /* aynı gün: tam +1  */
+              : yeni().bugunSayi == 1);                   /* yeni gün: sıfırla */
+
+      /* Kullanıcı sayacını silerek tavanı sıfırlayamaz. */
+      allow delete: if yonetici();
+    }
+
+    /* =========================================================================
+       3) FORUM PROFİLİ — herkese açık, e-posta İÇERMEZ
+       (Şu an forum.html bu belgeyi yazmıyor; yazarın yanında "unvan · şehir"
+        göstermek istendiğinde hazır olsun diye tanımlı bırakıldı. E-posta
+        içeren kullanicilar/{uid} belgesi herkese açık okunamaz — forumun
+        ihtiyaç duyduğu görünür bilgi için ayrı ve dar bir belge gerekir.)
+    ========================================================================= */
+    match /forumProfiller/{kimlik} {
+
+      function profilAlanlari() {
+        return ['uid', 'gorunenAd', 'unvan', 'firma', 'sehir', 'hakkinda', 'guncelleme'];
+      }
+
+      allow read: if true;
+
+      allow create, update: if dogrulanmis() && kimlik == benim()
+        && yeni().keys().hasOnly(profilAlanlari())
+        && yeni().keys().hasAll(['uid', 'gorunenAd', 'guncelleme'])
+        && yeni().uid == benim()
+        && yeni().gorunenAd == sunucuAd()
+        && (!('unvan'    in yeni()) || (yeni().unvan    is string && yeni().unvan.size()    <= 60))
+        && (!('firma'    in yeni()) || (yeni().firma    is string && yeni().firma.size()    <= 60))
+        && (!('sehir'    in yeni()) || (yeni().sehir    is string && yeni().sehir.size()    <= 40))
+        && (!('hakkinda' in yeni()) || (yeni().hakkinda is string && yeni().hakkinda.size() <= 400))
+        && yeni().guncelleme == request.time;
+
+      allow delete: if yonetici() || (girisli() && kimlik == benim());
+    }
+
+    /* =========================================================================
+       4) KONULAR
+    ========================================================================= */
+    match /forumKonular/{konuId} {
+
+      /* NOT: 'etiketler' bilerek YOK. Ne istemci yazıyor ne de sayfa basıyordu;
+         kural dilinde liste ELEMANLARI doğrulanamadığı için (foreach yok) izin
+         verilen bir liste alanı, herkese açık bir belgeye sınırsız uzunlukta
+         çöp yazmanın kapısıydı. İhtiyaç doğarsa eleman başına doğrulanabilen
+         bir şekille (ör. sabit beyaz liste) geri eklenmeli. */
+      function konuAlanlari() {
+        return ['baslik', 'govde', 'kategori',
+                'yazarUid', 'yazarAd', 'yazarFoto', 'takmaMi',
+                'olusturma', 'sonEtkinlik', 'duzenleme', 'ilkYanit',
+                'yanitSayisi', 'sonYanitId', 'sonYanitAd', 'sonYanitUid',
+                'kilitli', 'gizli', 'sabitlenmis', 'cozuldu', 'cozumYanitId'];
+      }
+
+      function konuZorunlu() {
+        return ['baslik', 'govde', 'kategori',
+                'yazarUid', 'yazarAd', 'yazarFoto', 'takmaMi',
+                'olusturma', 'sonEtkinlik', 'yanitSayisi',
+                'sonYanitId', 'sonYanitAd', 'sonYanitUid',
+                'kilitli', 'gizli', 'sabitlenmis', 'cozuldu'];
+      }
+
+      function metinGecerli() {
+        return yeni().baslik is string
+          && yeni().baslik.size() >= 10 && yeni().baslik.size() <= 120
+          && yeni().govde is string
+          && yeni().govde.size() >= 30 && yeni().govde.size() <= 8000
+          && yeni().kategori in kategoriler();
+      }
+
+      /* Forum halka açık okunur — giriş yapmadan da okunur. */
+      allow read: if true;
+
+      allow create: if yazabilir(45)                     /* 45 sn konu beklemesi */
+        && yeni().keys().hasOnly(konuAlanlari())
+        && yeni().keys().hasAll(konuZorunlu())
+        && metinGecerli()
+        && yeni().yazarUid    == benim()                 /* uid uydurulamaz     */
+        && gorunenKimlik()                               /* ad/foto ya jeton ya rol */
+        && yeni().olusturma   == request.time            /* zaman sunucudan     */
+        && yeni().sonEtkinlik == request.time
+        && yeni().yanitSayisi == 0                       /* sayaç sıfır başlar  */
+        && yeni().sonYanitId  == ''
+        && yeni().sonYanitAd  == ''
+        && yeni().sonYanitUid == ''
+        && yeni().kilitli     == false                   /* kendini kilitleyip  */
+        && yeni().gizli       == false                   /* moderasyondan kaçamaz */
+        && yeni().sabitlenmis == false                   /* kendini öne alamaz  */
+        && yeni().cozuldu     == false
+        /* ÖLÇÜM ALANLARI CREATE'TE YASAK. ilkYanit sayfadaki "ölçülen ortanca
+           ilk yanıt" rakamının tek kaynağıdır; create'te serbest bırakılırsa
+           kullanıcı konusunu açarken ilkYanit'ı istediği ana yazıp UYDURMA bir
+           ölçüm enjekte edebilirdi. Bu alan yalnız yanitSayaci() içinde,
+           yalnız 0 -> 1 geçişinde ve yalnız request.time ile doğar.
+           duzenleme / cozumYanitId de aynı sebeple sonradan doğar. */
+        && !('ilkYanit'     in yeni())
+        && !('duzenleme'    in yeni())
+        && !('cozumYanitId' in yeni());
+
+      /* --- güncelleme: üç ayrı meşru yol + yönetici --- */
+
+      function yazarDuzenlemesi() {
+        return dogrulanmis()
+          && eski().yazarUid == benim()
+          && eski().kilitli == false && eski().gizli == false
+          && degisenler().hasOnly(['baslik', 'govde', 'kategori', 'duzenleme'])
+          && metinGecerli()
+          && yeni().duzenleme == request.time;
+      }
+
+      /* Yanıt sayacı: SAYAÇ MANİPÜLASYONUNA KARŞI KİLİT.
+         Sayıyı bir artırmak, aynı toplu yazmada gerçekten bir yanıt belgesi
+         yaratmayı gerektirir; getAfter() o belgenin yazma SONRASI halini okur.
+         olusturma == request.time koşulu, eski bir yanıtı işaret ederek
+         sayacı şişirmeyi de imkânsız kılar (eski belgenin damgası geçmişte).
+         sonYanitAd yanıt belgesinden okunur — "adım görünmesin" seçilmişse
+         gerçek ad listeye SIZMAZ. */
+      function yanitBelgesi() {
+        return getAfter(/databases/$(database)/documents/forumKonular/$(konuId)/yanitlar/$(yeni().sonYanitId)).data;
+      }
+
+      function yanitSayaci() {
+        return dogrulanmis()
+          && eski().kilitli == false && eski().gizli == false
+          && degisenler().hasOnly(['yanitSayisi', 'sonEtkinlik', 'ilkYanit',
+                                   'sonYanitId', 'sonYanitAd', 'sonYanitUid'])
+          && yeni().yanitSayisi == eski().yanitSayisi + 1
+          && yeni().sonEtkinlik == request.time
+          && yeni().sonYanitUid == benim()
+          && yeni().sonYanitId is string
+          && yeni().sonYanitId.size() > 0
+          && yeni().sonYanitId.size() <= 40
+          && yanitBelgesi().yazarUid  == benim()
+          && yanitBelgesi().olusturma == request.time
+          && yanitBelgesi().yazarAd   == yeni().sonYanitAd
+          /* ilkYanit yalnız 0 -> 1 geçişinde ve yalnız sunucu saatiyle yazılır;
+             "ölçülen ilk yanıt süresi" bu alandan hesaplanır, uydurulamaz. */
+          && (!degisenler().hasAny(['ilkYanit'])
+              || (eski().yanitSayisi == 0 && yeni().ilkYanit == request.time));
+      }
+
+      /* Soruyu soran "çözüldü" işaretleyebilir; kilit/sabitleme yönetici işi.
+         GİZLENMİŞ konuda çalışmaz: moderasyon kararı verilmiş bir konuyu yazar
+         yeşil "Çözüldü" rozetiyle geri parlatamaz.
+         cozumYanitId GERÇEK bir yanıtı göstermek zorunda — uydurma kimlik
+         yazılıp "çözülmüş konu" sayacı şişirilemez. */
+      function cozumIsareti() {
+        return dogrulanmis()
+          && eski().yazarUid == benim()
+          && eski().gizli == false
+          && degisenler().hasOnly(['cozuldu', 'cozumYanitId'])
+          && yeni().cozuldu is bool
+          && ('cozumYanitId' in yeni())
+          && yeni().cozumYanitId is string
+          && yeni().cozumYanitId.size() <= 40
+          && (yeni().cozuldu == false
+                ? yeni().cozumYanitId == ''
+                : (yeni().cozumYanitId.size() > 0
+                   && exists(/databases/$(database)/documents/forumKonular/$(konuId)/yanitlar/$(yeni().cozumYanitId))));
+      }
+
+      allow update: if yonetici()                        /* kilitle, gizle, sabitle */
+                    || yazarDuzenlemesi()
+                    || yanitSayaci()
+                    || cozumIsareti();
+
+      /* Yazar yalnız HİÇ YANIT ALMAMIŞ konusunu silebilir: başkalarının emeğini
+         silemez ve öksüz alt koleksiyon bırakamaz. Yanıt almışsa yönetici siler
+         (panel önce yanıtları, sonra konuyu silmeli — Firestore CASCADE YAPMAZ). */
+      allow delete: if yonetici()
+                    || (dogrulanmis() && eski().yazarUid == benim()
+                        && eski().yanitSayisi == 0);
+
+      /* --------------------------------------------------------- YANITLAR --- */
+      match /yanitlar/{yanitId} {
+
+        function yanitAlanlari() {
+          return ['govde', 'yazarUid', 'yazarAd', 'yazarFoto', 'takmaMi',
+                  'olusturma', 'duzenleme', 'silindi', 'yanitVerilen'];
+        }
+
+        function konuYolu() {
+          return /databases/$(database)/documents/forumKonular/$(konuId);
+        }
+
+        allow read: if true;
+
+        allow create: if yazabilir(20)                   /* 20 sn yanıt beklemesi */
+          && exists(konuYolu())
+          && get(konuYolu()).data.kilitli == false       /* KİLİTLİ KONUYA YAZILAMAZ */
+          && get(konuYolu()).data.gizli   == false
+          && yeni().keys().hasOnly(yanitAlanlari())
+          && yeni().keys().hasAll(['govde', 'yazarUid', 'yazarAd', 'yazarFoto',
+                                   'takmaMi', 'olusturma', 'silindi'])
+          && yeni().govde is string
+          && yeni().govde.size() >= 2 && yeni().govde.size() <= 4000
+          && yeni().yazarUid == benim()
+          && gorunenKimlik()
+          && yeni().olusturma == request.time
+          && yeni().silindi   == false
+          && (!('yanitVerilen' in yeni())
+              || (yeni().yanitVerilen is string && yeni().yanitVerilen.size() <= 40));
+
+        /* Konu kilitli/gizli DEĞİLKEN metin düzeltilebilir. Bu kontrol şart:
+           yoksa spam yüzünden kilitlenen/gizlenen bir konudaki yanıtın metni
+           sonradan yenisiyle değiştirilebilir, moderasyon kararı boşa çıkardı. */
+        function konuAcikMi() {
+          return exists(konuYolu())
+                 && get(konuYolu()).data.kilitli == false
+                 && get(konuYolu()).data.gizli   == false;
+        }
+
+        /* Yazar ya metni düzeltir ya da yumuşak siler (govde boşalır, kayıt kalır).
+           Yumuşak silme sayacın yalan söylemesini önler.
+           YUMUŞAK SİLME kilitli/gizli konuda da serbesttir: kişinin kendi
+           yazısını geri çekme hakkı (KVKK) moderasyona bağlanamaz. */
+        allow update: if yonetici()
+          || (dogrulanmis()
+              && eski().yazarUid == benim()
+              && eski().silindi == false
+              && (
+                   (degisenler().hasOnly(['govde', 'duzenleme'])
+                     && konuAcikMi()
+                     && yeni().govde is string
+                     && yeni().govde.size() >= 2 && yeni().govde.size() <= 4000
+                     && yeni().duzenleme == request.time)
+                   ||
+                   (degisenler().hasOnly(['govde', 'silindi', 'duzenleme'])
+                     && yeni().silindi == true
+                     && yeni().govde == ''
+                     && yeni().duzenleme == request.time)
+                 ));
+
+        /* Kalıcı silme yalnız yöneticide (KVKK talebi, spam temizliği). */
+        allow delete: if yonetici();
+      }
+    }
+
+    /* Koleksiyon grubu sorgusu: collectionGroup('yanitlar') — bir kişinin tüm
+       yanıtlarını bulmak için (KVKK dışa aktarma/anonimleştirme, profil sayfası).
+       rules_version 2'de özyinelemeli joker olmadan grup sorgusu reddedilir.
+       Yalnız OKUMA verir; yazma yukarıdaki dar kural üzerinden yürür. */
+    match /{yol=**}/yanitlar/{yanitId} {
+      allow read: if true;
+    }
+
+    /* =========================================================================
+       5) ŞİKÂYET / BAYRAK — moderasyon kuyruğu
+       Belge kimliği ZORUNLU olarak "{uid}__{hedefId}" — aynı kişi aynı hedefi
+       ikinci kez bayraklarsa yeni belge oluşmaz, kuyruk şişirilemez.
+    ========================================================================= */
+    match /forumBayraklar/{bayrakId} {
+
+      allow read, update, delete: if yonetici();
+
+      allow create: if dogrulanmis()
+        && bayrakId == benim() + '__' + yeni().hedefId
+        && yeni().keys().hasOnly(['hedefTur', 'hedefId', 'konuId', 'sebep',
+                                  'aciklama', 'bildirenUid', 'bildirenAd', 'olusturma'])
+        && yeni().keys().hasAll(['hedefTur', 'hedefId', 'konuId', 'sebep',
+                                 'bildirenUid', 'olusturma'])
+        && yeni().hedefTur in ['konu', 'yanit']
+        && yeni().hedefId is string && yeni().hedefId.size() > 0 && yeni().hedefId.size() <= 40
+        && yeni().konuId  is string && yeni().konuId.size()  > 0 && yeni().konuId.size()  <= 40
+        && yeni().sebep in ['spam', 'taciz', 'reklam', 'alakasiz', 'kisisel-veri', 'telif', 'diger']
+        && (!('aciklama' in yeni())
+            || (yeni().aciklama is string && yeni().aciklama.size() <= 500))
+        && yeni().bildirenUid == benim()
+        && (!('bildirenAd' in yeni()) || yeni().bildirenAd == sunucuAd())
+        && yeni().olusturma == request.time;
+    }
+
+    /* =========================================================================
+       MEVCUT KOLEKSİYONLAR — forumdan önce de vardı, davranış korunuyor
+    ========================================================================= */
+
+    /* iz.js: kimliksiz REST yazımı. Yazma serbest ama ŞEKİL zorunlu; okuma yok
+       (ziyaret kayıtları yalnız yöneticiye). */
+    match /ziyaretler/{kayit} {
+      allow create: if yeni().keys().hasOnly(['sayfa', 'zaman', 'kaynak',
+                                              'genislik', 'dil', 'oturum', 'olay'])
+        && yeni().sayfa  is string && yeni().sayfa.size()  <= 120
+        && yeni().kaynak is string && yeni().kaynak.size() <= 120
+        && yeni().dil    is string && yeni().dil.size()    <= 12
+        && yeni().oturum is string && yeni().oturum.size() <= 40
+        && yeni().olay in ['giris', 'cikis']
+        && yeni().genislik is int && yeni().genislik >= 0 && yeni().genislik <= 20000
+        && yeni().zaman is timestamp;
+      allow read, update, delete: if yonetici();
+    }
+
+    /* Mağaza kataloğu: herkes okur, yalnız yönetici yazar. */
+    match /urunler/{urun} {
+      allow read: if true;
+      allow write: if yonetici();
+    }
+
+    /* Siparişler: kullanıcı yalnız kendi siparişini yaratır ve okur. */
+    match /siparisler/{siparis} {
+      allow create: if girisli()
+                    && yeni().ownerId == benim()
+                    && yeni().tarih == request.time;
+      allow read:   if yonetici() || (girisli() && eski().ownerId == benim());
+      allow update, delete: if yonetici();
+    }
+
+    /* Hesap kaydı (hesap.js) ve kayıtlı adresler. E-POSTA BURADA — herkese açık
+       okunmaz; forumun ihtiyaç duyduğu görünür bilgi konu/yanıt belgesindedir.
+       NOT: hasOnly listesi hesap.js ile birebir; hesap.js'e yeni alan eklenirse
+       bu liste de güncellenmeli, yoksa giriş sırasında yazma sessizce reddedilir. */
+    match /kullanicilar/{kimlik} {
+      allow read: if yonetici() || (girisli() && kimlik == benim());
+
+      allow create, update: if girisli() && kimlik == benim()
+        && yeni().keys().hasOnly(['uid', 'eposta', 'ad', 'foto', 'sonGiris'])
+        && yeni().uid == benim()
+        && yeni().eposta == request.auth.token.email
+        && yeni().sonGiris == request.time;
+
+      allow delete: if yonetici() || (girisli() && kimlik == benim());
+
+      match /adresler/{adres} {
+        allow read, write: if girisli() && kimlik == benim();
+        allow read, delete: if yonetici();
+      }
+    }
+
+    /* Açıkça eşleşmeyen her yol kapalıdır (varsayılan zaten budur; niyet beyanı). */
+    match /{belge=**} {
+      allow read, write: if false;
+    }
+  }
+}

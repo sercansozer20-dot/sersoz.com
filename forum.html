@@ -3,11 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Forum — Sercan Sözer</title>
-<meta name="description" content="Makine görüşü, robotik ve endüstriyel otomasyon üzerine soru-cevap ve tartışma alanı. GitHub Discussions altyapısıyla çalışır.">
-<meta property="og:title" content="Forum — Sercan Sözer">
-<meta property="og:description" content="Makine görüşü · Robotik · Endüstriyel otomasyon tartışmaları">
+<title>Danışma Masası — Sahadan soru sorun · sersoz.com</title>
+<meta name="description" content="Makine görüşü, PLC haberleşme, 3D ölçüm ve robot kılavuzlama üzerine kamuya açık danışma masası. Sorunuzu yazın, cevabı burada kalsın.">
+<link rel="canonical" href="https://sersoz.com/forum.html">
+<meta property="og:title" content="Danışma Masası — Sahadan soru sorun">
+<meta property="og:description" content="PLC haberleşme, kamera-aydınlatma, 3D ölçüm, robot kılavuzlama. Soruyu yazın; iş günlerinde 48 saat içinde yanıtlıyorum.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sersoz.com/forum.html">
+<meta property="og:image" content="https://sersoz.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="sersoz.com">
+<meta property="og:locale" content="tr_TR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://sersoz.com/og.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23f6f2ea'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%231a1815' stroke-width='3'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23c2410c' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+
+<!--
+  Bu sayfa Cloud Firestore (proje: sersoz-f93c3) üzerinde çalışır.
+  Güvenlik kuralları depoda /firestore.rules dosyasındadır ve
+  Firebase Konsolu > Firestore Database > Rules ekranından ELLE yayımlanır.
+  Ayrıca forumAyar/genel = { yazmaAcik: true, yasakli: [] } belgesi
+  bulunmalıdır; site sahibi hesabıyla girildiğinde sayfadaki
+  "Kurulum" kutusundan tek tıkla oluşturulabilir.
+-->
+
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -20,6 +40,7 @@
     --line: rgba(26, 24, 21, .2);
     --line-soft: rgba(26, 24, 21, .1);
     --faint: rgba(26, 24, 21, .055);
+    --paper: rgba(255, 253, 248, .72);
     --mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
     --serif: Georgia, 'Times New Roman', Times, serif;
     --sans: 'Segoe UI Variable Text', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
@@ -31,411 +52,461 @@
     background: var(--bg);
     color: var(--ink);
     font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
   }
 
   ::selection { background: var(--accent); color: var(--bg); }
 
-  section { scroll-margin-top: 72px; }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  [hidden] { display: none !important; }
 
   .container { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
 
   /* ---------- Nav ---------- */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 60px;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    background: rgba(246, 242, 234, .9);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+  nav#nav {
+    position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 40;
+    display: flex; align-items: center;
+    background: rgba(246, 242, 234, .93);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--line);
   }
-
   .nav-inner {
-    width: 100%;
-    max-width: 1120px;
-    margin: 0 auto;
-    padding: 0 28px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
   }
-
   .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
   .brand .mark {
-    width: 22px; height: 22px;
-    background: var(--accent);
-    color: var(--bg);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--serif);
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1;
+    width: 22px; height: 22px; background: var(--accent); color: var(--bg);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--serif); font-size: 14px; font-weight: 700; line-height: 1;
   }
   .brand span.host { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--ink); }
-
-  .nav-links { display: flex; gap: 4px; }
+  .nav-links { display: flex; align-items: center; gap: 4px; }
   .nav-links a {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: var(--ink);
-    text-decoration: none;
-    padding: 10px 12px;
-    transition: color .2s;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink); text-decoration: none; padding: 11px 12px; transition: color .2s;
   }
-  .nav-links a:hover { color: var(--accent); }
-  .nav-links a.active { color: var(--accent); }
-  .nav-links a.nav-cta { border: 1px solid var(--ink); padding: 9px 14px; margin-left: 10px; transition: color .2s, border-color .2s; }
-  .nav-links a.nav-cta:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-links a:hover, .nav-links a.active { color: var(--accent); }
 
-  /* ---------- Sayfa başlığı ---------- */
-  .page-head {
-    position: relative;
-    padding: clamp(140px, 20vh, 200px) 0 clamp(56px, 8vh, 90px);
-    overflow: hidden;
-  }
-
-  .page-head .section-index { top: clamp(84px, 12vh, 120px); }
+  /* ---------- Başlık alanı ---------- */
+  .page-head { padding: 108px 0 10px; }
 
   .eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 14px;
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: .3em;
-    text-transform: uppercase;
-    color: var(--ink);
-    margin-bottom: 28px;
+    display: inline-flex; align-items: center; gap: 14px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .3em;
+    text-transform: uppercase; color: var(--ink); margin-bottom: 22px;
   }
   .eyebrow::before { content: ''; width: 42px; height: 2px; background: var(--accent); }
 
+  /* Kullanıcı metni boşluksuz uzun dizgi içerebilir (dosya yolu, adres, PLC
+     etiketi). Sarma zorlanmazsa sayfa yatay taşar. */
+  h1, h2, h3, p, li, td, .baslik-bag, .konu-meta, .konu-ustbilgi,
+  .yanit-ust, .rozet { overflow-wrap: anywhere; }
+
   h1 {
     font-family: var(--serif);
-    font-size: clamp(46px, 8vw, 84px);
-    font-weight: 700;
-    letter-spacing: -.015em;
-    line-height: 1.0;
+    font-size: clamp(34px, 6vw, 62px);
+    font-weight: 700; letter-spacing: -.015em; line-height: 1.04;
+    max-width: 20ch;
   }
-  h1::after { content: '.'; color: var(--accent); }
+  h1 .nokta { color: var(--accent); }
 
   .tagline {
-    margin-top: 22px;
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: clamp(16px, 2.3vw, 21px);
-    color: var(--muted);
-    letter-spacing: .01em;
+    margin-top: 18px; max-width: 60ch;
+    font-family: var(--serif); font-style: italic;
+    font-size: clamp(17px, 2.2vw, 21px); color: var(--muted);
   }
   .tagline b { color: var(--ink); font-weight: 600; font-style: italic; }
 
-  .page-lead {
-    margin-top: 18px;
-    max-width: 62ch;
-    font-size: clamp(14px, 1.8vw, 16px);
-    line-height: 1.78;
-    color: var(--muted);
+  /* Kimlik + söz bandı */
+  .kimlik-band {
+    margin-top: 34px;
+    display: grid; grid-template-columns: 1fr auto; gap: 22px 34px;
+    align-items: center;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 20px 0;
   }
-
-  .dropcap::first-letter {
-    font-family: var(--serif);
-    font-size: 3.35em;
-    font-weight: 700;
-    float: left;
-    line-height: .8;
-    padding: .06em .13em 0 0;
-    color: var(--accent);
+  .kimlik { display: flex; align-items: center; gap: 16px; min-width: 0; }
+  .kimlik .yuz {
+    width: 58px; height: 58px; flex: none; border-radius: 50%;
+    border: 1px solid var(--line); object-fit: cover; background: var(--faint);
   }
-
-  /* ---------- Ortak bölüm düzeni ---------- */
-  .section { position: relative; padding: clamp(84px, 12vh, 150px) 0; border-top: 3px double var(--line); overflow: hidden; }
-
-  .section-index {
-    position: absolute;
-    top: clamp(24px, 5vh, 56px);
-    right: -8px;
-    font-family: var(--serif);
-    font-size: clamp(110px, 18vw, 210px);
-    font-weight: 700;
-    letter-spacing: -.02em;
-    line-height: .8;
-    color: var(--faint);
-    pointer-events: none;
-    user-select: none;
+  .kimlik .monogram {
+    width: 58px; height: 58px; flex: none; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--ink); color: var(--bg);
+    font-family: var(--serif); font-size: 23px; font-weight: 700;
   }
+  .kimlik-ad { font-family: var(--serif); font-size: 19px; font-weight: 700; }
+  .kimlik-rol { font-size: 14.5px; color: var(--muted); }
+  .kimlik-bag { margin-top: 5px; display: flex; gap: 6px 16px; flex-wrap: wrap; }
+  .kimlik-bag a {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--accent); text-decoration: none;
+    border-bottom: 1px solid rgba(194, 65, 12, .35); padding-bottom: 2px;
+  }
+  .kimlik-bag a:hover { border-bottom-color: var(--accent); }
+
+  .soz {
+    border-left: 3px solid var(--accent); padding: 4px 0 4px 18px; max-width: 34ch;
+  }
+  .soz-etiket {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .22em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 5px;
+  }
+  .soz p { font-size: 15px; color: var(--muted); }
+  .soz p b { color: var(--ink); font-weight: 600; }
+  .soz-olcum { margin-top: 6px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  /* Gerçek sayılar — yalnız hesaplanabildiğinde görünür */
+  .sayilar {
+    margin-top: 18px; display: flex; gap: 10px 34px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .sayilar > div { display: flex; gap: 10px; align-items: baseline; }
+  .sayilar b { color: var(--ink); font-size: 15px; letter-spacing: 0; }
+
+  /* ---------- Bölümler ---------- */
+  .section { padding: clamp(44px, 7vh, 76px) 0; }
+  .section + .section { border-top: 3px double var(--line); }
 
   .kicker {
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: .3em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 18px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: .3em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
   }
   .kicker .idx { color: var(--accent); margin-right: 10px; }
 
   h2 {
-    font-family: var(--serif);
-    font-size: clamp(31px, 4.8vw, 54px);
-    font-weight: 700;
-    letter-spacing: -.012em;
-    line-height: 1.06;
-    margin-bottom: 26px;
+    font-family: var(--serif); font-size: clamp(26px, 3.6vw, 38px);
+    font-weight: 700; letter-spacing: -.012em; line-height: 1.1;
   }
-  h2::after { content: '.'; color: var(--accent); }
+  h2 .nokta { color: var(--accent); }
+  h3 { font-family: var(--serif); font-size: 19px; font-weight: 700; }
 
-  .section-lead { color: var(--muted); line-height: 1.78; font-size: 16px; max-width: 60ch; }
+  /* ---------- Soru kutusu ---------- */
+  .sor-izgara { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px; align-items: start; }
 
-  /* ---------- Kategori kartları ---------- */
-  .cat-cards { margin-top: 30px; border-top: 1px solid var(--line); }
-
-  .cat-card {
-    display: grid;
-    grid-template-columns: 168px 1fr auto;
-    gap: 32px;
-    align-items: start;
-    padding: clamp(28px, 4.5vh, 42px) 0;
-    border-bottom: 1px solid var(--line);
-    text-decoration: none;
-    color: inherit;
+  .sor-kutu {
+    margin-top: 22px; border: 1px solid var(--line); background: var(--paper);
+    padding: 22px 24px 20px;
   }
-
-  .cat-side { display: flex; flex-direction: column; gap: 10px; }
-
-  .cat-no {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--accent);
-    letter-spacing: .1em;
-    transition: letter-spacing .25s ease;
+  .alan { margin-bottom: 16px; }
+  .alan > label, .kucuk-baslik {
+    display: block; margin-bottom: 7px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--muted);
   }
-
-  .cat-tag {
-    font-family: var(--mono);
-    font-size: 11.5px;
-    letter-spacing: .2em;
-    text-transform: uppercase;
-    color: var(--muted);
+  input[type="text"], textarea, select {
+    width: 100%; font-family: var(--sans); font-size: 16px; line-height: 1.6;
+    color: var(--ink); background: #fffdf8;
+    border: 1px solid var(--line); padding: 12px 14px; border-radius: 0;
+    transition: border-color .18s;
   }
+  input[type="text"]:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 150px; }
+  select { min-height: 46px; }
+  ::placeholder { color: rgba(91, 86, 77, .6); }
 
-  .cat-card h3 {
-    font-family: var(--serif);
-    font-size: clamp(21px, 2.6vw, 28px);
-    font-weight: 700;
-    letter-spacing: -.008em;
-    line-height: 1.14;
-    transition: color .22s ease;
+  .sor-satir { display: flex; gap: 16px 24px; flex-wrap: wrap; align-items: flex-end; }
+  .sor-satir .alan { flex: 1 1 220px; margin-bottom: 0; }
+
+  .kutucuk {
+    display: flex; gap: 11px; align-items: flex-start;
+    font-size: 14.5px; line-height: 1.6; color: var(--muted);
+    padding: 10px 0; cursor: pointer;
   }
-
-  .cat-card p { margin-top: 10px; color: var(--muted); line-height: 1.7; font-size: 14.5px; max-width: 64ch; }
-
-  .cat-go {
-    align-self: center;
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: var(--muted);
-    white-space: nowrap;
-    transition: color .22s ease;
+  .kutucuk input[type="checkbox"] {
+    width: 22px; height: 22px; margin-top: 1px; flex: none; accent-color: var(--accent); cursor: pointer;
   }
-  .cat-go svg { width: 14px; height: 14px; fill: currentColor; transition: transform .25s ease; }
+  .kutucuk b { color: var(--ink); font-weight: 600; }
 
-  @media (hover: hover) {
-    .cat-card:hover h3 { color: var(--accent); }
-    .cat-card:hover .cat-no { letter-spacing: .3em; }
-    .cat-card:hover .cat-go { color: var(--accent); }
-    .cat-card:hover .cat-go svg { transform: translateX(4px); }
+  .sor-alt {
+    margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line-soft);
+    display: flex; gap: 14px 18px; align-items: center; flex-wrap: wrap;
   }
+  .sayac { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-left: auto; }
+  .sayac.asim { color: var(--accent); }
 
-  /* ---------- Nasıl çalışır ---------- */
-  .steps {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
-    margin-top: 34px;
-    border-top: 1px solid var(--line);
+  .ipuclari { margin-top: 14px; display: grid; gap: 6px; }
+  .ipuclari p { font-size: 13.5px; color: var(--muted); padding-left: 18px; position: relative; }
+  .ipuclari p::before { content: ''; position: absolute; left: 0; top: .72em; width: 10px; height: 1px; background: var(--accent); }
+
+  /* Düğmeler */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+    min-height: 46px; padding: 12px 22px; cursor: pointer;
+    border: 1px solid var(--ink); background: transparent; color: var(--ink);
+    text-decoration: none; font-family: var(--mono); font-size: 12px;
+    letter-spacing: .12em; text-transform: uppercase;
+    transition: border-color .2s, background .2s, color .2s;
   }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.ana { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .btn.ana:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn[disabled] { opacity: .5; cursor: default; }
+  .btn.kucuk { min-height: 44px; padding: 8px 14px; font-size: 11px; }
 
-  .step { padding: 32px 32px 8px 32px; border-left: 1px solid var(--line-soft); }
-  .step:first-child { border-left: none; padding-left: 0; }
-
-  .step-no {
-    font-family: var(--serif);
-    font-size: clamp(40px, 5vw, 56px);
-    font-weight: 700;
-    letter-spacing: -.02em;
-    line-height: 1;
-    color: var(--accent);
+  .metin-btn {
+    background: none; border: none; cursor: pointer; padding: 10px 8px;
+    min-height: 44px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted);
   }
+  .metin-btn:hover { color: var(--accent); }
+  .metin-btn.tehlike:hover { color: #991b1b; }
 
-  .step h4 {
-    margin-top: 16px;
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: .22em;
-    text-transform: uppercase;
-    color: var(--ink);
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .durum-satir { font-size: 14px; color: var(--muted); min-height: 22px; }
+  .durum-satir.hata { color: #991b1b; }
+  .durum-satir.iyi { color: var(--green); }
+
+  /* Rehber (kenar notu) */
+  .rehber {
+    border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    background: var(--faint); padding: 20px 22px; margin-top: 22px;
   }
-  .step h4::before { content: ''; width: 8px; height: 8px; background: var(--accent); flex: none; }
-
-  .step p { margin-top: 12px; color: var(--muted); line-height: 1.7; font-size: 14.5px; }
-
-  .note-box {
-    margin-top: 44px;
-    max-width: 76ch;
-    background: var(--faint);
-    border-left: 3px solid var(--accent);
-    padding: 20px 24px;
+  .rehber h3 { font-size: 17px; margin-bottom: 12px; }
+  .rehber ol { list-style: none; counter-reset: r; }
+  .rehber li {
+    counter-increment: r; position: relative; padding-left: 26px;
+    margin-bottom: 10px; font-size: 14.5px; line-height: 1.62; color: var(--muted);
   }
-  .note-box .note-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: .22em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 8px;
+  .rehber li::before {
+    content: counter(r); position: absolute; left: 0; top: 0;
+    font-family: var(--mono); font-size: 12px; color: var(--accent);
   }
-  .note-box p { color: var(--muted); line-height: 1.7; font-size: 14px; }
-  .note-box p b { color: var(--ink); font-weight: 600; }
-
-  /* ---------- İletişim CTA ---------- */
-  .contact-wrap { max-width: 760px; }
-  .contact-wrap > p.lead { color: var(--muted); line-height: 1.78; font-size: 16px; max-width: 52ch; margin-bottom: 34px; }
-
-  .links { margin-top: 38px; display: flex; gap: 12px; flex-wrap: wrap; }
-
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    padding: 13px 24px;
-    border: 1px solid var(--ink);
-    border-radius: 0;
-    color: var(--ink);
-    text-decoration: none;
-    font-family: var(--mono);
-    font-size: 12.5px;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    background: transparent;
-    transition: border-color .22s, background .22s, color .22s;
-  }
-  .pill svg { width: 15px; height: 15px; fill: currentColor; }
-  .pill.primary { background: var(--ink); color: var(--bg); }
-
-  @media (hover: hover) {
-    .pill:hover { border-color: var(--accent); color: var(--accent); }
-    .pill.primary:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
-  }
-  .pill:active { border-color: var(--accent); }
-
-  .status {
-    margin-top: 44px;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: .12em;
-    color: var(--muted);
-    text-transform: uppercase;
+  .rehber li b { color: var(--ink); font-weight: 600; }
+  .rehber .kapsam {
+    margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-soft);
+    font-size: 13.5px; color: var(--muted);
   }
 
-  .dot {
-    width: 8px; height: 8px;
-    background: var(--green);
-    box-shadow: 0 0 0 0 rgba(20, 83, 45, .4);
-    animation: pulse 2.2s ease-out infinite;
+  /* ---------- Liste ---------- */
+  .liste-ust {
+    display: flex; gap: 14px 24px; align-items: flex-end;
+    justify-content: space-between; flex-wrap: wrap; margin-bottom: 18px;
   }
-  @keyframes pulse {
-    0%   { box-shadow: 0 0 0 0 rgba(20, 83, 45, .4); }
-    70%  { box-shadow: 0 0 0 11px rgba(20, 83, 45, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(20, 83, 45, 0); }
+  .sekmeler { display: flex; gap: 4px; flex-wrap: wrap; }
+  .sekme {
+    background: none; border: 1px solid transparent; cursor: pointer;
+    min-height: 44px; padding: 10px 14px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .sekme:hover { color: var(--accent); }
+  .sekme[aria-pressed="true"] { color: var(--ink); border-color: var(--line); background: var(--paper); }
+
+  .cipler { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .cip {
+    background: none; cursor: pointer; border: 1px solid var(--line);
+    min-height: 44px; padding: 10px 14px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
+    color: var(--muted); transition: border-color .18s, color .18s;
+  }
+  .cip:hover { border-color: var(--accent); color: var(--accent); }
+  .cip[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); background: var(--paper); }
+  .cip .adet { color: var(--accent); margin-left: 6px; }
+
+  .konu-liste { border-top: 1px solid var(--line); }
+  .konu-sat { border-bottom: 1px solid var(--line-soft); padding: 20px 0; }
+  .konu-sat .baslik-bag {
+    font-family: var(--serif); font-size: clamp(19px, 2.2vw, 23px);
+    font-weight: 700; line-height: 1.24; color: var(--ink);
+    text-decoration: none; display: inline-block;
+  }
+  .konu-sat .baslik-bag:hover { color: var(--accent); }
+  .konu-meta {
+    margin-top: 9px; display: flex; gap: 8px 14px; align-items: center; flex-wrap: wrap;
+    font-size: 13.5px; color: var(--muted);
+  }
+  .konu-meta .yazar { display: inline-flex; align-items: center; gap: 8px; }
+
+  .avatar, .avatar-harf {
+    width: 26px; height: 26px; border-radius: 50%; flex: none;
+  }
+  .avatar { border: 1px solid var(--line); object-fit: cover; }
+  .avatar-harf {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--faint); border: 1px solid var(--line);
+    font-family: var(--serif); font-size: 13px; font-weight: 700; color: var(--muted);
+  }
+  .avatar.buyuk, .avatar-harf.buyuk { width: 34px; height: 34px; font-size: 15px; }
+
+  .rozet {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
+    text-transform: uppercase; padding: 5px 10px; border: 1px solid var(--line);
+    color: var(--muted); white-space: nowrap;
+  }
+  .rozet.bekliyor { border-color: rgba(194, 65, 12, .5); color: var(--accent); }
+  .rozet.cozuldu { border-color: rgba(20, 83, 45, .5); color: var(--green); }
+  .rozet.saha { border-color: var(--ink); color: var(--ink); }
+  .rozet.gizli { border-color: #991b1b; color: #991b1b; }
+  .rozet.kilit { border-style: dashed; }
+  .rozet.hiz { border: none; padding-left: 0; color: var(--green); }
+
+  .etiket-cip {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+    color: var(--muted); border-bottom: 1px dotted var(--line);
   }
 
-  footer { border-top: 3px double var(--line); padding: 26px 0; }
+  /* ---------- Boş durum ---------- */
+  .bos { border-top: 1px solid var(--line); padding-top: 30px; }
+  .bos-acilis {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .bos h3 { margin-top: 12px; font-size: clamp(21px, 3vw, 27px); max-width: 26ch; }
+  .bos .bos-lead { margin-top: 10px; max-width: 56ch; color: var(--muted); font-size: 15.5px; }
+  .ornek-baslik {
+    margin-top: 30px; font-family: var(--mono); font-size: 11.5px;
+    letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
+  }
+  .ornekler { margin-top: 14px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .ornek {
+    text-align: left; cursor: pointer; background: none;
+    border: 1px dashed var(--line); padding: 15px 16px; min-height: 44px;
+    font-family: var(--serif); font-size: 16px; line-height: 1.4; color: var(--muted);
+    transition: border-color .18s, color .18s;
+  }
+  .ornek:hover { border-color: var(--accent); color: var(--ink); }
+  .ornek span { display: block; margin-top: 7px; font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+
+  /* ---------- Konu görünümü ---------- */
+  .geri {
+    display: inline-flex; align-items: center; gap: 9px; min-height: 44px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted); text-decoration: none;
+  }
+  .geri:hover { color: var(--accent); }
+
+  .konu-basi { margin-top: 10px; }
+  .konu-basi h2 { max-width: 26ch; }
+  .konu-ustbilgi { margin-top: 14px; display: flex; gap: 10px 16px; align-items: center; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+
+  .govde {
+    margin-top: 20px; font-size: 16.5px; line-height: 1.75; color: var(--ink);
+    max-width: 74ch;
+  }
+  .govde p { white-space: pre-wrap; margin-bottom: 14px; overflow-wrap: anywhere; }
+  .govde p:last-child { margin-bottom: 0; }
+  .govde a { color: var(--accent); overflow-wrap: anywhere; }
+  .govde pre {
+    background: #11161d; color: #e8edf5; padding: 16px 18px; margin: 14px 0;
+    overflow-x: auto; border-left: 3px solid var(--accent);
+  }
+  .govde pre code { font-family: var(--mono); font-size: 13.5px; line-height: 1.6; white-space: pre; }
+
+  .cozum-kutu {
+    margin-top: 24px; border: 1px solid rgba(20, 83, 45, .45);
+    border-left: 3px solid var(--green); background: rgba(20, 83, 45, .045);
+    padding: 18px 20px;
+  }
+  .cozum-kutu .cozum-etiket {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 10px;
+  }
+
+  .islem-satir { margin-top: 16px; display: flex; gap: 4px 10px; flex-wrap: wrap; align-items: center; }
+
+  .yanit-liste { margin-top: 34px; border-top: 3px double var(--line); }
+  .yanit {
+    padding: 22px 0; border-bottom: 1px solid var(--line-soft);
+  }
+  .yanit.cozum-yanit { border-left: 3px solid var(--green); padding-left: 16px; }
+  .yanit-ust { display: flex; gap: 10px 14px; align-items: center; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+  .yanit .govde { margin-top: 12px; font-size: 16px; }
+  .yanit.silinmis .govde { font-style: italic; color: var(--muted); }
+
+  .yanit-yaz { margin-top: 30px; border: 1px solid var(--line); background: var(--paper); padding: 20px 22px; }
+
+  .bildir-kutu { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+  /* Kurulum / yönetici kutusu */
+  .kurulum {
+    margin-top: 26px; border: 1px dashed var(--accent); background: rgba(194, 65, 12, .05);
+    padding: 18px 20px;
+  }
+  .kurulum h3 { font-size: 17px; margin-bottom: 8px; }
+  .kurulum p { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+  .kurulum code { font-family: var(--mono); font-size: 13px; background: var(--faint); padding: 2px 6px; }
+
+  .uyari-kutu {
+    margin-top: 22px; border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    background: var(--paper); padding: 18px 20px; max-width: 74ch;
+  }
+  .uyari-kutu h3 { font-size: 17px; margin-bottom: 8px; }
+  .uyari-kutu p { font-size: 14.5px; color: var(--muted); margin-bottom: 10px; }
+  .uyari-kutu a { color: var(--accent); }
+
+  .yukleniyor { padding: 26px 0; font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+
+  footer { border-top: 3px double var(--line); padding: 26px 0 36px; margin-top: 40px; }
   .footer-inner {
-    max-width: 1120px;
-    margin: 0 auto;
-    padding: 0 28px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    font-size: 12px;
-    letter-spacing: .08em;
-    color: var(--muted);
+    max-width: 1120px; margin: 0 auto; padding: 0 28px;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--muted);
   }
+  .footer-links { display: flex; gap: 4px 16px; flex-wrap: wrap; }
+  .footer-links a {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted); text-decoration: none;
+  }
+  .footer-links a:hover { color: var(--accent); }
   .footer-inner .mono { font-family: var(--mono); }
 
-  /* ---------- Scroll reveal ---------- */
-  .reveal {
-    opacity: 0;
-    transform: translateY(18px);
-    transition: opacity .6s cubic-bezier(.2, .7, .3, 1), transform .6s cubic-bezier(.2, .7, .3, 1);
-    transition-delay: var(--d, 0s);
+  .atla {
+    position: absolute; left: -9999px; top: 0; z-index: 60;
+    background: var(--ink); color: var(--bg); padding: 12px 18px;
+    font-family: var(--mono); font-size: 12px;
   }
-  .reveal.visible { opacity: 1; transform: none; }
+  .atla:focus { left: 12px; top: 12px; }
 
-  /* ---------- Mobil ---------- */
+  /* ---------- Duyarlı ---------- */
   @media (max-width: 1080px) {
-    .container, .nav-inner, .footer-inner { max-width: 920px; }
-    .cat-card { grid-template-columns: 132px 1fr auto; gap: 24px; }
+    .container, .nav-inner, .footer-inner { max-width: 940px; }
+    .sor-izgara { grid-template-columns: minmax(0, 1fr) 290px; gap: 30px; }
   }
 
   @media (max-width: 880px) {
-    .steps { grid-template-columns: 1fr; }
-    .step { border-left: none; border-top: 1px solid var(--line-soft); padding: 28px 0 8px 0; }
-    .step:first-child { border-top: none; }
-    .section-index { font-size: clamp(90px, 22vw, 150px); }
-    .cat-go { display: none; }
-    .cat-card { grid-template-columns: 132px 1fr; }
-  }
-
-  @media (max-width: 720px) {
-    .cat-card { grid-template-columns: 1fr; gap: 12px; }
-    .cat-side { flex-direction: row; align-items: baseline; gap: 16px; }
+    .sor-izgara { grid-template-columns: minmax(0, 1fr); }
+    .kimlik-band { grid-template-columns: 1fr; }
+    .soz { border-left: none; border-top: 2px solid var(--accent); padding: 14px 0 0; max-width: none; }
+    .ornekler { grid-template-columns: minmax(0, 1fr); }
   }
 
   @media (max-width: 640px) {
+    .container, .nav-inner, .footer-inner { padding: 0 18px; }
     .nav-links a { display: none; }
-    .nav-links a.nav-cta { display: inline-block; }
+    .page-head { padding-top: 92px; }
+    .sor-kutu { padding: 18px 16px 16px; }
+    .rehber { padding: 18px 16px; }
+    .sekme, .cip { font-size: 10.5px; letter-spacing: .1em; }
+    .yanit-yaz { padding: 16px 14px; }
+  }
+
+  @media (max-width: 400px) {
+    .kimlik .yuz, .kimlik .monogram { width: 46px; height: 46px; font-size: 19px; }
+    .btn { padding: 12px 16px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
-    .dot { animation: none; }
-    .reveal { opacity: 1; transform: none; transition: none; }
-    .cat-no, .cat-card h3, .cat-go, .cat-go svg, .pill { transition: none; }
+    * { transition: none !important; animation: none !important; }
   }
 </style>
-<noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
-<meta property="og:image" content="https://sersoz.com/og.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:site_name" content="sersoz.com">
-<meta property="og:locale" content="tr_TR">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://sersoz.com/og.png">
 </head>
 <body>
+
+<a class="atla" href="#anaIcerik">İçeriğe atla</a>
 
 <nav id="nav">
   <div class="nav-inner">
@@ -449,171 +520,211 @@
       <a href="/magaza.html">Mağaza</a>
       <a href="/yazilar.html">Yazılar</a>
       <a class="active" href="/forum.html" aria-current="page">Forum</a>
-      <a class="nav-cta" href="/#iletisim">İletişim</a>
     </div>
   </div>
 </nav>
 
 <header class="page-head">
-  <span class="section-index" aria-hidden="true">F</span>
   <div class="container">
-    <p class="eyebrow">sersoz.com / forum</p>
-    <h1>Forum</h1>
-    <p class="tagline"><b>Makine görüşü</b> · <b>Robotik</b> · <b>Endüstriyel otomasyon</b></p>
-    <p class="page-lead dropcap">Makine görüşü, robotik ve endüstriyel otomasyon üzerine soru-cevap
-      ve tartışma alanı. Katılmak için bir GitHub hesabı yeterli — konu açın, deneyiminizi paylaşın,
-      sahadan gelen sorulara birlikte yanıt arayalım.</p>
+    <p class="eyebrow">sersoz.com / danışma masası</p>
+    <h1>Sahadan bir soru sorun — cevabı burada kalsın<span class="nokta">.</span></h1>
+    <p class="tagline">Makine görüşü, <b>PLC haberleşme</b>, 3D ölçüm ve <b>robot kılavuzlama</b>
+      için kamuya açık bir masa. Okumak için giriş gerekmez.</p>
+
+    <div class="kimlik-band">
+      <div class="kimlik">
+        <!-- Depoda fotoğraf yok (ölçüldü: /sercan.jpg → 404), sayfanın kendi
+             .monogram yedeği kullanılıyor. Gerçek fotoğraf eklenince bu satır
+             <img class="yuz" src="/sercan.jpg" alt="Sercan Sözer"
+             width="58" height="58"> ile değiştirilir. -->
+        <span class="monogram" aria-hidden="true">S</span>
+        <div>
+          <p class="kimlik-ad">Sercan Sözer</p>
+          <p class="kimlik-rol">Wenglor 3D + YOLO ile hat kuran mekatronik mühendisi</p>
+          <p class="kimlik-bag">
+            <a href="/vision-detection.html">Kurduğum sistem</a>
+            <a href="/yazilar/el-goz-kalibrasyonu-tsai-lenz.html">El-göz kalibrasyonu yazısı</a>
+          </p>
+        </div>
+      </div>
+      <div class="soz">
+        <p class="soz-etiket">Söz</p>
+        <p>İş günlerinde <b>48 saat</b> içinde ben yanıtlarım.</p>
+        <p class="soz-olcum" id="sozOlcum" hidden></p>
+      </div>
+    </div>
+
+    <dl class="sayilar" id="sayilar" hidden>
+      <div><dt>Cevap bekleyen</dt><dd><b id="sayiAcik">—</b></dd></div>
+      <div><dt>Çözülmüş konu</dt><dd><b id="sayiCozulmus">—</b></dd></div>
+    </dl>
   </div>
 </header>
 
-<main>
-  <!-- Kategoriler -->
-  <section class="section" id="kategoriler">
-    <span class="section-index" aria-hidden="true">01</span>
-    <div class="container">
-      <p class="kicker reveal"><span class="idx">01</span>Kategoriler</p>
-      <h2 class="reveal">Tartışma başlıkları</h2>
-      <p class="section-lead reveal">Aşağıdaki kategorilerden birine tıklayın; tartışma GitHub
-        Discussions üzerinde açılır. Kategoriler GitHub tarafında zamanla genişletilecek.</p>
+<main id="anaIcerik" tabindex="-1">
 
-      <div class="cat-cards">
-        <a class="cat-card reveal" href="https://github.com/sercansozer20-dot/sersoz.com/discussions" target="_blank" rel="noopener">
-          <div class="cat-side">
-            <p class="cat-no">01</p>
-            <p class="cat-tag">Genel</p>
-          </div>
-          <div class="cat-body">
-            <h3>Genel Tartışma</h3>
-            <p>Belirli bir kategoriye sığmayan her şey: tanışma, öneriler, sektör gündemi,
-              araç ve kaynak paylaşımları.</p>
-          </div>
-          <span class="cat-go">Tartışmaya git
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8a.7.7 0 0 1 .7-.7h5.9L7.8 5a.7.7 0 1 1 1-1l3.5 3.5a.7.7 0 0 1 0 1L8.8 12a.7.7 0 1 1-1-1l2.3-2.3H4.2a.7.7 0 0 1-.7-.7z"/></svg>
-          </span>
-        </a>
+  <!-- ================= LİSTE GÖRÜNÜMÜ ================= -->
+  <div id="listeGorunum">
 
-        <a class="cat-card reveal" href="https://github.com/sercansozer20-dot/sersoz.com/discussions" target="_blank" rel="noopener">
-          <div class="cat-side">
-            <p class="cat-no">02</p>
-            <p class="cat-tag">3D Vizyon</p>
-          </div>
-          <div class="cat-body">
-            <h3>3D Vizyon &amp; Metroloji</h3>
-            <p>Nokta bulutu işleme, profil sensörleri, RANSAC/ICP, düzlemsellik ve boyutsal
-              ölçüm, CAD karşılaştırma, kalibrasyon soruları.</p>
-          </div>
-          <span class="cat-go">Tartışmaya git
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8a.7.7 0 0 1 .7-.7h5.9L7.8 5a.7.7 0 1 1 1-1l3.5 3.5a.7.7 0 0 1 0 1L8.8 12a.7.7 0 1 1-1-1l2.3-2.3H4.2a.7.7 0 0 1-.7-.7z"/></svg>
-          </span>
-        </a>
+    <section class="section" id="soru-kutusu" aria-labelledby="sorBaslik">
+      <div class="container sor-izgara">
+        <div>
+          <p class="kicker"><span class="idx">01</span>Sorunuzu yazın</p>
+          <h2 id="sorBaslik">Ne takıldı<span class="nokta">?</span></h2>
 
-        <a class="cat-card reveal" href="https://github.com/sercansozer20-dot/sersoz.com/discussions" target="_blank" rel="noopener">
-          <div class="cat-side">
-            <p class="cat-no">03</p>
-            <p class="cat-tag">Haberleşme</p>
-          </div>
-          <div class="cat-body">
-            <h3>PLC &amp; Haberleşme</h3>
-            <p>Mitsubishi MC/SLMP, Siemens S7, Modbus TCP, PROFINET; el sıkışma desenleri,
-              vizyon→PLC köprüleri ve saha ağı sorunları.</p>
-          </div>
-          <span class="cat-go">Tartışmaya git
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8a.7.7 0 0 1 .7-.7h5.9L7.8 5a.7.7 0 1 1 1-1l3.5 3.5a.7.7 0 0 1 0 1L8.8 12a.7.7 0 1 1-1-1l2.3-2.3H4.2a.7.7 0 0 1-.7-.7z"/></svg>
-          </span>
-        </a>
+          <form class="sor-kutu" id="konuForm" novalidate>
+            <div class="alan">
+              <label for="konuBaslik">Tek satır başlık</label>
+              <input type="text" id="konuBaslik" name="konuBaslik" maxlength="120"
+                     autocomplete="off"
+                     placeholder="S7-1200 ile vizyon PC arasında el sıkışma biti nasıl kurulur"
+                     aria-describedby="baslikSayac">
+            </div>
 
-        <a class="cat-card reveal" href="https://github.com/sercansozer20-dot/sersoz.com/discussions" target="_blank" rel="noopener">
-          <div class="cat-side">
-            <p class="cat-no">04</p>
-            <p class="cat-tag">Derin Öğrenme</p>
-          </div>
-          <div class="cat-body">
-            <h3>Derin Öğrenme &amp; Görüntü İşleme</h3>
-            <p>YOLO ve ONNX dağıtımı, anomali tespiti, ürün öğretme, veri toplama ve etiketleme,
-              çıkarım hızlandırma, OpenCV teknikleri.</p>
-          </div>
-          <span class="cat-go">Tartışmaya git
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8a.7.7 0 0 1 .7-.7h5.9L7.8 5a.7.7 0 1 1 1-1l3.5 3.5a.7.7 0 0 1 0 1L8.8 12a.7.7 0 1 1-1-1l2.3-2.3H4.2a.7.7 0 0 1-.7-.7z"/></svg>
-          </span>
-        </a>
+            <div class="alan">
+              <label for="konuGovde">Durumu anlatın</label>
+              <textarea id="konuGovde" name="konuGovde" maxlength="8000"
+                        placeholder="Marka/model, yazılım sürümü, ne yaptınız, ne bekliyordunuz, ne oldu. Hata kodunu aynen yazın.&#10;&#10;Kod veya kayıt paylaşacaksanız üç ters tırnak ``` arasına alın."
+                        aria-describedby="govdeSayac"></textarea>
+            </div>
 
-        <a class="cat-card reveal" href="https://github.com/sercansozer20-dot/sersoz.com/discussions" target="_blank" rel="noopener">
-          <div class="cat-side">
-            <p class="cat-no">05</p>
-            <p class="cat-tag">Robotik</p>
-          </div>
-          <div class="cat-body">
-            <h3>Robotik</h3>
-            <p>Robot kılavuzlama, el-göz kalibrasyonu, poz sözleşmeleri (KUKA/ABB/Fanuc/Yaskawa),
-              taramadan robot koordinatına giden hat.</p>
-          </div>
-          <span class="cat-go">Tartışmaya git
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8a.7.7 0 0 1 .7-.7h5.9L7.8 5a.7.7 0 1 1 1-1l3.5 3.5a.7.7 0 0 1 0 1L8.8 12a.7.7 0 1 1-1-1l2.3-2.3H4.2a.7.7 0 0 1-.7-.7z"/></svg>
-          </span>
-        </a>
-      </div>
-    </div>
-  </section>
+            <div class="sor-satir">
+              <div class="alan">
+                <label for="konuKategori">Alan (isteğe bağlı)</label>
+                <select id="konuKategori" name="konuKategori"></select>
+              </div>
+              <div class="alan">
+                <label for="konuRol">Adım görünmesin (isteğe bağlı)</label>
+                <select id="konuRol" name="konuRol"></select>
+              </div>
+            </div>
 
-  <!-- Nasıl çalışır -->
-  <section class="section" id="nasil-calisir">
-    <span class="section-index" aria-hidden="true">02</span>
-    <div class="container">
-      <p class="kicker reveal"><span class="idx">02</span>Nasıl çalışır</p>
-      <h2 class="reveal">Üç adımda katılın</h2>
+            <label class="kutucuk" id="onayKutucuk" hidden>
+              <input type="checkbox" id="konuOnay">
+              <span>Adımın ve profil fotoğrafımın yazımla birlikte <b>herkese açık</b>
+                yayınlanacağını, arama motorlarınca dizinlenebileceğini biliyorum.</span>
+            </label>
 
-      <div class="steps">
-        <div class="step reveal">
-          <div class="step-no">1</div>
-          <h4>Giriş yapın</h4>
-          <p>GitHub hesabınızla giriş yapın. Hesabınız yoksa github.com üzerinden ücretsiz
-            açabilirsiniz — başka üyelik gerekmez.</p>
+            <div class="sor-alt">
+              <button type="submit" class="btn ana" id="konuGonder">Gönder</button>
+              <span class="sayac" id="baslikSayac" aria-live="off"></span>
+              <span class="sayac" id="govdeSayac" aria-live="off"></span>
+            </div>
+            <p class="durum-satir" id="konuDurum" role="status" aria-live="polite" style="margin-top:10px"></p>
+
+            <div class="ipuclari">
+              <p>Marka/model ve hata kodunu yazın — firma adına gerek yok.</p>
+              <p>Giriş yapmadan yazmaya başlayabilirsiniz; Google girişi yalnız
+                <b>Gönder</b>e bastığınızda istenir. Yazdığınız metin tarayıcınızda saklanır,
+                giriş penceresi onu yutmaz.</p>
+              <p>Görsel yükleme henüz yok: ekran görüntüsünü bir bağlantı olarak paylaşın
+                ya da e-posta ile gönderin.</p>
+            </div>
+          </form>
         </div>
-        <div class="step reveal" style="--d:.08s">
-          <div class="step-no">2</div>
-          <h4>Konu açın veya yanıtlayın</h4>
-          <p>İlgili kategoride yeni bir tartışma başlatın ya da mevcut bir konuya yanıt yazın.
-            Kod blokları ve görseller desteklenir.</p>
-        </div>
-        <div class="step reveal" style="--d:.16s">
-          <div class="step-no">3</div>
-          <h4>Kalıcı arşiv</h4>
-          <p>Tüm tartışmalar bu sitenin deposunda saklanır: aranabilir, bağlantı verilebilir
-            ve zamanla birikip bir bilgi tabanına dönüşür.</p>
-        </div>
-      </div>
 
-      <div class="note-box reveal">
-        <p class="note-label">Not</p>
-        <p>Forum, <b>GitHub Discussions</b> altyapısıyla çalışır; ilk kez açılıyorsa depo sahibinin
-          Discussions özelliğini etkinleştirmesi gerekir.</p>
+        <aside class="rehber" aria-labelledby="rehberBaslik">
+          <h3 id="rehberBaslik">Cevaplanabilir soru nasıl olur</h3>
+          <ol>
+            <li><b>Marka + model + yazılım sürümü.</b> "PLC" değil, "S7-1200 CPU 1214C, TIA v17".</li>
+            <li><b>Ne yaptınız, ne bekliyordunuz, ne oldu.</b> Hata kodu/mesajı aynen.</li>
+            <li><b>Fotoğraf veya ekran görüntüsü</b> bağlantısı — parça, HMI ekranı, tarama kesiti.</li>
+            <li><b>Denediğiniz şeyler.</b> Neyi elediğinizi bilmek işi hızlandırır.</li>
+          </ol>
+          <p class="kapsam">Burası teknik yardımlaşma içindir; <b>iş ilanı, ürün reklamı ve firma
+            şikâyeti</b> kapsam dışıdır. Tek kural: kişiye değil probleme yazın.</p>
+        </aside>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- İletişim CTA -->
-  <section class="section" id="iletisim">
-    <span class="section-index" aria-hidden="true">03</span>
-    <div class="container">
-      <div class="contact-wrap">
-        <p class="kicker reveal"><span class="idx">03</span>İletişim</p>
-        <h2 class="reveal">Foruma sığmayan bir konu mu var</h2>
-        <p class="lead reveal">Projeniz hakkında birebir konuşmak isterseniz ya da forumla ilgili
-          bir öneriniz varsa doğrudan e-posta gönderebilirsiniz.</p>
-        <div class="links reveal">
-          <a class="pill primary" href="mailto:sercansozer20@gmail.com">
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M.05 3.56A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.56L8 7.41.05 3.56zM0 4.7v6.8A2 2 0 0 0 2 13.5h12a2 2 0 0 0 2-2V4.7L8.35 8.42a.8.8 0 0 1-.7 0L0 4.7z"/></svg>
-            sercansozer20@gmail.com
-          </a>
-          <a class="pill" href="https://github.com/sercansozer20-dot/sersoz.com/discussions" target="_blank" rel="noopener">
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-            Discussions'a git
-          </a>
+    <section class="section" aria-labelledby="listeBaslik">
+      <div class="container">
+        <p class="kicker"><span class="idx">02</span>Masadakiler</p>
+
+        <div class="liste-ust">
+          <h2 id="listeBaslik">Konular<span class="nokta">.</span></h2>
+          <div class="sekmeler" role="group" aria-label="Sıralama">
+            <button class="sekme" type="button" id="sekmeBekleyen"
+                    data-sekme="bekleyen" aria-pressed="true">Cevap bekleyenler</button>
+            <button class="sekme" type="button" id="sekmeSon"
+                    data-sekme="son" aria-pressed="false">Son etkinlik</button>
+            <button class="sekme" type="button" id="sekmeCozulmus"
+                    data-sekme="cozulmus" aria-pressed="false">Çözülmüş</button>
+          </div>
         </div>
-        <div class="status reveal"><span class="dot"></span> Forum GitHub Discussions üzerinde barınır</div>
+
+        <div class="cipler" id="cipler"></div>
+
+        <div class="konu-liste" id="konuListe" aria-busy="true"></div>
+
+        <p class="durum-satir" id="listeDurum" role="status" aria-live="polite"></p>
+
+        <div style="margin-top:22px">
+          <button class="btn" id="dahaFazla" hidden>Daha fazla konu</button>
+        </div>
+
+        <!-- Boş durum -->
+        <div class="bos" id="bosDurum" hidden>
+          <p class="bos-acilis">Bu masa 9 Ağustos 2026'da açıldı</p>
+          <h3>Şu an sırada kimse yok.</h3>
+          <p class="bos-lead">İlk soru sizinse en hızlı yanıtı siz alırsınız. Sorduğunuz şey burada
+            kalır: yarın aynı sorunu yaşayan kişi — belki yine siz — arama sonuçlarında bulur.</p>
+
+          <p class="ornek-baslik">Şöyle sorular için doğru yer</p>
+          <div class="ornekler" id="ornekler"></div>
+        </div>
+
+        <!-- Yönetici kurulum kutusu -->
+        <div class="kurulum" id="kurulumKutu" hidden>
+          <h3>Kurulum — yalnız site sahibine görünür</h3>
+          <p>Güvenlik kuralları depodaki <code>/firestore.rules</code> dosyasındadır ve
+            <b>Firebase Konsolu → Firestore Database → Rules</b> ekranından <b>elle</b> yayımlanır.
+            Kurallar yayımlandıktan sonra <code>forumAyar/genel</code> belgesi bulunmalıdır;
+            yoksa hiç kimse yazamaz.</p>
+          <div class="islem-satir">
+            <button class="btn kucuk" type="button" id="ayarOlustur">forumAyar/genel oluştur</button>
+            <button class="btn kucuk" type="button" id="ayarKilit">Yazmayı dondur / aç</button>
+            <span class="durum-satir" id="kurulumDurum"></span>
+          </div>
+        </div>
+
+        <!-- Firestore erişilemezse -->
+        <div class="uyari-kutu" id="cevrimdisi" hidden>
+          <h3>Forum şu an yüklenemedi</h3>
+          <p id="cevrimdisiMetin">Veritabanına ulaşılamıyor. Ağ bağlantınız ya da bir tarayıcı
+            eklentisi engelliyor olabilir.</p>
+          <p>Soru sormanın iki yedek yolu:
+            <a href="mailto:sercansozer20@gmail.com?subject=Forum%20sorusu">e-posta</a> ·
+            <a href="https://github.com/sercansozer20-dot/sersoz.com/discussions" rel="noopener" target="_blank">GitHub Discussions</a>
+          </p>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
+
+  <!-- ================= KONU GÖRÜNÜMÜ ================= -->
+  <div id="konuGorunum" hidden>
+    <section class="section">
+      <div class="container">
+        <a class="geri" href="#/">← Tüm konular</a>
+        <div id="konuIcerik"></div>
+      </div>
+    </section>
+  </div>
+
+  <noscript>
+    <section class="section">
+      <div class="container">
+        <div class="uyari-kutu">
+          <h3>Bu sayfa JavaScript gerektiriyor</h3>
+          <p>Danışma masası tarayıcınızda çalışan bir uygulamadır; konular JavaScript kapalıyken
+            yüklenemez. JavaScript'i açabilir ya da sorunuzu doğrudan iletebilirsiniz:</p>
+          <p><a href="mailto:sercansozer20@gmail.com?subject=Forum%20sorusu">sercansozer20@gmail.com</a>
+            · <a href="https://github.com/sercansozer20-dot/sersoz.com/discussions" rel="noopener">GitHub Discussions</a></p>
+        </div>
+      </div>
+    </section>
+  </noscript>
 </main>
 
 <footer>
@@ -630,26 +741,1573 @@
 </footer>
 
 <script>
-(function () {
-  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* =============================================================================
+   sersoz.com — Danışma masası (forum)
+   Arka uç: Cloud Firestore. Sunucu yok; tüm kısıtlar /firestore.rules içinde.
+   Kullanıcı içeriği ASLA innerHTML ile basılmaz — yalnız textContent ve
+   createElement kullanılır.
+============================================================================= */
+(function (global) {
+  'use strict';
 
-  /* ---------- Scroll reveal ---------- */
-  var revealEls = document.querySelectorAll('.reveal');
-  if (reduced || !('IntersectionObserver' in window)) {
-    revealEls.forEach(function (el) { el.classList.add('visible'); });
-  } else {
-    var ro = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          ro.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
-    revealEls.forEach(function (el) { ro.observe(el); });
+  /* ----------------------------------------------------------- sabitler */
+
+  var FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48",
+    authDomain: "sersoz-f93c3.firebaseapp.com",
+    projectId: "sersoz-f93c3",
+    storageBucket: "sersoz-f93c3.firebasestorage.app",
+    messagingSenderId: "173131115543",
+    appId: "1:173131115543:web:f0313dd00ac0f2d3f80052"
+  };
+
+  var YONETICI = 'sercansozer20@gmail.com';
+  var SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
+
+  var SAYFA = 20;          /* konu sayfa boyu   */
+  var YANIT_SAYFA = 30;    /* yanıt sayfa boyu  */
+  var TASLAK = 'sersoz_forum_taslak_v1';
+
+  /* Kategoriler — firestore.rules içindeki kategoriler() ile BİREBİR aynı olmalı */
+  var KATEGORILER = [
+    { k: 'genel',            ad: 'Genel' },
+    { k: 'plc-haberlesme',   ad: 'PLC & haberleşme' },
+    { k: 'kamera-aydinlatma',ad: 'Kamera, lens, aydınlatma' },
+    { k: '3d-vizyon',        ad: '3D ölçüm & nokta bulutu' },
+    { k: 'goruntu-isleme',   ad: 'Derin öğrenme & görüntü işleme' },
+    { k: 'robotik',          ad: 'Robot kılavuzlama' },
+    { k: 'kalibrasyon',      ad: 'Kalibrasyon' },
+    { k: 'saha-sorunlari',   ad: 'Saha arızası' }
+  ];
+
+  /* "Adım görünmesin" — firestore.rules içindeki rolAdlari() ile BİREBİR aynı */
+  var ROLLER = ['Bakım Mühendisi', 'Otomasyon Mühendisi', 'Kalite Mühendisi',
+                'PLC Programcısı', 'Sistem Entegratörü', 'Makine İmalatçısı',
+                'Elektrik Teknisyeni', 'İsimsiz katılımcı'];
+
+  var SEBEPLER = [
+    { k: 'spam',         ad: 'Spam' },
+    { k: 'taciz',        ad: 'Hakaret' },
+    { k: 'alakasiz',     ad: 'Alakasız' },
+    { k: 'kisisel-veri', ad: 'Kişisel veri' },
+    { k: 'reklam',       ad: 'Reklam' }
+  ];
+
+  var ORNEKLER = [
+    'S7-1200 ile vizyon PC arasında el sıkışma biti nasıl kurulur',
+    'Parlak sac yüzeyde ışık yansımasını nasıl kestiniz',
+    'MLBS115 taramasında düzlemsellik ölçüsü tekrar etmiyor',
+    'YOLO modeli sahada masaüstündeki kadar iyi değil, nereden başlarım',
+    '3D mi 2D mi — 0.1 mm ölçü için hangisi',
+    'PROFINET’te cihazı ağda göremiyorum'
+  ];
+
+  var SINIR = {
+    baslikMin: 10, baslikMax: 120,
+    govdeMin: 30,  govdeMax: 8000,
+    yanitMin: 2,   yanitMax: 4000
+  };
+
+  /* ------------------------------------------------------------- durum */
+
+  var S = {
+    fs: null, db: null, auth: null, authMod: null,
+    user: null, yoneticiMi: false,
+    hiz: null, hizOkundu: false,
+    konular: [], sonBelge: null, tumu: false, yukleniyor: false,
+    sekme: 'bekleyen', kategori: '',
+    konuId: null, konu: null, yanitlar: [], yanitSon: null, yanitTumu: false,
+    hazir: false, cevrimdisi: false
+  };
+
+  /* --------------------------------------------------------- kısa yollar */
+
+  function $(id) { return document.getElementById(id); }
+
+  function dm(etiket, sinif, metin) {
+    var e = document.createElement(etiket);
+    if (sinif) e.className = sinif;
+    if (metin != null) e.textContent = metin;
+    return e;
   }
-})();
+
+  function bosalt(el) { while (el && el.firstChild) el.removeChild(el.firstChild); }
+
+  function goster(el, evet) { if (el) el.hidden = !evet; }
+
+  function durumYaz(el, metin, tur) {
+    if (!el) return;
+    el.textContent = metin || '';
+    el.className = 'durum-satir' + (tur ? ' ' + tur : '');
+  }
+
+  /* --------------------------------------------------------- yardımcılar */
+
+  function katAdi(k) {
+    for (var i = 0; i < KATEGORILER.length; i++) if (KATEGORILER[i].k === k) return KATEGORILER[i].ad;
+    return '';
+  }
+
+  function ms(ts) {
+    if (!ts) return 0;
+    if (typeof ts.toMillis === 'function') return ts.toMillis();
+    if (ts instanceof Date) return ts.getTime();
+    if (typeof ts.seconds === 'number') return ts.seconds * 1000;
+    return 0;
+  }
+
+  function gecen(ts) {
+    var t = ms(ts);
+    if (!t) return 'az önce';
+    var fark = Date.now() - t;
+    if (fark < 0) fark = 0;
+    var dk = Math.floor(fark / 60000);
+    if (dk < 1) return 'az önce';
+    if (dk < 60) return dk + ' dakika önce';
+    var sa = Math.floor(dk / 60);
+    if (sa < 24) return sa + ' saat önce';
+    var gun = Math.floor(sa / 24);
+    if (gun < 30) return gun + ' gün önce';
+    return new Date(t).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function sureMetni(dakika) {
+    if (dakika < 60) return Math.max(1, Math.round(dakika)) + ' dakika';
+    if (dakika < 60 * 24) return Math.round(dakika / 60) + ' saat';
+    return Math.round(dakika / (60 * 24)) + ' gün';
+  }
+
+  function slug(metin) {
+    var harita = { 'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+                   'Ç': 'c', 'Ğ': 'g', 'İ': 'i', 'I': 'i', 'Ö': 'o', 'Ş': 's', 'Ü': 'u' };
+    return String(metin || '').replace(/[çğıöşüÇĞİIÖŞÜ]/g, function (c) { return harita[c] || c; })
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60) || 'konu';
+  }
+
+  function konuYolu(id, baslik) { return '#/konu/' + id + '/' + slug(baslik); }
+
+  /* Google profil fotoğrafı dışındaki adresler kabul edilmez. */
+  function fotoGecerli(u) {
+    if (!u || typeof u !== 'string' || u.length > 400) return false;
+    try {
+      var x = new URL(u);
+      return x.protocol === 'https:' &&
+        /(^|\.)(googleusercontent\.com|ggpht\.com)$/.test(x.hostname);
+    } catch (e) { return false; }
+  }
+
+  function avatarCiz(ad, foto, buyuk) {
+    if (fotoGecerli(foto)) {
+      var img = document.createElement('img');
+      img.className = 'avatar' + (buyuk ? ' buyuk' : '');
+      img.src = foto;
+      img.alt = '';
+      img.referrerPolicy = 'no-referrer';
+      img.width = buyuk ? 34 : 26;
+      img.height = buyuk ? 34 : 26;
+      img.addEventListener('error', function () {
+        if (img.parentNode) img.parentNode.replaceChild(harfRozeti(ad, buyuk), img);
+      });
+      return img;
+    }
+    return harfRozeti(ad, buyuk);
+  }
+
+  function harfRozeti(ad, buyuk) {
+    var d = dm('span', 'avatar-harf' + (buyuk ? ' buyuk' : ''),
+               (String(ad || '?').trim().charAt(0) || '?').toLocaleUpperCase('tr-TR'));
+    d.setAttribute('aria-hidden', 'true');
+    return d;
+  }
+
+  /* ---- Gövde çizimi: kod bloğu + güvenli bağlantı, innerHTML YOK ---- */
+
+  function baglantiliYaz(el, metin) {
+    var re = /https?:\/\/[^\s<>"']+/g, son = 0, m;
+    while ((m = re.exec(metin)) !== null) {
+      if (m.index > son) el.appendChild(document.createTextNode(metin.slice(son, m.index)));
+      var u = m[0].replace(/[.,;:!?)\]]+$/, '');
+      var a = document.createElement('a');
+      a.href = u;                       /* regex gereği yalnız http/https */
+      a.textContent = u;
+      a.rel = 'nofollow ugc noopener noreferrer';
+      a.target = '_blank';
+      el.appendChild(a);
+      son = m.index + u.length;
+      re.lastIndex = son;
+    }
+    if (son < metin.length) el.appendChild(document.createTextNode(metin.slice(son)));
+  }
+
+  function govdeCiz(metin) {
+    var kap = dm('div', 'govde');
+    var parcalar = String(metin == null ? '' : metin).split('```');
+    for (var i = 0; i < parcalar.length; i++) {
+      if (i % 2 === 1) {
+        var pre = dm('pre'), code = dm('code');
+        code.textContent = parcalar[i].replace(/^\r?\n/, '').replace(/\r?\n$/, '');
+        pre.appendChild(code);
+        kap.appendChild(pre);
+      } else {
+        var paragraflar = parcalar[i].split(/\n\s*\n/);
+        for (var j = 0; j < paragraflar.length; j++) {
+          if (!paragraflar[j].trim()) continue;
+          var p = dm('p');
+          baglantiliYaz(p, paragraflar[j].replace(/^\r?\n+|\r?\n+$/g, ''));
+          kap.appendChild(p);
+        }
+      }
+    }
+    if (!kap.firstChild) kap.appendChild(dm('p', null, ''));
+    return kap;
+  }
+
+  /* ------------------------------------------------------------ taslak */
+
+  function taslakKaydet() {
+    try {
+      localStorage.setItem(TASLAK, JSON.stringify({
+        baslik: $('konuBaslik').value,
+        govde: $('konuGovde').value,
+        kategori: $('konuKategori').value,
+        rol: $('konuRol').value
+      }));
+    } catch (e) {}
+  }
+
+  function taslakYukle() {
+    try {
+      var h = localStorage.getItem(TASLAK);
+      if (!h) return;
+      var d = JSON.parse(h);
+      if (d.baslik) $('konuBaslik').value = d.baslik;
+      if (d.govde) $('konuGovde').value = d.govde;
+      if (d.kategori) $('konuKategori').value = d.kategori;
+      if (d.rol) $('konuRol').value = d.rol;
+    } catch (e) {}
+  }
+
+  function taslakSil() { try { localStorage.removeItem(TASLAK); } catch (e) {} }
+
+  /* ------------------------------------------------------ form kurulumu */
+
+  function formKur() {
+    var kat = $('konuKategori');
+    for (var i = 0; i < KATEGORILER.length; i++) {
+      var o = dm('option', null, KATEGORILER[i].ad);
+      o.value = KATEGORILER[i].k;
+      kat.appendChild(o);
+    }
+
+    var rol = $('konuRol');
+    var yok = dm('option', null, 'Hayır — adım görünsün');
+    yok.value = '';
+    rol.appendChild(yok);
+    for (var j = 0; j < ROLLER.length; j++) {
+      var r = dm('option', null, ROLLER[j]);
+      r.value = ROLLER[j];
+      rol.appendChild(r);
+    }
+
+    var orn = $('ornekler');
+    for (var n = 0; n < ORNEKLER.length; n++) {
+      (function (metin) {
+        var b = dm('button', 'ornek');
+        b.type = 'button';
+        b.appendChild(document.createTextNode(metin));
+        b.appendChild(dm('span', null, 'Bu başlıkla sor'));
+        b.addEventListener('click', function () {
+          $('konuBaslik').value = metin;
+          taslakKaydet();
+          $('konuGovde').focus();
+          $('soru-kutusu').scrollIntoView({ block: 'start' });
+          sayaclariGuncelle();
+        });
+        orn.appendChild(b);
+      })(ORNEKLER[n]);
+    }
+
+    $('konuBaslik').addEventListener('input', function () { taslakKaydet(); sayaclariGuncelle(); });
+    $('konuGovde').addEventListener('input', function () { taslakKaydet(); sayaclariGuncelle(); });
+    $('konuKategori').addEventListener('change', taslakKaydet);
+    $('konuRol').addEventListener('change', taslakKaydet);
+
+    taslakYukle();
+    sayaclariGuncelle();
+
+    $('konuForm').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      konuGonder();
+    });
+
+    /* Fotoğraf yedeği: işaretlemede doğrudan .monogram var (bkz. .kimlik).
+       Önceki hâlde <img src="/sercan.jpg"> konup yüklenemezse error olayında
+       monogramla değiştiriliyordu — çalışıyordu ama her açılışta 404 üretiyordu.
+       Fotoğraf eklenince img geri konur; o zaman bu yedek yeniden gerekir. */
+
+    var sekmeler = document.querySelectorAll('.sekme');
+    for (var s = 0; s < sekmeler.length; s++) {
+      sekmeler[s].addEventListener('click', function () {
+        S.sekme = this.getAttribute('data-sekme');
+        for (var q = 0; q < sekmeler.length; q++) {
+          sekmeler[q].setAttribute('aria-pressed', sekmeler[q] === this ? 'true' : 'false');
+        }
+        listeCiz();
+      });
+    }
+
+    $('dahaFazla').addEventListener('click', function () { konulariYukle(false); });
+  }
+
+  function sayaclariGuncelle() {
+    var b = $('konuBaslik').value.trim().length;
+    var g = $('konuGovde').value.trim().length;
+    var bs = $('baslikSayac'), gs = $('govdeSayac');
+    bs.textContent = 'başlık ' + b + '/' + SINIR.baslikMax;
+    gs.textContent = 'metin ' + g + '/' + SINIR.govdeMax;
+    bs.className = 'sayac' + ((b > 0 && b < SINIR.baslikMin) || b > SINIR.baslikMax ? ' asim' : '');
+    gs.className = 'sayac' + ((g > 0 && g < SINIR.govdeMin) || g > SINIR.govdeMax ? ' asim' : '');
+  }
+
+  /* ------------------------------------------------------------ Firebase */
+
+  function baslat() {
+    return import(SDK + 'firebase-app.js').then(function (appMod) {
+      var mevcut = (appMod.getApps && appMod.getApps()) || [];
+      var app = mevcut.length ? mevcut[0] : appMod.initializeApp(FIREBASE_CONFIG);
+      return Promise.all([app,
+        import(SDK + 'firebase-auth.js'),
+        import(SDK + 'firebase-firestore.js')]);
+    }).then(function (r) {
+      var app = r[0];
+      S.authMod = r[1];
+      S.fs = r[2];
+
+      /* Kalıcı önbellek okuma kotasını ciddi biçimde düşürür. Firestore başka
+         bir betik (hesap.js) tarafından başlatılmışsa initializeFirestore hata
+         verir — o durumda mevcut örneği kullan. */
+      try {
+        S.db = S.fs.initializeFirestore(app, {
+          localCache: S.fs.persistentLocalCache({
+            tabManager: S.fs.persistentMultipleTabManager()
+          })
+        });
+      } catch (e) {
+        S.db = S.fs.getFirestore(app);
+      }
+
+      S.auth = S.authMod.getAuth(app);
+      S.authMod.onAuthStateChanged(S.auth, kullaniciDegisti);
+      S.hazir = true;
+      return konulariYukle(true);
+    });
+  }
+
+  function girisYap() {
+    if (!S.authMod || !S.auth) return Promise.reject(new Error('hazir-degil'));
+    var saglayici = new S.authMod.GoogleAuthProvider();
+    return S.authMod.signInWithPopup(S.auth, saglayici).then(function (r) {
+      /* onAuthStateChanged'ı beklemeden durumu kur — yarış olmasın */
+      if (r && r.user) kullaniciDegisti(r.user);
+      return S.user;
+    });
+  }
+
+  function kullaniciDegisti(u) {
+    var degisti = (S.user && S.user.uid) !== (u && u.uid);
+    S.user = u || null;
+    S.yoneticiMi = !!(u && u.email === YONETICI && u.emailVerified !== false);
+    goster($('kurulumKutu'), S.yoneticiMi);
+
+    if (degisti) { S.hiz = null; S.hizOkundu = false; }
+    onayKutucukGuncelle();
+    if (u && !S.hizOkundu) hizOku().then(onayKutucukGuncelle);
+
+    /* Kendi yazılarının düzenle/sil düğmeleri kimliğe bağlı — yeniden çiz */
+    listeCiz();
+    if (S.konuId && S.konu) konuCiz();
+  }
+
+  function hizOku() {
+    if (!S.user) return Promise.resolve(null);
+    return S.fs.getDoc(S.fs.doc(S.db, 'forumHiz', S.user.uid)).then(function (d) {
+      S.hiz = d.exists() ? d.data() : null;
+      S.hizOkundu = true;
+      return S.hiz;
+    }).catch(function () { S.hiz = null; S.hizOkundu = true; return null; });
+  }
+
+  function onayKutucukGuncelle() {
+    var gerek = !(S.hiz && S.hiz.forumOnay === true);
+    goster($('onayKutucuk'), gerek);
+  }
+
+  /* ------------------------------------------------------- konu yükleme */
+
+  function konulariYukle(ilk) {
+    if (S.yukleniyor) return Promise.resolve();
+    S.yukleniyor = true;
+    if (ilk) { S.konular = []; S.sonBelge = null; S.tumu = false; }
+    $('konuListe').setAttribute('aria-busy', 'true');
+    durumYaz($('listeDurum'), 'Konular yükleniyor…');
+
+    var kosullar = [S.fs.orderBy('sonEtkinlik', 'desc')];
+    if (S.sonBelge) kosullar.push(S.fs.startAfter(S.sonBelge));
+    kosullar.push(S.fs.limit(SAYFA));
+
+    var q = S.fs.query.apply(null, [S.fs.collection(S.db, 'forumKonular')].concat(kosullar));
+
+    return S.fs.getDocs(q).then(function (snap) {
+      snap.forEach(function (d) {
+        var v = d.data() || {};
+        v.id = d.id;
+        S.konular.push(v);
+      });
+      S.sonBelge = snap.docs.length ? snap.docs[snap.docs.length - 1] : S.sonBelge;
+      if (snap.docs.length < SAYFA) S.tumu = true;
+      S.yukleniyor = false;
+      S.cevrimdisi = false;
+      goster($('cevrimdisi'), false);
+      durumYaz($('listeDurum'), '');
+      $('konuListe').setAttribute('aria-busy', 'false');
+      listeCiz();
+      istatistikCiz();
+      yonlendir();
+    }).catch(function (e) {
+      S.yukleniyor = false;
+      S.cevrimdisi = true;
+      $('konuListe').setAttribute('aria-busy', 'false');
+      durumYaz($('listeDurum'), '');
+      hataGoster(e);
+    });
+  }
+
+  function hataGoster(e) {
+    S.cevrimdisi = true;
+    goster($('cevrimdisi'), true);
+    var metin = 'Veritabanına ulaşılamıyor. Ağ bağlantınız ya da bir tarayıcı eklentisi engelliyor olabilir.';
+    if (e && e.code === 'permission-denied') {
+      metin = 'Veritabanı bu isteği reddetti. Güvenlik kuralları henüz yayımlanmamış olabilir ' +
+              '(depodaki firestore.rules dosyası Firebase Konsolundan elle yayımlanır).';
+    } else if (e && e.code === 'failed-precondition') {
+      metin = 'Sorgu için gereken dizin hazır değil. Birkaç dakika sonra tekrar deneyin.';
+    }
+    $('cevrimdisiMetin').textContent = metin;
+    /* Konu görünümü sonsuza kadar "yükleniyor" kalmasın: hata listede görünür. */
+    if (!S.konu) {
+      goster($('konuGorunum'), false);
+      goster($('listeGorunum'), true);
+    }
+    listeCiz();   /* "Daha fazla konu" gibi anlamsız kalan denetimleri kaldırır */
+    if (global.console && console.warn) console.warn('[forum]', e);
+  }
+
+  /* --------------------------------------------------------- liste çizim */
+
+  function gorunurKonular() {
+    var liste = [];
+    for (var i = 0; i < S.konular.length; i++) {
+      var k = S.konular[i];
+      if (k.gizli && !S.yoneticiMi) continue;
+      if (S.kategori && k.kategori !== S.kategori) continue;
+      if (S.sekme === 'cozulmus' && !k.cozuldu) continue;
+      liste.push(k);
+    }
+    if (S.sekme === 'bekleyen') {
+      liste.sort(function (a, b) {
+        var ab = (!a.cozuldu && !(a.yanitSayisi > 0)) ? 0 : 1;
+        var bb = (!b.cozuldu && !(b.yanitSayisi > 0)) ? 0 : 1;
+        if (ab !== bb) return ab - bb;
+        return ms(b.sonEtkinlik) - ms(a.sonEtkinlik);
+      });
+    } else {
+      liste.sort(function (a, b) { return ms(b.sonEtkinlik) - ms(a.sonEtkinlik); });
+    }
+    /* Sabitlenmiş konular her zaman en üstte */
+    liste.sort(function (a, b) { return (b.sabitlenmis ? 1 : 0) - (a.sabitlenmis ? 1 : 0); });
+    return liste;
+  }
+
+  function ciplerCiz() {
+    var kap = $('cipler');
+    bosalt(kap);
+    var adet = {};
+    for (var i = 0; i < S.konular.length; i++) {
+      var k = S.konular[i];
+      if (k.gizli && !S.yoneticiMi) continue;
+      adet[k.kategori] = (adet[k.kategori] || 0) + 1;
+    }
+    var varMi = false;
+    for (var a in adet) { if (Object.prototype.hasOwnProperty.call(adet, a)) { varMi = true; break; } }
+    if (!varMi) return;
+
+    kap.appendChild(cipYap('', 'Tümü', 0));
+    for (var j = 0; j < KATEGORILER.length; j++) {
+      var kk = KATEGORILER[j].k;
+      if (!adet[kk]) continue;                       /* sayısı 0 olan çip gösterilmez */
+      kap.appendChild(cipYap(kk, KATEGORILER[j].ad, adet[kk]));
+    }
+  }
+
+  function cipYap(k, ad, adet) {
+    var b = dm('button', 'cip');
+    b.type = 'button';
+    b.setAttribute('aria-pressed', S.kategori === k ? 'true' : 'false');
+    b.appendChild(document.createTextNode(ad));
+    if (adet) b.appendChild(dm('span', 'adet', String(adet)));
+    b.addEventListener('click', function () {
+      S.kategori = (S.kategori === k) ? '' : k;
+      listeCiz();
+    });
+    return b;
+  }
+
+  function rozetler(k) {
+    var kap = document.createDocumentFragment();
+    if (k.cozuldu) {
+      kap.appendChild(dm('span', 'rozet cozuldu', 'Çözüldü'));
+    } else if (!(k.yanitSayisi > 0)) {
+      kap.appendChild(dm('span', 'rozet bekliyor', 'Cevap bekliyor'));
+    } else {
+      kap.appendChild(dm('span', 'rozet', k.yanitSayisi + ' yanıt'));
+    }
+    if (k.ilkYanit && k.olusturma) {
+      var dk = (ms(k.ilkYanit) - ms(k.olusturma)) / 60000;
+      if (dk >= 0) kap.appendChild(dm('span', 'rozet hiz', 'ilk yanıt: ' + sureMetni(dk)));
+    }
+    if (k.kilitli) kap.appendChild(dm('span', 'rozet kilit', 'Kilitli'));
+    if (k.gizli) kap.appendChild(dm('span', 'rozet gizli', 'Gizlenmiş'));
+    return kap;
+  }
+
+  function listeCiz() {
+    var kap = $('konuListe');
+    if (!kap) return;
+    bosalt(kap);
+    ciplerCiz();
+
+    var liste = gorunurKonular();
+
+    for (var i = 0; i < liste.length; i++) {
+      var k = liste[i];
+      var sat = dm('article', 'konu-sat');
+
+      var a = dm('a', 'baslik-bag', k.baslik || '(başlıksız)');
+      a.href = konuYolu(k.id, k.baslik);
+      sat.appendChild(a);
+
+      var meta = dm('div', 'konu-meta');
+      var yaz = dm('span', 'yazar');
+      yaz.appendChild(avatarCiz(k.yazarAd, k.yazarFoto, false));
+      yaz.appendChild(dm('span', null, k.yazarAd || 'İsimsiz katılımcı'));
+      meta.appendChild(yaz);
+      meta.appendChild(dm('span', null, gecen(k.olusturma)));
+      meta.appendChild(rozetler(k));
+      if (k.kategori && k.kategori !== 'genel') {
+        meta.appendChild(dm('span', 'etiket-cip', katAdi(k.kategori)));
+      }
+      sat.appendChild(meta);
+      kap.appendChild(sat);
+    }
+
+    var bosMu = liste.length === 0;
+
+    /* Boş durum ekranı YALNIZ gerçekten hiç konu yokken çıkar; süzgeç
+       sonucu boş kaldığında değil (yoksa "masa henüz açıldı" yalanı olur). */
+    var hicKonuYok = true;
+    for (var g = 0; g < S.konular.length; g++) {
+      if (!S.konular[g].gizli || S.yoneticiMi) { hicKonuYok = false; break; }
+    }
+    goster($('bosDurum'), hicKonuYok && S.tumu && !S.cevrimdisi);
+    goster($('dahaFazla'), !S.tumu && !S.cevrimdisi);
+
+    if (bosMu && !S.tumu && !S.cevrimdisi) {
+      durumYaz($('listeDurum'), 'Bu süzgeçte yüklenmiş konu yok — "Daha fazla konu" ile geriye bakabilirsiniz.');
+    } else if (bosMu && S.kategori) {
+      durumYaz($('listeDurum'), 'Bu alanda henüz konu yok.');
+    } else if (bosMu && S.sekme === 'cozulmus') {
+      durumYaz($('listeDurum'), 'Henüz çözüm işaretlenmiş konu yok.');
+    } else {
+      durumYaz($('listeDurum'), '');
+    }
+  }
+
+  /* İstatistik: yalnız TÜM liste yüklendiğinde ve yalnız gerçek ölçümle. */
+  function istatistikCiz() {
+    if (!S.tumu) { goster($('sayilar'), false); goster($('sozOlcum'), false); return; }
+
+    var acik = 0, cozulmus = 0, sureler = [];
+    for (var i = 0; i < S.konular.length; i++) {
+      var k = S.konular[i];
+      if (k.gizli) continue;
+      if (k.cozuldu) cozulmus++;
+      else if (!(k.yanitSayisi > 0)) acik++;
+      if (k.ilkYanit && k.olusturma) {
+        var dk = (ms(k.ilkYanit) - ms(k.olusturma)) / 60000;
+        if (dk >= 0) sureler.push(dk);
+      }
+    }
+
+    if (!S.konular.length) { goster($('sayilar'), false); goster($('sozOlcum'), false); return; }
+
+    $('sayiAcik').textContent = String(acik);
+    $('sayiCozulmus').textContent = String(cozulmus);
+    goster($('sayilar'), true);
+
+    if (sureler.length >= 3) {
+      sureler.sort(function (a, b) { return a - b; });
+      var orta = sureler.length % 2
+        ? sureler[(sureler.length - 1) / 2]
+        : (sureler[sureler.length / 2 - 1] + sureler[sureler.length / 2]) / 2;
+      $('sozOlcum').textContent = 'Ölçülen ilk yanıt (ortanca): ' + sureMetni(orta);
+      goster($('sozOlcum'), true);
+    } else {
+      goster($('sozOlcum'), false);
+    }
+  }
+
+  /* ----------------------------------------------------------- yazma */
+
+  /* Gün kodu UTC ile hesaplanır: güvenlik kuralındaki request.time de UTC'dir. */
+  function gunKodu() {
+    var d = new Date();
+    return d.getUTCFullYear() * 10000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+  }
+
+  function hizYuku() {
+    var gk = gunKodu();
+    var d = S.hiz;
+    return {
+      sonYazi: S.fs.serverTimestamp(),
+      gunKodu: gk,
+      bugunSayi: (d && d.gunKodu === gk) ? ((d.bugunSayi || 0) + 1) : 1,
+      forumOnay: true,
+      onayZaman: (d && d.onayZaman) ? d.onayZaman : S.fs.serverTimestamp()
+    };
+  }
+
+  function hizGuncelle(yuk) {
+    S.hiz = {
+      sonYazi: new Date(),
+      gunKodu: yuk.gunKodu,
+      bugunSayi: yuk.bugunSayi,
+      forumOnay: true,
+      onayZaman: (S.hiz && S.hiz.onayZaman) ? S.hiz.onayZaman : null
+    };
+    S.hizOkundu = true;
+    onayKutucukGuncelle();
+
+    /* Sunucudaki GERÇEK damgaları geri al. Yoksa onayZaman yerelde null kalır,
+       bir sonraki gönderide yeniden serverTimestamp() yazılır ve "ilk gönderi
+       onayının zamanı" her yazıda ileri kayardı — gizlilik.html bunu KVKK
+       kaydı olarak duyuruyor. Okuma başarısız olursa yerel durum korunur. */
+    if (!S.user) return;
+    S.fs.getDoc(S.fs.doc(S.db, 'forumHiz', S.user.uid)).then(function (d) {
+      var v = d.exists() ? d.data() : null;
+      if (v && v.sonYazi && v.onayZaman) {   /* sunucu damgası çözülmüşse */
+        S.hiz = v;
+        onayKutucukGuncelle();
+      }
+    }).catch(function () {});
+  }
+
+  function beklemeKaldi(saniye) {
+    if (!S.hiz || !S.hiz.sonYazi) return 0;
+    var kalan = saniye - Math.floor((Date.now() - ms(S.hiz.sonYazi)) / 1000);
+    return kalan > 0 ? kalan : 0;
+  }
+
+  /* firestore.rules içindeki sunucuAd() / sunucuFoto() ile BİREBİR aynı mantık:
+     ufak bir sapma yazmanın reddedilmesine yol açar. */
+  function jetonAd() {
+    var ad = (S.user && S.user.displayName) ? String(S.user.displayName) : '';
+    return (ad.length > 0 && ad.length <= 80) ? ad : 'İsimsiz katılımcı';
+  }
+
+  function jetonFoto() {
+    var foto = (S.user && S.user.photoURL) ? String(S.user.photoURL) : '';
+    return foto.length <= 400 ? foto : '';
+  }
+
+  function kimlikSec(rolDegeri) {
+    if (rolDegeri) return { ad: rolDegeri, foto: '', takma: true };
+    return { ad: jetonAd(), foto: jetonFoto(), takma: false };
+  }
+
+  function yazmaHatasi(e) {
+    if (!e) return 'Gönderilemedi.';
+    if (e.message === 'giris-yok') {
+      return 'Giriş tamamlanmadı. Yazdığınız metin duruyor; tekrar Gönder diyebilirsiniz.';
+    }
+    if (e.message === 'hazir-degil') {
+      return 'Bağlantı henüz kurulmadı. Metniniz tarayıcınızda duruyor, birkaç saniye sonra tekrar deneyin.';
+    }
+    if (e.code === 'permission-denied') {
+      return 'Gönderi kabul edilmedi. Nedenleri: çok sık yazma (konu 45 sn, yanıt 20 sn), ' +
+             'günlük 20 gönderi sınırı, forumun geçici olarak yazmaya kapatılmış olması ' +
+             'ya da güvenlik kurallarının henüz yayımlanmamış olması.';
+    }
+    if (e.code === 'unavailable') return 'Bağlantı yok. Metniniz tarayıcınızda duruyor, birazdan tekrar deneyin.';
+    if (e.code === 'auth/popup-blocked' || (e.message && /popup/i.test(e.message))) {
+      return 'Tarayıcı giriş penceresini engelledi. Adres çubuğundaki engel simgesinden izin verip tekrar deneyin.';
+    }
+    if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+      return 'Giriş tamamlanmadı. Yazdığınız metin duruyor; tekrar Gönder diyebilirsiniz.';
+    }
+    return 'Gönderilemedi: ' + (e.code || e.message || 'bilinmeyen hata');
+  }
+
+  /* Girişi ve KVKK onayını kontrol eder; hazırsa true döner. */
+  function yazmayaHazirla(durumEl, onayKutuId) {
+    var p = S.user ? Promise.resolve(S.user) : girisYap();
+    return p.then(function () {
+      if (!S.user) throw new Error('giris-yok');
+      return S.hizOkundu ? null : hizOku();
+    }).then(function () {
+      var onayVar = !!(S.hiz && S.hiz.forumOnay === true);
+      if (!onayVar) {
+        var kutu = onayKutuId ? $(onayKutuId) : null;
+        if (!kutu || !kutu.checked) {
+          durumYaz(durumEl, 'İlk gönderiden önce: adınızın ve fotoğrafınızın herkese açık ' +
+                            'yayınlanacağını onaylayan kutuyu işaretleyin.', 'hata');
+          if (kutu) kutu.focus();
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+
+  function konuGonder() {
+    var durum = $('konuDurum');
+    var baslik = $('konuBaslik').value.trim();
+    var govde = $('konuGovde').value.trim();
+    var kategori = $('konuKategori').value || 'genel';
+    var rol = $('konuRol').value || '';
+
+    if (baslik.length < SINIR.baslikMin || baslik.length > SINIR.baslikMax) {
+      durumYaz(durum, 'Başlık ' + SINIR.baslikMin + '-' + SINIR.baslikMax + ' karakter olmalı.', 'hata');
+      $('konuBaslik').focus(); return;
+    }
+    if (govde.length < SINIR.govdeMin || govde.length > SINIR.govdeMax) {
+      durumYaz(durum, 'Açıklama ' + SINIR.govdeMin + '-' + SINIR.govdeMax + ' karakter olmalı — ' +
+                      'marka/model ve ne olduğunu yazarsanız yeter.', 'hata');
+      $('konuGovde').focus(); return;
+    }
+    taslakKaydet();
+
+    var btn = $('konuGonder');
+    btn.disabled = true;
+    durumYaz(durum, 'Gönderiliyor…');
+
+    yazmayaHazirla(durum, 'konuOnay').then(function (hazir) {
+      if (!hazir) { btn.disabled = false; return null; }
+
+      var kalan = beklemeKaldi(45);
+      if (kalan > 0) {
+        durumYaz(durum, 'Arka arkaya konu açmaya karşı ' + kalan + ' saniye beklemek gerekiyor.', 'hata');
+        btn.disabled = false; return null;
+      }
+
+      return konuYaz(baslik, govde, kategori, rol).catch(function (e) {
+        /* Hız belgesi bayatsa bir kez tazeleyip yeniden dene */
+        if (e && e.code === 'permission-denied') {
+          return hizOku().then(function () { return konuYaz(baslik, govde, kategori, rol); });
+        }
+        throw e;
+      });
+    }).then(function (id) {
+      btn.disabled = false;
+      if (!id) return;
+      taslakSil();
+      $('konuBaslik').value = '';
+      $('konuGovde').value = '';
+      $('konuRol').value = '';
+      sayaclariGuncelle();
+      durumYaz(durum, 'Yayınlandı. Yanıt geldiğinde bu sayfada görürsünüz — bağlantıyı yer imlerinize ekleyin.', 'iyi');
+      location.hash = konuYolu(id, baslik);
+    }).catch(function (e) {
+      btn.disabled = false;
+      durumYaz(durum, yazmaHatasi(e), 'hata');
+      if (global.console && console.warn) console.warn('[forum] konu', e);
+    });
+  }
+
+  function konuYaz(baslik, govde, kategori, rol) {
+    var kimlik = kimlikSec(rol);
+    var ref = S.fs.doc(S.fs.collection(S.db, 'forumKonular'));
+    var yuk = hizYuku();
+    var toplu = S.fs.writeBatch(S.db);
+
+    toplu.set(ref, {
+      baslik: baslik,
+      govde: govde,
+      kategori: kategori,
+      yazarUid: S.user.uid,
+      yazarAd: kimlik.ad,
+      yazarFoto: kimlik.foto,
+      takmaMi: kimlik.takma,
+      olusturma: S.fs.serverTimestamp(),
+      sonEtkinlik: S.fs.serverTimestamp(),
+      yanitSayisi: 0,
+      sonYanitId: '',
+      sonYanitAd: '',
+      sonYanitUid: '',
+      kilitli: false,
+      gizli: false,
+      sabitlenmis: false,
+      cozuldu: false
+    });
+    toplu.set(S.fs.doc(S.db, 'forumHiz', S.user.uid), yuk);
+
+    return toplu.commit().then(function () {
+      hizGuncelle(yuk);
+      return S.fs.getDoc(ref);
+    }).then(function (d) {
+      var v = d.data() || {};
+      v.id = ref.id;
+      S.konular.unshift(v);
+      listeCiz();
+      istatistikCiz();
+      return ref.id;
+    });
+  }
+
+  /* --------------------------------------------------------- konu sayfası */
+
+  function yonlendir() {
+    var h = location.hash || '';
+    var m = h.match(/^#\/konu\/([A-Za-z0-9_-]{1,40})/);
+    if (m) { konuAc(m[1]); return; }
+
+    /* "#anaIcerik" gibi sayfa içi çapalar rota değildir — görünümü değiştirme */
+    if (h && h !== '#' && h.charAt(1) !== '/') return;
+
+    S.konuId = null; S.konu = null;
+    goster($('konuGorunum'), false);
+    goster($('listeGorunum'), true);
+    document.title = 'Danışma Masası — Sahadan soru sorun · sersoz.com';
+  }
+
+  function konuAc(id) {
+    goster($('listeGorunum'), false);
+    goster($('konuGorunum'), true);
+    if (!S.hazir) {                       /* veritabanı henüz bağlanmadı */
+      var bekle = $('konuIcerik');
+      bosalt(bekle);
+      bekle.appendChild(dm('p', 'yukleniyor', 'Konu yükleniyor…'));
+      return;
+    }
+    if (S.konuId === id && S.konu) { konuCiz(); return; }
+
+    S.konuId = id; S.konu = null; S.yanitlar = []; S.yanitSon = null; S.yanitTumu = false;
+    var kap = $('konuIcerik');
+    bosalt(kap);
+    kap.appendChild(dm('p', 'yukleniyor', 'Konu yükleniyor…'));
+    window.scrollTo(0, 0);
+
+    var yerel = null;
+    for (var i = 0; i < S.konular.length; i++) if (S.konular[i].id === id) yerel = S.konular[i];
+
+    var p = yerel ? Promise.resolve(yerel) : S.fs.getDoc(S.fs.doc(S.db, 'forumKonular', id)).then(function (d) {
+      if (!d.exists()) return null;
+      var v = d.data(); v.id = d.id; return v;
+    });
+
+    p.then(function (konu) {
+      if (S.konuId !== id) return;
+      if (!konu) {
+        bosalt(kap);
+        kap.appendChild(dm('h2', null, 'Bu konu bulunamadı'));
+        kap.appendChild(dm('p', 'bos-lead', 'Silinmiş olabilir. Tüm konulara dönebilirsiniz.'));
+        return;
+      }
+      S.konu = konu;
+      /* Gizlenmiş konunun başlığı sekmeye/geçmişe de düşmesin. */
+      document.title = (konu.gizli && !S.yoneticiMi)
+        ? 'Görüntülenemeyen konu — sersoz.com danışma masası'
+        : (konu.baslik || 'Konu') + ' — sersoz.com danışma masası';
+      return yanitlariYukle(true);
+    }).then(function () {
+      if (S.konuId === id && S.konu) konuCiz();
+    }).catch(function (e) {
+      bosalt(kap);
+      kap.appendChild(dm('h2', null, 'Konu yüklenemedi'));
+      kap.appendChild(dm('p', 'bos-lead', yazmaHatasi(e)));
+      if (global.console && console.warn) console.warn('[forum] konuAc', e);
+    });
+  }
+
+  function yanitlariYukle(ilk) {
+    if (ilk) { S.yanitlar = []; S.yanitSon = null; S.yanitTumu = false; }
+    var yol = S.fs.collection(S.db, 'forumKonular', S.konuId, 'yanitlar');
+    var kosullar = [S.fs.orderBy('olusturma', 'asc')];
+    if (S.yanitSon) kosullar.push(S.fs.startAfter(S.yanitSon));
+    kosullar.push(S.fs.limit(YANIT_SAYFA));
+    var q = S.fs.query.apply(null, [yol].concat(kosullar));
+
+    return S.fs.getDocs(q).then(function (snap) {
+      snap.forEach(function (d) { var v = d.data() || {}; v.id = d.id; S.yanitlar.push(v); });
+      S.yanitSon = snap.docs.length ? snap.docs[snap.docs.length - 1] : S.yanitSon;
+      if (snap.docs.length < YANIT_SAYFA) S.yanitTumu = true;
+    });
+  }
+
+  function konuCiz() {
+    var kap = $('konuIcerik');
+    if (!kap || !S.konu) return;
+    var k = S.konu;
+    bosalt(kap);
+
+    /* MODERASYON: "Gizle" kararı listede uygulanıyordu ama doğrudan bağlantıyla
+       (#/konu/{id}/...) konu gövdesi, yanıtları ve içindeki bağlantılarıyla
+       tam olarak açılıyordu — yani gizlemek spam'i durdurmuyordu. Gizli konu
+       artık site sahibi dışında kimseye basılmaz. (Kayıt hâlâ herkese açık
+       okunabilir; kalıcı kaldırma yöneticinin "Konuyu sil" işlemidir.) */
+    if (k.gizli && !S.yoneticiMi) {
+      document.title = 'Görüntülenemeyen konu — sersoz.com danışma masası';
+      var gz = dm('div', 'uyari-kutu');
+      gz.appendChild(dm('h3', null, 'Bu konu görüntülenemiyor'));
+      gz.appendChild(dm('p', null, 'İçerik site kurallarına aykırı bulunduğu için gizlendi. ' +
+        'Bir hata olduğunu düşünüyorsanız e-posta ile yazabilirsiniz.'));
+      kap.appendChild(gz);
+      return;
+    }
+
+    var basi = dm('div', 'konu-basi');
+    var h = dm('h2');
+    h.appendChild(document.createTextNode(k.baslik || '(başlıksız)'));
+    basi.appendChild(h);
+
+    var ust = dm('div', 'konu-ustbilgi');
+    var yaz = dm('span', 'yazar');
+    yaz.style.display = 'inline-flex';
+    yaz.style.alignItems = 'center';
+    yaz.style.gap = '9px';
+    yaz.appendChild(avatarCiz(k.yazarAd, k.yazarFoto, true));
+    yaz.appendChild(dm('span', null, k.yazarAd || 'İsimsiz katılımcı'));
+    ust.appendChild(yaz);
+    ust.appendChild(dm('span', null, gecen(k.olusturma)));
+    if (k.duzenleme) ust.appendChild(dm('span', null, '(düzenlendi)'));
+    ust.appendChild(rozetler(k));
+    if (k.kategori) ust.appendChild(dm('span', 'etiket-cip', katAdi(k.kategori)));
+    basi.appendChild(ust);
+    kap.appendChild(basi);
+
+    kap.appendChild(govdeCiz(k.govde));
+
+    /* Çözüm kutusu — işaretlenen yanıt konunun başına kopyalanır */
+    if (k.cozuldu && k.cozumYanitId) {
+      var cy = null;
+      for (var c = 0; c < S.yanitlar.length; c++) if (S.yanitlar[c].id === k.cozumYanitId) cy = S.yanitlar[c];
+      if (cy && !cy.silindi) {
+        var kutu = dm('div', 'cozum-kutu');
+        kutu.appendChild(dm('p', 'cozum-etiket', 'Çözüm — ' + (cy.yazarAd || 'katılımcı')));
+        kutu.appendChild(govdeCiz(cy.govde));
+        kap.appendChild(kutu);
+      }
+    }
+
+    /* İşlem satırı */
+    var islem = dm('div', 'islem-satir');
+    var benimMi = !!(S.user && k.yazarUid === S.user.uid);
+
+    if (benimMi && !k.kilitli && !k.gizli) {
+      islem.appendChild(metinDugme('Düzenle', function () { konuDuzenle(); }));
+      if (!(k.yanitSayisi > 0)) {
+        islem.appendChild(metinDugme('Sil', function () { konuSil(); }, true));
+      }
+    }
+    if (S.yoneticiMi) {
+      islem.appendChild(metinDugme(k.gizli ? 'Göster' : 'Gizle', function () {
+        yoneticiGuncelle({ gizli: !k.gizli });
+      }));
+      islem.appendChild(metinDugme(k.kilitli ? 'Kilidi aç' : 'Kilitle', function () {
+        yoneticiGuncelle({ kilitli: !k.kilitli });
+      }));
+      islem.appendChild(metinDugme(k.sabitlenmis ? 'Sabitlemeyi kaldır' : 'Sabitle', function () {
+        yoneticiGuncelle({ sabitlenmis: !k.sabitlenmis });
+      }));
+      islem.appendChild(metinDugme('Konuyu sil', function () { yoneticiKonuSil(); }, true));
+    }
+    islem.appendChild(metinDugme('Benzer bir sorum var', function () {
+      location.hash = '#/';
+      setTimeout(function () {
+        var g = $('konuGovde');
+        var ref = 'İlgili konu: ' + (k.baslik || '') + '\n' +
+                  location.origin + '/forum.html' + konuYolu(k.id, k.baslik) + '\n\n';
+        if (g.value.indexOf(ref) === -1) g.value = ref + g.value;
+        taslakKaydet(); sayaclariGuncelle();
+        $('soru-kutusu').scrollIntoView({ block: 'start' });
+        $('konuBaslik').focus();
+      }, 60);
+    }));
+    islem.appendChild(bildirDugmesi('konu', k.id, k.id));
+    kap.appendChild(islem);
+
+    var konuDurum = dm('p', 'durum-satir');
+    konuDurum.id = 'konuIslemDurum';
+    konuDurum.setAttribute('role', 'status');
+    konuDurum.setAttribute('aria-live', 'polite');
+    kap.appendChild(konuDurum);
+
+    /* Yanıtlar */
+    var liste = dm('div', 'yanit-liste');
+    liste.id = 'yanitListe';
+    var basligi = dm('h3', null, k.yanitSayisi > 0 ? (k.yanitSayisi + ' yanıt') : 'Henüz yanıt yok');
+    basligi.style.marginTop = '22px';
+    liste.appendChild(basligi);
+
+    if (!S.yanitlar.length) {
+      var bosP = dm('p', 'bos-lead', k.kilitli
+        ? 'Bu konu kapatıldı.'
+        : 'İlk yanıtı siz yazabilirsiniz. Benzerini yaşadıysanız neyin işe yaradığını yazmanız yeter.');
+      bosP.style.marginTop = '14px';
+      liste.appendChild(bosP);
+    }
+
+    for (var i = 0; i < S.yanitlar.length; i++) {
+      liste.appendChild(yanitCiz(S.yanitlar[i], k));
+    }
+
+    if (!S.yanitTumu) {
+      var db2 = dm('button', 'btn kucuk', 'Daha fazla yanıt');
+      db2.type = 'button';
+      db2.style.marginTop = '18px';
+      db2.addEventListener('click', function () {
+        yanitlariYukle(false).then(konuCiz).catch(function (e) {
+          durumYaz($('konuIslemDurum'), yazmaHatasi(e), 'hata');
+        });
+      });
+      liste.appendChild(db2);
+    }
+    kap.appendChild(liste);
+
+    /* Yanıt kutusu */
+    if (k.kilitli && !S.yoneticiMi) {
+      var kilitli = dm('div', 'uyari-kutu');
+      kilitli.appendChild(dm('h3', null, 'Bu konu kilitli'));
+      kilitli.appendChild(dm('p', null, 'Yeni yanıt alınmıyor. Benzer bir sorunuz varsa yeni bir konu açın.'));
+      kap.appendChild(kilitli);
+    } else if (k.gizli && !S.yoneticiMi) {
+      /* gizli konu zaten listede görünmez */
+    } else {
+      kap.appendChild(yanitKutusuCiz(k));
+    }
+  }
+
+  function metinDugme(metin, fn, tehlike) {
+    var b = dm('button', 'metin-btn' + (tehlike ? ' tehlike' : ''), metin);
+    b.type = 'button';
+    b.addEventListener('click', fn);
+    return b;
+  }
+
+  function yanitCiz(y, k) {
+    var el = dm('article', 'yanit' + (y.silindi ? ' silinmis' : '') +
+                (k.cozuldu && k.cozumYanitId === y.id ? ' cozum-yanit' : ''));
+    var ust = dm('div', 'yanit-ust');
+    var yaz = dm('span');
+    yaz.style.display = 'inline-flex';
+    yaz.style.alignItems = 'center';
+    yaz.style.gap = '9px';
+    yaz.appendChild(avatarCiz(y.yazarAd, y.yazarFoto, false));
+    yaz.appendChild(dm('span', null, y.yazarAd || 'İsimsiz katılımcı'));
+    ust.appendChild(yaz);
+    ust.appendChild(dm('span', null, gecen(y.olusturma)));
+    if (y.duzenleme && !y.silindi) ust.appendChild(dm('span', null, '(düzenlendi)'));
+    if (k.cozuldu && k.cozumYanitId === y.id) ust.appendChild(dm('span', 'rozet cozuldu', 'Çözüm'));
+    el.appendChild(ust);
+
+    if (y.silindi) {
+      var s = dm('div', 'govde');
+      s.appendChild(dm('p', null, 'Bu yanıt yazarı tarafından silindi.'));
+      el.appendChild(s);
+      return el;
+    }
+
+    el.appendChild(govdeCiz(y.govde));
+
+    var islem = dm('div', 'islem-satir');
+    var benimMi = !!(S.user && y.yazarUid === S.user.uid);
+    if (benimMi) {
+      islem.appendChild(metinDugme('Düzenle', function () { yanitDuzenle(y, el, k); }));
+      islem.appendChild(metinDugme('Sil', function () { yanitSil(y); }, true));
+    }
+    if (S.user && k.yazarUid === S.user.uid && !k.cozuldu) {
+      islem.appendChild(metinDugme('Çözüm olarak işaretle', function () { cozumIsaretle(y.id); }));
+    } else if (S.user && k.yazarUid === S.user.uid && k.cozumYanitId === y.id) {
+      islem.appendChild(metinDugme('Çözüm işaretini kaldır', function () { cozumIsaretle(''); }));
+    }
+    if (S.yoneticiMi) {
+      islem.appendChild(metinDugme('Kalıcı sil', function () { yoneticiYanitSil(y); }, true));
+    }
+    islem.appendChild(bildirDugmesi('yanit', y.id, k.id));
+    el.appendChild(islem);
+    return el;
+  }
+
+  function yanitKutusuCiz(k) {
+    var kutu = dm('div', 'yanit-yaz');
+    var h = dm('h3', null, 'Yanıt yazın');
+    kutu.appendChild(h);
+
+    var alan = dm('div', 'alan');
+    alan.style.marginTop = '12px';
+    var lab = dm('label', null, 'Yanıtınız');
+    lab.setAttribute('for', 'yanitGovde');
+    var ta = dm('textarea');
+    ta.id = 'yanitGovde';
+    ta.maxLength = SINIR.yanitMax;
+    ta.style.minHeight = '120px';
+    ta.placeholder = 'Neyi denediniz, ne işe yaradı? Kod veya kayıt için ``` kullanın.';
+    alan.appendChild(lab);
+    alan.appendChild(ta);
+    kutu.appendChild(alan);
+
+    var satir = dm('div', 'sor-satir');
+    var ra = dm('div', 'alan');
+    var rl = dm('label', null, 'Adım görünmesin (isteğe bağlı)');
+    rl.setAttribute('for', 'yanitRol');
+    var rs = dm('select');
+    rs.id = 'yanitRol';
+    var o0 = dm('option', null, 'Hayır — adım görünsün'); o0.value = '';
+    rs.appendChild(o0);
+    for (var i = 0; i < ROLLER.length; i++) {
+      var o = dm('option', null, ROLLER[i]); o.value = ROLLER[i]; rs.appendChild(o);
+    }
+    ra.appendChild(rl); ra.appendChild(rs);
+    satir.appendChild(ra);
+    kutu.appendChild(satir);
+
+    var onayGerek = !(S.hiz && S.hiz.forumOnay === true);
+    var onayLab = dm('label', 'kutucuk');
+    var onayKutu = dm('input');
+    onayKutu.type = 'checkbox';
+    onayKutu.id = 'yanitOnay';
+    var onaySpan = dm('span');
+    onaySpan.appendChild(document.createTextNode('Adımın ve profil fotoğrafımın yazımla birlikte '));
+    onaySpan.appendChild(dm('b', null, 'herkese açık'));
+    onaySpan.appendChild(document.createTextNode(' yayınlanacağını, arama motorlarınca dizinlenebileceğini biliyorum.'));
+    onayLab.appendChild(onayKutu);
+    onayLab.appendChild(onaySpan);
+    onayLab.hidden = !onayGerek;
+    kutu.appendChild(onayLab);
+
+    var alt = dm('div', 'sor-alt');
+    var btn = dm('button', 'btn ana', S.user ? 'Yanıtı gönder' : 'Google ile giriş yapıp gönder');
+    btn.type = 'button';
+    alt.appendChild(btn);
+    kutu.appendChild(alt);
+
+    var durum = dm('p', 'durum-satir');
+    durum.setAttribute('role', 'status');
+    durum.setAttribute('aria-live', 'polite');
+    durum.style.marginTop = '10px';
+    kutu.appendChild(durum);
+
+    btn.addEventListener('click', function () {
+      var metin = ta.value.trim();
+      if (metin.length < SINIR.yanitMin || metin.length > SINIR.yanitMax) {
+        durumYaz(durum, 'Yanıt ' + SINIR.yanitMin + '-' + SINIR.yanitMax + ' karakter olmalı.', 'hata');
+        ta.focus(); return;
+      }
+      btn.disabled = true;
+      durumYaz(durum, 'Gönderiliyor…');
+
+      yazmayaHazirla(durum, 'yanitOnay').then(function (hazir) {
+        if (!hazir) { btn.disabled = false; return null; }
+        var kalan = beklemeKaldi(20);
+        if (kalan > 0) {
+          durumYaz(durum, 'Arka arkaya yazmaya karşı ' + kalan + ' saniye beklemek gerekiyor.', 'hata');
+          btn.disabled = false; return null;
+        }
+        return yanitYaz(metin, rs.value).catch(function (e) {
+          if (e && e.code === 'permission-denied') {
+            return hizOku().then(function () { return konuTazele(); })
+                           .then(function () { return yanitYaz(metin, rs.value); });
+          }
+          throw e;
+        });
+      }).then(function (ok) {
+        btn.disabled = false;
+        if (!ok) return;
+        ta.value = '';
+        konuCiz();
+      }).catch(function (e) {
+        btn.disabled = false;
+        durumYaz(durum, yazmaHatasi(e), 'hata');
+        if (global.console && console.warn) console.warn('[forum] yanit', e);
+      });
+    });
+
+    return kutu;
+  }
+
+  function konuTazele() {
+    return S.fs.getDoc(S.fs.doc(S.db, 'forumKonular', S.konuId)).then(function (d) {
+      if (d.exists()) { var v = d.data(); v.id = d.id; S.konu = v; }
+      return S.konu;
+    });
+  }
+
+  function yanitYaz(metin, rol) {
+    var k = S.konu;
+    var kimlik = kimlikSec(rol);
+    var konuRef = S.fs.doc(S.db, 'forumKonular', S.konuId);
+    var yRef = S.fs.doc(S.fs.collection(S.db, 'forumKonular', S.konuId, 'yanitlar'));
+    var yuk = hizYuku();
+    var toplu = S.fs.writeBatch(S.db);
+
+    toplu.set(yRef, {
+      govde: metin,
+      yazarUid: S.user.uid,
+      yazarAd: kimlik.ad,
+      yazarFoto: kimlik.foto,
+      takmaMi: kimlik.takma,
+      olusturma: S.fs.serverTimestamp(),
+      silindi: false
+    });
+
+    var guncelleme = {
+      yanitSayisi: S.fs.increment(1),     /* sayaç istemciden yazılmaz */
+      sonEtkinlik: S.fs.serverTimestamp(),
+      sonYanitId: yRef.id,
+      sonYanitAd: kimlik.ad,
+      sonYanitUid: S.user.uid
+    };
+    if (!(k.yanitSayisi > 0)) guncelleme.ilkYanit = S.fs.serverTimestamp();
+    toplu.update(konuRef, guncelleme);
+    toplu.set(S.fs.doc(S.db, 'forumHiz', S.user.uid), yuk);
+
+    return toplu.commit().then(function () {
+      hizGuncelle(yuk);
+      return S.fs.getDoc(yRef);
+    }).then(function (d) {
+      var v = d.data() || {}; v.id = yRef.id;
+      S.yanitlar.push(v);
+      k.yanitSayisi = (k.yanitSayisi || 0) + 1;
+      k.sonEtkinlik = new Date();
+      if (!k.ilkYanit) k.ilkYanit = new Date();
+      for (var i = 0; i < S.konular.length; i++) {
+        if (S.konular[i].id === k.id) {
+          S.konular[i].yanitSayisi = k.yanitSayisi;
+          S.konular[i].sonEtkinlik = k.sonEtkinlik;
+          S.konular[i].ilkYanit = k.ilkYanit;
+        }
+      }
+      return true;
+    });
+  }
+
+  /* ------------------------------------------------- düzenleme / silme */
+
+  function konuDuzenle() {
+    var k = S.konu;
+    var kap = $('konuIcerik');
+    bosalt(kap);
+
+    var form = dm('div', 'sor-kutu');
+    var a1 = dm('div', 'alan');
+    var l1 = dm('label', null, 'Başlık'); l1.setAttribute('for', 'duzBaslik');
+    var i1 = dm('input'); i1.type = 'text'; i1.id = 'duzBaslik'; i1.maxLength = SINIR.baslikMax; i1.value = k.baslik || '';
+    a1.appendChild(l1); a1.appendChild(i1);
+
+    var a2 = dm('div', 'alan');
+    var l2 = dm('label', null, 'Metin'); l2.setAttribute('for', 'duzGovde');
+    var t2 = dm('textarea'); t2.id = 'duzGovde'; t2.maxLength = SINIR.govdeMax; t2.value = k.govde || '';
+    a2.appendChild(l2); a2.appendChild(t2);
+
+    var a3 = dm('div', 'alan');
+    var l3 = dm('label', null, 'Alan'); l3.setAttribute('for', 'duzKategori');
+    var s3 = dm('select'); s3.id = 'duzKategori';
+    for (var i = 0; i < KATEGORILER.length; i++) {
+      var o = dm('option', null, KATEGORILER[i].ad); o.value = KATEGORILER[i].k;
+      if (KATEGORILER[i].k === k.kategori) o.selected = true;
+      s3.appendChild(o);
+    }
+    a3.appendChild(l3); a3.appendChild(s3);
+
+    var alt = dm('div', 'sor-alt');
+    var kaydet = dm('button', 'btn ana', 'Kaydet'); kaydet.type = 'button';
+    var vazgec = dm('button', 'btn', 'Vazgeç'); vazgec.type = 'button';
+    alt.appendChild(kaydet); alt.appendChild(vazgec);
+
+    var durum = dm('p', 'durum-satir'); durum.style.marginTop = '10px';
+    durum.setAttribute('role', 'status'); durum.setAttribute('aria-live', 'polite');
+
+    form.appendChild(a1); form.appendChild(a2); form.appendChild(a3);
+    form.appendChild(alt); form.appendChild(durum);
+    kap.appendChild(form);
+    i1.focus();
+
+    vazgec.addEventListener('click', konuCiz);
+    kaydet.addEventListener('click', function () {
+      var b = i1.value.trim(), g = t2.value.trim();
+      if (b.length < SINIR.baslikMin || b.length > SINIR.baslikMax ||
+          g.length < SINIR.govdeMin || g.length > SINIR.govdeMax) {
+        durumYaz(durum, 'Başlık ' + SINIR.baslikMin + '-' + SINIR.baslikMax +
+                        ', metin ' + SINIR.govdeMin + '-' + SINIR.govdeMax + ' karakter olmalı.', 'hata');
+        return;
+      }
+      kaydet.disabled = true;
+      durumYaz(durum, 'Kaydediliyor…');
+      S.fs.updateDoc(S.fs.doc(S.db, 'forumKonular', k.id), {
+        baslik: b, govde: g, kategori: s3.value, duzenleme: S.fs.serverTimestamp()
+      }).then(function () {
+        k.baslik = b; k.govde = g; k.kategori = s3.value; k.duzenleme = new Date();
+        for (var i = 0; i < S.konular.length; i++) {
+          if (S.konular[i].id === k.id) {
+            S.konular[i].baslik = b; S.konular[i].govde = g; S.konular[i].kategori = s3.value;
+          }
+        }
+        listeCiz();
+        konuCiz();
+      }).catch(function (e) {
+        kaydet.disabled = false;
+        durumYaz(durum, yazmaHatasi(e), 'hata');
+      });
+    });
+  }
+
+  function konuSil() {
+    if (!global.confirm('Bu konu silinsin mi? Geri alınamaz.')) return;
+    S.fs.deleteDoc(S.fs.doc(S.db, 'forumKonular', S.konu.id)).then(function () {
+      listedenCikar(S.konu.id);
+      location.hash = '#/';
+    }).catch(function (e) {
+      durumYaz($('konuIslemDurum'), yazmaHatasi(e), 'hata');
+    });
+  }
+
+  function listedenCikar(id) {
+    var yeni = [];
+    for (var i = 0; i < S.konular.length; i++) if (S.konular[i].id !== id) yeni.push(S.konular[i]);
+    S.konular = yeni;
+    listeCiz();
+    istatistikCiz();
+  }
+
+  function yanitDuzenle(y, el, k) {
+    var eski = el.querySelector('.govde');
+    if (!eski) return;
+    var ta = dm('textarea');
+    ta.value = y.govde || '';
+    ta.maxLength = SINIR.yanitMax;
+    ta.style.minHeight = '120px';
+    ta.setAttribute('aria-label', 'Yanıt metni');
+    var alt = dm('div', 'sor-alt');
+    var kaydet = dm('button', 'btn kucuk ana', 'Kaydet'); kaydet.type = 'button';
+    var vazgec = dm('button', 'btn kucuk', 'Vazgeç'); vazgec.type = 'button';
+    var durum = dm('p', 'durum-satir'); durum.style.marginTop = '8px';
+    alt.appendChild(kaydet); alt.appendChild(vazgec);
+    eski.replaceWith(ta);
+    ta.parentNode.insertBefore(alt, ta.nextSibling);
+    alt.parentNode.insertBefore(durum, alt.nextSibling);
+    ta.focus();
+
+    vazgec.addEventListener('click', konuCiz);
+    kaydet.addEventListener('click', function () {
+      var m = ta.value.trim();
+      if (m.length < SINIR.yanitMin || m.length > SINIR.yanitMax) {
+        durumYaz(durum, 'Yanıt ' + SINIR.yanitMin + '-' + SINIR.yanitMax + ' karakter olmalı.', 'hata');
+        return;
+      }
+      kaydet.disabled = true;
+      S.fs.updateDoc(S.fs.doc(S.db, 'forumKonular', k.id, 'yanitlar', y.id), {
+        govde: m, duzenleme: S.fs.serverTimestamp()
+      }).then(function () {
+        y.govde = m; y.duzenleme = new Date();
+        konuCiz();
+      }).catch(function (e) {
+        kaydet.disabled = false;
+        durumYaz(durum, yazmaHatasi(e), 'hata');
+      });
+    });
+  }
+
+  function yanitSil(y) {
+    if (!global.confirm('Yanıtınızın metni silinsin mi? Konunun akışı korunur, yerinde "silindi" notu kalır.')) return;
+    S.fs.updateDoc(S.fs.doc(S.db, 'forumKonular', S.konu.id, 'yanitlar', y.id), {
+      govde: '', silindi: true, duzenleme: S.fs.serverTimestamp()
+    }).then(function () {
+      y.govde = ''; y.silindi = true;
+      konuCiz();
+    }).catch(function (e) {
+      durumYaz($('konuIslemDurum'), yazmaHatasi(e), 'hata');
+    });
+  }
+
+  function cozumIsaretle(yanitId) {
+    var k = S.konu;
+    S.fs.updateDoc(S.fs.doc(S.db, 'forumKonular', k.id), {
+      cozuldu: !!yanitId, cozumYanitId: yanitId || ''
+    }).then(function () {
+      k.cozuldu = !!yanitId; k.cozumYanitId = yanitId || '';
+      for (var i = 0; i < S.konular.length; i++) {
+        if (S.konular[i].id === k.id) {
+          S.konular[i].cozuldu = k.cozuldu;
+          S.konular[i].cozumYanitId = k.cozumYanitId;
+        }
+      }
+      listeCiz(); istatistikCiz(); konuCiz();
+    }).catch(function (e) {
+      durumYaz($('konuIslemDurum'), yazmaHatasi(e), 'hata');
+    });
+  }
+
+  /* ------------------------------------------------------------ bildir */
+
+  function bildirDugmesi(tur, hedefId, konuId) {
+    var sar = dm('span');
+    var b = metinDugme('Bildir', function () {
+      if (!S.user) {
+        girisYap().catch(function () {});
+        return;
+      }
+      if (sar.querySelector('.bildir-kutu')) return;
+      var kutu = dm('div', 'bildir-kutu');
+      kutu.setAttribute('role', 'status');      /* sonuç ekran okuyucuya duyurulsun */
+      kutu.setAttribute('aria-live', 'polite');
+      for (var i = 0; i < SEBEPLER.length; i++) {
+        (function (sebep) {
+          var sb = dm('button', 'btn kucuk', sebep.ad);
+          sb.type = 'button';
+          sb.addEventListener('click', function () {
+            bosalt(kutu);
+            kutu.appendChild(dm('span', 'durum-satir', 'Gönderiliyor…'));
+            S.fs.setDoc(S.fs.doc(S.db, 'forumBayraklar', S.user.uid + '__' + hedefId), {
+              hedefTur: tur,
+              hedefId: hedefId,
+              konuId: konuId,
+              sebep: sebep.k,
+              bildirenUid: S.user.uid,
+              bildirenAd: jetonAd(),
+              olusturma: S.fs.serverTimestamp()
+            }).then(function () {
+              bosalt(kutu);
+              kutu.appendChild(dm('span', 'durum-satir iyi', 'Bildirildi. Yalnız site sahibi görür.'));
+            }).catch(function (e) {
+              bosalt(kutu);
+              /* Belge kimliği uid__hedefId olduğu için ikinci bildirim bir
+                 UPDATE'tir ve kural bunu reddeder — bu bir arıza değil. */
+              var msg = (e && e.code === 'permission-denied')
+                ? 'Bildirim kaydedilmedi — bu gönderiyi zaten bildirmiş olabilirsiniz.'
+                : yazmaHatasi(e);
+              kutu.appendChild(dm('span', 'durum-satir hata', msg));
+            });
+          });
+          kutu.appendChild(sb);
+        })(SEBEPLER[i]);
+      }
+      sar.appendChild(kutu);
+    });
+    sar.appendChild(b);
+    return sar;
+  }
+
+  /* ---------------------------------------------------------- yönetici */
+
+  function yoneticiGuncelle(alanlar) {
+    S.fs.updateDoc(S.fs.doc(S.db, 'forumKonular', S.konu.id), alanlar).then(function () {
+      for (var a in alanlar) if (Object.prototype.hasOwnProperty.call(alanlar, a)) S.konu[a] = alanlar[a];
+      for (var i = 0; i < S.konular.length; i++) {
+        if (S.konular[i].id === S.konu.id) {
+          for (var b in alanlar) if (Object.prototype.hasOwnProperty.call(alanlar, b)) S.konular[i][b] = alanlar[b];
+        }
+      }
+      listeCiz(); konuCiz();
+    }).catch(function (e) {
+      durumYaz($('konuIslemDurum'), yazmaHatasi(e), 'hata');
+    });
+  }
+
+  /* Firestore alt koleksiyonu CASCADE SİLMEZ: önce yanıtlar, sonra konu. */
+  function yoneticiKonuSil() {
+    if (!global.confirm('Konu ve TÜM yanıtları kalıcı olarak silinsin mi?')) return;
+    var kId = S.konu.id;
+    var durum = $('konuIslemDurum');
+    durumYaz(durum, 'Yanıtlar siliniyor…');
+
+    (function turDon() {
+      var q = S.fs.query(S.fs.collection(S.db, 'forumKonular', kId, 'yanitlar'), S.fs.limit(100));
+      return S.fs.getDocs(q).then(function (snap) {
+        if (snap.empty) return null;
+        var toplu = S.fs.writeBatch(S.db);
+        snap.forEach(function (d) { toplu.delete(d.ref); });
+        return toplu.commit().then(turDon);
+      });
+    })().then(function () {
+      return S.fs.deleteDoc(S.fs.doc(S.db, 'forumKonular', kId));
+    }).then(function () {
+      listedenCikar(kId);
+      location.hash = '#/';
+    }).catch(function (e) {
+      durumYaz(durum, yazmaHatasi(e), 'hata');
+    });
+  }
+
+  function yoneticiYanitSil(y) {
+    if (!global.confirm('Bu yanıt kalıcı olarak silinsin mi? (Konu sayacı elle düzeltilmez)')) return;
+    S.fs.deleteDoc(S.fs.doc(S.db, 'forumKonular', S.konu.id, 'yanitlar', y.id)).then(function () {
+      var yeni = [];
+      for (var i = 0; i < S.yanitlar.length; i++) if (S.yanitlar[i].id !== y.id) yeni.push(S.yanitlar[i]);
+      S.yanitlar = yeni;
+      konuCiz();
+    }).catch(function (e) {
+      durumYaz($('konuIslemDurum'), yazmaHatasi(e), 'hata');
+    });
+  }
+
+  function kurulumKur() {
+    $('ayarOlustur').addEventListener('click', function () {
+      var d = $('kurulumDurum');
+      durumYaz(d, 'Yazılıyor…');
+      S.fs.setDoc(S.fs.doc(S.db, 'forumAyar', 'genel'),
+                  { yazmaAcik: true, yasakli: [] }, { merge: true })
+        .then(function () { durumYaz(d, 'forumAyar/genel hazır — forum yazmaya açık.', 'iyi'); })
+        .catch(function (e) { durumYaz(d, yazmaHatasi(e), 'hata'); });
+    });
+
+    $('ayarKilit').addEventListener('click', function () {
+      var d = $('kurulumDurum');
+      durumYaz(d, 'Okunuyor…');
+      var ref = S.fs.doc(S.db, 'forumAyar', 'genel');
+      S.fs.getDoc(ref).then(function (snap) {
+        var acik = snap.exists() ? snap.data().yazmaAcik !== false : true;
+        return S.fs.setDoc(ref, { yazmaAcik: !acik }, { merge: true }).then(function () {
+          durumYaz(d, !acik ? 'Forum yazmaya AÇIK.' : 'Forum donduruldu — yalnız okunur.', 'iyi');
+        });
+      }).catch(function (e) { durumYaz(d, yazmaHatasi(e), 'hata'); });
+    });
+  }
+
+  /* ------------------------------------------------------------ başlangıç */
+
+  function kur() {
+    formKur();
+    kurulumKur();
+    window.addEventListener('hashchange', yonlendir);
+    yonlendir();          /* doğrudan bir konu bağlantısıyla gelinmiş olabilir */
+
+    baslat().catch(function (e) {
+      $('konuListe').setAttribute('aria-busy', 'false');
+      durumYaz($('listeDurum'), '');
+      hataGoster(e);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', kur);
+  } else {
+    kur();
+  }
+})(window);
 </script>
+
 <script src="/onay.js" defer></script>
 <script src="/hesap.js" defer></script>
 <script src="/iz.js" defer></script>
