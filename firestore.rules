@@ -816,6 +816,24 @@ service cloud.firestore {
       allow delete: if tamYetkili();
     }
 
+    /* Satıcıya sor: herkes okur; giriş yapan sorar, eşya sahibi bir kez cevaplar. */
+    match /dolapSorular/{soru} {
+      allow read: if true;
+      allow create: if girisli() && !kisitli()
+        && yeni().keys().hasOnly(['esyaId', 'esyaBaslik', 'sahipId', 'soranId', 'soranAd', 'soru', 'cevap', 'durum', 'olusturma'])
+        && yeni().soranId == benim() && yeni().sahipId != benim()
+        && get(/databases/$(database)/documents/dolapEsyalar/$(yeni().esyaId)).data.sahipId == yeni().sahipId
+        && yeni().soru is string && yeni().soru.size() >= 3 && yeni().soru.size() <= 500
+        && yeni().soranAd is string && yeni().soranAd.size() <= 40
+        && yeni().esyaBaslik is string && yeni().esyaBaslik.size() <= 80
+        && yeni().cevap == '' && yeni().durum == 'bekliyor' && yeni().olusturma == request.time;
+      allow update: if girisli() && resource.data.sahipId == benim() && resource.data.durum == 'bekliyor'
+        && degisenler().hasOnly(['cevap', 'durum', 'cevapZaman'])
+        && yeni().cevap is string && yeni().cevap.size() >= 1 && yeni().cevap.size() <= 1000
+        && yeni().durum == 'cevaplandi' && yeni().cevapZaman == request.time;
+      allow delete: if girisli() && ((resource.data.soranId == benim() && resource.data.durum == 'bekliyor') || dolapAdmin());
+    }
+
     match /dolapFotolar/{foto} {
       allow read: if true;
       allow create: if girisli() && !kisitli()

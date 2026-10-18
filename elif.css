@@ -500,3 +500,15 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 .kasa-dokum span { background: rgba(255,255,255,.08); border-radius: 12px; padding: 10px 12px; font-size: 13px; color: rgba(255,255,255,.8); }
 .kasa-dokum b { display: block; font-size: 17px; color: #fff; margin-top: 2px; }
 .gelir-satir .eylem .kucuk { align-self: center; }
+
+/* satıcıya sor */
+.sorular { margin-top: 32px; }
+.sorular h2 { margin-bottom: 12px; }
+.soru-form textarea, .soru-cevapla textarea { width: 100%; min-height: 72px; padding: 10px 12px; border: 1px solid var(--cizgi); border-radius: 12px; font: inherit; resize: vertical; background: var(--kart); }
+.soru-alt { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.soru-liste { margin-top: 14px; display: grid; gap: 10px; }
+.soru { padding: 12px 14px; border: 1px solid var(--cizgi); border-radius: 14px; background: var(--kart); }
+.soru-s { margin: 0; }
+.soru-c { margin: 8px 0 0; padding-left: 12px; border-left: 3px solid var(--vurgu-acik); }
+.soru-cevapla { display: flex; gap: 8px; align-items: flex-end; margin-top: 8px; }
+.soru .dug-metin { margin-top: 6px; padding: 0; font-size: 12px; }

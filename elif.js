@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019n';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019o';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -176,7 +176,7 @@ function demoEngel() {
 /* Yazma katmanı: örnek modda bellekteki veriyi değiştirir (sayfa yenilenince sıfırlanır),
    normalde Firestore'a yazar. Sunucu zamanı örnek modda tarayıcı saatidir. */
 const SIMDI = () => (DEMO ? (t => ({ toMillis: () => t }))(Date.now()) : serverTimestamp());
-const demoDizi = kol => ({ dolapEsyalar: D.esyalar, dolapKiralamalar: D.kiralamalar, dolapSohbet: D.sohbetler, dolapRoller: D.roller, dolapUyeler: D.uyeler, dolapBoostlar: (D.boostlar = D.boostlar || []), dolapBorclar: (D.borclar = D.borclar || []), dolapKasa: (D.kasa = D.kasa || []) })[kol];
+const demoDizi = kol => ({ dolapEsyalar: D.esyalar, dolapKiralamalar: D.kiralamalar, dolapSohbet: D.sohbetler, dolapRoller: D.roller, dolapUyeler: D.uyeler, dolapBoostlar: (D.boostlar = D.boostlar || []), dolapBorclar: (D.borclar = D.borclar || []), dolapKasa: (D.kasa = D.kasa || []), dolapSorular: (D.sorular = D.sorular || []) })[kol];
 const demoAnahtar = kol => (kol === 'dolapRoller' ? 'eposta' : kol === 'dolapUyeler' ? 'uid' : 'id');
 async function dbEkle(kol, veri) {
   if (!DEMO) return addDoc(collection(db, kol), veri);
@@ -424,9 +424,10 @@ async function benimSohbetlerim() {
 async function bildirimleriTopla() {
   const u = kullanici.uid, o = [];
   const ekle = (t, ikon, metin, link) => { const ms = typeof t === 'number' ? t : zaman(t); if (ms) o.push({ t: ms, ikon, metin, link }); };
-  const [kc, sh, es, br, bo, so] = await Promise.all([
+  const [kc, sh, es, br, bo, so, sq, sc] = await Promise.all([
     kiraListesi('kiraciId', u).catch(() => []), kiraListesi('sahipId', u).catch(() => []), esyaListesi('sahipId', u).catch(() => []),
-    borcListesi(u).catch(() => []), boostListesi('sahipId', u).catch(() => []), benimSohbetlerim().catch(() => [])]);
+    borcListesi(u).catch(() => []), boostListesi('sahipId', u).catch(() => []), benimSohbetlerim().catch(() => []),
+    soruListesi('sahipId', u).catch(() => []), soruListesi('soranId', u).catch(() => [])]);
   const b = k => '"' + k.esyaBaslik + '"';
   kc.forEach(k => {
     const m = { onaylandi: ['✅', b(k) + ' isteğin onaylandı. Ödeme adımına geçebilirsin.'], reddedildi: ['✖', b(k) + ' isteğin reddedildi.'],
@@ -461,6 +462,8 @@ async function bildirimleriTopla() {
     const son = (x.mesajlar || [])[x.mesajlar.length - 1];
     if (son && son.kimden === 'admin') ekle(x.sonZaman, '💬', 'Destek ekibi yanıtladı: ' + String(son.metin).slice(0, 90), 'sohbet');
   });
+  sq.filter(x => x.durum === 'bekliyor').forEach(x => ekle(x.olusturma, '❓', 'Yeni soru ("' + x.esyaBaslik + '"): ' + String(x.soru).slice(0, 90), '#esya/' + x.esyaId + '/sorular'));
+  sc.filter(x => x.durum === 'cevaplandi').forEach(x => ekle(x.cevapZaman, '💬', 'Sorun cevaplandı ("' + x.esyaBaslik + '"): ' + String(x.cevap).slice(0, 90), '#esya/' + x.esyaId + '/sorular'));
   if (adminMi()) {
     const [bek, od, gel] = await Promise.all([esyaListesi('onay', 'bekliyor').catch(() => []), kiraListesi('durum', 'odeme_bildirildi').catch(() => []), sohbetListesi().catch(() => [])]);
     bek.forEach(e => ekle(e.olusturma, '🛂', 'Onay bekleyen parça: "' + e.baslik + '" · ' + e.sahipAd, '#yonetim/onay'));
@@ -1115,7 +1118,8 @@ async function esyaSayfasi(id, istek) {
         '<div class="kutu" id="kiraKutu"></div>' +
       '</div>' +
     '</div>' +
-    yorumBolumu(e.id);
+    yorumBolumu(e.id) +
+    '<section class="sorular" id="sorular" aria-labelledby="soruBas"><h2 id="soruBas">Satıcıya sor</h2><div id="soruIc"><p class="yukleniyor">Yükleniyor…</p></div></section>';
 
   icerik.querySelector('.kucukler')?.addEventListener('click', ev => {
     const b = ev.target.closest('[data-f]'); if (!b) return;
@@ -1136,6 +1140,7 @@ async function esyaSayfasi(id, istek) {
   };
 
   seviyeleriDoldur(icerik);
+  sorulariCiz(e, istek);
   const okb = $('#ornekKaldir');
   if (okb) okb.onclick = async () => {
     if (!confirm('"' + e.baslik + '" örnek ilanı siteden kaldırılsın mı?')) return;
@@ -1252,6 +1257,67 @@ async function esyaSayfasi(id, istek) {
       dug.disabled = false; dug.textContent = 'İstek gönder';
     }
   };
+}
+
+/* ---------------------------------------------------------------- satıcıya sor (dolapSorular, herkese açık) */
+async function soruListesi(alan, deger) {
+  if (D) return (D.sorular || []).filter(x => x[alan] === deger).map(x => ({ ...x }));
+  return (await getDocs(query(collection(db, 'dolapSorular'), where(alan, '==', deger)))).docs.map(x => ({ id: x.id, ...x.data() }));
+}
+const kisaAd = ad => { const p = String(ad || 'Üye').trim().split(/\s+/); return p.length > 1 ? p[0] + ' ' + p[p.length - 1][0] + '.' : p[0]; };
+async function sorulariCiz(e, istek) {
+  if (!$('#soruIc')) return;
+  let l = [];
+  if (!e.ornek) { try { l = await soruListesi('esyaId', e.id); } catch (h) { l = []; } }
+  const ic = $('#soruIc');
+  if (istek !== aktifIstek || !ic) return;
+  const sahibi = kullanici && kullanici.uid === e.sahipId;
+  l.sort((a, b) => (zaman(b.olusturma) || Date.now()) - (zaman(a.olusturma) || Date.now()));
+  const form = e.ornek ? '<p class="kucuk">Bu bir örnek ilan; satıcıya soru sorulamaz. Gerçek ilanlarda sorunu buradan sorabilirsin.</p>'
+    : sahibi ? '<p class="kucuk">Bu senin parçan. Gelen soruları aşağıdan cevaplayabilirsin; cevabın herkese görünür.</p>'
+    : !kullanici ? '<p class="kucuk">Satıcıya soru sormak için <button type="button" class="dug-metin" id="soruGiris">giriş yap</button>.</p>'
+    : rol === 'kisitli' ? '<p class="kucuk">Hesabın kısıtlı; soru soramazsın.</p>'
+    : '<div class="soru-form"><textarea id="soruMetin" maxlength="500" placeholder="Örn. Bel ölçüsü kaç? Bir gün erken teslim alabilir miyim?"></textarea>' +
+      '<div class="soru-alt"><span class="kucuk">Soru ve cevap herkese görünür; telefon ya da adres paylaşma.</span>' +
+      '<button type="button" class="dug dug-vurgu dug-kucuk" id="soruGonderDug">Soruyu gönder</button></div><p class="hata" id="soruHata" role="alert"></p></div>';
+  ic.innerHTML = form + (l.length ? '<div class="soru-liste">' + l.map(x =>
+    '<article class="soru"><p class="soru-s"><b>S:</b> ' + esc(x.soru) + ' <span class="kucuk">· ' + esc(x.soranAd) + ' · ' + onceYaz(zaman(x.olusturma) || Date.now()) + '</span></p>' +
+    (x.cevap ? '<p class="soru-c"><b>C:</b> ' + esc(x.cevap) + ' <span class="kucuk">· satıcı · ' + onceYaz(zaman(x.cevapZaman) || Date.now()) + '</span></p>'
+      : sahibi ? '<div class="soru-cevapla"><textarea data-cevap-alan="' + esc(x.id) + '" maxlength="1000" placeholder="Cevabını yaz"></textarea>' +
+          '<button type="button" class="dug dug-kucuk dug-vurgu" data-cevapla="' + esc(x.id) + '">Cevapla</button></div>'
+      : '<p class="kucuk soru-c">Satıcının cevabı bekleniyor.</p>') +
+    ((kullanici && x.soranId === kullanici.uid && !x.cevap) || adminMi() ? '<button type="button" class="dug-metin" data-soru-sil="' + esc(x.id) + '">Sil</button>' : '') +
+    '</article>').join('') + '</div>' : (e.ornek ? '' : '<p class="kucuk" style="margin-top:10px">Henüz soru yok. İlk soran sen ol.</p>'));
+  const g = $('#soruGiris'); if (g) g.onclick = girisYap;
+  const gd = $('#soruGonderDug');
+  if (gd) gd.onclick = async () => {
+    const metin = $('#soruMetin').value.trim();
+    if (metin.length < 3) { $('#soruHata').textContent = 'Sorunu yaz.'; return; }
+    gd.disabled = true;
+    try {
+      await dbEkle('dolapSorular', { esyaId: e.id, esyaBaslik: e.baslik.slice(0, 80), sahipId: e.sahipId, soranId: kullanici.uid,
+        soranAd: kisaAd(kullanici.displayName).slice(0, 40), soru: metin.slice(0, 500), cevap: '', durum: 'bekliyor', olusturma: SIMDI() });
+      bildir('Sorun satıcıya iletildi; cevaplayınca bildirim gelir.'); sorulariCiz(e, istek);
+    } catch (h) { gd.disabled = false; $('#soruHata').textContent = hataMetni(h); }
+  };
+  ic.onclick = async ev => {
+    const c = ev.target.closest('[data-cevapla]'), sl = ev.target.closest('[data-soru-sil]');
+    if (!c && !sl) return;
+    try {
+      if (c) {
+        const v = ic.querySelector('[data-cevap-alan="' + CSS.escape(c.dataset.cevapla) + '"]').value.trim();
+        if (!v) return;
+        c.disabled = true;
+        await dbGuncelle('dolapSorular', c.dataset.cevapla, { cevap: v.slice(0, 1000), durum: 'cevaplandi', cevapZaman: SIMDI() });
+        bildir('Cevabın yayında.');
+      } else {
+        if (!confirm('Soru silinsin mi?')) return;
+        await dbSil('dolapSorular', sl.dataset.soruSil);
+      }
+      sorulariCiz(e, istek);
+    } catch (h) { bildir(hataMetni(h)); if (c) c.disabled = false; }
+  };
+  if (yol()[2] === 'sorular') $('#sorular').scrollIntoView({ block: 'start' });
 }
 
 function yorumBolumu(id) {
