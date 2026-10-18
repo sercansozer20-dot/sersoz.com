@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019h';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019k';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -87,10 +87,12 @@ const D = DEMO ? await demoYukle() : null;
    Tam yetkili panelden "Örnek veriyi veritabanından sil" deyince kaybolur. */
 async function ornekYukle() {
   try {
-    const [e, y] = await Promise.all([getDoc(doc(db, 'demoVeri', 'esyalar')), getDoc(doc(db, 'demoVeri', 'yorumlar'))]);
+    const [e, y, g] = await Promise.all([getDoc(doc(db, 'demoVeri', 'esyalar')), getDoc(doc(db, 'demoVeri', 'yorumlar')),
+      getDoc(doc(db, 'ayarlarGenel', 'ornekGizli')).catch(() => null)]);
     if (!e.exists()) return null;
+    const gizli = new Set(g && g.exists() ? g.data().idler || [] : []);
     return {
-      esyalar: demoAc(e.data().veri).filter(x => x.onay === 'onaylandi' && x.aktif).map(x => ({ ...x, ornek: true, oneCikanBitis: null })),
+      esyalar: demoAc(e.data().veri).filter(x => x.onay === 'onaylandi' && x.aktif && !gizli.has(x.id)).map(x => ({ ...x, ornek: true, oneCikanBitis: null })),
       yorumlar: y.exists() ? demoAc(y.data().veri) : {}
     };
   } catch (h) { return null; }
@@ -140,6 +142,16 @@ function adresleriDoldur(kok) {
     .catch(() => { el.textContent = 'görüntülenemedi'; }));
 }
 
+/* Admin: örnek ilanı siteden kaldırır (ayarlarGenel/ornekGizli listesine ekler; örnek verinin kendisi silinmez). */
+async function ornekGizle(ids) {
+  const r = doc(db, 'ayarlarGenel', 'ornekGizli');
+  const sn = await getDoc(r);
+  const l = new Set(sn.exists() ? sn.data().idler || [] : []);
+  ids.forEach(i => l.add(i));
+  await setDoc(r, { idler: [...l].slice(-500) });
+  if (ORNEK) ORNEK.esyalar = ORNEK.esyalar.filter(x => !l.has(x.id));
+}
+
 /* tam yetkili: örnek veriyi veritabanına yükle / sil */
 async function demoVeritabaninaYukle() {
   const v = demoVeri();
@@ -164,7 +176,7 @@ function demoEngel() {
 /* Yazma katmanı: örnek modda bellekteki veriyi değiştirir (sayfa yenilenince sıfırlanır),
    normalde Firestore'a yazar. Sunucu zamanı örnek modda tarayıcı saatidir. */
 const SIMDI = () => (DEMO ? (t => ({ toMillis: () => t }))(Date.now()) : serverTimestamp());
-const demoDizi = kol => ({ dolapEsyalar: D.esyalar, dolapKiralamalar: D.kiralamalar, dolapSohbet: D.sohbetler, dolapRoller: D.roller, dolapUyeler: D.uyeler, dolapBoostlar: (D.boostlar = D.boostlar || []) })[kol];
+const demoDizi = kol => ({ dolapEsyalar: D.esyalar, dolapKiralamalar: D.kiralamalar, dolapSohbet: D.sohbetler, dolapRoller: D.roller, dolapUyeler: D.uyeler, dolapBoostlar: (D.boostlar = D.boostlar || []), dolapBorclar: (D.borclar = D.borclar || []) })[kol];
 const demoAnahtar = kol => (kol === 'dolapRoller' ? 'eposta' : kol === 'dolapUyeler' ? 'uid' : 'id');
 async function dbEkle(kol, veri) {
   if (!DEMO) return addDoc(collection(db, kol), veri);
@@ -380,17 +392,110 @@ async function girisYap() {
 }
 const G_IKON = '<svg class="g-ikon" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
 
+/* ---------------------------------------------------------------- bildirim çanı
+ * Sunucu tarafı olmadan, kişinin okuyabildiği kayıtlardan türetilir: kiralamalar, parçalar, borçlar, paketler, mesajlar
+ * (adminlere ayrıca onay bekleyenler, ödeme bildirimleri, okunmamış mesajlar). Okundu bilgisi dolapUyeler.bildirimOkuma. */
+const ZIL = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+let bildirimler = [], bildirimZaman = 0, acikOkuma = null;
+const KALP = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>';
+const bOkuma = () => (uye && uye.bildirimOkuma) || 0;
+async function benimSohbetlerim() {
+  if (D) return (D.sohbetler || []).filter(x => x.uid === kullanici.uid);
+  return (await getDocs(query(collection(db, 'dolapSohbet'), where('uid', '==', kullanici.uid)))).docs.map(x => ({ id: x.id, ...x.data() }));
+}
+async function bildirimleriTopla() {
+  const u = kullanici.uid, o = [];
+  const ekle = (t, ikon, metin, link) => { const ms = typeof t === 'number' ? t : zaman(t); if (ms) o.push({ t: ms, ikon, metin, link }); };
+  const [kc, sh, es, br, bo, so] = await Promise.all([
+    kiraListesi('kiraciId', u).catch(() => []), kiraListesi('sahipId', u).catch(() => []), esyaListesi('sahipId', u).catch(() => []),
+    borcListesi(u).catch(() => []), boostListesi('sahipId', u).catch(() => []), benimSohbetlerim().catch(() => [])]);
+  const b = k => '"' + k.esyaBaslik + '"';
+  kc.forEach(k => {
+    const m = { onaylandi: ['✅', b(k) + ' isteğin onaylandı. Ödeme adımına geçebilirsin.'], reddedildi: ['✖', b(k) + ' isteğin reddedildi.'],
+      odendi: ['💳', b(k) + ' için ödemen onaylandı; parça kargoya hazırlanıyor.'],
+      kargoda: ['📦', b(k) + ' kargoya verildi' + (k.kargoFirma ? ' (' + k.kargoFirma + (k.kargoTakip ? ' · ' + k.kargoTakip : '') + ')' : '') + '.'],
+      iade_edildi: ['↩︎', b(k) + ' iaden teslim alındı.'] }[k.durum];
+    if (m) ekle(k.guncelleme, m[0], m[1], '#kiralamalar');
+    if (k.depozitoDurum) ekle(k.depozitoZaman, '💰', b(k) + (k.depozitoDurum === 'iade' ? ' depozito iaden yapıldı.' : ' depozitondan ' + tl(k.depozitoKesinti || 0) + ' kesildi.'), '#kiralamalar');
+  });
+  sh.forEach(k => {
+    const m = { beklemede: ['🔔', 'Yeni kiralama isteği: ' + b(k) + ' · ' + k.kiraciAd], iptal: ['✖', k.kiraciAd + ', ' + b(k) + ' isteğini iptal etti.'],
+      odendi: ['💳', b(k) + ' ödemesi onaylandı. Gönderi formunu yazdırıp kargoya ver.'],
+      teslim_edildi: ['✅', k.kiraciAd + ', ' + b(k) + ' parçasını teslim aldı.'],
+      iade_yolda: ['↩︎', b(k) + ' iade kargoda' + (k.iadeTakip ? ' (takip ' + k.iadeTakip + ')' : '') + '.'] }[k.durum];
+    if (m) ekle(k.guncelleme, m[0], m[1], '#kiralamalar/sahip');
+    if (k.teslimSorun) ekle(k.guncelleme, '⚠️', 'Kiracı sorun bildirdi (' + b(k) + '): ' + k.teslimSorun, '#kiralamalar/sahip');
+    if (k.sahipOdeme === 'odendi') ekle(k.sahipOdemeZaman, '💰', b(k) + ' payın (' + tl(kiraHesap(k).sahibe) + ') IBAN\'ına aktarıldı.', '#hesabim/gecmis');
+  });
+  es.forEach(e => {
+    if (e.onayZaman && e.onay !== 'bekliyor') ekle(e.onayZaman, e.onay === 'onaylandi' ? '✅' : '✖',
+      '"' + e.baslik + '" ' + (e.onay === 'onaylandi' ? 'onaylandı, Keşfet\'te yayında.' : 'reddedildi: ' + (e.redNeden || '')), '#dolabim');
+  });
+  br.forEach(x => {
+    ekle(x.olusturma, '🧾', (kisiBorclu(x) ? 'Borç kaydı: ' : 'Alacak kaydı: ') + tl(x.tutar) + ' · ' + x.neden, '#kiralamalar');
+    if (x.durum === 'kapandi') ekle(x.kapanis, '✅', (kisiBorclu(x) ? 'Borcun kapandı: ' : 'Alacağın ödendi: ') + tl(x.tutar), '#hesabim/gecmis');
+  });
+  bo.forEach(x => {
+    if (x.durum === 'aktif') ekle(x.baslangic, '★', '"' + x.esyaBaslik + '" öne çıkarıldı.', '#dolabim');
+    if (x.durum === 'reddedildi') ekle(x.guncelleme, '✖', '"' + x.esyaBaslik + '" öne çıkarma talebi reddedildi.', '#dolabim');
+  });
+  so.forEach(x => {
+    const son = (x.mesajlar || [])[x.mesajlar.length - 1];
+    if (son && son.kimden === 'admin') ekle(x.sonZaman, '💬', 'Destek ekibi yanıtladı: ' + String(son.metin).slice(0, 90), 'sohbet');
+  });
+  if (adminMi()) {
+    const [bek, od, gel] = await Promise.all([esyaListesi('onay', 'bekliyor').catch(() => []), kiraListesi('durum', 'odeme_bildirildi').catch(() => []), sohbetListesi().catch(() => [])]);
+    bek.forEach(e => ekle(e.olusturma, '🛂', 'Onay bekleyen parça: "' + e.baslik + '" · ' + e.sahipAd, '#yonetim/onay'));
+    od.forEach(k => ekle(k.guncelleme, '💳', 'Ödeme bildirildi: ' + refKod(k.id) + ' · ' + tl(k.toplam) + ' · ' + k.kiraciAd, '#yonetim/odemeler'));
+    gel.filter(x => !x.adminOkudu).forEach(x => ekle(x.sonZaman, '💬', 'Yeni mesaj · ' + x.ad + ': ' + String(x.mesajlar[x.mesajlar.length - 1].metin).slice(0, 80), '#yonetim/gelen/' + x.id));
+  }
+  return o.sort((a, c) => c.t - a.t).slice(0, 40);
+}
+function onceYaz(t) {
+  const sn = Math.round((Date.now() - t) / 1000);
+  if (sn < 60) return 'az önce';
+  if (sn < 3600) return Math.floor(sn / 60) + ' dk önce';
+  if (sn < 86400) return Math.floor(sn / 3600) + ' sa önce';
+  if (sn < 7 * 86400) return Math.floor(sn / 86400) + ' gün önce';
+  return tarihYaz(yerelGun(t));
+}
+function canCiz() {
+  const m = $('#canMenu'); if (!m) return;
+  const ok = acikOkuma ?? bOkuma();
+  m.innerHTML = '<div class="can-bas"><b>Bildirimler</b><button type="button" class="dug-metin" id="canYenile">Yenile</button></div>' +
+    (bildirimler.length ? bildirimler.map((x, i) => '<button type="button" class="can-oge' + (x.t > ok ? ' yeni' : '') + '" data-bi="' + i + '">' +
+      '<span class="can-ikon" aria-hidden="true">' + x.ikon + '</span><span><span class="can-metin">' + esc(x.metin) + '</span><small>' + onceYaz(x.t) + '</small></span></button>').join('')
+      : '<p class="kucuk" style="padding:16px 14px">Henüz bildirim yok. Kiralama, onay ve mesaj hareketlerin burada görünür.</p>');
+}
+async function bildirimYenile(zorla) {
+  if (!kullanici) return;
+  if (!zorla && Date.now() - bildirimZaman < 60000) return;
+  bildirimZaman = Date.now();
+  try { bildirimler = await bildirimleriTopla(); } catch (h) { return; }
+  const n = bildirimler.filter(x => x.t > bOkuma()).length, sy = $('#canSayi');
+  if (sy) { sy.textContent = n > 9 ? '9+' : n; sy.hidden = !n || !$('#canMenu').hidden; }
+  const m = $('#canMenu'); if (m && !m.hidden) canCiz();
+}
+setInterval(() => { if (!document.hidden) bildirimYenile(); }, 90000);
+window.addEventListener('hashchange', () => bildirimYenile());
+
 function hesapCiz() {
   const h = $('#hesap');
   const ys = $('#yonetimSekme');
   if (ys) ys.hidden = !adminMi();
   if (!kullanici) {
-    h.innerHTML = '<button type="button" class="dug" id="girisDug">' + G_IKON + 'Google ile giriş</button>';
+    h.innerHTML = '<a class="can-dug fav-dug" href="#favoriler" aria-label="Favorilerim" title="Favorilerim">' + KALP + '</a>' +
+      '<button type="button" class="dug" id="girisDug">' + G_IKON + 'Google ile giriş</button>';
     $('#girisDug').onclick = girisYap;
     return;
   }
   const ad = kullanici.displayName || kullanici.email || '';
-  h.innerHTML = '<div class="menu-kap">' +
+  h.innerHTML = '<a class="can-dug fav-dug" href="#favoriler" aria-label="Favorilerim" title="Favorilerim">' + KALP + '</a>' +
+    '<div class="can-kap"><button type="button" class="can-dug" id="canDug" aria-haspopup="true" aria-expanded="false" aria-controls="canMenu" aria-label="Bildirimler">' +
+      ZIL + '<span class="can-sayi" id="canSayi" hidden></span></button><div class="can-menu" id="canMenu" hidden></div></div>' +
+    '<div class="menu-kap">' +
     '<button type="button" class="avatar-dug" id="avatarDug" aria-haspopup="menu" aria-expanded="false" aria-controls="hesapMenu">' +
       (kullanici.photoURL ? '<img class="avatar" src="' + esc(kullanici.photoURL) + '" alt="" referrerpolicy="no-referrer">'
         : '<span class="avatar harf">' + esc(ad.slice(0, 1).toUpperCase()) + '</span>') +
@@ -401,6 +506,7 @@ function hesapCiz() {
       '<div class="menu-bas"><b>' + esc(ad) + '</b><span>' + esc(kullanici.email || '') + '</span></div>' +
       '<a role="menuitem" href="#hesabim">Hesabım ve ayarlar</a>' +
       '<a role="menuitem" href="#profil/' + esc(kullanici.uid) + '">Profilim</a>' +
+      '<a role="menuitem" href="#favoriler">♡ Favorilerim</a>' +
       '<a role="menuitem" href="#hesabim/puan">★ Sadakat puanım</a>' +
       '<a role="menuitem" href="#hesabim/adresler">Kayıtlı adreslerim</a>' +
       '<a role="menuitem" href="#hesabim/kartlar">Kayıtlı kartlarım</a>' +
@@ -410,17 +516,43 @@ function hesapCiz() {
       '<button type="button" role="menuitem" id="cikisDug">Çıkış yap</button>' +
     '</div></div>';
   const m = $('#hesapMenu'), d = $('#avatarDug');
-  d.onclick = ev => { ev.stopPropagation(); m.hidden = !m.hidden; d.setAttribute('aria-expanded', String(!m.hidden)); };
+  d.onclick = ev => { ev.stopPropagation(); m.hidden = !m.hidden; d.setAttribute('aria-expanded', String(!m.hidden)); $('#canMenu').hidden = true; acikOkuma = null; };
+  const cd = $('#canDug'), cm = $('#canMenu');
+  cd.onclick = ev => {
+    ev.stopPropagation();
+    const ac = cm.hidden;
+    cm.hidden = !ac; cd.setAttribute('aria-expanded', String(ac)); m.hidden = true;
+    if (!ac) { acikOkuma = null; return; }
+    acikOkuma = bOkuma();
+    canCiz();
+    $('#canSayi').hidden = true;
+    if (bildirimler.some(x => x.t > acikOkuma)) uyeKaydet({ bildirimOkuma: Date.now() }).catch(() => {});
+    bildirimYenile(true);
+  };
+  cm.onclick = ev => {
+    ev.stopPropagation();
+    if (ev.target.closest('#canYenile')) { bildirimYenile(true); return; }
+    const o = ev.target.closest('[data-bi]'); if (!o) return;
+    const x = bildirimler[+o.dataset.bi];
+    cm.hidden = true; acikOkuma = null; cd.setAttribute('aria-expanded', 'false');
+    if (x.link === 'sohbet') { const a = $('#asistanDug'); if (a && $('#asistan').hidden) a.click(); return; }
+    if (location.hash === x.link) sayfaCiz(); else location.hash = x.link;
+  };
+  bildirimYenile(true);
   m.onclick = () => { m.hidden = true; d.setAttribute('aria-expanded', 'false'); };
   $('#cikisDug').onclick = () => { if (!demoEngel()) signOut(auth); };
 }
 document.addEventListener('click', ev => {
   const m = $('#hesapMenu');
   if (m && !m.hidden && !ev.target.closest('.menu-kap')) m.hidden = true;
+  const c = $('#canMenu');
+  if (c && !c.hidden && !ev.target.closest('.can-kap')) { c.hidden = true; acikOkuma = null; }
 });
 document.addEventListener('keydown', ev => {
   const m = $('#hesapMenu');
   if (ev.key === 'Escape' && m && !m.hidden) { m.hidden = true; $('#avatarDug').focus(); }
+  const c = $('#canMenu');
+  if (ev.key === 'Escape' && c && !c.hidden) { c.hidden = true; acikOkuma = null; $('#canDug').focus(); }
 });
 function girisCagrisi(baslik, metin) {
   icerik.innerHTML = '<div class="giris-cagri"><h2>' + esc(baslik) + '</h2><p>' + esc(metin) + '</p>' +
@@ -444,6 +576,7 @@ function sayfaCiz() {
   if (s === 'esya' && p) return esyaSayfasi(p, istek);
   if (s === 'dolabim') return dolabim(istek);
   if (s === 'sepet') return sepetSayfasi(istek);
+  if (s === 'favoriler') return favorilerSayfasi(istek);
   if (s === 'profil' && p) return profilSayfasi(p, istek);
   if (s === 'kiralamalar') return kiralamalar(p || 'kiraci', istek);
   return kesfet(istek);
@@ -700,6 +833,20 @@ document.addEventListener('click', ev => {
   bildir(vardi ? 'Sepetten çıkarıldı.' : 'Sepete eklendi. Sepetim\'den sırayla kiralayabilirsin.');
 }, true);
 
+/* ---------------------------------------------------------------- FAVORİLERİM (♡ ile beğenilenler) */
+async function favorilerSayfasi(istek) {
+  icerik.innerHTML = '<div class="bas"><div><h1>Favorilerim</h1><p>♡ ile beğendiğin parçalar burada toplanır.</p></div></div>' +
+    '<div class="izgara" id="izgara"><p class="yukleniyor" style="grid-column:1/-1">Yükleniyor…</p></div>';
+  if (kullanici && !D) await begenileriYukle();
+  const ids = [...new Set([...begenilerim, ...ornekBegeniler()])];
+  const l = (await Promise.all(ids.map(id => esyaGetir(id).catch(() => null))))
+    .filter(e => e && (e.ornek || (e.aktif && e.onay === 'onaylandi')));
+  if (istek !== aktifIstek) return;
+  $('#izgara').innerHTML = l.length ? l.map(e => esyaKarti(e, kullanici && e.sahipId === kullanici.uid)).join('')
+    : '<div class="bos"><h3>Henüz favorin yok</h3><p>Keşfet\'te beğendiğin parçalarda ♡ işaretine bas; burada toplanır.' +
+      (kullanici ? '' : ' Giriş yaparsan favorilerin her cihazda seninle olur.') + '</p><a class="dug" href="#kesfet">Keşfet\'e git</a></div>';
+}
+
 /* ---------------------------------------------------------------- SEPETİM */
 async function sepetSayfasi(istek) {
   const ids = sepetListe();
@@ -880,7 +1027,8 @@ async function esyaSayfasi(id, istek) {
         '<p class="kucuk" style="margin-top:4px"><a href="elif-sozlesme.html" target="_blank" style="text-decoration:underline">Kiralama şartları</a> · geç iade ve teslim etmeme kuralları</p>' +
         (e.aciklama ? '<p class="aciklama">' + esc(e.aciklama) + '</p>' : '') +
         '<a class="sahip sahip-link" href="#profil/' + esc(e.sahipId) + '" style="margin-top:14px">' + (e.sahipFoto ? '<img src="' + esc(e.sahipFoto) + '" alt="" referrerpolicy="no-referrer">' : '') + esc(iyelik(e.sahipAd)) + ' dolabından <span data-seviye="' + esc(e.sahipId) + '"></span></a>' +
-        (e.ornek ? '' : adminEsyaAraclari(e)) +
+        (e.ornek ? (adminMi() && !D ? '<div class="kutu" style="margin-top:14px"><b>Yönetim</b><p class="kucuk" style="margin:4px 0 10px">Bu bir örnek ilan. Kaldırırsan Keşfet\'te ve her yerde görünmez.</p>' +
+          '<button type="button" class="dug dug-kucuk dug-tehlike" id="ornekKaldir">Örnek ilanı kaldır</button></div>' : '') : adminEsyaAraclari(e)) +
         (e.aktif ? '<div class="begeni-satir">' + begeniDugme(e, true) + '</div>' : '') +
         (kendi || !e.aktif ? '' : '<span class="dug sepet-dug-uzun' + (sepette(e.id) ? ' secili' : '') + '" data-sepet="' + esc(e.id) + '" data-uzun="1">' + (sepette(e.id) ? '✓ Sepette' : '🛒 Sepete ekle') + '</span>') +
         '<div class="kutu" id="kiraKutu"></div>' +
@@ -897,16 +1045,23 @@ async function esyaSayfasi(id, istek) {
   const yon = icerik.querySelector('.admin-kutu');
   if (yon) yon.onclick = async ev => {
     const b = ev.target.closest('[data-yon]'); if (!b) return;
-    let veri = { onay: 'onaylandi', redNeden: '' };
+    let veri = { onay: 'onaylandi', redNeden: '', onayZaman: SIMDI() };
     if (b.dataset.yon === 'kaldir') {
       const n = prompt('Kaldırma nedeni (ürün sahibine gösterilir):', '');
       if (n === null) return;
-      veri = { onay: 'reddedildi', redNeden: n.trim().slice(0, 200) || 'Yönetici tarafından kaldırıldı.', aktif: false };
+      veri = { onay: 'reddedildi', redNeden: n.trim().slice(0, 200) || 'Yönetici tarafından kaldırıldı.', aktif: false, onayZaman: SIMDI() };
     }
     try { await dbGuncelle('dolapEsyalar', e.id, veri); bildir('Güncellendi.'); sayfaCiz(); } catch (h) { bildir(hataMetni(h)); }
   };
 
   seviyeleriDoldur(icerik);
+  const okb = $('#ornekKaldir');
+  if (okb) okb.onclick = async () => {
+    if (!confirm('"' + e.baslik + '" örnek ilanı siteden kaldırılsın mı?')) return;
+    okb.disabled = true;
+    try { await ornekGizle([e.id]); sepetCikar(e.id); bildir('Örnek ilan kaldırıldı.'); location.hash = '#kesfet'; }
+    catch (h) { okb.disabled = false; bildir(hataMetni(h)); }
+  };
   (e.fotoBelge || []).forEach((id, i) => fotoGetir(id).then(v => {
     if (!v || istek !== aktifIstek) return;
     const b = icerik.querySelector('[data-belge="' + CSS.escape(id) + '"]');
@@ -1265,10 +1420,19 @@ async function kiralamalar(gorunum, istek) {
       (gorunum === 'kiraci' ? '<a class="dug dug-vurgu" href="#kesfet">Keşfet\'e göz at</a>' : '') + '</div>';
     return;
   }
-  $('#liste').innerHTML = l.map(k => kiraSatiri(k, gorunum)).join('');
+  const borclar = await borcListesi(kullanici.uid).catch(() => []);
+  if (istek !== aktifIstek) return;
+  $('#liste').innerHTML = l.map(k => kiraSatiri(k, gorunum, borclar.filter(b => b.kiraId === k.id))).join('');
   seviyeleriDoldur($('#liste'));
   adresleriDoldur($('#liste'));
   $('#liste').onclick = async ev => {
+    const bo = ev.target.closest('[data-borc-odedim]');
+    if (bo) {
+      if (!confirm('Borcu ödediğini bildirmek istiyor musun? Ekip hesabı kontrol edip kapatacak.')) return;
+      try { await dbGuncelle('dolapBorclar', bo.dataset.borcOdedim, { bildirildi: true, guncelleme: SIMDI() }); bildir('Bildirildi; kontrol edilecek.'); sayfaCiz(); }
+      catch (h) { bildir(hataMetni(h)); }
+      return;
+    }
     const fb = ev.target.closest('[data-form]');
     if (fb) { gonderiFormu(l.find(x => x.id === fb.dataset.form), fb.dataset.yon || 'gidis'); return; }
     const ib = ev.target.closest('[data-iade-gonder]');
@@ -1538,6 +1702,77 @@ function adimCubugu(d) {
   return '<ol class="adim-cubuk" aria-label="Kiralama adımları">' + ADIMLAR.map((a, i) =>
     '<li class="' + (i < sira ? 'bitti' : i === sira ? 'simdi' : '') + '"' + (i === sira ? ' aria-current="step"' : '') + '>' + a + '</li>').join('') + '</ol>';
 }
+/* ---------------------------------------------------------------- borç / alacak kayıtları (dolapBorclar)
+ * Eksik/fazla ödeme, eksik komisyon, eksik aktarım gibi farklar. Yalnız admin açar/kapatır; kişi kendisininkini görür
+ * ve borcunu ödediğini bildirebilir. */
+const BORC_TUR = {
+  kiraci_site: ['Kiracı → site', 'Kiracının siteye borcu'],
+  sahip_site: ['Eşya sahibi → site', 'Eşya sahibinin siteye borcu'],
+  site_sahip: ['Site → eşya sahibi', 'Sitenin eşya sahibine borcu'],
+  site_kiraci: ['Site → kiracı', 'Sitenin kiracıya borcu']
+};
+const borcKod = id => 'BR-' + String(id).slice(0, 6).toUpperCase();
+const kisiBorclu = b => b.tur === 'kiraci_site' || b.tur === 'sahip_site';
+async function borcListesi(uid) {
+  if (D) return (D.borclar || []).filter(b => !uid || b.kisiId === uid).map(b => ({ ...b }));
+  const q = uid ? query(collection(db, 'dolapBorclar'), where('kisiId', '==', uid)) : collection(db, 'dolapBorclar');
+  return (await getDocs(q)).docs.map(x => ({ id: x.id, ...x.data() }));
+}
+function borcKutuHTML(b) {
+  const h = AYAR.havale || {};
+  if (b.durum === 'kapandi') return '<div class="kazanc"><span class="kucuk">' + (kisiBorclu(b) ? 'Borcun' : 'Alacağın') + ' ' + tl(b.tutar) + ' (' + esc(b.neden) + ') kapandı ✓</span></div>';
+  if (kisiBorclu(b)) return '<div class="gecikme"><b>Ödenmemiş borcun: ' + tl(b.tutar) + '</b> · ' + esc(b.neden) + '<br>' +
+    (h.iban ? 'IBAN <b>' + esc(h.iban) + '</b> (' + esc(h.hesapSahibi || '') + ') · açıklamaya <b>' + borcKod(b.id) + '</b> yaz. '
+      : 'Ödeme bilgisi için ' + esc(AYAR.eposta) + ' adresine yaz. ') +
+    (b.bildirildi ? '<b>Ödediğini bildirdin; kontrol ediliyor.</b>' : '<button type="button" class="dug dug-kucuk" data-borc-odedim="' + esc(b.id) + '">Ödedim</button>') + '</div>';
+  return '<div class="kazanc"><b>Sitenin sana borcu: ' + tl(b.tutar) + '</b> · ' + esc(b.neden) + ' · IBAN\'ına gönderilecek.' +
+    (uye && uye.iban ? '' : ' <a href="#hesabim/odeme" style="text-decoration:underline">IBAN ekle</a>') + '</div>';
+}
+/* Kiracı ödemesini onayla: gelen tutar farklıysa aynı yazımda borç/alacak kaydı açılır. */
+async function odemeOnayla(k, gelen) {
+  const fark = k.toplam - gelen;
+  const veri = { durum: 'odendi', odemeZaman: SIMDI(), alinanTutar: gelen, guncelleme: SIMDI() };
+  const borc = fark ? { kiraId: k.id, esyaBaslik: k.esyaBaslik, tur: fark > 0 ? 'kiraci_site' : 'site_kiraci', kisiId: k.kiraciId, kisiAd: k.kiraciAd,
+    tutar: Math.abs(fark), neden: (fark > 0 ? 'Eksik ödeme' : 'Fazla ödeme') + ' (beklenen ' + k.toplam + ' TL, gelen ' + gelen + ' TL)',
+    durum: 'acik', bildirildi: false, olusturma: SIMDI(), yazan: kullanici.email } : null;
+  if (D) { await dbGuncelle('dolapKiralamalar', k.id, veri); if (borc) await dbEkle('dolapBorclar', borc); return; }
+  const bt = writeBatch(db);
+  bt.update(doc(db, 'dolapKiralamalar', k.id), veri);
+  if (borc) bt.set(doc(collection(db, 'dolapBorclar')), borc);
+  await bt.commit();
+}
+/* Ödeme geçmişi: kim boşsa yönetimin (site hesabı) bakışı, doluysa o kişinin bakışı. */
+function odemeOlaylari(kl, borclar, boostlar, kim) {
+  const o = [];
+  const ekle = (t, ad, tutar, yon, ref, not) => o.push({ t: t && zaman(t) ? zaman(t) : 0, ad, tutar, yon, ref, not });
+  kl.forEach(k => {
+    const kiraci = !kim || k.kiraciId === kim, sahip = !kim || k.sahipId === kim, ref = { baslik: k.esyaBaslik, kod: refKod(k.id) };
+    if (kiraci && ['odendi', 'kargoda', 'teslim_edildi', 'iade_yolda', 'iade_edildi'].includes(k.durum))
+      ekle(k.odemeZaman, kim ? 'Kiralama ödemesi yaptın' : 'Kiracıdan ödeme alındı · ' + k.kiraciAd, k.alinanTutar || k.toplam, kim ? '-' : '+', ref);
+    if (sahip && k.sahipOdeme === 'odendi')
+      ekle(k.sahipOdemeZaman, kim ? 'Payın IBAN\'ına aktarıldı' : 'Eşya sahibine aktarıldı', kiraHesap(k).sahibe, kim ? '+' : '-', ref);
+    if (kiraci && k.depozitoDurum) {
+      const iade = (k.depozito || 0) - (k.depozitoKesinti || 0);
+      if (iade > 0) ekle(k.depozitoZaman, kim ? 'Depozito iaden yapıldı' : 'Depozito iade edildi · ' + k.kiraciAd, iade, kim ? '+' : '-', ref);
+      if (k.depozitoKesinti) ekle(k.depozitoZaman, 'Depozitodan kesildi', k.depozitoKesinti, '·', ref, k.depozitoNot);
+    }
+  });
+  borclar.filter(b => b.durum === 'kapandi').forEach(b => {
+    const kisiOdedi = kisiBorclu(b);
+    ekle(b.kapanis, kim ? (kisiOdedi ? 'Borcunu ödedin' : 'Alacağın ödendi') : BORC_TUR[b.tur][0] + ' kapandı · ' + (b.kisiAd || ''),
+      b.tutar, kim ? (kisiOdedi ? '-' : '+') : (kisiOdedi ? '+' : '-'), { baslik: b.esyaBaslik, kod: borcKod(b.id) }, b.neden);
+  });
+  (boostlar || []).filter(b => b.durum === 'aktif').forEach(b =>
+    ekle(b.baslangic, kim ? 'Öne çıkarma paketi aldın' : 'Öne çıkarma geliri · ' + (b.sahipAd || ''), b.fiyat || 0, kim ? '-' : '+', { baslik: b.esyaBaslik, kod: '' }));
+  return o.sort((a, b) => b.t - a.t);
+}
+function gecmisHTML(o) {
+  if (!o.length) return '<p class="kucuk">Henüz ödeme hareketi yok.</p>';
+  return '<div class="gecmis">' + o.slice(0, 200).map(x => '<div class="gecmis-satir"><span class="kucuk">' + (x.t ? tarihYaz(yerelGun(x.t)) : 'eski kayıt') + '</span>' +
+    '<span>' + esc(x.ad) + '<span class="kucuk"> · ' + esc(x.ref.baslik || '') + (x.ref.kod ? ' · ' + x.ref.kod : '') + (x.not ? ' · ' + esc(x.not) : '') + '</span></span>' +
+    '<b class="' + (x.yon === '+' ? 'arti' : x.yon === '-' ? 'eksi' : '') + '">' + (x.yon === '·' ? '' : x.yon) + tl(x.tutar) + '</b></div>').join('') + '</div>';
+}
+
 /* Eşya sahibinin payı. Kiracının ödemesi önce site hesabına gelir; sahibin payı ayrıca, teslimattan sonra aktarılır. */
 function kazancHTML(k) {
   const h = kiraHesap(k), d = k.durum;
@@ -1552,7 +1787,7 @@ function kazancHTML(k) {
   return '<div class="kazanc"><b>Senin payın: ' + tl(h.sahibe) + '</b> <span class="kucuk">(kira ' + tl(h.brut) +
     (h.komisyon ? ' − %' + k.komisyonYuzde + ' site komisyonu ' + tl(h.komisyon) : '') + ')</span><br><span class="kucuk">' + durum + '</span></div>';
 }
-function kiraSatiri(k, gorunum) {
+function kiraSatiri(k, gorunum, borclar = []) {
   const d = k.durum;
   const gecis = (y, ad, sinif) => '<button type="button" class="dug dug-kucuk ' + (sinif || '') + '" data-id="' + esc(k.id) + '" data-gecis="' + y + '">' + ad + '</button>';
   let eylem = '', ek = '';
@@ -1605,6 +1840,7 @@ function kiraSatiri(k, gorunum) {
       ' · Kiracı: <a href="#profil/' + esc(k.kiraciId) + '">' + esc(k.kiraciAd) + '</a> <span data-seviye="' + esc(k.kiraciId) + '" data-beyan="' + (+k.indirimYuzde || 0) + '"></span></div>';
   }
 
+  ek += borclar.map(borcKutuHTML).join('');
   return '<div class="satir"><img class="k" src="' + esc(k.esyaFoto) + '" alt="">' +
     '<div><h3><a href="#esya/' + esc(k.esyaId) + '">' + esc(k.esyaBaslik) + '</a></h3>' + adimCubugu(d) +
       '<p class="kira-detay">' + tarihYaz(k.baslangic) + ' → ' + tarihYaz(k.bitis) + ' · ' + k.gun + ' gün · <b>' + tl(k.toplam) + '</b></p>' +
@@ -1754,7 +1990,7 @@ async function panelOneCikar(panel, istek) {
 }
 
 /* ---------------------------------------------------------------- YÖNETİM PANELİ (#yonetim/...) */
-const SAYFA_AD = { kesfet: 'Keşfet', esya: 'Parça sayfası', dolabim: 'Dolabım', kiralamalar: 'Kiralamalarım', hesabim: 'Hesabım', yonetim: 'Yönetim', profil: 'Profil', sepet: 'Sepetim' };
+const SAYFA_AD = { kesfet: 'Keşfet', esya: 'Parça sayfası', dolabim: 'Dolabım', kiralamalar: 'Kiralamalarım', hesabim: 'Hesabım', yonetim: 'Yönetim', profil: 'Profil', sepet: 'Sepetim', favoriler: 'Favorilerim' };
 
 async function panelOdemeler(panel, istek) {
   const [bildirilen, odemeBekleyen] = await Promise.all([kiraListesi('durum', 'odeme_bildirildi'), kiraListesi('durum', 'onaylandi')]);
@@ -1779,11 +2015,22 @@ async function panelOdemeler(panel, istek) {
     try {
       if (g) {
         const k = bildirilen.find(x => x.id === g.dataset.id), y = g.dataset.gecis;
-        if (!confirm(y === 'odendi'
-          ? tl(k.toplam) + ' tutarındaki ödeme (' + refKod(k.id) + ') hesaba geldi mi?\nOnaylayınca eşya sahibine kiracının telefonu ve adresi açılır.'
-          : 'Ödeme bulunamadı olarak işaretlensin mi? Kiracı tekrar ödeme adımına döner.')) return;
-        g.disabled = true;
-        await dbGuncelle('dolapKiralamalar', k.id, { durum: y, guncelleme: SIMDI() });
+        if (y === 'odendi') {
+          const girdi = prompt('Hesaba gelen tutar (TL)? ' + refKod(k.id) + ' için beklenen ' + k.toplam + ' TL.', String(k.toplam));
+          if (girdi === null) return;
+          const gelen = Math.round(+String(girdi).replace(/\./g, '').replace(',', '.'));
+          if (!(gelen > 0)) { bildir('Geçerli bir tutar yaz.'); return; }
+          const fark = k.toplam - gelen;
+          if (!confirm(fark > 0 ? 'Eksik ödeme: ' + tl(fark) + '.\nKiracıya bu tutarda borç kaydı açılacak; kiralama devam edecek. Onaylıyor musun?'
+            : fark < 0 ? 'Fazla ödeme: ' + tl(-fark) + '.\nKiracıya iade edilecek alacak kaydı açılacak. Onaylıyor musun?'
+            : tl(gelen) + ' geldi. Onaylayınca eşya sahibine kiracının telefonu ve adresi açılır.')) return;
+          g.disabled = true;
+          await odemeOnayla(k, gelen);
+        } else {
+          if (!confirm('Ödeme bulunamadı olarak işaretlensin mi? Kiracı tekrar ödeme adımına döner.')) return;
+          g.disabled = true;
+          await dbGuncelle('dolapKiralamalar', k.id, { durum: y, guncelleme: SIMDI() });
+        }
         bildir(y === 'odendi' ? 'Ödeme onaylandı; eşya sahibi kargoya hazırlanabilir.' : 'Kiracı ödeme adımına geri döndü.');
       } else {
         const link = panel.querySelector('[data-kart-alan="' + CSS.escape(kb.dataset.kartKaydet) + '"]').value.trim();
@@ -1797,7 +2044,8 @@ async function panelOdemeler(panel, istek) {
 }
 
 async function panelGelir(panel, istek) {
-  const [l, boostlar] = await Promise.all([tumKiralamalar(), boostListesi()]);
+  const [l, boostlar, borclar] = await Promise.all([tumKiralamalar(), boostListesi(), borcListesi().catch(() => [])]);
+  const acikBorc = borclar.filter(b => b.durum !== 'kapandi');
   if (istek !== aktifIstek) return;
   const kesin = l.filter(k => ['odendi', 'kargoda', 'teslim_edildi', 'iade_yolda', 'iade_edildi'].includes(k.durum));
   const top = (dizi, f) => dizi.reduce((t, k) => t + f(k), 0);
@@ -1819,7 +2067,9 @@ async function panelGelir(panel, istek) {
       sayac('Site geliri · kiralama', tl(H('site')), 'hizmet ' + tl(H('hizmet')) + ' + komisyon ' + tl(H('komisyon')) + ' − indirim ' + tl(H('indirim'))) +
       sayac('Öne çıkarma geliri', tl(boost)) + sayac('Toplam gelir', tl(H('site') + boost)) +
       sayac('Sahiplere ödenecek', tl(top(sahipBekleyen, k => kiraHesap(k).sahibe)), sahipBekleyen.length + ' kiralama') +
-      sayac('Elde tutulan depozito', tl(elde)) + '</div>' +
+      sayac('Elde tutulan depozito', tl(elde)) +
+      sayac('Kişilerden alacak', tl(top(acikBorc.filter(kisiBorclu), b => b.tutar))) +
+      sayac('Kişilere borç', tl(top(acikBorc.filter(b => !kisiBorclu(b)), b => b.tutar))) + '</div>' +
     '<section class="kutu"><h2>Gelir oranları</h2>' +
       '<p class="kucuk">Yeni kiralama isteklerine uygulanır; mevcut kiralamalar istek anındaki oranla kalır. Veritabanı kuralları her isteği bu oranlarla doğrular.</p>' +
       '<div class="form-izgara" style="margin-top:12px">' +
@@ -1850,10 +2100,41 @@ async function panelGelir(panel, istek) {
         '<div class="eylem"><button type="button" class="dug dug-kucuk dug-vurgu" data-dep-iade="' + esc(k.id) + '">Tamamını iade ettim</button>' +
           '<button type="button" class="dug dug-kucuk" data-dep-kes="' + esc(k.id) + '">Kesinti yap</button></div></div>').join('')
         : '<p class="kucuk">Bekleyen depozito iadesi yok.</p>') + '</section>' +
-    '<p class="kucuk">Kiracı ödemelerini onaylamak için <a href="#kiralamalar/yonetim" style="text-decoration:underline">Ödeme onayları</a>.</p>';
+    '<section class="kutu"><h2>Borç ve alacaklar</h2><p class="kucuk" style="margin-bottom:10px">Eksik ya da fazla ödeme, eksik komisyon, eksik aktarım gibi farklar. Kişi kendi kiralamasında görür ve borcunu ödediğini bildirebilir.</p>' +
+      (acikBorc.length ? acikBorc.map(b => '<div class="gelir-satir">' +
+        '<div><b>' + BORC_TUR[b.tur][0] + '</b><span class="kucuk">' + esc(b.neden) + '</span></div>' +
+        '<div><a href="#profil/' + esc(b.kisiId) + '">' + esc(b.kisiAd || 'Kişi') + '</a><span class="kucuk">' + esc(b.esyaBaslik || '') + ' · ' + borcKod(b.id) + '</span></div>' +
+        '<div><b>' + tl(b.tutar) + '</b>' + (b.bildirildi ? '<span class="kucuk arti">kişi "ödedim" dedi</span>' : '') + '</div>' +
+        '<div><button type="button" class="dug dug-kucuk dug-vurgu" data-borc-kapat="' + esc(b.id) + '">Ödendi, kapat</button></div></div>').join('')
+        : '<p class="kucuk">Açık kayıt yok.</p>') +
+      '<details class="borc-yeni"><summary>+ Yeni borç / alacak kaydı</summary><div class="form-izgara" style="margin-top:10px">' +
+        '<div class="alan tam"><label for="bKira">Kiralama</label><select id="bKira">' +
+          l.filter(k => !['beklemede', 'reddedildi', 'iptal'].includes(k.durum)).map(k => '<option value="' + esc(k.id) + '">' + refKod(k.id) + ' · ' + esc(k.esyaBaslik) + ' · ' + esc(k.kiraciAd) + '</option>').join('') + '</select></div>' +
+        '<div class="alan"><label for="bTur">Kim kime borçlu?</label><select id="bTur">' + Object.entries(BORC_TUR).map(([a, v]) => '<option value="' + a + '">' + v[1] + '</option>').join('') + '</select></div>' +
+        '<div class="alan"><label for="bTutar">Tutar (TL)</label><input id="bTutar" type="number" min="1" step="1"></div>' +
+        '<div class="alan tam"><label for="bNeden">Neden</label><input id="bNeden" maxlength="200" placeholder="Örn. eksik komisyon; kiracı eşya sahibine elden ödedi"></div></div>' +
+        '<button type="button" class="dug dug-ana" id="borcEkle" style="margin-top:10px">Kaydı aç</button></details></section>' +
+    '<section class="kutu"><h2>Ödeme geçmişi</h2><p class="kucuk" style="margin-bottom:6px">Site hesabının bakışıyla: + giren, − çıkan para.</p>' + gecmisHTML(odemeOlaylari(l, borclar, boostlar, null)) + '</section>' +
+    '<p class="kucuk">Kiracı ödemelerini onaylamak için <a href="#yonetim/odemeler" style="text-decoration:underline">Ödeme onayları</a>.</p>';
   panel.onclick = async ev => {
-    const b = ev.target.closest('[data-sahip-ode],[data-dep-iade],[data-dep-kes],[data-teslim],[data-kart-kaydet],#gKaydet'); if (!b) return;
+    const b = ev.target.closest('[data-sahip-ode],[data-dep-iade],[data-dep-kes],[data-teslim],[data-kart-kaydet],[data-borc-kapat],#borcEkle,#gKaydet'); if (!b) return;
     try {
+      if (b.id === 'borcEkle') {
+        const k = l.find(x => x.id === $('#bKira').value), tur = $('#bTur').value;
+        const tutar = Math.round(+$('#bTutar').value), neden = $('#bNeden').value.trim().slice(0, 200);
+        if (!k || !(tutar > 0) || neden.length < 3) { bildir('Kiralama, tutar ve neden gerekli.'); return; }
+        const kiraciTarafi = tur === 'kiraci_site' || tur === 'site_kiraci';
+        const kisiAd = kiraciTarafi ? k.kiraciAd : (((await uyeGetir(k.sahipId).catch(() => null)) || {}).ad || 'Eşya sahibi');
+        await dbEkle('dolapBorclar', { kiraId: k.id, esyaBaslik: k.esyaBaslik, tur, kisiId: kiraciTarafi ? k.kiraciId : k.sahipId, kisiAd,
+          tutar, neden, durum: 'acik', bildirildi: false, olusturma: SIMDI(), yazan: kullanici.email });
+        bildir('Kayıt açıldı; kişi kendi kiralamasında görür.'); sayfaCiz(); return;
+      }
+      if (b.dataset.borcKapat) {
+        const x = borclar.find(y => y.id === b.dataset.borcKapat);
+        if (!confirm(tl(x.tutar) + ' (' + BORC_TUR[x.tur][1] + ') ödendi olarak kapatılsın mı?')) return;
+        await dbGuncelle('dolapBorclar', x.id, { durum: 'kapandi', kapanis: SIMDI() });
+        bildir('Kapatıldı; ödeme geçmişine yazıldı.'); sayfaCiz(); return;
+      }
       if (b.dataset.kartKaydet) {
         const link = panel.querySelector('[data-kart-alan="' + CSS.escape(b.dataset.kartKaydet) + '"]').value.trim();
         if (link && !/^https:\/\/(www\.)?shopier\.com\/\S+$/.test(link)) { bildir('Link https://www.shopier.com/ ile başlamalı.'); return; }
@@ -2035,11 +2316,11 @@ async function panelOnay(panel, istek) {
       '<button type="button" class="dug dug-kucuk dug-tehlike" data-red="' + esc(e.id) + '">Reddet</button></div></div>').join('') + '</div>';
   panel.onclick = async ev => {
     const b = ev.target.closest('[data-onay],[data-red]'); if (!b) return;
-    let veri = { onay: 'onaylandi', redNeden: '' };
+    let veri = { onay: 'onaylandi', redNeden: '', onayZaman: SIMDI() };
     if (b.dataset.red) {
       const n = prompt('Red nedeni (ürün sahibine gösterilir):', '');
       if (n === null) return;
-      veri = { onay: 'reddedildi', redNeden: n.trim().slice(0, 200) || 'Uygun bulunmadı.' };
+      veri = { onay: 'reddedildi', redNeden: n.trim().slice(0, 200) || 'Uygun bulunmadı.', onayZaman: SIMDI() };
     }
     b.disabled = true;
     try { await dbGuncelle('dolapEsyalar', b.dataset.onay || b.dataset.red, veri); bildir(veri.onay === 'onaylandi' ? 'Onaylandı, Keşfet\'te yayında.' : 'Reddedildi.'); sayfaCiz(); }
@@ -2103,7 +2384,7 @@ async function panelKullanicilar(panel, istek) {
         const n = prompt('Ürünleri kaldırma nedeni (ürün sahibine gösterilir):', 'Topluluk kurallarına aykırı içerik.');
         if (n === null) return;
         for (const e of esyalar.filter(x => x.sahipId === b.dataset.urunkaldir)) {
-          await dbGuncelle('dolapEsyalar', e.id, { onay: 'reddedildi', redNeden: n.trim().slice(0, 200) || 'Yönetici tarafından kaldırıldı.', aktif: false });
+          await dbGuncelle('dolapEsyalar', e.id, { onayZaman: SIMDI(), onay: 'reddedildi', redNeden: n.trim().slice(0, 200) || 'Yönetici tarafından kaldırıldı.', aktif: false });
         }
         bildir('Kullanıcının ürünleri yayından kaldırıldı.');
       }
@@ -2405,6 +2686,7 @@ function sohbetIzle() {
   sohbetDinle = onSnapshot(query(collection(db, 'dolapSohbet'), where('uid', '==', kullanici.uid)), snap => {
     const yeni = snap.docs.some(d => d.data().durum === 'yanitlandi' && !d.data().kullaniciOkudu);
     const r = $('#asistanSayi'); if (r && $('#asistan').hidden) r.hidden = !yeni;
+    if (yeni) bildirimYenile(true);
   }, () => {});
 }
 
@@ -2458,7 +2740,7 @@ async function hesabim(bolum, istek) {
   if (!kullanici) return girisCagrisi('Hesabın', 'Bilgilerini, adreslerini ve kayıtlı filtrelerini görmek için giriş yap.');
   if (!uye) uye = { telefon: '', adresler: [], filtreler: [], bildirimEposta: true };
   const adresler = uye.adresler || [], filtreler = uye.filtreler || [];
-  const bolumler = [['profil', 'Profil'], ['puan', 'Sadakat puanım'], ['adresler', 'Adreslerim'], ['kartlar', 'Kartlarım'], ['odeme', 'Ödeme alacağım hesap'], ['filtreler', 'Filtrelerim'], ['tercihler', 'Gizlilik ve bildirim'], ['hesap', 'Hesap']];
+  const bolumler = [['profil', 'Profil'], ['puan', 'Sadakat puanım'], ['adresler', 'Adreslerim'], ['kartlar', 'Kartlarım'], ['odeme', 'Ödeme alacağım hesap'], ['gecmis', 'Ödeme geçmişim'], ['filtreler', 'Filtrelerim'], ['tercihler', 'Gizlilik ve bildirim'], ['hesap', 'Hesap']];
   icerik.innerHTML = '<div class="bas"><div><h1>Hesabım</h1><p>Bilgilerin ve ayarların.</p></div></div>' +
     '<div class="hesap-duzen"><nav class="hesap-menu" aria-label="Hesap bölümleri">' +
       bolumler.map(([k, ad]) => '<a href="#hesabim/' + k + '"' + ((bolum || 'profil') === k ? ' aria-current="true"' : '') + '>' + ad + '</a>').join('') + '</nav><div>' +
@@ -2488,6 +2770,7 @@ async function hesabim(bolum, istek) {
       '<div class="alan"><label for="hIban">IBAN</label><input id="hIban" maxlength="40" placeholder="TR00 0000 0000 0000 0000 0000 00" value="' + esc(uye.iban || '') + '"></div></div>' +
       '<p class="hata" id="ibanHata" role="alert"></p>' +
       '<button type="button" class="dug dug-ana" id="ibanKaydet" style="margin-top:8px">Kaydet</button></section>' +
+    '<section class="kutu" id="b-gecmis"><h2>Ödeme geçmişim</h2><div id="gecmisIc"><p class="yukleniyor">Yükleniyor…</p></div></section>' +
     '<section class="kutu" id="b-kartlar"><h2>Kayıtlı kartlarım</h2>' +
       '<p class="uyari">Güvenliğin için kart numaraları bu sitede <b>saklanmaz</b>. Kartla ödeme altyapısı bağlandığında kartını ödeme kuruluşunun güvenli kasasına (PCI DSS uyumlu) kaydedebilecek, sonraki kiralamalarda tek dokunuşla ödeyebileceksin. Şimdilik ödemeler havale/EFT ile yapılıyor.</p></section>' +
     /* filtreler */
@@ -2509,6 +2792,16 @@ async function hesabim(bolum, istek) {
   if (bolum) { const h = $('#b-' + bolum); if (h) h.scrollIntoView({ block: 'start' }); }
   sadakatGetir(kullanici.uid).then(x => { if (istek === aktifIstek && $('#sadakatIc')) $('#sadakatIc').innerHTML = sadakatHTML(x, true); })
     .catch(h => { if ($('#sadakatIc')) $('#sadakatIc').innerHTML = '<p class="kucuk">Hesaplanamadı: ' + esc(hataMetni(h)) + '</p>'; });
+  Promise.all([kiraListesi('kiraciId', kullanici.uid), kiraListesi('sahipId', kullanici.uid), borcListesi(kullanici.uid).catch(() => []), boostListesi('sahipId', kullanici.uid).catch(() => [])])
+    .then(([a, b, br, bo]) => {
+      if (istek !== aktifIstek || !$('#gecmisIc')) return;
+      const kl = a.concat(b.filter(x => !a.some(y => y.id === x.id)));
+      const acik = br.filter(x => x.durum !== 'kapandi');
+      $('#gecmisIc').innerHTML = (acik.length ? '<div style="margin-bottom:12px">' + acik.map(x => '<p class="' + (kisiBorclu(x) ? 'eksi' : 'arti') + '"><b>' +
+          (kisiBorclu(x) ? 'Açık borcun: ' : 'Açık alacağın: ') + tl(x.tutar) + '</b> <span class="kucuk">· ' + esc(x.neden) + ' · ' + esc(x.esyaBaslik || '') +
+          (kisiBorclu(x) ? ' · <a href="#kiralamalar" style="text-decoration:underline">Kiralamalarım\'dan öde</a>' : '') + '</span></p>').join('') + '</div>' : '') +
+        gecmisHTML(odemeOlaylari(kl, br, bo, kullanici.uid));
+    }).catch(h => { if ($('#gecmisIc')) $('#gecmisIc').innerHTML = '<p class="kucuk">Yüklenemedi: ' + esc(hataMetni(h)) + '</p>'; });
 
   const kaydet = async (veri, mesaj) => { try { await uyeKaydet(veri); bildir(mesaj); sayfaCiz(); } catch (h) { bildir(hataMetni(h)); } };
   profilGetir(kullanici.uid).then(pf => { if (pf && $('#hSehir')) { $('#hSehir').value = pf.sehir || ''; $('#hHakkimda').value = pf.hakkimda || ''; } }).catch(() => {});

@@ -436,3 +436,32 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 .begeni-satir { margin-top: 14px; }
 #kgIadeYeni { margin-top: 8px; min-height: 64px; }
 .satir > .kazanc { grid-column: 1 / -1; margin-top: 0; }
+
+/* ödeme geçmişi, borçlar */
+.gecmis { display: grid; }
+.gecmis-satir { display: grid; grid-template-columns: 92px 1fr auto; gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--cizgi); font-size: 14px; }
+.gecmis-satir b { white-space: nowrap; }
+.borc-yeni { margin-top: 14px; }
+.borc-yeni summary { cursor: pointer; font-weight: 600; }
+@media (max-width: 560px) { .gecmis-satir { grid-template-columns: 1fr auto; } .gecmis-satir > span:first-child { grid-column: 1 / -1; } }
+
+/* bildirim çanı */
+.hesap { display: flex; align-items: center; gap: 8px; }
+.can-kap { position: relative; }
+.can-dug { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--cizgi); background: var(--kart); color: var(--metin); cursor: pointer; }
+.can-dug:hover, .can-dug[aria-expanded="true"] { background: var(--vurgu-acik); }
+.can-sayi { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--kirmizi); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; }
+.can-sayi[hidden] { display: none; }
+.can-menu { position: absolute; right: 0; top: calc(100% + 8px); width: 360px; max-width: calc(100vw - 24px); max-height: 70vh; overflow-y: auto; background: var(--kart); border: 1px solid var(--cizgi); border-radius: 16px; box-shadow: 0 12px 32px rgba(0,0,0,.14); z-index: 60; text-align: left; }
+.can-bas { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--cizgi); position: sticky; top: 0; background: var(--kart); }
+.dug-metin { background: none; border: 0; color: var(--vurgu-koyu); cursor: pointer; font: inherit; font-size: 13px; }
+.can-oge { display: flex; gap: 10px; width: 100%; text-align: left; padding: 11px 14px; border: 0; border-bottom: 1px solid var(--cizgi); background: none; cursor: pointer; font: inherit; color: inherit; }
+.can-oge:hover { background: var(--zemin); }
+.can-oge.yeni { background: var(--vurgu-acik); }
+.can-ikon { width: 22px; flex: none; text-align: center; }
+.can-metin { display: block; font-size: 13.5px; line-height: 1.35; }
+.can-oge small { display: block; margin-top: 3px; color: var(--ikinci); font-size: 11.5px; }
+@media (max-width: 560px) { .can-menu { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; max-width: none; } }
+
+.fav-dug { text-decoration: none; }
+.fav-dug[aria-current], .fav-dug:hover { color: #d6336c; }
