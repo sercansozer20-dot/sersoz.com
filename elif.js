@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019m';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019n';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -176,7 +176,7 @@ function demoEngel() {
 /* Yazma katmanı: örnek modda bellekteki veriyi değiştirir (sayfa yenilenince sıfırlanır),
    normalde Firestore'a yazar. Sunucu zamanı örnek modda tarayıcı saatidir. */
 const SIMDI = () => (DEMO ? (t => ({ toMillis: () => t }))(Date.now()) : serverTimestamp());
-const demoDizi = kol => ({ dolapEsyalar: D.esyalar, dolapKiralamalar: D.kiralamalar, dolapSohbet: D.sohbetler, dolapRoller: D.roller, dolapUyeler: D.uyeler, dolapBoostlar: (D.boostlar = D.boostlar || []), dolapBorclar: (D.borclar = D.borclar || []) })[kol];
+const demoDizi = kol => ({ dolapEsyalar: D.esyalar, dolapKiralamalar: D.kiralamalar, dolapSohbet: D.sohbetler, dolapRoller: D.roller, dolapUyeler: D.uyeler, dolapBoostlar: (D.boostlar = D.boostlar || []), dolapBorclar: (D.borclar = D.borclar || []), dolapKasa: (D.kasa = D.kasa || []) })[kol];
 const demoAnahtar = kol => (kol === 'dolapRoller' ? 'eposta' : kol === 'dolapUyeler' ? 'uid' : 'id');
 async function dbEkle(kol, veri) {
   if (!DEMO) return addDoc(collection(db, kol), veri);
@@ -1823,7 +1823,23 @@ async function odemeOnayla(k, gelen) {
   await bt.commit();
 }
 /* Ödeme geçmişi: kim boşsa yönetimin (site hesabı) bakışı, doluysa o kişinin bakışı. */
-function odemeOlaylari(kl, borclar, boostlar, kim) {
+/* ---------------------------------------------------------------- kasa
+ * Kasa = kasaya alınan site payları (hizmet + komisyon − indirim) + öne çıkarma gelirleri
+ *        + kapanan borçlar − kapanan alacaklar + elle giriş − elle çıkış (dolapKasa, yalnız tam yetkili). */
+async function kasaListesi() {
+  if (D) return (D.kasa || []).map(x => ({ ...x }));
+  return (await getDocs(collection(db, 'dolapKasa'))).docs.map(x => ({ id: x.id, ...x.data() }));
+}
+function kasaHesap(kl, borclar, boostlar, kasa) {
+  const t = (dz, f) => dz.reduce((a, x) => a + (f(x) || 0), 0);
+  const kom = t(kl.filter(k => k.komisyonAlindi), k => k.komisyonTutar ?? kiraHesap(k).site);
+  const boost = t((boostlar || []).filter(b => b.durum === 'aktif'), b => b.fiyat);
+  const borc = t(borclar.filter(b => b.durum === 'kapandi'), b => (kisiBorclu(b) ? b.tutar : -b.tutar));
+  const elle = t(kasa, x => (x.tur === 'giris' ? x.tutar : -x.tutar));
+  return { kom, boost, borc, elle, toplam: kom + boost + borc + elle };
+}
+
+function odemeOlaylari(kl, borclar, boostlar, kim, kasa = []) {
   const o = [];
   const ekle = (t, ad, tutar, yon, ref, not) => o.push({ t: t && zaman(t) ? zaman(t) : 0, ad, tutar, yon, ref, not });
   kl.forEach(k => {
@@ -1845,6 +1861,10 @@ function odemeOlaylari(kl, borclar, boostlar, kim) {
   });
   (boostlar || []).filter(b => b.durum === 'aktif').forEach(b =>
     ekle(b.baslangic, kim ? 'Öne çıkarma paketi aldın' : 'Öne çıkarma geliri · ' + (b.sahipAd || ''), b.fiyat || 0, kim ? '-' : '+', { baslik: b.esyaBaslik, kod: '' }));
+  if (!kim) {
+    kl.filter(k => k.komisyonAlindi).forEach(k => ekle(k.komisyonZaman, 'Site payı kasaya alındı', k.komisyonTutar ?? kiraHesap(k).site, '·', { baslik: k.esyaBaslik, kod: refKod(k.id) }));
+    kasa.forEach(x => ekle(x.olusturma, x.tur === 'giris' ? 'Kasaya elle giriş' : 'Kasadan çıkış', x.tutar, x.tur === 'giris' ? '+' : '-', { baslik: '', kod: '' }, x.aciklama));
+  }
   return o.sort((a, b) => b.t - a.t);
 }
 function gecmisHTML(o) {
@@ -1864,7 +1884,8 @@ function kazancHTML(k) {
     ? '<b class="arti">✓ IBAN\'ına aktarıldı' + (k.sahipOdemeZaman && zaman(k.sahipOdemeZaman) ? ' · ' + tarihYaz(yerelGun(zaman(k.sahipOdemeZaman))) : '') + '</b>'
     : !odemeGeldi ? 'Kiracı ödeyince para site hesabında tutulur; parça kiracıya ulaşınca sana aktarılır.'
     : !teslimSonrasi ? 'Kiracının ödemesi site hesabında güvende. Kiracı parçayı teslim alınca sana aktarılır.'
-    : '<b>Henüz aktarılmadı.</b> Teslimat onaylandı; site yöneticisi payını IBAN\'ına gönderecek.' + ibanYok;
+    : k.komisyonAlindi ? '<b>Komisyon kesildi;</b> payın IBAN\'ına gönderilmek üzere.' + ibanYok
+    : '<b>Henüz aktarılmadı.</b> Teslimat onaylandı; site komisyonu ayrıldıktan sonra payın IBAN\'ına gönderilecek.' + ibanYok;
   return '<div class="kazanc"><b>Senin payın: ' + tl(h.sahibe) + '</b> <span class="kucuk">(kira ' + tl(h.brut) +
     (h.komisyon ? ' − %' + k.komisyonYuzde + ' site komisyonu ' + tl(h.komisyon) : '') + ')</span><br><span class="kucuk">' + durum + '</span></div>';
 }
@@ -2125,7 +2146,8 @@ async function panelOdemeler(panel, istek) {
 }
 
 async function panelGelir(panel, istek) {
-  const [l, boostlar, borclar] = await Promise.all([tumKiralamalar(), boostListesi(), borcListesi().catch(() => [])]);
+  const [l, boostlar, borclar, kasa] = await Promise.all([tumKiralamalar(), boostListesi(), borcListesi().catch(() => []), kasaListesi().catch(() => [])]);
+  const K = kasaHesap(l, borclar, boostlar, kasa);
   const acikBorc = borclar.filter(b => b.durum !== 'kapandi');
   if (istek !== aktifIstek) return;
   const kesin = l.filter(k => ['odendi', 'kargoda', 'teslim_edildi', 'iade_yolda', 'iade_edildi'].includes(k.durum));
@@ -2144,6 +2166,18 @@ async function panelGelir(panel, istek) {
   const ornek = Math.floor(1000 * GELIR.hizmetYuzde / 100), ornekK = Math.floor(1000 * GELIR.komisyonYuzde / 100);
   const kilit = tamMi() ? '' : ' disabled';
   panel.innerHTML =
+    '<section class="kutu kasa-kutu"><div class="kasa-ust"><span>Kasa</span><b>' + tl(K.toplam) + '</b></div>' +
+      '<div class="kasa-dokum">' +
+        '<span>Kasaya alınan site payları <b>' + tl(K.kom) + '</b></span>' +
+        '<span>Öne çıkarma gelirleri <b>' + tl(K.boost) + '</b></span>' +
+        '<span>Kapanan borç / alacak <b>' + (K.borc < 0 ? '−' + tl(-K.borc) : tl(K.borc)) + '</b></span>' +
+        '<span>Elle giriş / çıkış <b>' + (K.elle < 0 ? '−' + tl(-K.elle) : tl(K.elle)) + '</b></span></div>' +
+      '<p class="kucuk" style="margin-top:8px">Site payı, eşya sahibine ödeme yapılmadan önce "Komisyonu kasaya aldım" ile onaylanınca kasaya eklenir.</p>' +
+      (tamMi() ? '<details class="borc-yeni"><summary>Kasaya giriş / çıkış yaz</summary><div class="form-izgara" style="margin-top:10px">' +
+        '<div class="alan"><label for="kTur">Tür</label><select id="kTur"><option value="cikis">Çıkış (gider, para çekme)</option><option value="giris">Giriş</option></select></div>' +
+        '<div class="alan"><label for="kTutar">Tutar (TL)</label><input id="kTutar" type="number" min="1" step="1"></div>' +
+        '<div class="alan tam"><label for="kAciklama">Açıklama</label><input id="kAciklama" maxlength="200" placeholder="Örn. kargo gideri, kasadan çekilen"></div></div>' +
+        '<button type="button" class="dug dug-ana" id="kasaEkle" style="margin-top:10px">Kaydet</button></details>' : '') + '</section>' +
     '<div class="sayaclar">' +
       sayac('Site geliri · kiralama', tl(H('site')), 'hizmet ' + tl(H('hizmet')) + ' + komisyon ' + tl(H('komisyon')) + ' − indirim ' + tl(H('indirim'))) +
       sayac('Öne çıkarma geliri', tl(boost)) + sayac('Toplam gelir', tl(H('site') + boost)) +
@@ -2165,13 +2199,16 @@ async function panelGelir(panel, istek) {
         '<div>' + (k.teslimSorun ? '<b class="eksi">Sorun: ' + esc(k.teslimSorun) + '</b>' : '<span class="kucuk">' + tarihYaz(k.baslangic) + ' teslim</span>') + '</div>' +
         '<div>' + (k.durum === 'kargoda' ? '<button type="button" class="dug dug-kucuk" data-teslim="' + esc(k.id) + '">Teslim edildi</button>' : '') + '</div></div>').join('')
         : '<p class="kucuk">Yolda parça yok.</p>') + '</section>' +
-    '<section class="kutu"><h2>Eşya sahiplerine ödenecekler</h2><p class="kucuk" style="margin-bottom:10px">Yalnız kiracının teslim aldığı (ya da senin doğruladığın) kiralamalar burada. Sorun bildirilmişse önce çöz; teslimat sorunsuzsa havaleyi yapıp "Ödendi"ye bas, eşya sahibi Kiralamalarım\'da görür.</p>' +
+    '<section class="kutu"><h2>Eşya sahiplerine ödenecekler</h2><p class="kucuk" style="margin-bottom:10px">Yalnız kiracının teslim aldığı (ya da senin doğruladığın) kiralamalar burada. Sorun bildirilmişse önce çöz. Teslimat sorunsuzsa önce <b>"Komisyonu kasaya aldım"</b> ile site payını kasaya al, sonra eşya sahibine havaleyi yapıp <b>"Ödendi"</b>ye bas.</p>' +
       (sahipBekleyen.length ? sahipBekleyen.map(k => { const h = kiraHesap(k), u = uyeler[k.sahipId]; return '<div class="gelir-satir">' +
         '<div><b><a href="#esya/' + esc(k.esyaId) + '">' + esc(k.esyaBaslik) + '</a></b><span class="kucuk">' + refKod(k.id) + ' · ' + esc(DURUM[k.durum]) + ' · ' + tarihYaz(k.bitis) + '</span></div>' +
         '<div><a href="#profil/' + esc(k.sahipId) + '">' + esc(u ? u.ad : 'Eşya sahibi') + '</a><br>' + hesap(k.sahipId) + '</div>' +
-        '<div><b>' + tl(h.sahibe) + '</b><span class="kucuk">kira ' + tl(h.brut) + ' − komisyon ' + tl(h.komisyon) + '</span>' +
+        '<div><b>' + tl(h.sahibe) + '</b><span class="kucuk">kira ' + tl(h.brut) + ' − komisyon ' + tl(h.komisyon) + ' · site payı ' + tl(h.site) + '</span>' +
           (k.teslimSorun ? '<b class="eksi" style="display:block">Sorun: ' + esc(k.teslimSorun) + '</b>' : (k.teslimOnay ? '<span class="kucuk arti">teslim ' + (k.teslimOnay === 'admin' ? 'site tarafından doğrulandı' : 'kiracı onayladı') + ' ✓</span>' : '<span class="kucuk">eski kayıt · teslim onayı yok, kontrol et</span>')) + '</div>' +
-        '<div><button type="button" class="dug dug-kucuk dug-vurgu" data-sahip-ode="' + esc(k.id) + '">Ödendi</button></div></div>'; }).join('')
+        '<div class="eylem">' + (k.komisyonAlindi
+          ? '<span class="kucuk arti">✓ ' + tl(k.komisyonTutar ?? h.site) + ' kasada</span><button type="button" class="dug dug-kucuk dug-vurgu" data-sahip-ode="' + esc(k.id) + '">Ödendi</button>'
+          : '<button type="button" class="dug dug-kucuk dug-vurgu" data-kom-al="' + esc(k.id) + '">Komisyonu kasaya aldım</button>' +
+            '<button type="button" class="dug dug-kucuk" disabled title="Önce komisyonu kasaya al">Ödendi</button>') + '</div></div>'; }).join('')
         : '<p class="kucuk">Bekleyen ödeme yok.</p>') + '</section>' +
     '<section class="kutu"><h2>Depozito iadeleri</h2><p class="kucuk" style="margin-bottom:10px">Parça iade edildikten sonra. Hasar ya da gecikme varsa sözleşmeye göre kesinti yapılabilir; kiracı nedeni görür.</p>' +
       (depBekleyen.length ? depBekleyen.map(k => '<div class="gelir-satir">' +
@@ -2195,11 +2232,25 @@ async function panelGelir(panel, istek) {
         '<div class="alan"><label for="bTutar">Tutar (TL)</label><input id="bTutar" type="number" min="1" step="1"></div>' +
         '<div class="alan tam"><label for="bNeden">Neden</label><input id="bNeden" maxlength="200" placeholder="Örn. eksik komisyon; kiracı eşya sahibine elden ödedi"></div></div>' +
         '<button type="button" class="dug dug-ana" id="borcEkle" style="margin-top:10px">Kaydı aç</button></details></section>' +
-    '<section class="kutu"><h2>Ödeme geçmişi</h2><p class="kucuk" style="margin-bottom:6px">Site hesabının bakışıyla: + giren, − çıkan para.</p>' + gecmisHTML(odemeOlaylari(l, borclar, boostlar, null)) + '</section>' +
+    '<section class="kutu"><h2>Ödeme geçmişi</h2><p class="kucuk" style="margin-bottom:6px">Site hesabının bakışıyla: + giren, − çıkan para.</p>' + gecmisHTML(odemeOlaylari(l, borclar, boostlar, null, kasa)) + '</section>' +
     '<p class="kucuk">Kiracı ödemelerini onaylamak için <a href="#yonetim/odemeler" style="text-decoration:underline">Ödeme onayları</a>.</p>';
   panel.onclick = async ev => {
-    const b = ev.target.closest('[data-sahip-ode],[data-dep-iade],[data-dep-kes],[data-teslim],[data-kart-kaydet],[data-borc-kapat],#borcEkle,#gKaydet'); if (!b) return;
+    const b = ev.target.closest('[data-sahip-ode],[data-kom-al],[data-dep-iade],[data-dep-kes],[data-teslim],[data-kart-kaydet],[data-borc-kapat],#borcEkle,#kasaEkle,#gKaydet'); if (!b) return;
     try {
+      if (b.dataset.komAl) {
+        const k = l.find(x => x.id === b.dataset.komAl), h = kiraHesap(k);
+        if (!confirm('Site payı ' + tl(h.site) + ' (hizmet ' + tl(h.hizmet) + ' + komisyon ' + tl(h.komisyon) + (h.indirim ? ' − indirim ' + tl(h.indirim) : '') + ') kasaya alındı mı?\n' +
+          'Onaylayınca kasaya eklenir ve eşya sahibine ' + tl(h.sahibe) + ' ödeyebilirsin.')) return;
+        await dbGuncelle('dolapKiralamalar', k.id, { komisyonAlindi: true, komisyonTutar: h.site, komisyonZaman: SIMDI(), guncelleme: SIMDI() });
+        bildir('Site payı kasaya eklendi.'); sayfaCiz(); return;
+      }
+      if (b.id === 'kasaEkle') {
+        if (demoEngel()) return;
+        const tur = $('#kTur').value, tutar = Math.round(+$('#kTutar').value), aciklama = $('#kAciklama').value.trim().slice(0, 200);
+        if (!(tutar > 0) || aciklama.length < 3) { bildir('Tutar ve açıklama gerekli.'); return; }
+        await dbEkle('dolapKasa', { tur, tutar, aciklama, olusturma: SIMDI(), yazan: kullanici.email });
+        bildir('Kasa hareketi kaydedildi.'); sayfaCiz(); return;
+      }
       if (b.id === 'borcEkle') {
         const k = l.find(x => x.id === $('#bKira').value), tur = $('#bTur').value;
         const tutar = Math.round(+$('#bTutar').value), neden = $('#bNeden').value.trim().slice(0, 200);
@@ -2234,6 +2285,7 @@ async function panelGelir(panel, istek) {
         bildir('Oranlar kaydedildi.');
       } else if (b.dataset.sahipOde) {
         const k = l.find(x => x.id === b.dataset.sahipOde);
+        if (!k.komisyonAlindi) { bildir('Önce komisyonu kasaya al.'); return; }
         if (!confirm((k.teslimSorun ? 'DİKKAT: kiracı sorun bildirdi (' + k.teslimSorun + ').\n' : '') + tl(kiraHesap(k).sahibe) + ' eşya sahibine ödendi olarak işaretlensin mi?')) return;
         await dbGuncelle('dolapKiralamalar', k.id, { sahipOdeme: 'odendi', sahipOdemeZaman: SIMDI(), guncelleme: SIMDI() });
         bildir('Ödendi olarak işaretlendi.');

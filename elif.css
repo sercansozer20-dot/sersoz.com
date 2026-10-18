@@ -488,3 +488,15 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 .mesaj-dug { text-decoration: none; }
 .mesaj-dug:hover { color: var(--vurgu-koyu); }
 @media (max-width: 600px) { .hesap .ad, .hesap .rol-rozet { display: none; } .can-dug { width: 36px; height: 36px; } }
+
+/* kasa */
+.kasa-kutu { background: var(--metin); color: #fff; border-color: var(--metin); }
+.kasa-kutu .kucuk, .kasa-kutu summary { color: rgba(255,255,255,.75); }
+.kasa-kutu label { color: rgba(255,255,255,.85); }
+.kasa-ust { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.kasa-ust span { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; opacity: .8; }
+.kasa-ust b { font-family: var(--serif); font-size: 40px; font-weight: 600; line-height: 1; }
+.kasa-dokum { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; margin-top: 14px; }
+.kasa-dokum span { background: rgba(255,255,255,.08); border-radius: 12px; padding: 10px 12px; font-size: 13px; color: rgba(255,255,255,.8); }
+.kasa-dokum b { display: block; font-size: 17px; color: #fff; margin-top: 2px; }
+.gelir-satir .eylem .kucuk { align-self: center; }

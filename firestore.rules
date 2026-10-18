@@ -660,7 +660,12 @@ service cloud.firestore {
     function odemeTakip() {
       return dolapAdmin() && (tamYetkili() || (resource.data.kiraciId != benim() && resource.data.sahipId != benim()))
         && request.resource.data.guncelleme == request.time
-        && degisenler().hasOnly(['sahipOdeme', 'sahipOdemeZaman', 'depozitoDurum', 'depozitoKesinti', 'depozitoNot', 'depozitoZaman', 'guncelleme'])
+        && degisenler().hasOnly(['sahipOdeme', 'sahipOdemeZaman', 'depozitoDurum', 'depozitoKesinti', 'depozitoNot', 'depozitoZaman',
+                                 'komisyonAlindi', 'komisyonTutar', 'komisyonZaman', 'guncelleme'])
+        && (!degisenler().hasAny(['sahipOdeme']) || request.resource.data.get('komisyonAlindi', false) == true)
+        && (!degisenler().hasAny(['komisyonAlindi'])
+            || (request.resource.data.komisyonAlindi == true && request.resource.data.komisyonTutar is int
+                && request.resource.data.komisyonZaman == request.time))
         && resource.data.durum in ['teslim_edildi', 'iade_yolda', 'iade_edildi'];
     }
 
@@ -796,6 +801,18 @@ service cloud.firestore {
         || (girisli() && resource.data.kisiId == benim() && resource.data.tur in ['kiraci_site', 'sahip_site']
             && resource.data.durum == 'acik'
             && degisenler().hasOnly(['bildirildi', 'guncelleme']) && yeni().bildirildi == true);
+      allow delete: if tamYetkili();
+    }
+
+    /* Kasa: elle giriş/çıkış kayıtları. Adminler görür, yalnız tam yetkili yazar. */
+    match /dolapKasa/{hareket} {
+      allow read: if dolapAdmin();
+      allow create: if tamYetkili()
+        && yeni().keys().hasOnly(['tur', 'tutar', 'aciklama', 'olusturma', 'yazan'])
+        && yeni().tur in ['giris', 'cikis']
+        && yeni().tutar is int && yeni().tutar > 0 && yeni().tutar <= 10000000
+        && yeni().aciklama is string && yeni().aciklama.size() >= 3 && yeni().aciklama.size() <= 200
+        && yeni().olusturma == request.time && yeni().yazan == request.auth.token.email;
       allow delete: if tamYetkili();
     }
 
