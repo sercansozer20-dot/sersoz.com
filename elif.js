@@ -50,8 +50,37 @@ const DEMO = new URLSearchParams(location.search).has('demo');
 const D = DEMO ? demoVeri() : null;
 function demoEngel() {
   if (!DEMO) return false;
-  bildir('Örnek modda değişiklik kaydedilmez.');
+  bildir('Örnek modda bu işlem kapalı.');
   return true;
+}
+
+/* Yazma katmanı: örnek modda bellekteki veriyi değiştirir (sayfa yenilenince sıfırlanır),
+   normalde Firestore'a yazar. Sunucu zamanı örnek modda tarayıcı saatidir. */
+const SIMDI = () => (DEMO ? (t => ({ toMillis: () => t }))(Date.now()) : serverTimestamp());
+const demoDizi = kol => ({ dolapEsyalar: D.esyalar, dolapKiralamalar: D.kiralamalar, dolapSohbet: D.sohbetler, dolapRoller: D.roller, dolapUyeler: D.uyeler })[kol];
+const demoAnahtar = kol => (kol === 'dolapRoller' ? 'eposta' : kol === 'dolapUyeler' ? 'uid' : 'id');
+async function dbEkle(kol, veri) {
+  if (!DEMO) return addDoc(collection(db, kol), veri);
+  if (!demoDizi(kol)) return { id: '' };
+  const id = 'demo-' + Date.now().toString(36);
+  demoDizi(kol).unshift({ id, ...veri });
+  return { id };
+}
+async function dbGuncelle(kol, id, veri) {
+  if (!DEMO) return updateDoc(doc(db, kol, id), veri);
+  const a = demoAnahtar(kol), x = demoDizi(kol).find(o => o[a] === id);
+  if (x) Object.assign(x, veri);
+}
+async function dbYaz(kol, id, veri, birlestir) {
+  if (!DEMO) return setDoc(doc(db, kol, id), veri, birlestir ? { merge: true } : {});
+  const a = demoAnahtar(kol), l = demoDizi(kol), i = l.findIndex(o => o[a] === id);
+  if (i >= 0) l[i] = birlestir ? Object.assign(l[i], veri) : { [a]: id, ...veri };
+  else l.push({ [a]: id, ...veri });
+}
+async function dbSil(kol, id) {
+  if (!DEMO) return deleteDoc(doc(db, kol, id));
+  const a = demoAnahtar(kol), l = demoDizi(kol), i = l.findIndex(o => o[a] === id);
+  if (i >= 0) l.splice(i, 1);
 }
 
 /* veri katmanı: örnek modda bellekten, normalde Firestore'dan */
@@ -111,7 +140,7 @@ async function uyeGetir(uid) {
   return s.exists() ? s.data() : null;
 }
 async function uyeKaydet(veri) {
-  if (!DEMO) await setDoc(doc(db, 'dolapUyeler', kullanici.uid), { uid: kullanici.uid, eposta: kullanici.email, ...veri }, { merge: true });
+  await dbYaz('dolapUyeler', kullanici.uid, { uid: kullanici.uid, eposta: kullanici.email, ...veri }, true);
   Object.assign(uye, veri);
 }
 async function uyeListesi() {
@@ -131,9 +160,9 @@ async function rolListesi() {
   if (D) return D.roller.map(x => ({ ...x }));
   return (await getDocs(collection(db, 'dolapRoller'))).docs.map(d => ({ eposta: d.id, ...d.data() }));
 }
-const rolYaz = (eposta, r, neden) => setDoc(doc(db, 'dolapRoller', eposta),
-  { rol: r, neden: neden || '', atayan: kullanici.email, zaman: serverTimestamp() });
-const rolSil = eposta => deleteDoc(doc(db, 'dolapRoller', eposta));
+const rolYaz = (eposta, r, neden) => dbYaz('dolapRoller', eposta,
+  { rol: r, neden: neden || '', atayan: kullanici.email, zaman: SIMDI() });
+const rolSil = eposta => dbSil('dolapRoller', eposta);
 
 /* ---------------------------------------------------------------- gezinti kaydı (KVKK: yalnız izinle) */
 const LS_IZIN = 'elif_gezinti_izni';
@@ -148,10 +177,10 @@ function izinVar() { try { return localStorage.getItem(LS_IZIN) === 'evet'; } ca
 function olay(tur, ek = {}) {
   if (DEMO || !izinVar()) return;
   const k = (v, n) => String(v || '').slice(0, n);
-  addDoc(collection(db, 'dolapOlaylar'), {
+  dbEkle('dolapOlaylar', {
     tur, sayfa: k(ek.sayfa, 60), esyaId: k(ek.esyaId, 60), marka: k(ek.marka, 40), kategori: k(ek.kategori, 20),
     baslik: k(ek.baslik, 80), ara: k(ek.ara, 60), oturum: oturumId,
-    uid: kullanici ? kullanici.uid : '', ad: kullanici ? k(kullanici.displayName, 80) : '', zaman: serverTimestamp()
+    uid: kullanici ? kullanici.uid : '', ad: kullanici ? k(kullanici.displayName, 80) : '', zaman: SIMDI()
   }).catch(() => {});
 }
 async function olayListesi(gun) {
@@ -454,14 +483,13 @@ async function esyaSayfasi(id, istek) {
   const yon = icerik.querySelector('.admin-kutu');
   if (yon) yon.onclick = async ev => {
     const b = ev.target.closest('[data-yon]'); if (!b) return;
-    if (demoEngel()) return;
     let veri = { onay: 'onaylandi', redNeden: '' };
     if (b.dataset.yon === 'kaldir') {
       const n = prompt('Kaldırma nedeni (ürün sahibine gösterilir):', '');
       if (n === null) return;
       veri = { onay: 'reddedildi', redNeden: n.trim().slice(0, 200) || 'Yönetici tarafından kaldırıldı.', aktif: false };
     }
-    try { await updateDoc(doc(db, 'dolapEsyalar', e.id), veri); bildir('Güncellendi.'); sayfaCiz(); } catch (h) { bildir(hataMetni(h)); }
+    try { await dbGuncelle('dolapEsyalar', e.id, veri); bildir('Güncellendi.'); sayfaCiz(); } catch (h) { bildir(hataMetni(h)); }
   };
 
   const kutu = $('#kiraKutu');
@@ -509,7 +537,6 @@ async function esyaSayfasi(id, istek) {
   }));
   $('#kGonder').onclick = async () => {
     const hata = $('#kHata'); hata.textContent = '';
-    if (demoEngel()) return;
     const gun = hesapla(), tel = $('#kIlet').value.trim();
     if (!(gun >= 1)) { hata.textContent = 'Başlangıç ve iade tarihini seçin (iade, başlangıçtan sonra olmalı).'; return; }
     if (gun > 60) { hata.textContent = 'En fazla 60 günlük kiralama yapılabilir.'; return; }
@@ -518,14 +545,14 @@ async function esyaSayfasi(id, istek) {
     localStorage.setItem(LS_ILETISIM, tel);
     const dug = $('#kGonder'); dug.disabled = true; dug.textContent = 'Gönderiliyor…';
     try {
-      await addDoc(collection(db, 'dolapKiralamalar'), {
+      await dbEkle('dolapKiralamalar', {
         esyaId: e.id, esyaBaslik: e.baslik, esyaFoto: e.fotolar[0], sahipId: e.sahipId,
         kiraciId: kullanici.uid, kiraciAd: (kullanici.displayName || kullanici.email || '').slice(0, 80),
         kiraciIletisim: (tel + ' · ' + (kullanici.email || '')).slice(0, 200), sahipIletisim: '',
         baslangic: $('#kBas').value, bitis: $('#kBit').value, gun,
         gunlukUcret: e.gunlukUcret, kira: gun * e.gunlukUcret, depozito: e.depozito, toplam: gun * e.gunlukUcret + e.depozito,
         not: $('#kNot').value.trim().slice(0, 500), durum: 'beklemede', sozlesme: SOZLESME_SURUM,
-        olusturma: serverTimestamp(), guncelleme: serverTimestamp()
+        olusturma: SIMDI(), guncelleme: SIMDI()
       });
       bildir('İsteğin gönderildi. Sahibi onaylayınca haber Kiralamalarım\'da.');
       location.hash = '#kiralamalar';
@@ -585,14 +612,14 @@ async function dolabim(istek) {
     const b = ev.target.closest('button'); if (!b) return;
     const e = l.find(x => x.id === (b.dataset.duzenle || b.dataset.yayin || b.dataset.sil));
     if (!e) return;
-    if (!b.dataset.duzenle && demoEngel()) return;
+    
     try {
       if (b.dataset.duzenle) return esyaFormu(e);
-      if (b.dataset.yayin) { b.disabled = true; await updateDoc(doc(db, 'dolapEsyalar', e.id), { aktif: !e.aktif }); bildir(e.aktif ? 'Yayından kaldırıldı.' : 'Yayında.'); }
+      if (b.dataset.yayin) { b.disabled = true; await dbGuncelle('dolapEsyalar', e.id, { aktif: !e.aktif }); bildir(e.aktif ? 'Yayından kaldırıldı.' : 'Yayında.'); }
       if (b.dataset.sil) {
         if (!confirm('"' + e.baslik + '" dolabından silinsin mi? Bu geri alınamaz.')) return;
-        await deleteDoc(doc(db, 'dolapEsyalar', e.id));
-        e.fotolar.forEach(f => deleteObject(ref(storage, f)).catch(() => {}));
+        await dbSil('dolapEsyalar', e.id);
+        if (!DEMO) e.fotolar.forEach(f => deleteObject(ref(storage, f)).catch(() => {}));
         bildir('Silindi.');
       }
       sayfaCiz();
@@ -667,7 +694,6 @@ function esyaFormu(e) {
 
   $('#fKaydet').onclick = async () => {
     const hata = $('#fHata'); hata.textContent = '';
-    if (demoEngel()) return;
     const v = id => $('#' + id).value.trim();
     const ucret = Math.round(+v('fUcret')), depozito = Math.round(+v('fDepozito') || 0);
     if (!fotolar.length) { hata.textContent = 'En az bir fotoğraf ekleyin.'; return; }
@@ -681,6 +707,7 @@ function esyaFormu(e) {
       for (let i = 0; i < fotolar.length; i++) {
         const f = fotolar[i];
         if (f.url) { urller.push(f.url); continue; }
+        if (DEMO) { urller.push(f.onizleme); continue; }    // örnek mod: fotoğraf tarayıcıda kalır
         dug.textContent = 'Fotoğraf yükleniyor ' + (i + 1) + '/' + fotolar.length + '…';
         const blob = await kucult(f.dosya);
         const r = ref(storage, 'dolap/' + kullanici.uid + '/' + Date.now() + '-' + i + '.jpg');
@@ -694,9 +721,9 @@ function esyaFormu(e) {
         onay: 'bekliyor', redNeden: '',
         sahipAd: (kullanici.displayName || 'Kullanıcı').slice(0, 80), sahipFoto: (kullanici.photoURL || '').slice(0, 600)
       };
-      if (e) await updateDoc(doc(db, 'dolapEsyalar', e.id), veri);
-      else await addDoc(collection(db, 'dolapEsyalar'), { ...veri, sahipId: kullanici.uid, aktif: true, olusturma: serverTimestamp() });
-      kaldirilan.forEach(u => deleteObject(ref(storage, u)).catch(() => {}));
+      if (e) await dbGuncelle('dolapEsyalar', e.id, veri);
+      else await dbEkle('dolapEsyalar', { ...veri, sahipId: kullanici.uid, aktif: true, olusturma: SIMDI() });
+      if (!DEMO) kaldirilan.forEach(u => deleteObject(ref(storage, u)).catch(() => {}));
       kapat();
       bildir('Ekip onayına gönderildi. Onaylanınca Keşfet\'te görünecek.');
       sayfaCiz();
@@ -736,10 +763,9 @@ async function kiralamalar(gorunum, istek) {
   $('#liste').innerHTML = l.map(k => kiraSatiri(k, gorunum)).join('');
   $('#liste').onclick = async ev => {
     const b = ev.target.closest('[data-gecis]'); if (!b) return;
-    if (demoEngel()) return;
     const k = l.find(x => x.id === b.dataset.id);
     const y = b.dataset.gecis;
-    const veri = { durum: y, guncelleme: serverTimestamp() };
+    const veri = { durum: y, guncelleme: SIMDI() };
     if (y === 'onaylandi' && gorunum === 'sahip') {
       const tel = await onayPenceresi(k);
       if (!tel) return;
@@ -748,7 +774,7 @@ async function kiralamalar(gorunum, istek) {
     }
     if (['iptal', 'reddedildi'].includes(y) && !confirm(y === 'iptal' ? 'İstek iptal edilsin mi?' : 'İstek reddedilsin mi?')) return;
     b.disabled = true;
-    try { await updateDoc(doc(db, 'dolapKiralamalar', k.id), veri); bildir('Güncellendi: ' + DURUM[y]); sayfaCiz(); }
+    try { await dbGuncelle('dolapKiralamalar', k.id, veri); bildir('Güncellendi: ' + DURUM[y]); sayfaCiz(); }
     catch (h) { bildir(hataMetni(h)); b.disabled = false; }
   };
 }
@@ -838,7 +864,7 @@ async function yonetim(sekme, ek, istek) {
     return;
   }
   const sekmeler = [['ozet', 'Özet'], ['onay', 'Onay bekleyenler'], ['gelen', 'Gelen kutusu'], ['kullanicilar', 'Kullanıcılar']]
-    .concat(tamMi() ? [['yoneticiler', 'Yöneticiler']] : []).concat([['odemeler', 'Ödemeler']]);
+    .concat(tamMi() ? [['yoneticiler', 'Admin atama']] : []).concat([['odemeler', 'Ödemeler']]);
   icerik.innerHTML = '<div class="bas"><div><h1>Yönetim paneli</h1><p>' + ROL_AD[rol] + ' olarak giriş yaptın.</p></div></div>' +
     '<div class="alt-sekme">' + sekmeler.map(([k, ad]) =>
       '<a class="cip" href="#yonetim/' + k + '" aria-pressed="' + (sekme === k || (sekme === 'kisi' && k === 'kullanicilar')) + '">' + ad +
@@ -953,7 +979,6 @@ async function panelOnay(panel, istek) {
       '<button type="button" class="dug dug-kucuk dug-tehlike" data-red="' + esc(e.id) + '">Reddet</button></div></div>').join('') + '</div>';
   panel.onclick = async ev => {
     const b = ev.target.closest('[data-onay],[data-red]'); if (!b) return;
-    if (demoEngel()) return;
     let veri = { onay: 'onaylandi', redNeden: '' };
     if (b.dataset.red) {
       const n = prompt('Red nedeni (ürün sahibine gösterilir):', '');
@@ -961,7 +986,7 @@ async function panelOnay(panel, istek) {
       veri = { onay: 'reddedildi', redNeden: n.trim().slice(0, 200) || 'Uygun bulunmadı.' };
     }
     b.disabled = true;
-    try { await updateDoc(doc(db, 'dolapEsyalar', b.dataset.onay || b.dataset.red), veri); bildir(veri.onay === 'onaylandi' ? 'Onaylandı, Keşfet\'te yayında.' : 'Reddedildi.'); sayfaCiz(); }
+    try { await dbGuncelle('dolapEsyalar', b.dataset.onay || b.dataset.red, veri); bildir(veri.onay === 'onaylandi' ? 'Onaylandı, Keşfet\'te yayında.' : 'Reddedildi.'); sayfaCiz(); }
     catch (h) { bildir(hataMetni(h)); b.disabled = false; }
   };
 }
@@ -985,6 +1010,8 @@ async function panelKullanicilar(panel, istek) {
           '<td><span class="rol-rozet r-' + r + '">' + ROL_AD[r] + '</span>' + (r === 'kisitli' && kayit && kayit.neden ? '<br><span class="kucuk">' + esc(kayit.neden) + '</span>' : '') + '</td>' +
           '<td>' + n + '</td><td class="nw">' + (u.sonGiris ? tarihSaat(u.sonGiris) : '') + '</td>' +
           '<td class="eylem-hucre"><a class="dug dug-kucuk" href="#yonetim/kisi/' + esc(u.uid) + '">Gezinti</a>' +
+            (tamMi() && r === 'uye' ? '<button type="button" class="dug dug-kucuk dug-vurgu" data-adminyap="' + esc(u.eposta) + '">Admin yap</button>' : '') +
+            (tamMi() && r === 'admin' ? '<button type="button" class="dug dug-kucuk" data-adminal="' + esc(u.eposta) + '">Adminliği al</button>' : '') +
             (r === 'uye' ? '<button type="button" class="dug dug-kucuk dug-tehlike" data-kisitla="' + esc(u.eposta) + '">Kısıtla</button>' : '') +
             (r === 'kisitli' ? '<button type="button" class="dug dug-kucuk" data-ac="' + esc(u.eposta) + '">Kısıtı kaldır</button>' : '') +
             (yonetilebilir && n ? '<button type="button" class="dug dug-kucuk dug-tehlike" data-urunkaldir="' + esc(u.uid) + '">Ürünlerini kaldır</button>' : '') +
@@ -993,13 +1020,21 @@ async function panelKullanicilar(panel, istek) {
   };
   panel.innerHTML = '<input class="ara" id="uyeAra" type="search" placeholder="Ad veya e-posta ara…" style="margin:0 0 14px">' +
     '<div class="tablo-kap" id="uyeTablo"></div>' +
-    '<p class="kucuk" style="margin-top:10px">Kısıtlanan kullanıcı siteyi gezebilir ama ürün ekleyemez ve kiralama yapamaz. Adminleri yalnız tam yetkili yönetir.</p>';
+    '<p class="kucuk" style="margin-top:10px">Kısıtlanan kullanıcı siteyi gezebilir ama ürün ekleyemez ve kiralama yapamaz. Admin yapma ve adminliği alma yalnız tam yetkilide görünür' +
+    (tamMi() ? '; listede olmayan biri için <a href="#yonetim/yoneticiler" style="text-decoration:underline">Admin atama</a> sekmesine Gmail adresini yazabilirsin' : '') + '.</p>';
   $('#uyeAra').oninput = ev => { ara = ev.target.value; ciz(); };
   ciz();
   panel.onclick = async ev => {
-    const b = ev.target.closest('[data-kisitla],[data-ac],[data-urunkaldir]'); if (!b) return;
-    if (demoEngel()) return;
+    const b = ev.target.closest('[data-kisitla],[data-ac],[data-urunkaldir],[data-adminyap],[data-adminal]'); if (!b) return;
     try {
+      if (b.dataset.adminyap && tamMi()) {
+        if (!confirm(b.dataset.adminyap + ' admin yapılsın mı? Ürün onayı, kullanıcı kısıtlama, gelen kutusu ve ödeme onayı yetkisi alır.')) return;
+        await rolYaz(b.dataset.adminyap, 'admin', ''); bildir(b.dataset.adminyap + ' artık admin.');
+      }
+      if (b.dataset.adminal && tamMi()) {
+        if (!confirm(b.dataset.adminal + ' kişisinin admin yetkisi alınsın mı?')) return;
+        await rolSil(b.dataset.adminal); bildir('Admin yetkisi alındı.');
+      }
       if (b.dataset.kisitla) {
         const n = prompt('Kısıtlama nedeni (kullanıcıya gösterilir):', '');
         if (n === null) return;
@@ -1011,7 +1046,7 @@ async function panelKullanicilar(panel, istek) {
         const n = prompt('Ürünleri kaldırma nedeni (ürün sahibine gösterilir):', 'Topluluk kurallarına aykırı içerik.');
         if (n === null) return;
         for (const e of esyalar.filter(x => x.sahipId === b.dataset.urunkaldir)) {
-          await updateDoc(doc(db, 'dolapEsyalar', e.id), { onay: 'reddedildi', redNeden: n.trim().slice(0, 200) || 'Yönetici tarafından kaldırıldı.', aktif: false });
+          await dbGuncelle('dolapEsyalar', e.id, { onay: 'reddedildi', redNeden: n.trim().slice(0, 200) || 'Yönetici tarafından kaldırıldı.', aktif: false });
         }
         bildir('Kullanıcının ürünleri yayından kaldırıldı.');
       }
@@ -1070,12 +1105,10 @@ async function panelYoneticiler(panel, istek) {
     h.textContent = '';
     if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(e)) { h.textContent = 'Geçerli bir e-posta adresi yazın.'; return; }
     if (e === TAM_YETKILI) { h.textContent = 'Bu hesap zaten tam yetkili.'; return; }
-    if (demoEngel()) return;
     try { await rolYaz(e, 'admin', ''); bildir(e + ' admin yapıldı.'); sayfaCiz(); } catch (x) { h.textContent = hataMetni(x); }
   };
   panel.onclick = async ev => {
     const b = ev.target.closest('[data-adminsil]'); if (!b) return;
-    if (demoEngel()) return;
     if (!confirm(b.dataset.adminsil + ' kişisinin admin yetkisi alınsın mı?')) return;
     try { await rolSil(b.dataset.adminsil); bildir('Yetki alındı.'); sayfaCiz(); } catch (x) { bildir(hataMetni(x)); }
   };
@@ -1110,14 +1143,38 @@ async function benimSohbetim() {
   const l = (await getDocs(query(collection(db, 'dolapSohbet'), where('uid', '==', kullanici.uid)))).docs.map(d => ({ id: d.id, ...d.data() }));
   return l.sort((a, b) => zaman(b.sonZaman) - zaman(a.sonZaman))[0] || null;
 }
+/* Destek postası: sunucu gerektirmeyen form hizmetiyle site sahibinin adresine gider.
+   ayarlar.js'te web3formsKey varsa Web3Forms, yoksa FormSubmit (ilk gönderimde adrese bir kez
+   "Activate Form" postası gelir; tıklanınca sonraki tüm iletiler doğrudan düşer). */
+async function destekPostasi(v) {
+  const konu = 'Elif\'in Dolabı destek: ' + v.konu;
+  const govde = { name: v.ad, email: v.eposta, Konu: v.konu, Mesaj: v.mesaj, 'Sohbet geçmişi': v.gecmis || '-',
+    Sayfa: location.origin + location.pathname, 'Giriş yapmış hesap': kullanici ? (kullanici.email || '') : 'Giriş yapılmamış' };
+  let url;
+  if (AYAR.web3formsKey) {
+    url = 'https://api.web3forms.com/submit';
+    Object.assign(govde, { access_key: AYAR.web3formsKey, subject: konu, from_name: v.ad, replyto: v.eposta });
+  } else {
+    url = 'https://formsubmit.co/ajax/' + encodeURIComponent(AYAR.eposta || TAM_YETKILI);
+    Object.assign(govde, { _subject: konu, _replyto: v.eposta, _template: 'table', _captcha: 'false' });
+  }
+  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(govde) });
+  const d = await r.json().catch(() => ({}));
+  const tamam = r.ok && String(d.success) !== 'false';
+  if (!tamam) {
+    const e = new Error(d.message || 'E-posta gönderilemedi.');
+    e.aktivasyon = /activat/i.test(d.message || '');
+    throw e;
+  }
+}
 async function soruGonder(metin) {
   const mesaj = { kimden: 'kullanici', ad: (kullanici.displayName || '').slice(0, 80), metin: metin.slice(0, 2000), zaman: Date.now() };
   const mevcut = await benimSohbetim();
   if (mevcut && mevcut.durum !== 'kapali') {
-    await updateDoc(doc(db, 'dolapSohbet', mevcut.id), { mesajlar: mevcut.mesajlar.concat([mesaj]), durum: 'acik', sonZaman: serverTimestamp(), adminOkudu: false });
+    await dbGuncelle('dolapSohbet', mevcut.id, { mesajlar: mevcut.mesajlar.concat([mesaj]), durum: 'acik', sonZaman: SIMDI(), adminOkudu: false });
   } else {
-    await addDoc(collection(db, 'dolapSohbet'), { uid: kullanici.uid, ad: mesaj.ad, eposta: kullanici.email, konu: metin.slice(0, 120),
-      durum: 'acik', mesajlar: [mesaj], sonZaman: serverTimestamp(), adminOkudu: false, kullaniciOkudu: true });
+    await dbEkle('dolapSohbet', { uid: kullanici.uid, ad: mesaj.ad, eposta: kullanici.email, konu: metin.slice(0, 120),
+      durum: 'acik', mesajlar: [mesaj], sonZaman: SIMDI(), adminOkudu: false, kullaniciOkudu: true });
   }
 }
 
@@ -1129,9 +1186,24 @@ function asistanKur() {
     '<div class="asistan-akis" id="asistanAkis"></div>' +
     '<form class="asistan-form" id="asistanForm"><input id="asistanMetin" maxlength="2000" placeholder="Sorunu yaz…" autocomplete="off" aria-label="Sorun"><button type="submit" class="dug dug-kucuk dug-ana">Gönder</button></form></section>');
   const akis = $('#asistanAkis'), kutu = $('#asistan'), dug = $('#asistanDug');
-  const balon = (kimden, html) => { akis.insertAdjacentHTML('beforeend', '<div class="mesaj m-' + kimden + '">' + html + '</div>'); akis.scrollTop = akis.scrollHeight; };
+  const balon = (kimden, html, metin) => {
+    akis.insertAdjacentHTML('beforeend', '<div class="mesaj m-' + kimden + '">' + html + '</div>');
+    akis.scrollTop = akis.scrollHeight;
+    if (metin) gunluk.push((kimden === 'kullanici' ? 'Ziyaretçi: ' : 'Asistan: ') + metin);
+  };
   let gecmisCizildi = false, sonSoru = '';
+  const gunluk = [];   // e-postaya eklenecek sohbet özeti
   const ilet = '<button type="button" class="bag-dug" data-ilet="1">Ekibe ilet →</button>';
+  const iletFormu = () => {
+    const ad = kullanici ? (kullanici.displayName || '') : '', ep = kullanici ? (kullanici.email || '') : '';
+    return '<form class="ilet-form" data-ilet-form="1"><b>Ekibe ilet</b>' +
+      '<label>Adın<input name="ad" required maxlength="80" autocomplete="name" value="' + esc(ad) + '"></label>' +
+      '<label>E-posta adresin<input name="eposta" type="email" required maxlength="120" autocomplete="email" value="' + esc(ep) + '"></label>' +
+      '<label>Konu<input name="konu" required maxlength="120" value="' + esc(sonSoru.slice(0, 70)) + '"></label>' +
+      '<label>Mesaj<textarea name="mesaj" required maxlength="2000" rows="4">' + esc(sonSoru) + '</textarea></label>' +
+      '<button type="submit" class="dug dug-kucuk dug-ana">Gönder</button>' +
+      '<span class="kucuk">Yanıt e-posta adresine gelir' + (kullanici ? ', burada da görürsün' : '') + '.</span></form>';
+  };
   const giris = () => {
     akis.innerHTML = '';
     balon('bot', 'Merhaba! Kiralama, depozito, ödeme ya da dolabına parça ekleme hakkında sorabilirsin.');
@@ -1142,7 +1214,7 @@ function asistanKur() {
     if (!s) return;
     balon('bot', '<span class="kucuk">Ekiple yazışman</span>');
     s.mesajlar.forEach(m => balon(m.kimden === 'admin' ? 'admin' : 'kullanici', (m.kimden === 'admin' ? '<b>' + esc(m.ad || 'Ekip') + ':</b> ' : '') + esc(m.metin)));
-    if (s.durum === 'yanitlandi' && !s.kullaniciOkudu && !DEMO) updateDoc(doc(db, 'dolapSohbet', s.id), { kullaniciOkudu: true }).catch(() => {});
+    if (s.durum === 'yanitlandi' && !s.kullaniciOkudu) dbGuncelle('dolapSohbet', s.id, { kullaniciOkudu: true }).catch(() => {});
   };
   dug.onclick = async () => {
     kutu.hidden = !kutu.hidden; dug.setAttribute('aria-expanded', String(!kutu.hidden));
@@ -1153,26 +1225,45 @@ function asistanKur() {
   $('#asistanKapat').onclick = () => { kutu.hidden = true; dug.setAttribute('aria-expanded', 'false'); dug.focus(); };
   akis.onclick = async ev => {
     const s = ev.target.closest('[data-sss]');
-    if (s) { const x = SSS[+s.dataset.sss]; balon('kullanici', esc(x.s)); balon('bot', esc(x.c) + '<br>' + ilet); sonSoru = x.s; return; }
+    if (s) { const x = SSS[+s.dataset.sss]; balon('kullanici', esc(x.s), x.s); balon('bot', esc(x.c) + '<br>' + ilet, x.c); sonSoru = x.s; return; }
     if (ev.target.closest('[data-ilet]')) {
-      if (!kullanici) { balon('bot', 'Sorunu ekibe iletebilmem için Google ile giriş yapman gerekiyor; yanıtı burada göreceksin. <button type="button" class="bag-dug" data-giris="1">Giriş yap</button>'); return; }
-      if (!sonSoru) { balon('bot', 'Önce sorunu aşağıya yaz.'); return; }
-      if (demoEngel()) return;
-      try { await soruGonder(sonSoru); balon('bot', 'İletildi ✓ Ekibimiz yanıtlayınca burada göreceksin.'); sonSoru = ''; }
-      catch (h) { balon('bot', esc(hataMetni(h))); }
+      if (akis.querySelector('[data-ilet-form]')) { akis.querySelector('[data-ilet-form] input').focus(); return; }
+      balon('bot', iletFormu());
+      akis.querySelector('[data-ilet-form] input:invalid, [data-ilet-form] input')?.focus();
     }
-    if (ev.target.closest('[data-giris]')) girisYap();
+  };
+  akis.onsubmit = async ev => {
+    const f = ev.target.closest('[data-ilet-form]'); if (!f) return;
+    ev.preventDefault();
+    const v = Object.fromEntries(new FormData(f));
+    Object.keys(v).forEach(k => { v[k] = String(v[k]).trim(); });
+    if (!v.ad || !v.konu || !v.mesaj || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.eposta)) { balon('bot', 'Ad, geçerli bir e-posta, konu ve mesaj gerekli.'); return; }
+    v.gecmis = gunluk.slice(-12).join('\n');
+    const dug = f.querySelector('button'); dug.disabled = true; dug.textContent = 'Gönderiliyor…';
+    try {
+      await destekPostasi(v);
+      if (kullanici) soruGonder(v.konu + ' — ' + v.mesaj).catch(() => {});   // giriş yapılmışsa gelen kutusuna da
+      f.closest('.mesaj').remove();
+      balon('kullanici', '<b>' + esc(v.konu) + '</b><br>' + esc(v.mesaj));
+      balon('bot', 'İletildi ✓ Ekibimiz ' + esc(v.eposta) + ' adresine yanıt verecek.');
+      sonSoru = '';
+    } catch (h) {
+      dug.disabled = false; dug.textContent = 'Gönder';
+      balon('bot', h.aktivasyon
+        ? 'Destek e-postası ilk kez kuruluyor: site sahibinin adresine bir doğrulama postası gitti. Doğrulandıktan sonra gönderebileceksin; acilse ' + esc(AYAR.eposta) + ' adresine doğrudan yazabilirsin.'
+        : 'Gönderilemedi: ' + esc(h.message) + '. Doğrudan ' + esc(AYAR.eposta) + ' adresine yazabilirsin.');
+    }
   };
   $('#asistanForm').onsubmit = ev => {
     ev.preventDefault();
     const m = $('#asistanMetin').value.trim();
     if (!m) return;
     $('#asistanMetin').value = '';
-    balon('kullanici', esc(m));
+    balon('kullanici', esc(m), m);
     sonSoru = m;
     const x = sssBul(m);
     balon('bot', x ? esc(x.c) + '<br><span class="kucuk">Yanıt sorunu çözmediyse:</span> ' + ilet
-      : 'Bunun yanıtını bilmiyorum, ama ekibimiz yanıtlayabilir. ' + ilet);
+      : 'Bunun yanıtını bilmiyorum, ama ekibimiz yanıtlayabilir. ' + ilet, x ? x.c : 'Yanıt bilinmiyor, ekibe iletme önerildi.');
   };
 }
 /* giriş yapan kullanıcıya gelen yeni yanıtı balonda rozetle göster */
@@ -1204,14 +1295,14 @@ async function panelGelen(panel, secili, istek) {
       '<form class="asistan-form" id="yanitForm"><textarea id="yanitMetin" maxlength="2000" placeholder="Yanıtını yaz…" aria-label="Yanıt"></textarea><button type="submit" class="dug dug-vurgu">Yanıtla</button></form>'
       : '<p class="kucuk" style="padding:20px">Soldan bir konu seç.</p>') + '</div></div>';
   if (!s) return;
-  if (!s.adminOkudu && !DEMO) updateDoc(doc(db, 'dolapSohbet', s.id), { adminOkudu: true }).catch(() => {});
+  if (!s.adminOkudu) dbGuncelle('dolapSohbet', s.id, { adminOkudu: true }).catch(() => {});
   $('#yanitForm').onsubmit = async ev => {
     ev.preventDefault();
     const m = $('#yanitMetin').value.trim();
-    if (!m || demoEngel()) return;
+    if (!m) return;
     const mesaj = { kimden: 'admin', ad: (kullanici.displayName || 'Ekip').slice(0, 80), metin: m.slice(0, 2000), zaman: Date.now() };
     try {
-      await updateDoc(doc(db, 'dolapSohbet', s.id), { mesajlar: s.mesajlar.concat([mesaj]), durum: 'yanitlandi', sonZaman: serverTimestamp(), adminOkudu: true, kullaniciOkudu: false });
+      await dbGuncelle('dolapSohbet', s.id, { mesajlar: s.mesajlar.concat([mesaj]), durum: 'yanitlandi', sonZaman: SIMDI(), adminOkudu: true, kullaniciOkudu: false });
       bildir('Yanıt gönderildi.'); sayfaCiz();
     } catch (h) { bildir(hataMetni(h)); }
   };
@@ -1220,14 +1311,13 @@ async function panelGelen(panel, secili, istek) {
     if (!confirm('Bu konu ve tüm mesajları silinsin mi? Geri alınamaz.')) return;
     try {
       if (D) D.sohbetler = D.sohbetler.filter(x => x.id !== s.id);
-      else await deleteDoc(doc(db, 'dolapSohbet', s.id));
+      else await dbSil('dolapSohbet', s.id);
       bildir('Konu silindi.'); location.hash = '#yonetim/gelen';
     } catch (h) { bildir(hataMetni(h)); }
   };
   const kapat = $('#sohbetKapat');
   if (kapat) kapat.onclick = async () => {
-    if (demoEngel()) return;
-    try { await updateDoc(doc(db, 'dolapSohbet', s.id), { durum: 'kapali', sonZaman: serverTimestamp() }); sayfaCiz(); } catch (h) { bildir(hataMetni(h)); }
+    try { await dbGuncelle('dolapSohbet', s.id, { durum: 'kapali', sonZaman: SIMDI() }); sayfaCiz(); } catch (h) { bildir(hataMetni(h)); }
   };
 }
 
@@ -1276,7 +1366,7 @@ async function hesabim(bolum, istek) {
     '</div></div>';
   if (bolum) { const h = $('#b-' + bolum); if (h) h.scrollIntoView({ block: 'start' }); }
 
-  const kaydet = async (veri, mesaj) => { if (demoEngel()) return; try { await uyeKaydet(veri); bildir(mesaj); sayfaCiz(); } catch (h) { bildir(hataMetni(h)); } };
+  const kaydet = async (veri, mesaj) => { try { await uyeKaydet(veri); bildir(mesaj); sayfaCiz(); } catch (h) { bildir(hataMetni(h)); } };
   $('#profilKaydet').onclick = () => kaydet({ telefon: $('#hTel').value.trim().slice(0, 30) }, 'Profil kaydedildi.');
   $('#tercihKaydet').onclick = () => {
     try { localStorage.setItem(LS_IZIN, $('#tIzin').checked ? 'evet' : 'hayir'); } catch (e) {}
@@ -1286,7 +1376,7 @@ async function hesabim(bolum, istek) {
   $('#hSil').onclick = async () => {
     if (demoEngel()) return;
     if (!confirm('Üyelik kaydın (telefon, adresler, filtreler) silinsin mi?')) return;
-    try { await deleteDoc(doc(db, 'dolapUyeler', kullanici.uid)); uye = null; bildir('Üyelik kaydın silindi.'); signOut(auth); } catch (h) { bildir(hataMetni(h)); }
+    try { await dbSil('dolapUyeler', kullanici.uid); uye = null; bildir('Üyelik kaydın silindi.'); signOut(auth); } catch (h) { bildir(hataMetni(h)); }
   };
   const adresBtn = $('#adresEkle');
   if (adresBtn) adresBtn.onclick = () => adresFormu(-1);
@@ -1319,7 +1409,6 @@ function adresFormu(i) {
     const v = id => $('#a' + id).value.trim();
     const yeni = { baslik: v('Baslik') || 'Adres', adSoyad: v('AdSoyad'), telefon: v('Telefon'), adres: v('Adres'), ilce: v('Ilce'), il: v('Il') };
     if (!yeni.adres || !yeni.il) { $('#aHata').textContent = 'Açık adres ve il zorunlu.'; return; }
-    if (demoEngel()) return;
     const l = (uye.adresler || []).slice();
     if (i >= 0) l[i] = yeni; else l.push(yeni);
     try { await uyeKaydet({ adresler: l }); kapat(); bildir('Adres kaydedildi.'); sayfaCiz(); } catch (h) { $('#aHata').textContent = hataMetni(h); }
@@ -1351,10 +1440,10 @@ async function oturumHazirla(u) {
       } catch (e) {}
     }
     try { uye = await uyeGetir(u.uid); } catch (e) {}
-    const temel = { ad: (u.displayName || '').slice(0, 80), foto: (u.photoURL || '').slice(0, 600), sonGiris: serverTimestamp() };
+    const temel = { ad: (u.displayName || '').slice(0, 80), foto: (u.photoURL || '').slice(0, 600), sonGiris: SIMDI() };
     if (!uye) {
       uye = { telefon: '', adresler: [], filtreler: [], bildirimEposta: true, istatistikIzni: izinVar() };
-      Object.assign(temel, uye, { ilkGiris: serverTimestamp() });
+      Object.assign(temel, uye, { ilkGiris: SIMDI() });
     }
     setDoc(doc(db, 'dolapUyeler', u.uid), { uid: u.uid, eposta: u.email, ...temel }, { merge: true }).catch(() => {});
     if (ilkKez) olay('giris', { sayfa: yol()[0] || 'kesfet' });

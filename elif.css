@@ -299,3 +299,11 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 .tehlike-kutu { border-color: #f2c9c4; background: #fffafa; }
 .sil-dug { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--cizgi); background: var(--kart); color: var(--ikinci); cursor: pointer; line-height: 1; }
 .sil-dug:hover { color: var(--kirmizi); border-color: var(--kirmizi); }
+
+/* ekibe ilet formu */
+.ilet-form { display: grid; gap: 8px; min-width: 240px; }
+.ilet-form label { display: grid; gap: 3px; font-size: 12.5px; font-weight: 600; }
+.ilet-form input, .ilet-form textarea { border: 1px solid var(--cizgi); border-radius: 10px; padding: 7px 10px; font-size: 13.5px; background: #fff; font-weight: 400; }
+.ilet-form textarea { resize: vertical; }
+.ilet-form button { justify-self: start; }
+.asistan .mesaj:has(.ilet-form) { max-width: 100%; width: 100%; }
