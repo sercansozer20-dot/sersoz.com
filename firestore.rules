@@ -624,7 +624,8 @@ service cloud.firestore {
       allow create: if girisli()
         && yeni().keys().hasOnly(['esyaId', 'esyaBaslik', 'esyaFoto', 'sahipId', 'kiraciId',
              'kiraciAd', 'kiraciIletisim', 'sahipIletisim', 'baslangic', 'bitis', 'gun',
-             'gunlukUcret', 'kira', 'depozito', 'toplam', 'not', 'durum', 'olusturma', 'guncelleme', 'sozlesme'])
+             'gunlukUcret', 'kira', 'depozito', 'toplam', 'not', 'durum', 'olusturma', 'guncelleme', 'sozlesme',
+             'indirimYuzde', 'indirim'])
         && yeni().sozlesme == 'v1'
         && yeni().kiraciId == benim()
         && yeni().sahipId != benim()
@@ -638,7 +639,11 @@ service cloud.firestore {
         && kiraEsyasi().gunlukUcret == yeni().gunlukUcret
         && kiraEsyasi().depozito == yeni().depozito
         && yeni().gun is int && yeni().gun >= 1 && yeni().gun <= 60
-        && yeni().kira == yeni().gun * yeni().gunlukUcret
+        && yeni().get('indirimYuzde', 0) is int && yeni().get('indirimYuzde', 0) >= 0 && yeni().get('indirimYuzde', 0) <= 30
+        && yeni().get('indirim', 0) is int
+        && yeni().get('indirim', 0) * 100 <= yeni().gun * yeni().gunlukUcret * yeni().get('indirimYuzde', 0)
+        && (yeni().get('indirim', 0) + 1) * 100 > yeni().gun * yeni().gunlukUcret * yeni().get('indirimYuzde', 0)
+        && yeni().kira == yeni().gun * yeni().gunlukUcret - yeni().get('indirim', 0)
         && yeni().toplam == yeni().kira + yeni().depozito
         && yeni().baslangic is string && yeni().baslangic.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && yeni().bitis is string && yeni().bitis.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
@@ -651,6 +656,38 @@ service cloud.firestore {
         && yeni().not is string && yeni().not.size() <= 500;
       allow update: if girisli() && kiraGecis();
       allow delete: if tamYetkili();
+    }
+
+    /* Herkese açık profil: ad, foto, şehir, hakkında. Telefon/adres/e-posta burada TUTULMAZ. */
+    match /dolapProfiller/{kimlik} {
+      allow read: if true;
+      allow create, update: if (girisli() && kimlik == benim()
+          && yeni().keys().hasOnly(['ad', 'foto', 'sehir', 'hakkimda', 'katilma', 'guncelleme'])
+          && yeni().get('ad', '') is string && yeni().get('ad', '').size() <= 80
+          && yeni().get('foto', '') is string && yeni().get('foto', '').size() <= 600
+          && yeni().get('sehir', '') is string && yeni().get('sehir', '').size() <= 40
+          && yeni().get('hakkimda', '') is string && yeni().get('hakkimda', '').size() <= 300
+          && (!yeni().keys().hasAny(['katilma']) || (yeni().katilma is timestamp && yeni().katilma <= request.time)))
+        || (dolapAdmin() && resource != null && degisenler().hasOnly(['hakkimda']) && yeni().hakkimda == '');
+      allow delete: if girisli() && (kimlik == benim() || tamYetkili());
+    }
+
+    /* Sadakat puanı kaydı: belge kimliği kiralama kimliği. Yalnız eşya sahibi, kiralamayı
+       "teslim_edildi"den "iade_edildi"ye geçirdiği aynı yazımda oluşturabilir; alanlar kiralamayla aynı olmalı. */
+    function puanGecerli(kira) {
+      let once = get(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data;
+      let sonra = getAfter(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data;
+      let p = request.resource.data;
+      return once.durum == 'teslim_edildi' && sonra.durum == 'iade_edildi' && once.sahipId == benim()
+        && p.keys().hasOnly(['kiraciId', 'kiraciAd', 'sahipId', 'esyaId', 'esyaBaslik', 'bitis', 'iadeDurum', 'zaman'])
+        && p.kiraciId == once.kiraciId && p.kiraciAd == once.kiraciAd && p.sahipId == once.sahipId
+        && p.esyaId == once.esyaId && p.esyaBaslik == once.esyaBaslik && p.bitis == once.bitis
+        && p.iadeDurum == sonra.get('iadeDurum', 'sorunsuz') && p.zaman == request.time;
+    }
+    match /dolapPuanlar/{kira} {
+      allow read: if true;
+      allow create: if girisli() && puanGecerli(kira);
+      allow update, delete: if tamYetkili();
     }
 
     /* Üye kaydı: profil, telefon, adresler, kayıtlı filtreler, tercihler.

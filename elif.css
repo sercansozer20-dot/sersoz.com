@@ -383,3 +383,19 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 .iade-secim { display: grid; gap: 8px; }
 .iade-secim label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--cizgi); border-radius: 12px; cursor: pointer; }
 .iade-secim label:has(input:checked) { border-color: var(--vurgu); background: var(--vurgu-acik); }
+
+/* profil */
+.profil-bas { display: flex; gap: 20px; align-items: center; margin: 8px 0 18px; flex-wrap: wrap; }
+.profil-foto { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
+.bos-foto { display: grid; place-items: center; background: var(--vurgu-acik); color: var(--vurgu-koyu); font-family: var(--serif); font-size: 40px; }
+.profil-bas h1 { margin: 0 0 4px; }
+.profil-rozet { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.profil-hakkimda { max-width: 62ch; margin: 0 0 18px; white-space: pre-line; }
+.profil-alt-bas { margin: 26px 0 14px; }
+.sahip[data-profil] { cursor: pointer; }
+.sahip[data-profil]:hover { text-decoration: underline; }
+.sahip-link { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sahip-link:hover { text-decoration: underline; }
+[data-seviye] .seviye { padding: 2px 8px; font-size: 11.5px; }
+.indirim-not { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--sari); font-size: 14px; }
+.ozet-satir.indirim { color: var(--yesil); font-weight: 600; }

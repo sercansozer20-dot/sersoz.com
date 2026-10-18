@@ -41,6 +41,11 @@ window.SERSOZ_AYAR = {
     'Hafta içi saat 15:00\'e kadar verilen siparişler aynı gün kargoda'
   ],
 
+  /* Elif'in Dolabı · sadakat seviyesi indirimleri (yüzde). Kira bedeline uygulanır, depozitoya değil.
+     Fark site tarafından karşılanır: eşya sahibine tam kira ödenir. 0 yazılırsa o seviyede indirim olmaz.
+     En çok %30 (firestore.rules sınırı). Seviyeler: Bronz 50+, Gümüş 150+, Altın 300+ puan. */
+  sadakatIndirim: { 'Bronz': 5, 'Gümüş': 10, 'Altın': 15 },
+
   /* Elif'in Dolabı · Keşfet'in başında dönen kampanya afişleri (5 sn'de bir).
      Sırayı değiştirebilir, yenisini ekleyebilir, silebilirsiniz. Boş [] bırakılırsa afiş çıkmaz.
      ust: küçük üst yazı · baslik · metin · dugme: düğme yazısı · link: tıklanınca gidilecek yer
@@ -48,7 +53,7 @@ window.SERSOZ_AYAR = {
   kampanyalar: [
     { ust: 'Yeni', baslik: 'Sepetini doldur, sırayla kirala', metin: 'Beğendiğin parçaları ♡ ile sepete at, istekleri tek tek gönder.',
       dugme: 'Sepetime git', link: '#sepet', renk: '#7a2e3a', foto: 'gorsel/ornek/elbise-3.jpg' },
-    { ust: 'Sadakat puanı', baslik: 'Sorunsuz her kiralama puan kazandırır', metin: 'Bronz, Gümüş, Altın: seviyeni Hesabım\'da gör.',
+    { ust: 'Sadakat puanı', baslik: 'Seviyen yükseldikçe indirimin artar', metin: 'Bronz %5 · Gümüş %10 · Altın %15 kira indirimi. Sorunsuz her kiralama puan kazandırır.',
       dugme: 'Puanımı gör', link: '#hesabim/puan', renk: '#3d4a3a', foto: 'gorsel/ornek/canta-2.jpg' },
     { ust: 'Dolabını kiraya ver', baslik: 'Giymediğin parçalar kazandırsın', metin: 'İlan vermek ücretsiz. Onaylanan parçan Keşfet\'te yayında.',
       dugme: 'Parça ekle', link: '#dolabim', renk: '#2a1f1e', foto: 'gorsel/ornek/dis-giyim-2.jpg' },
