@@ -3,33 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Elif'in Dolabı | SERSOZ</title>
-<meta name="description" content="Elif'in Dolabı: kıyafetler ve aksesuarlar.">
-<meta name="theme-color" content="#8e4a52">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2317191c'/%3E%3Ccircle cx='32' cy='32' r='17' fill='none' stroke='%23fff' stroke-width='7'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23d9480f'/%3E%3Cpath d='M6 37.5 58 26.5' stroke='%23d9480f' stroke-width='3'/%3E%3C/svg%3E">
+<title>Elif'in Dolabı | Kıyafet kirala, dolabını kiraya ver</title>
+<meta name="description" content="Elif'in Dolabı: Google hesabınla gir, dolabındaki kıyafetleri kiraya ver ya da başkalarının dolabından kirala.">
+<meta name="theme-color" content="#faf7f4">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23b5655d'/%3E%3Ctext x='32' y='46' font-family='Georgia,serif' font-style='italic' font-size='40' fill='%23fff' text-anchor='middle'%3EE%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112..125,700..900&family=Barlow:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="giris.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="elif.css">
 </head>
 <body>
 <header class="ust">
-  <a href="index.html" aria-label="SERSOZ ana sayfa"><span class="wm" aria-hidden="true">SERS<span class="mercek"></span>Z</span></a>
-  <a class="geri" href="index.html">← Ana sayfa</a>
+  <div class="kap">
+    <a class="marka" href="#kesfet">Elif'in <b>Dolabı</b></a>
+    <nav class="sekmeler" aria-label="Bölümler">
+      <a href="#kesfet" data-sekme="kesfet">Keşfet</a>
+      <a href="#dolabim" data-sekme="dolabim">Dolabım</a>
+      <a href="#kiralamalar" data-sekme="kiralamalar">Kiralamalarım</a>
+    </nav>
+    <div class="hesap" id="hesap"></div>
+  </div>
 </header>
 
-<main>
-  <div class="kartlar">
-    <div class="secim z-elif pasif" style="min-height:min(60vh,480px)">
-      <span class="desen"></span>
-      <span class="etiket">Yakında</span>
-      <h2>Elif'in Dolabı</h2>
-      <p>Bu bölüm hazırlanıyor. Çok yakında burada olacak.</p>
-    </div>
-  </div>
+<main class="kap" id="icerik">
+  <div class="yukleniyor">Yükleniyor…</div>
 </main>
 
-<footer class="alt">© <span id="yil"></span> SERSOZ</footer>
-<script>document.getElementById('yil').textContent = new Date().getFullYear();</script>
+<div class="pencere" id="pencere" hidden role="dialog" aria-modal="true" aria-labelledby="pencereBas"></div>
+<div class="bildirim" id="bildirim" role="status" aria-live="polite" hidden></div>
+
+<footer class="kap kucuk" style="padding:24px 20px;text-align:center">
+  <a href="index.html">← SERSOZ ana sayfa</a> · <a href="kosullar.html#gizlilik">Gizlilik</a>
+</footer>
+
+<script src="ayarlar.js"></script>
+<script type="module" src="elif.js"></script>
 </body>
 </html>

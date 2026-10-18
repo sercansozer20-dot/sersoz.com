@@ -1,0 +1,20 @@
+rules_version = '2';
+
+/* sersoz.com — Firebase Storage kuralları (Elif'in Dolabı fotoğrafları)
+   ELLE YAYIMLANIR: Firebase Konsolu → Storage → Rules → yapıştır → Publish.
+   Her kullanıcı yalnız kendi klasörüne (dolap/{uid}/) en fazla 3 MB resim yükler;
+   herkes okuyabilir (eşya vitrinde görünür). */
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /dolap/{uid}/{dosya} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.size < 3 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+    match /{tumu=**} {
+      allow read, write: if false;
+    }
+  }
+}
