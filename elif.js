@@ -47,7 +47,56 @@ const SARTLAR_OZET = '<ul class="sartlar">' +
 
 /* ?demo=1 → tarayıcıda üretilen örnek veriyle çalışır, veritabanına yazmaz (elif-demo.js) */
 const DEMO = new URLSearchParams(location.search).has('demo');
-const D = DEMO ? demoVeri() : null;
+
+/* Örnek veri veritabanında (demoVeri koleksiyonu) paketlenmiş belgelerde durur: bir ziyaret ≈ 8 okuma.
+   Zamanlar { __ms } olarak saklanır, okununca toMillis() olan nesneye çevrilir.
+   Veritabanında yoksa tarayıcıda üretilir (elif-demo.js). Tam yetkili panelden yükler/siler. */
+const DEMO_BELGELER = ['esyalar', 'kiralamalar', 'uyeler', 'roller', 'sohbetler', 'yorumlar'];
+function demoPaketle(x) {
+  if (x && typeof x.toMillis === 'function') return { __ms: x.toMillis() };
+  if (Array.isArray(x)) return x.map(demoPaketle);
+  if (x && typeof x === 'object') return Object.fromEntries(Object.entries(x).map(([k, v]) => [k, demoPaketle(v)]));
+  return x;
+}
+function demoAc(x) {
+  if (x && typeof x === 'object' && !Array.isArray(x) && Object.keys(x).length === 1 && '__ms' in x) { const t = x.__ms; return { toMillis: () => t }; }
+  if (Array.isArray(x)) return x.map(demoAc);
+  if (x && typeof x === 'object') return Object.fromEntries(Object.entries(x).map(([k, v]) => [k, demoAc(v)]));
+  return x;
+}
+async function demoYukle() {
+  try {
+    const snap = await getDocs(collection(db, 'demoVeri'));
+    if (!snap.size) throw new Error('bos');
+    const b = Object.fromEntries(snap.docs.map(d => [d.id, d.data()]));
+    const v = { olaylar: [] };
+    DEMO_BELGELER.forEach(k => { v[k] = demoAc((b[k] || {}).veri) || (k === 'yorumlar' ? {} : []); });
+    Object.keys(b).filter(k => k.startsWith('olaylar-')).sort().forEach(k => { v.olaylar = v.olaylar.concat(demoAc(b[k].veri)); });
+    v.olaylar.sort((x, y) => y.zaman.toMillis() - x.zaman.toMillis());
+    v.kullanicilar = v.uyeler.map(u => ({ uid: u.uid, ad: u.ad, foto: u.foto }));
+    v.kaynak = 'veritabanı';
+    return v;
+  } catch (e) {
+    return { ...demoVeri(), kaynak: 'tarayıcı' };
+  }
+}
+const D = DEMO ? await demoYukle() : null;
+
+/* tam yetkili: örnek veriyi veritabanına yükle / sil */
+async function demoVeritabaninaYukle() {
+  const v = demoVeri();
+  const b = writeBatch(db);
+  DEMO_BELGELER.forEach(k => b.set(doc(db, 'demoVeri', k), { veri: demoPaketle(v[k]) }));
+  for (let i = 0; i * 300 < v.olaylar.length; i++) b.set(doc(db, 'demoVeri', 'olaylar-' + i), { veri: demoPaketle(v.olaylar.slice(i * 300, i * 300 + 300)) });
+  await b.commit();
+}
+async function demoVeritabanindanSil() {
+  const snap = await getDocs(collection(db, 'demoVeri'));
+  const b = writeBatch(db);
+  snap.docs.forEach(d => b.delete(d.ref));
+  await b.commit();
+  return snap.size;
+}
 function demoEngel() {
   if (!DEMO) return false;
   bildir('Örnek modda bu işlem kapalı.');
@@ -927,10 +976,25 @@ async function panelOzet(panel, istek) {
       '<p class="kucuk" style="margin-bottom:12px">Yalnız tam yetkili görür. Silinen gezinti kayıtları geri getirilemez.</p>' +
       '<div class="satir-form"><label class="mini-alan">Şundan eski kayıtlar: <select id="silGun"><option value="7">7 gün</option><option value="30" selected>30 gün</option><option value="90">90 gün</option><option value="180">180 gün</option></select></label>' +
         '<button type="button" class="dug dug-kucuk" id="eskiSil">Eski kayıtları sil</button>' +
-        '<button type="button" class="dug dug-kucuk dug-tehlike" id="hepsiniSil">Tüm gezinti kayıtlarını sıfırla</button></div></section>' : '');
+        '<button type="button" class="dug dug-kucuk dug-tehlike" id="hepsiniSil">Tüm gezinti kayıtlarını sıfırla</button></div>' +
+      (DEMO ? '' : '<h3 style="font-size:15px;margin:18px 0 6px">Örnek veri</h3><p class="kucuk" style="margin-bottom:10px">Demo (elif.html?demo=1) bu veriyi veritabanından okur. Gerçek kullanıcı verilerine karışmaz; ayrı <b>demoVeri</b> koleksiyonundadır.</p>' +
+        '<div class="satir-form"><button type="button" class="dug dug-kucuk dug-vurgu" id="demoYukle">Örnek veriyi veritabanına yükle</button>' +
+        '<button type="button" class="dug dug-kucuk" id="demoSil">Örnek veriyi veritabanından sil</button>' +
+        '<a class="dug dug-kucuk" href="elif.html?demo=1" target="_blank">Demoyu aç</a></div>') + '</section>' : '');
   panel.onclick = async ev => {
-    const b = ev.target.closest('[data-olay-sil],#eskiSil,#hepsiniSil'); if (!b || !tamMi()) return;
+    const b = ev.target.closest('[data-olay-sil],#eskiSil,#hepsiniSil,#demoYukle,#demoSil'); if (!b || !tamMi()) return;
     try {
+      if (b.id === 'demoYukle') {
+        if (!confirm('Örnek veri (parçalar, kiralamalar, üyeler, sohbetler, gezinti kayıtları) veritabanına yüklensin mi? Varsa üzerine yazılır.')) return;
+        b.disabled = true; b.textContent = 'Yükleniyor…';
+        await demoVeritabaninaYukle(); bildir('Örnek veri veritabanına yüklendi. Demo artık buradan okuyor.'); b.disabled = false; b.textContent = 'Örnek veriyi veritabanına yükle';
+        return;
+      }
+      if (b.id === 'demoSil') {
+        if (!confirm('Veritabanındaki örnek veri silinsin mi? Demo tarayıcıda üretilen veriyle çalışmaya devam eder.')) return;
+        bildir((await demoVeritabanindanSil()) + ' örnek veri belgesi silindi.');
+        return;
+      }
       let n = 0;
       if (b.dataset.olaySil) n = await olaylariSil([b.dataset.olaySil]);
       if (b.id === 'eskiSil') {
@@ -1458,7 +1522,7 @@ if (DEMO) {
   rol = 'tam';
   uye = D.uyeler[0];
   document.body.insertAdjacentHTML('afterbegin',
-    '<div class="demo-serit">Örnek veri: 20 sahte kullanıcı, parçalar, kiralamalar ve gezinti kayıtları. Seni tam yetkili gösteriyor; hiçbir şey kaydedilmez. <a href="elif.html">Gerçek siteye dön</a></div>');
+    '<div class="demo-serit">Örnek veri (' + D.kaynak + '): 20 sahte kullanıcı, parçalar, kiralamalar ve gezinti kayıtları. Seni tam yetkili gösteriyor; değişiklikler kaydedilmez. <a href="elif.html">Gerçek siteye dön</a></div>');
   hesapCiz(); sayfaCiz();
 } else {
   onAuthStateChanged(auth, u => { oturumHazirla(u); });

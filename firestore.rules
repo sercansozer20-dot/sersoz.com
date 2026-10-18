@@ -734,6 +734,13 @@ service cloud.firestore {
       allow delete: if tamYetkili();
     }
 
+    /* Örnek (demo) veri: elif.html?demo=1 buradan okur. Gerçek verilerden ayrı.
+       Herkes okur; yalnız tam yetkili yükler / siler (panel → Veri yönetimi). */
+    match /demoVeri/{belge} {
+      allow read: if true;
+      allow write: if tamYetkili();
+    }
+
     /* Açıkça eşleşmeyen her yol kapalıdır (varsayılan zaten budur; niyet beyanı). */
     match /{belge=**} {
       allow read, write: if false;
