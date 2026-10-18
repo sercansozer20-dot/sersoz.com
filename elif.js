@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018g';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018h';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -1508,8 +1508,9 @@ function asistanKur() {
   const iletFormu = () => {
     const ad = kullanici ? (kullanici.displayName || '') : '', ep = kullanici ? (kullanici.email || '') : '';
     return '<form class="ilet-form" data-ilet-form="1"><b>Ekibe ilet</b>' +
-      '<label>Adın<input name="ad" required maxlength="80" autocomplete="name" value="' + esc(ad) + '"></label>' +
-      '<label>E-posta adresin<input name="eposta" type="email" required maxlength="120" autocomplete="email" value="' + esc(ep) + '"></label>' +
+      '<div class="kime"><span>Kime</span><b>Destek ekibi</b></div>' +
+      '<label>Gönderen adı<input name="ad" required maxlength="80" autocomplete="name" value="' + esc(ad) + '"></label>' +
+      '<label>Gönderen e-postası <span class="kucuk">(yanıt buraya gelir)</span><input name="eposta" type="email" required maxlength="120" autocomplete="email" value="' + esc(ep) + '"></label>' +
       '<label>Konu<input name="konu" required maxlength="120" value="' + esc(sonSoru.slice(0, 70)) + '"></label>' +
       '<label>Mesaj<textarea name="mesaj" required maxlength="2000" rows="4">' + esc(sonSoru) + '</textarea></label>' +
       '<button type="submit" class="dug dug-kucuk dug-ana">Gönder</button>' +

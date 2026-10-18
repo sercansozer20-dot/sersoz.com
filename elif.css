@@ -319,3 +319,7 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 @media (max-width: 420px) { .paketler { grid-template-columns: 1fr; } }
 
 .esya .ornek-etiket { left: auto; right: 10px; background: rgba(42, 31, 30, .78); color: #fff; }
+
+.ilet-form .kime { display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: #fff; border: 1px solid var(--cizgi); border-radius: 10px; font-size: 13.5px; }
+.ilet-form .kime span { color: var(--ikinci); font-weight: 600; font-size: 12.5px; }
+.ilet-form label .kucuk { font-weight: 400; }
