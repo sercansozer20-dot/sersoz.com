@@ -323,3 +323,21 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 .ilet-form .kime { display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: #fff; border: 1px solid var(--cizgi); border-radius: 10px; font-size: 13.5px; }
 .ilet-form .kime span { color: var(--ikinci); font-weight: 600; font-size: 12.5px; }
 .ilet-form label .kucuk { font-weight: 400; }
+
+/* kart düğmeleri + sepet */
+.kart-dug { display: flex; gap: 8px; margin-top: 10px; }
+.kirala-dug { flex: 1; text-align: center; padding: 9px 12px; border-radius: 999px; background: var(--metin); color: #fff; font-weight: 600; font-size: 13.5px; }
+.kirala-dug:hover { background: var(--vurgu); }
+.sepet-dug { width: 40px; display: grid; place-items: center; border-radius: 999px; border: 1px solid rgba(0,0,0,.15); font-size: 17px; line-height: 1; }
+.sepet-dug:hover, .sepet-dug.secili, .sepet-dug-uzun.secili { color: var(--vurgu); border-color: var(--vurgu); }
+.sepet-dug-uzun { display: block; text-align: center; margin: 14px 0 0; cursor: pointer; }
+#kiraKutu { scroll-margin-top: 84px; }
+.sepet-say:not(:empty) { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: var(--vurgu); color: #fff; font-size: 11px; font-weight: 700; }
+.sepet-bas { margin: 8px 0 4px; }
+.sepet-liste { display: grid; gap: 12px; margin: 18px 0; }
+.sepet-satir { display: grid; grid-template-columns: 84px 1fr auto; gap: 14px; align-items: center; padding: 12px; border-radius: 16px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.sepet-satir img { width: 84px; height: 104px; object-fit: cover; border-radius: 12px; display: block; }
+.sepet-bilgi { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sepet-islem { display: flex; flex-direction: column; gap: 8px; }
+.sepet-ozet { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+@media (max-width: 560px) { .sepet-satir { grid-template-columns: 64px 1fr; } .sepet-satir img { width: 64px; height: 80px; } .sepet-islem { grid-column: 1 / -1; flex-direction: row; } }

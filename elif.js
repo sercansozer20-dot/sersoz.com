@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018h';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018i';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -398,10 +398,70 @@ function sayfaCiz() {
   if (s === 'yonetim') return yonetim(p || 'ozet', yol()[2], istek);
   if (s === 'esya' && p) return esyaSayfasi(p, istek);
   if (s === 'dolabim') return dolabim(istek);
+  if (s === 'sepet') return sepetSayfasi(istek);
   if (s === 'kiralamalar') return kiralamalar(p || 'kiraci', istek);
   return kesfet(istek);
 }
 window.addEventListener('hashchange', () => { window.scrollTo(0, 0); sayfaCiz(); });
+sepetSayac();
+
+/* ---------------------------------------------------------------- sepet (bu tarayıcıda saklanır) */
+const LS_SEPET = 'elif_sepet';
+function sepetListe() { try { return JSON.parse(localStorage.getItem(LS_SEPET) || '[]'); } catch (h) { return []; } }
+function sepetKaydet(l) { try { localStorage.setItem(LS_SEPET, JSON.stringify(l)); } catch (h) {} sepetSayac(); }
+function sepette(id) { return sepetListe().includes(id); }
+function sepetCikar(id) { sepetKaydet(sepetListe().filter(x => x !== id)); }
+function sepetSayac() { const n = sepetListe().length, el = document.getElementById('sepetSay'); if (el) el.textContent = n ? n : ''; }
+document.addEventListener('click', ev => {
+  const k = ev.target.closest('[data-kirala]');
+  if (k) { ev.preventDefault(); location.hash = '#esya/' + k.dataset.kirala + '/kirala'; return; }
+  const b = ev.target.closest('[data-sepet]');
+  if (!b) return;
+  ev.preventDefault(); ev.stopPropagation();
+  const id = b.dataset.sepet, l = sepetListe(), vardi = l.includes(id);
+  sepetKaydet(vardi ? l.filter(x => x !== id) : l.concat(id));
+  document.querySelectorAll('[data-sepet="' + CSS.escape(id) + '"]').forEach(x => {
+    x.classList.toggle('secili', !vardi);
+    x.textContent = x.dataset.uzun ? (vardi ? '♡ Sepete ekle' : '♥ Sepette') : (vardi ? '♡' : '♥');
+  });
+  bildir(vardi ? 'Sepetten çıkarıldı.' : 'Sepete eklendi. Sepetim\'den sırayla kiralayabilirsin.');
+}, true);
+
+/* ---------------------------------------------------------------- SEPETİM */
+async function sepetSayfasi(istek) {
+  const ids = sepetListe();
+  icerik.innerHTML = '<div class="sepet-bas"><h1>Sepetim</h1><p class="kucuk">Beğendiğin parçaları burada topla. Her parçanın sahibi ayrı olduğu için kiralama istekleri tek tek gönderilir; "Sırayla kirala" seni sırayla her parçanın formuna götürür.</p></div>' +
+    '<div id="sepetIc"><p class="yukleniyor">Yükleniyor…</p></div>';
+  if (!ids.length) {
+    $('#sepetIc').innerHTML = '<div class="bos"><h3>Sepetin boş</h3><p>Keşfet\'teki kartlarda ♡ işaretine basarak parça ekleyebilirsin.</p><a class="dug" href="#kesfet">Keşfet\'e git</a></div>';
+    return;
+  }
+  const esyalar = (await Promise.all(ids.map(id => esyaGetir(id).catch(() => null)))).filter(Boolean);
+  if (istek !== aktifIstek) return;
+  const bulunan = new Set(esyalar.map(e => e.id));
+  if (bulunan.size !== ids.length) sepetKaydet(ids.filter(id => bulunan.has(id)));   // kaldırılmış ilanları temizle
+  const kiralanabilir = esyalar.filter(e => !e.ornek && e.aktif && e.onay === 'onaylandi');
+  const gunluk = esyalar.reduce((t, e) => t + (+e.gunlukUcret || 0), 0);
+  $('#sepetIc').innerHTML = '<div class="sepet-liste">' + esyalar.map(e =>
+    '<div class="sepet-satir">' +
+      '<a href="#esya/' + esc(e.id) + '"><img src="' + esc(e.fotolar[0]) + '" alt=""></a>' +
+      '<div class="sepet-bilgi"><a href="#esya/' + esc(e.id) + '"><b>' + esc(e.baslik) + '</b></a>' +
+        '<span class="kucuk">' + esc(e.marka || '') + (e.beden ? ' · ' + esc(e.beden) : '') + ' · ' + esc(e.sahipAd) + '\'nin dolabı</span>' +
+        '<span>Günlük ' + esc(e.gunlukUcret) + ' TL · depozito ' + esc(e.depozito) + ' TL</span>' +
+        (e.ornek ? '<span class="kucuk" style="color:var(--vurgu)">Örnek ilan · kiralanamaz</span>' : '') + '</div>' +
+      '<div class="sepet-islem"><a class="dug dug-kucuk dug-vurgu" href="#esya/' + esc(e.id) + '/kirala">Kirala</a>' +
+        '<button type="button" class="dug dug-kucuk" data-cikar="' + esc(e.id) + '">Çıkar</button></div>' +
+    '</div>').join('') + '</div>' +
+    '<div class="kutu sepet-ozet"><span>' + esyalar.length + ' parça · günlük toplam <b>' + gunluk + ' TL</b></span>' +
+      (kiralanabilir.length
+        ? '<button type="button" class="dug dug-vurgu" id="sirayla">Sırayla kirala (' + kiralanabilir.length + ')</button>'
+        : '<button type="button" class="dug" disabled>Kiralanabilir parça yok</button>') + '</div>';
+  icerik.onclick = ev => {
+    const c = ev.target.closest('[data-cikar]');
+    if (c) { sepetCikar(c.dataset.cikar); sayfaCiz(); return; }
+    if (ev.target.id === 'sirayla') location.hash = '#esya/' + kiralanabilir[0].id + '/kirala';
+  };
+}
 
 /* ---------------------------------------------------------------- eşya kartı */
 function esyaKarti(e, kendi) {
@@ -414,6 +474,9 @@ function esyaKarti(e, kendi) {
     (puanOzeti(e.id) ? '<span class="puan">★ ' + puanOzeti(e.id).ort + ' <span>(' + puanOzeti(e.id).adet + ')</span></span>' : '') +
     '<span class="alt"><span>' + esc([e.marka, e.beden].filter(Boolean).join(' · ')) + '</span><span class="fiyat">' + tl(e.gunlukUcret) + ' / gün</span></span>' +
     (kendi ? '' : '<span class="sahip">' + (e.sahipFoto ? '<img src="' + esc(e.sahipFoto) + '" alt="" referrerpolicy="no-referrer">' : '') + esc(e.sahipAd) + '\'nin dolabı</span>') +
+    (kendi || !e.aktif ? '' : '<span class="kart-dug">' +
+      '<span class="kirala-dug" data-kirala="' + esc(e.id) + '">Kirala</span>' +
+      '<span class="sepet-dug' + (sepette(e.id) ? ' secili' : '') + '" data-sepet="' + esc(e.id) + '" title="Sepete ekle / çıkar">' + (sepette(e.id) ? '♥' : '♡') + '</span></span>') +
     '</a>';
 }
 
@@ -541,6 +604,7 @@ async function esyaSayfasi(id, istek) {
         (e.aciklama ? '<p class="aciklama">' + esc(e.aciklama) + '</p>' : '') +
         '<p class="sahip" style="margin-top:14px">' + (e.sahipFoto ? '<img src="' + esc(e.sahipFoto) + '" alt="" referrerpolicy="no-referrer">' : '') + esc(e.sahipAd) + '\'nin dolabından</p>' +
         (e.ornek ? '' : adminEsyaAraclari(e)) +
+        (kendi || !e.aktif ? '' : '<span class="dug sepet-dug-uzun' + (sepette(e.id) ? ' secili' : '') + '" data-sepet="' + esc(e.id) + '" data-uzun="1">' + (sepette(e.id) ? '♥ Sepette' : '♡ Sepete ekle') + '</span>') +
         '<div class="kutu" id="kiraKutu"></div>' +
       '</div>' +
     '</div>' +
@@ -565,20 +629,16 @@ async function esyaSayfasi(id, istek) {
   };
 
   const kutu = $('#kiraKutu');
-  if (e.ornek) {
-    kutu.innerHTML = '<h2>Örnek ilan</h2><p class="kucuk">Bu parça sitenin nasıl çalıştığını göstermek için konmuş örnek bir ilandır; kiralanamaz. ' +
-      'Gerçek ilanlarda "Örnek" rozeti bulunmaz. Kendi parçanı kiraya vermek için <a href="#dolabim" style="text-decoration:underline">Dolabım</a>\'a git.</p>';
-    return;
-  }
-  if (kendi) {
+  const ornekForm = !!e.ornek;   // örnek ilan: form görünür, gönderim kapalı
+  if (!ornekForm && (kendi)) {
     kutu.innerHTML = '<h2>Bu parça senin dolabında</h2><p class="kucuk" style="margin-bottom:12px">' +
       (e.onay === 'bekliyor' ? 'Ekip onayı bekliyor; onaylanınca Keşfet\'te görünür.' : e.onay === 'reddedildi' ? 'Reddedildi: ' + esc(e.redNeden) : e.aktif ? 'Keşfet\'te görünüyor.' : 'Şu an yayında değil.') + '</p>' +
       '<a class="dug" href="#dolabim">Dolabıma git</a>';
     return;
   }
-  if (!e.aktif || e.onay !== 'onaylandi') { kutu.innerHTML = '<h2>Şu an kiralanamıyor</h2><p class="kucuk">' + (e.onay === 'bekliyor' ? 'Bu parça ekip onayı bekliyor.' : 'Bu parça yayında değil.') + '</p>'; return; }
-  if (rol === 'kisitli') { kutu.innerHTML = '<h2>Kiralama yapamıyorsun</h2><p class="kucuk">Hesabın kısıtlandı' + (rolNeden ? ': ' + esc(rolNeden) : '') + '. Yardım için sağ alttaki "Soru sor"u kullan.</p>'; return; }
-  if (!kullanici) {
+  if (!ornekForm && (!e.aktif || e.onay !== 'onaylandi')) { kutu.innerHTML = '<h2>Şu an kiralanamıyor</h2><p class="kucuk">' + (e.onay === 'bekliyor' ? 'Bu parça ekip onayı bekliyor.' : 'Bu parça yayında değil.') + '</p>'; return; }
+  if (!ornekForm && (rol === 'kisitli')) { kutu.innerHTML = '<h2>Kiralama yapamıyorsun</h2><p class="kucuk">Hesabın kısıtlandı' + (rolNeden ? ': ' + esc(rolNeden) : '') + '. Yardım için sağ alttaki "Soru sor"u kullan.</p>'; return; }
+  if (!ornekForm && (!kullanici)) {
     kutu.innerHTML = '<h2>Kiralamak için giriş yap</h2><p class="kucuk" style="margin-bottom:12px">Google hesabınla saniyeler içinde giriş yapabilirsin.</p>' +
       '<button type="button" class="dug dug-ana dug-tam" id="kiraGiris">' + G_IKON + 'Google ile giriş yap</button>';
     $('#kiraGiris').onclick = girisYap;
@@ -586,6 +646,7 @@ async function esyaSayfasi(id, istek) {
   }
   const ilet = localStorage.getItem(LS_ILETISIM) || '';
   kutu.innerHTML = '<h2>Kiralama isteği</h2>' +
+    (ornekForm ? '<p class="uyari" style="margin-bottom:12px"><b>Örnek ilan.</b> Formu deneyebilirsin ama bu parça kiralanamaz; sitenin nasıl çalıştığını göstermek için konuldu. Gerçek ilanlarda "Örnek" rozeti bulunmaz.</p>' : '') +
     '<div class="form-izgara">' +
       '<div class="alan"><label for="kBas">Başlangıç</label><input type="date" id="kBas" min="' + bugun() + '"></div>' +
       '<div class="alan"><label for="kBit">İade</label><input type="date" id="kBit" min="' + bugun() + '"></div>' +
@@ -612,6 +673,8 @@ async function esyaSayfasi(id, istek) {
     if ($('#kBas').value) $('#kBit').min = $('#kBas').value;
     hesapla();
   }));
+  if (ornekForm) { const g = $('#kGonder'); g.disabled = true; g.textContent = 'Örnek ilan · kiralanamaz'; }
+  if (yol()[2] === 'kirala') [80, 700].forEach(t => setTimeout(() => { if (istek === aktifIstek) kutu.scrollIntoView({ block: 'start' }); }, t));
   $('#kGonder').onclick = async () => {
     const hata = $('#kHata'); hata.textContent = '';
     const gun = hesapla(), tel = $('#kIlet').value.trim();
@@ -631,8 +694,16 @@ async function esyaSayfasi(id, istek) {
         not: $('#kNot').value.trim().slice(0, 500), durum: 'beklemede', sozlesme: SOZLESME_SURUM,
         olusturma: SIMDI(), guncelleme: SIMDI()
       });
-      bildir('İsteğin gönderildi. Sahibi onaylayınca haber Kiralamalarım\'da.');
-      location.hash = '#kiralamalar';
+      const sirada = sepette(e.id);
+      sepetCikar(e.id);
+      const sonraki = sirada && sepetListe()[0];
+      if (sonraki) {
+        bildir('İsteğin gönderildi ✓ Sepetteki sıradaki parçaya geçiyoruz.');
+        location.hash = '#esya/' + sonraki + '/kirala';
+      } else {
+        bildir('İsteğin gönderildi. Sahibi onaylayınca haber Kiralamalarım\'da.');
+        location.hash = '#kiralamalar';
+      }
     } catch (h) {
       hata.textContent = hataMetni(h);
       dug.disabled = false; dug.textContent = 'İstek gönder';

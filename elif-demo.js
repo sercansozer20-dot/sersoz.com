@@ -5,7 +5,7 @@
  * "Örnek veri" şeridi görünür. Gerçek yayında kullanılmaz.
  */
 
-import { ORNEK_FOTO } from './elif-demo-foto.js?v=20261018h';
+import { ORNEK_FOTO } from './elif-demo-foto.js?v=20261018i';
 
 /* tekrarlanabilir rastgelelik: her açılışta aynı örnekler */
 let tohum = 7;
