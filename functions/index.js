@@ -5,8 +5,8 @@
  * Tarayıcı "mail" koleksiyonuna yazamaz (firestore.rules), böylece site üzerinden
  * başkasına istenmeyen posta attırılamaz.
  *
- *   urunOnayaDustu : ürün "onay bekliyor"a düştü  → tam yetkili + tüm adminler
- *   soruGeldi      : soru-cevaptan yeni kullanıcı mesajı → tam yetkili + tüm adminler
+ *   urunOnayaDustu : ürün "onay bekliyor"a düştü  → panelden atanmış adminler (yoksa tam yetkili)
+ *   soruGeldi      : soru-cevaptan yeni kullanıcı mesajı → panelden atanmış adminler (yoksa tam yetkili)
  *   yanitGeldi     : admin yanıtladı → soruyu soran (e-posta bildirimi açıksa)
  *
  * Kurulum: functions/BENIOKU.md
@@ -24,9 +24,11 @@ const BOLGE = 'europe-west1';   // Firestore konumu eur3 (Avrupa)
 
 const kac = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+/* Alıcılar: panelden atanmış adminler. Hiç admin yoksa mesaj kaybolmasın diye tam yetkili. */
 async function yetkililer() {
   const s = await db.collection('dolapRoller').where('rol', '==', 'admin').get();
-  return [...new Set([TAM_YETKILI, ...s.docs.map(d => d.id)])];
+  const adminler = s.docs.map(d => d.id);
+  return adminler.length ? adminler : [TAM_YETKILI];
 }
 function sablon(baslik, govde, dugmeYazi, adres) {
   return '<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#2a1f1e">' +
