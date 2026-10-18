@@ -226,8 +226,8 @@
 
     ust.className = 'ust';
     ust.innerHTML = '<div class="kap ust-ana">' +
-      '<a class="logo" href="index.html" aria-label="' + esc(AYAR.magazaAdi) + ' ana sayfa"><span class="logo-isaret">S</span>' +
-        '<span class="logo-yazi"><b>SERS<i>O</i>Z</b><small>Elektronik ve Otomasyon Market</small></span></a>' +
+      '<a class="logo" href="index.html" aria-label="' + esc(AYAR.magazaAdi) + ' ana sayfa">' + '<span class="wm" aria-hidden="true">SERS<span class="mercek"></span>Z</span>' +
+        '<small>Elektronik · Robotik · Görüntü</small></a>' +
       '<form class="arama" action="kategori.html" role="search">' +
         '<label class="sr-only" for="ustAra">Ürün ara</label>' +
         '<input id="ustAra" name="q" type="search" placeholder="Ürün, kategori veya ürün kodu ara" value="' + esc(q) + '" autocomplete="off">' +
@@ -277,7 +277,7 @@
     alt.className = 'alt';
     alt.id = 'iletisim';
     alt.innerHTML = '<div class="kap alt-ust">' +
-      '<div><a class="logo" href="index.html"><span class="logo-isaret">S</span><span class="logo-yazi"><b>SERS<i>O</i>Z</b></span></a>' +
+      '<div><a class="logo" href="index.html" aria-label="' + esc(AYAR.magazaAdi) + ' ana sayfa">' + '<span class="wm" aria-hidden="true">SERS<span class="mercek"></span>Z</span>' + '</a>' +
         '<p>Geliştirme kartları, sensörler, motor ve sürücüler, ölçüm aletleri ve makine görüşü çözümleri.</p></div>' +
       '<div><h3>Kategoriler</h3><ul>' +
         KATEGORILER.slice(0, 6).map(function (c) { return '<li><a href="' + katLink(c.id) + '">' + esc(c.ad) + '</a></li>'; }).join('') +

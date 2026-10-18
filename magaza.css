@@ -3,11 +3,11 @@
    Renkler :root'ta; marka rengi --ana. */
 
 :root {
-  --ana: #e8590c;
-  --ana-koyu: #c2410c;
-  --ana-acik: #fff4ec;
-  --lacivert: #1e2a3a;
-  --lacivert-2: #2b3a4f;
+  --ana: #d9480f;
+  --ana-koyu: #b33a0c;
+  --ana-acik: #fff1ea;
+  --lacivert: #17191c;   /* grafit: menü, alt bilgi, koyu düğmeler */
+  --lacivert-2: #2a2d33;
   --zemin: #f2f3f5;
   --kart: #ffffff;
   --metin: #1f2328;
@@ -18,14 +18,19 @@
   --kirmizi: #d92d20;
   --sari: #fff8e1;
   --yaricap: 8px;
-  --font: "Roboto", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font: "Barlow", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --baslik: "Archivo", "Barlow", "Segoe UI", sans-serif;
   --en: 1240px;
   color-scheme: light;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--zemin); color: var(--metin); font: 14px/1.5 var(--font); }
+body { margin: 0; background: var(--zemin); color: var(--metin); font: 15px/1.5 var(--font); }
+/* Başlıklar: geniş (expanded) endüstriyel yazı */
+h1, h2, h3, .slayt h2, .bolum-bas h2, .fiyat-kutu .simdi, .kart-fiyat b, .dug-buyuk, .tum-kat > button {
+  font-family: var(--baslik); font-stretch: 118%; letter-spacing: -.005em;
+}
 img { max-width: 100%; display: block; }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -64,11 +69,19 @@ p { margin: 0; }
 /* ------------------------------------------------------------- başlık */
 .ust { background: var(--kart); border-bottom: 1px solid var(--cizgi); }
 .ust-ana { display: flex; align-items: center; gap: 24px; height: 76px; }
-.logo { display: flex; align-items: center; gap: 10px; flex: none; }
-.logo-isaret { width: 42px; height: 42px; border-radius: 9px; background: var(--ana); color: #fff; display: grid; place-items: center; font-weight: 900; font-size: 22px; }
-.logo-yazi b { display: block; font-size: 22px; font-weight: 900; letter-spacing: .02em; line-height: 1; }
-.logo-yazi b i { font-style: normal; color: var(--ana); }
-.logo-yazi small { font-size: 11px; color: var(--ucuncu); letter-spacing: .02em; }
+.logo { display: flex; flex-direction: column; gap: 4px; flex: none; color: var(--metin); }
+/* Yazı markası: SERSOZ'daki O, lazer çizgisi geçen bir mercek */
+.wm {
+  display: inline-flex; align-items: center; font-family: var(--baslik); font-stretch: 125%;
+  font-weight: 900; font-size: 27px; line-height: 1; letter-spacing: .01em;
+}
+.wm .mercek {
+  position: relative; display: inline-block; width: .8em; height: .8em; margin: 0 .035em;
+  border: .15em solid currentColor; border-radius: 50%;
+}
+.wm .mercek::before { content: ""; position: absolute; inset: 0; margin: auto; width: .22em; height: .22em; border-radius: 50%; background: var(--ana); }
+.wm .mercek::after { content: ""; position: absolute; left: -.42em; right: -.42em; top: 50%; height: .055em; transform: translateY(-50%) rotate(-12deg); background: var(--ana); }
+.logo small { font-size: 10.5px; color: var(--ucuncu); letter-spacing: .16em; text-transform: uppercase; font-weight: 600; }
 .arama { flex: 1; display: flex; max-width: 640px; margin: 0 auto; }
 .arama input {
   flex: 1; min-width: 0; height: 44px; border: 2px solid var(--ana); border-right: 0; border-radius: 8px 0 0 8px;
@@ -126,7 +139,8 @@ p { margin: 0; }
   .kat-acilir { width: 100%; }
 }
 @media (max-width: 480px) {
-  .logo-yazi small { display: none; }
+  .logo small { display: none; }
+  .wm { font-size: 23px; }
   .sepet-dug .yazi { display: none; }
   .sepet-dug { width: 48px; padding: 0; }
 }
@@ -146,9 +160,9 @@ p { margin: 0; }
 .slayt .sekil { justify-self: center; width: 100%; max-width: 360px; color: rgba(255, 255, 255, .9); }
 .slayt .sekil svg { width: 100%; height: auto; }
 .slayt .sekil img { border-radius: 8px; }
-.slayt-1 { background: linear-gradient(110deg, #1e2a3a 0%, #2b3a4f 55%, #e8590c 160%); }
+.slayt-1 { background: linear-gradient(110deg, #17191c 0%, #26292e 55%, #d9480f 165%); }
 .slayt-2 { background: linear-gradient(110deg, #0f3d3e 0%, #16605f 60%, #2bb3a3 140%); }
-.slayt-3 { background: linear-gradient(110deg, #3b1d0e 0%, #8a3410 55%, #e8590c 120%); }
+.slayt-3 { background: linear-gradient(110deg, #1d1410 0%, #5e2a12 60%, #d9480f 125%); }
 .banner-ok {
   position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%;
   border: 0; background: rgba(255, 255, 255, .9); cursor: pointer; display: grid; place-items: center; z-index: 2;
@@ -193,7 +207,7 @@ p { margin: 0; }
 /* kategori kutucukları */
 .kat-kutular { display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; }
 .kat-kutu { background: var(--kart); border: 1px solid var(--cizgi); border-radius: var(--yaricap); padding: 16px 8px 14px; text-align: center; transition: border-color .15s, box-shadow .15s; }
-.kat-kutu:hover { border-color: var(--ana); box-shadow: 0 4px 14px rgba(232, 89, 12, .12); }
+.kat-kutu:hover { border-color: var(--ana); box-shadow: 0 4px 14px rgba(217, 72, 15, .12); }
 .kat-kutu .ikon { width: 58px; height: 58px; border-radius: 50%; background: var(--ana-acik); color: var(--ana); display: grid; place-items: center; margin: 0 auto 10px; }
 .kat-kutu .ikon svg { width: 30px; height: 30px; }
 .kat-kutu b { font-size: 13px; font-weight: 500; display: block; line-height: 1.3; }
@@ -326,7 +340,7 @@ p { margin: 0; }
 .alt h3 { color: #fff; font-size: 15px; margin-bottom: 12px; }
 .alt ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
 .alt a:hover { color: #fff; text-decoration: underline; }
-.alt .logo-yazi b { color: #fff; }
+.alt .logo { color: #fff; }
 .alt p { margin-top: 12px; line-height: 1.6; }
 .alt-alt { border-top: 1px solid rgba(255, 255, 255, .1); }
 .alt-alt .kap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 14px; padding-bottom: 18px; font-size: 12.5px; }
