@@ -642,6 +642,15 @@ service cloud.firestore {
         && resource.data.durum in ['teslim_edildi', 'iade_edildi'];
     }
 
+    /* Admin: kiracıya kartla ödeme linki (Shopier) ekler. */
+    function kartLinki() {
+      return dolapAdmin() && request.resource.data.guncelleme == request.time
+        && degisenler().hasOnly(['kartLink', 'guncelleme'])
+        && resource.data.durum in ['onaylandi', 'odeme_bildirildi']
+        && request.resource.data.kartLink is string && request.resource.data.kartLink.size() <= 300
+        && (request.resource.data.kartLink == '' || request.resource.data.kartLink.matches('^https://(www[.])?shopier[.]com/.+'));
+    }
+
     /* Teslimat adresi: kiralamayla aynı yazımda kiracı oluşturur. Eşya sahibi yalnız ödeme
        admin tarafından onaylandıktan sonra (odendi ve sonrası) okuyabilir. */
     match /dolapKiraGizli/{kira} {
@@ -706,7 +715,7 @@ service cloud.firestore {
         && yeni().kiraciIletisim is string && yeni().kiraciIletisim.size() >= 5
         && yeni().kiraciIletisim.size() <= 200
         && yeni().not is string && yeni().not.size() <= 500;
-      allow update: if girisli() && (kiraGecis() || odemeTakip());
+      allow update: if girisli() && (kiraGecis() || odemeTakip() || kartLinki());
       allow delete: if tamYetkili();
     }
 

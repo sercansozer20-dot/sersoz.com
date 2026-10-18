@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019b';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019c';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -626,6 +626,14 @@ function sepette(id) { return sepetListe().includes(id); }
 function sepetCikar(id) { sepetKaydet(sepetListe().filter(x => x !== id)); }
 function sepetSayac() { const n = sepetListe().length, el = document.getElementById('sepetSay'); if (el) el.textContent = n ? n : ''; }
 document.addEventListener('click', ev => {
+  const ko = ev.target.closest('[data-kopya]');
+  if (ko) {
+    ev.preventDefault();
+    const bitti = () => { const e = ko.textContent; ko.textContent = 'Kopyalandı ✓'; setTimeout(() => { ko.textContent = e; }, 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(ko.dataset.kopya).then(bitti, () => prompt('Kopyala:', ko.dataset.kopya));
+    else prompt('Kopyala:', ko.dataset.kopya);
+    return;
+  }
   const pr = ev.target.closest('[data-profil]');
   if (pr) { ev.preventDefault(); location.hash = '#profil/' + pr.dataset.profil; return; }
   const k = ev.target.closest('[data-kirala]');
@@ -882,7 +890,10 @@ async function esyaSayfasi(id, istek) {
     '<label class="onay-kutu"><input type="checkbox" id="kSozlesme"><span><a href="elif-sozlesme.html" target="_blank">Kiralama sözleşmesini</a> okudum; geç iade, teslim etmeme ve hasar maddelerini kabul ediyorum.</span></label>' +
     '<p class="hata" id="kHata" role="alert"></p>' +
     '<button type="button" class="dug dug-vurgu dug-tam" id="kGonder">İstek gönder</button>' +
-    '<p class="kucuk" style="margin-top:10px">Sahibi onaylayınca ödeme bilgileri Kiralamalarım\'da görünür. Telefonun yalnız kiralama kesinleşince karşı tarafa açılır.</p>';
+    '<ol class="adimlar kucuk" style="margin-top:12px"><li><b>İsteği gönder</b>, şimdi ödeme yok.</li>' +
+      '<li>Sahibi onaylayınca Kiralamalarım\'da <b>kartla ya da havale/FAST ile öde</b>.</li>' +
+      '<li>Parça kargoyla gelir; teslim alınca onayla. Depozito, parça sağlam dönünce iade edilir.</li></ol>' +
+    '<p class="kucuk">Telefonun ve adresin yalnız ödemen onaylanınca eşya sahibine açılır.</p>';
 
   const hesapla = () => {
     const a = $('#kBas').value, b = $('#kBit').value;
@@ -1317,6 +1328,33 @@ async function gonderiFormu(k) {
     '<button onclick="print()">Yazdır</button></body></html>');
   pen.document.close();
 }
+/* Kiracının ödeme kutusu: varsa kartla ödeme (Shopier linki, admin ekler), yoksa/ayrıca kopyala-yapıştır havale/FAST. */
+function odemeKutusuHTML(k) {
+  const h = AYAR.havale || {}, iban = (h.iban || '').replace(/\s+/g, '');
+  const satir = (ad, deger, goster) => '<div class="kopya-satir"><span>' + ad + '</span><b>' + esc(goster || deger) + '</b>' +
+    '<button type="button" class="dug dug-kucuk" data-kopya="' + esc(deger) + '">Kopyala</button></div>';
+  const dokum = 'kira ' + tl(k.kira) + (k.indirim ? ' (sadakat indirimi düşüldü)' : '') + (k.hizmetBedeli ? ' + hizmet bedeli ' + tl(k.hizmetBedeli) : '') +
+    (k.depozito ? ' + depozito ' + tl(k.depozito) + ' (parça sağlam dönünce iade edilir)' : '');
+  return '<div class="odeme-kutu odeme-adim"><p class="odeme-baslik">Ödenecek tutar <b>' + tl(k.toplam) + '</b></p><p class="kucuk">' + dokum + '</p>' +
+    (k.kartLink ? '<a class="dug dug-vurgu dug-tam" href="' + esc(k.kartLink) + '" target="_blank" rel="noopener" style="margin-top:12px">💳 Kartla öde</a>' +
+      '<p class="kucuk" style="margin-top:6px">Güvenli ödeme sayfası Shopier\'de açılır; ödeyince buraya dönüp "Ödemeyi yaptım"a bas.</p>' +
+      (iban ? '<p class="ayrac"><span>ya da havale / FAST</span></p>' : '') : '') +
+    (iban ? '<ol class="adimlar"><li>Banka uygulamanda <b>Para gönder → IBAN\'a</b> seç.</li><li>Aşağıdakileri <b>Kopyala</b> ile alıp yapıştır.</li>' +
+        '<li>Açıklamaya kodu yazmayı unutma, sonra burada <b>"Ödemeyi yaptım"</b> düğmesine bas.</li></ol>' +
+        satir('Alıcı', h.hesapSahibi || '') + satir('IBAN', iban, h.iban) + satir('Tutar', String(k.toplam), tl(k.toplam)) + satir('Açıklama', refKod(k.id)) +
+        '<p class="kucuk" style="margin-top:8px">FAST ile 7/24 birkaç saniyede ulaşır' + (h.banka ? ' · ' + esc(h.banka) : '') + '.</p>'
+      : (k.kartLink ? '' : '<p style="margin-top:10px">Ödeme bilgilerini birazdan buraya ekleyeceğiz. Acelen varsa <a href="mailto:' + esc(AYAR.eposta) + '?subject=' +
+          encodeURIComponent('Elif\'in Dolabı ödeme ' + refKod(k.id)) + '" style="text-decoration:underline">' + esc(AYAR.eposta) + '</a> adresine yaz.</p>')) +
+    '<p class="kucuk" style="margin-top:8px">Ödemen kontrol edilince eşya sahibine haber verilir, parça kargoya çıkar. Eşya sahibine para, sen parçayı teslim aldığını onaylayınca geçer.</p></div>';
+}
+/* Kiralamanın hangi adımda olduğu */
+const ADIMLAR = ['İstek', 'Ödeme', 'Hazırlanıyor', 'Kargoda', 'Sende', 'İade'];
+function adimCubugu(d) {
+  if (['reddedildi', 'iptal'].includes(d)) return '';
+  const sira = { beklemede: 0, onaylandi: 1, odeme_bildirildi: 1, odendi: 2, kargoda: 3, teslim_edildi: 4, iade_edildi: 6 }[d] ?? 0;
+  return '<ol class="adim-cubuk" aria-label="Kiralama adımları">' + ADIMLAR.map((a, i) =>
+    '<li class="' + (i < sira ? 'bitti' : i === sira ? 'simdi' : '') + '"' + (i === sira ? ' aria-current="step"' : '') + '>' + a + '</li>').join('') + '</ol>';
+}
 function kazancHTML(k) {
   const h = kiraHesap(k);
   return '<div class="kazanc">Sana ödenecek: <b>' + tl(h.sahibe) + '</b> <span class="kucuk">(kira ' + tl(h.brut) +
@@ -1334,11 +1372,7 @@ function kiraSatiri(k, gorunum) {
     if (d === 'beklemede') eylem = gecis('iptal', 'İsteği iptal et', 'dug-tehlike');
     if (d === 'onaylandi') {
       eylem = gecis('odeme_bildirildi', 'Ödemeyi yaptım', 'dug-vurgu') + gecis('iptal', 'İptal et', 'dug-tehlike');
-      const h = AYAR.havale || {};
-      ek = '<div class="odeme-kutu"><b>Ödeme: ' + tl(k.toplam) + '</b> (kira ' + tl(k.kira) + (k.indirim ? ', %' + k.indirimYuzde + ' sadakat indirimi düşüldü' : '') + (k.hizmetBedeli ? ' + hizmet bedeli ' + tl(k.hizmetBedeli) : '') + (k.depozito ? ' + iade edilecek depozito ' + tl(k.depozito) : '') + ')<br>' +
-        (h.iban ? 'Alıcı: ' + esc(h.hesapSahibi) + (h.banka ? ' · ' + esc(h.banka) : '') + '<br>IBAN: <span class="iban">' + esc(h.iban) + '</span><br>'
-          : 'Banka bilgileri için <a href="mailto:' + esc(AYAR.eposta) + '?subject=' + encodeURIComponent('Elif\'in Dolabı ödeme ' + refKod(k.id)) + '" style="text-decoration:underline">' + esc(AYAR.eposta) + '</a> adresine yazın.<br>') +
-        'Açıklamaya mutlaka <b>' + refKod(k.id) + '</b> yazın. Ödeme geçince "Ödemeyi yaptım"a basın.</div>';
+      ek = odemeKutusuHTML(k);
     }
     if (d === 'odeme_bildirildi') ek = '<div class="odeme-kutu">Ödemen kontrol ediliyor. Onaylanınca eşya sahibinin iletişim bilgisi burada görünecek.</div>';
     if (kesin) ek = '<div class="iletisim">Eşya sahibi: <b>' + esc(k.sahipIletisim) + '</b> · Teslimi birlikte ayarlayın.</div>';
@@ -1372,7 +1406,7 @@ function kiraSatiri(k, gorunum) {
   }
 
   return '<div class="satir"><img class="k" src="' + esc(k.esyaFoto) + '" alt="">' +
-    '<div><h3><a href="#esya/' + esc(k.esyaId) + '">' + esc(k.esyaBaslik) + '</a></h3>' +
+    '<div><h3><a href="#esya/' + esc(k.esyaId) + '">' + esc(k.esyaBaslik) + '</a></h3>' + adimCubugu(d) +
       '<p class="kira-detay">' + tarihYaz(k.baslangic) + ' → ' + tarihYaz(k.bitis) + ' · ' + k.gun + ' gün · <b>' + tl(k.toplam) + '</b></p>' +
       (gorunum === 'sahip' ? '<p class="kira-detay">Kiracı: <a href="#profil/' + esc(k.kiraciId) + '">' + esc(k.kiraciAd) + '</a> <span data-seviye="' + esc(k.kiraciId) + '"></span></p>' : '') +
       (gorunum === 'sahip' && k.indirim ? '<p class="kira-detay kucuk">Kiracıya %' + k.indirimYuzde + ' sadakat indirimi uygulandı; indirimi site karşılar, kazancın değişmez.</p>' : '') +
@@ -1531,6 +1565,7 @@ async function panelGelir(panel, istek) {
   const boost = boostlar.filter(b => b.durum === 'aktif').reduce((t, b) => t + (b.fiyat || 0), 0);
   const sahipBekleyen = kesin.filter(k => ['teslim_edildi', 'iade_edildi'].includes(k.durum) && k.sahipOdeme !== 'odendi');
   const kargodakiler = l.filter(k => k.durum === 'kargoda' || (k.durum === 'odendi'));
+  const odemeBekleyen = l.filter(k => k.durum === 'onaylandi' || k.durum === 'odeme_bildirildi');
   const depBekleyen = kesin.filter(k => k.durum === 'iade_edildi' && !k.depozitoDurum && k.depozito > 0);
   const elde = top(kesin.filter(k => !k.depozitoDurum), k => k.depozito || 0);
   const uidler = [...new Set(sahipBekleyen.map(k => k.sahipId).concat(depBekleyen.map(k => k.kiraciId)))];
@@ -1553,6 +1588,14 @@ async function panelGelir(panel, istek) {
         '<div class="alan"><label for="gKom">Eşya sahibinden komisyon (%)</label><input id="gKom" type="number" min="0" max="30" step="1" value="' + GELIR.komisyonYuzde + '"' + kilit + '></div></div>' +
       '<p class="kucuk" style="margin-top:8px">Örnek, 1.000 TL kira: kiracı ' + tl(1000 + ornek) + ' öder (+ depozito), eşya sahibi ' + tl(1000 - ornekK) + ' alır, site ' + tl(ornek + ornekK) + ' kazanır (sadakat indirimi varsa o kadar az).</p>' +
       (tamMi() ? '<button type="button" class="dug dug-ana" id="gKaydet" style="margin-top:10px">Oranları kaydet</button>' : '<p class="kucuk">Oranları yalnız tam yetkili değiştirebilir.</p>') + '</section>' +
+    '<section class="kutu"><h2>Kiracı ödemesi bekleyenler</h2><p class="kucuk" style="margin-bottom:10px">Kartla ödeme için Shopier\'de tutarı bu kadar olan bir ürün/ödeme linki oluştur ve buraya yapıştır; kiracı "Kartla öde" düğmesini görür. Link eklemezsen kiracı havale/FAST ile öder.</p>' +
+      (odemeBekleyen.length ? odemeBekleyen.map(k => '<div class="gelir-satir">' +
+        '<div><b><a href="#esya/' + esc(k.esyaId) + '">' + esc(k.esyaBaslik) + '</a></b><span class="kucuk">' + refKod(k.id) + ' · ' + esc(DURUM[k.durum]) + '</span></div>' +
+        '<div><a href="#profil/' + esc(k.kiraciId) + '">' + esc(k.kiraciAd) + '</a></div>' +
+        '<div><b>' + tl(k.toplam) + '</b></div>' +
+        '<div class="eylem"><input class="kart-link" data-kart-alan="' + esc(k.id) + '" placeholder="https://www.shopier.com/…" value="' + esc(k.kartLink || '') + '">' +
+          '<button type="button" class="dug dug-kucuk" data-kart-kaydet="' + esc(k.id) + '">Kaydet</button></div></div>').join('')
+        : '<p class="kucuk">Ödeme bekleyen yok.</p>') + '</section>' +
     '<section class="kutu"><h2>Teslimat bekleyenler</h2><p class="kucuk" style="margin-bottom:10px">Ödemesi onaylanmış, kiracıya henüz ulaşmamış parçalar. Kiracı "Teslim aldım" demeyi unutursa kargo takibinden teslimatı kontrol edip buradan onaylayabilirsin.</p>' +
       (kargodakiler.length ? kargodakiler.map(k => '<div class="gelir-satir">' +
         '<div><b><a href="#esya/' + esc(k.esyaId) + '">' + esc(k.esyaBaslik) + '</a></b><span class="kucuk">' + refKod(k.id) + ' · ' + esc(DURUM[k.durum]) + '</span></div>' +
@@ -1578,9 +1621,14 @@ async function panelGelir(panel, istek) {
         : '<p class="kucuk">Bekleyen depozito iadesi yok.</p>') + '</section>' +
     '<p class="kucuk">Kiracı ödemelerini onaylamak için <a href="#kiralamalar/yonetim" style="text-decoration:underline">Ödeme onayları</a>.</p>';
   panel.onclick = async ev => {
-    const b = ev.target.closest('[data-sahip-ode],[data-dep-iade],[data-dep-kes],[data-teslim],#gKaydet'); if (!b) return;
+    const b = ev.target.closest('[data-sahip-ode],[data-dep-iade],[data-dep-kes],[data-teslim],[data-kart-kaydet],#gKaydet'); if (!b) return;
     try {
-      if (b.dataset.teslim) {
+      if (b.dataset.kartKaydet) {
+        const link = panel.querySelector('[data-kart-alan="' + CSS.escape(b.dataset.kartKaydet) + '"]').value.trim();
+        if (link && !/^https:\/\/(www\.)?shopier\.com\/\S+$/.test(link)) { bildir('Link https://www.shopier.com/ ile başlamalı.'); return; }
+        await dbGuncelle('dolapKiralamalar', b.dataset.kartKaydet, { kartLink: link, guncelleme: SIMDI() });
+        bildir(link ? 'Kart ödeme linki eklendi; kiracı görüyor.' : 'Link kaldırıldı.');
+      } else if (b.dataset.teslim) {
         if (!confirm('Kargo takibinden teslimatı kontrol ettin mi? Teslim edildi olarak işaretlenecek.')) return;
         await dbGuncelle('dolapKiralamalar', b.dataset.teslim, { durum: 'teslim_edildi', teslimOnay: 'admin', guncelleme: SIMDI() });
         bildir('Teslim edildi olarak işaretlendi.');
