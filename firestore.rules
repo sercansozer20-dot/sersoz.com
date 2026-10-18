@@ -650,10 +650,13 @@ service cloud.firestore {
           && ((kiraci && request.resource.data.teslimOnay == 'kiraci')
               || (dolapAdmin() && (tamYetkili() || !(sahip || kiraci)) && request.resource.data.teslimOnay == 'admin')))
         || (kiraci && e == y && e in ['kargoda', 'teslim_edildi']
-          && degisenler().hasOnly(['guncelleme', 'teslimSorun'])
+          && degisenler().hasOnly(['guncelleme', 'teslimSorun', 'sorunDurum'])
+          && request.resource.data.get('sorunDurum', 'acik') == 'acik'
           && request.resource.data.teslimSorun is string && request.resource.data.teslimSorun.size() <= 300)
-        || (degisenler().hasOnly(['durum', 'guncelleme']) && (
+        || (degisenler().hasOnly(['durum', 'guncelleme', 'iptalNeden'])
+          && request.resource.data.get('iptalNeden', '') is string && request.resource.data.get('iptalNeden', '').size() <= 200 && (
              (sahip && e == 'beklemede' && y == 'reddedildi')
+          || (sahip && e == 'onaylandi' && y == 'iptal')
           || (kiraci && e in ['beklemede', 'onaylandi'] && y == 'iptal')
           || (kiraci && e == 'onaylandi' && y == 'odeme_bildirildi')
           || (dolapAdmin() && (tamYetkili() || !(sahip || kiraci)) && e == 'odeme_bildirildi' && y in ['odendi', 'onaylandi'])
@@ -673,10 +676,23 @@ service cloud.firestore {
         && degisenler().hasOnly(['sahipOdeme', 'sahipOdemeZaman', 'depozitoDurum', 'depozitoKesinti', 'depozitoNot', 'depozitoZaman',
                                  'komisyonAlindi', 'komisyonTutar', 'komisyonZaman', 'guncelleme'])
         && (!degisenler().hasAny(['sahipOdeme']) || request.resource.data.get('komisyonAlindi', false) == true)
+        && (!degisenler().hasAny(['sahipOdeme']) || !('teslimSorun' in resource.data) || resource.data.get('sorunDurum', 'acik') == 'cozuldu')
         && (!degisenler().hasAny(['komisyonAlindi'])
             || (request.resource.data.komisyonAlindi == true && request.resource.data.komisyonTutar is int
                 && request.resource.data.komisyonZaman == request.time))
         && resource.data.durum in ['teslim_edildi', 'iade_yolda', 'iade_edildi'];
+    }
+
+    /* Yönetim müdahalesi: admin (kiralamada taraf değilse; tam yetkili her zaman) durumu gerekçeyle değiştirir,
+       siparişi iptal eder ya da sorunu çözüldü olarak kapatır. */
+    function yonetimMudahale() {
+      return dolapAdmin() && (tamYetkili() || (resource.data.kiraciId != benim() && resource.data.sahipId != benim()))
+        && request.resource.data.guncelleme == request.time
+        && degisenler().hasOnly(['durum', 'guncelleme', 'yonetimNot', 'iptalNeden', 'teslimOnay', 'sorunDurum', 'sorunNot'])
+        && request.resource.data.durum in ['beklemede', 'onaylandi', 'odeme_bildirildi', 'odendi', 'kargoda', 'teslim_edildi', 'iade_yolda', 'iade_edildi', 'reddedildi', 'iptal']
+        && request.resource.data.get('yonetimNot', '') is string && request.resource.data.get('yonetimNot', '').size() <= 300
+        && request.resource.data.get('sorunNot', '') is string && request.resource.data.get('sorunNot', '').size() <= 300
+        && request.resource.data.get('sorunDurum', 'acik') in ['acik', 'cozuldu'];
     }
 
     /* Admin: kiracıya kartla ödeme linki (Shopier) ekler. */
@@ -778,7 +794,7 @@ service cloud.firestore {
         && yeni().kiraciIletisim.size() <= 200
         && yeni().not is string && yeni().not.size() <= 500
         && temizMetin(yeni().not);
-      allow update: if girisli() && (kiraGecis() || odemeTakip() || kartLinki());
+      allow update: if girisli() && (kiraGecis() || odemeTakip() || kartLinki() || yonetimMudahale());
       allow delete: if tamYetkili();
     }
 
@@ -843,6 +859,28 @@ service cloud.firestore {
         && yeni().cevap is string && yeni().cevap.size() >= 1 && yeni().cevap.size() <= 1000 && temizMetin(yeni().cevap)
         && yeni().durum == 'cevaplandi' && yeni().cevapZaman == request.time;
       allow delete: if girisli() && ((resource.data.soranId == benim() && resource.data.durum == 'bekliyor') || dolapAdmin());
+    }
+
+    /* Kiralama işlem kaydı: değişikliği yapan taraf/admin aynı yazımda ekler; değiştirilemez, silinemez (tam yetkili hariç). */
+    match /dolapKiraLog/{log} {
+      allow read: if girisli() && (resource.data.kiraciId == benim() || resource.data.sahipId == benim() || dolapAdmin());
+      allow create: if girisli()
+        && yeni().keys().hasOnly(['kiraId', 'sahipId', 'kiraciId', 'olay', 'metin', 'kim', 'kimAd', 'rol', 'zaman'])
+        && yeni().kim == benim() && yeni().zaman == request.time
+        && yeni().olay is string && yeni().olay.size() <= 40 && yeni().metin is string && yeni().metin.size() <= 300
+        && yeni().rol in ['kiraci', 'sahip', 'admin'] && (yeni().rol != 'admin' || dolapAdmin())
+        && getAfter(/databases/$(database)/documents/dolapKiralamalar/$(yeni().kiraId)).data.kiraciId == yeni().kiraciId
+        && getAfter(/databases/$(database)/documents/dolapKiralamalar/$(yeni().kiraId)).data.sahipId == yeni().sahipId
+        && (yeni().kiraciId == benim() || yeni().sahipId == benim() || dolapAdmin());
+      allow delete: if tamYetkili();
+    }
+    /* Siparişe yönetimin iç notları (taraflar görmez) */
+    match /dolapKiraNot/{n} {
+      allow read: if dolapAdmin();
+      allow create: if dolapAdmin() && yeni().keys().hasOnly(['kiraId', 'metin', 'yazan', 'yazanAd', 'zaman'])
+        && yeni().yazan == request.auth.token.email && yeni().zaman == request.time
+        && yeni().metin is string && yeni().metin.size() >= 2 && yeni().metin.size() <= 1000;
+      allow delete: if tamYetkili();
     }
 
     match /dolapFotolar/{foto} {
