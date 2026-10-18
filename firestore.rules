@@ -605,10 +605,12 @@ service cloud.firestore {
           && request.resource.data.sahipIletisim is string
           && request.resource.data.sahipIletisim.size() >= 5
           && request.resource.data.sahipIletisim.size() <= 200)
+        || (sahip && e == 'teslim_edildi' && y == 'iade_edildi'
+          && degisenler().hasOnly(['durum', 'guncelleme', 'iadeDurum'])
+          && request.resource.data.get('iadeDurum', 'sorunsuz') in ['sorunsuz', 'gec', 'hasar'])
         || (degisenler().hasOnly(['durum', 'guncelleme']) && (
              (sahip && e == 'beklemede' && y == 'reddedildi')
           || (sahip && e == 'odendi' && y == 'teslim_edildi')
-          || (sahip && e == 'teslim_edildi' && y == 'iade_edildi')
           || (kiraci && e in ['beklemede', 'onaylandi'] && y == 'iptal')
           || (kiraci && e == 'onaylandi' && y == 'odeme_bildirildi')
           || (dolapAdmin() && e == 'odeme_bildirildi' && y in ['odendi', 'onaylandi'])

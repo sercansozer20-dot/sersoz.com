@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018i';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018j';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -357,6 +357,7 @@ function hesapCiz() {
     '<div class="menu" id="hesapMenu" role="menu" hidden>' +
       '<div class="menu-bas"><b>' + esc(ad) + '</b><span>' + esc(kullanici.email || '') + '</span></div>' +
       '<a role="menuitem" href="#hesabim">Hesabım ve ayarlar</a>' +
+      '<a role="menuitem" href="#hesabim/puan">★ Sadakat puanım</a>' +
       '<a role="menuitem" href="#hesabim/adresler">Kayıtlı adreslerim</a>' +
       '<a role="menuitem" href="#hesabim/kartlar">Kayıtlı kartlarım</a>' +
       '<a role="menuitem" href="#hesabim/filtreler">Kayıtlı filtrelerim</a>' +
@@ -404,6 +405,84 @@ function sayfaCiz() {
 }
 window.addEventListener('hashchange', () => { window.scrollTo(0, 0); sayfaCiz(); });
 sepetSayac();
+
+/* ---------------------------------------------------------------- sadakat puanı
+ * Tamamlanan kiralamalardan hesaplanır; ayrıca bir yere yazılmaz, böylece elle şişirilemez.
+ * İade sırasında eşya sahibi "sorunsuz / geç / hasarlı" seçer (iadeDurum). */
+const PUAN = { sorunsuz: 20, gec: -15, hasar: -30, sahip: 15 };
+const SEVIYE = [[0, 'Yeni üye'], [50, 'Bronz'], [150, 'Gümüş'], [300, 'Altın']];
+const IADE_AD = { sorunsuz: 'Sorunsuz iade', gec: 'Geç iade', hasar: 'Hasarlı / eksik iade' };
+function sadakatHesapla(kiraci, sahip) {
+  const satir = [];
+  kiraci.filter(k => k.durum === 'iade_edildi').forEach(k => {
+    const d = PUAN[k.iadeDurum] !== undefined && k.iadeDurum !== 'sahip' ? k.iadeDurum : 'sorunsuz';
+    satir.push({ k, ad: d === 'sorunsuz' ? 'Sorunsuz kiralama' : IADE_AD[d], puan: PUAN[d] });
+  });
+  sahip.filter(k => k.durum === 'iade_edildi').forEach(k => satir.push({ k, ad: 'Dolabından kiralandı', puan: PUAN.sahip }));
+  satir.sort((a, b) => zaman(b.k.guncelleme) - zaman(a.k.guncelleme));
+  const puan = Math.max(0, satir.reduce((t, x) => t + x.puan, 0));
+  let i = 0; SEVIYE.forEach((x, j) => { if (puan >= x[0]) i = j; });
+  return { puan, i, seviye: SEVIYE[i][1], sonraki: SEVIYE[i + 1] || null, satir };
+}
+async function sadakatGetir(uid) {
+  const [a, b] = await Promise.all([kiraListesi('kiraciId', uid), kiraListesi('sahipId', uid)]);
+  return sadakatHesapla(a, b);
+}
+const seviyeRozet = x => '<span class="seviye sv-' + x.i + '">★ ' + esc(x.seviye) + '</span>';
+function sadakatHTML(x, kendi) {
+  const alt = SEVIYE[x.i][0], ust = x.sonraki ? x.sonraki[0] : alt;
+  const yuzde = x.sonraki ? Math.round(100 * (x.puan - alt) / (ust - alt)) : 100;
+  return '<div class="sadakat-bas"><span class="sadakat-puan">' + x.puan + '<small> puan</small></span>' + seviyeRozet(x) + '</div>' +
+    '<div class="ilerleme"><i style="width:' + yuzde + '%"></i></div>' +
+    '<p class="kucuk">' + (x.sonraki ? esc(x.sonraki[1]) + ' seviyesine ' + (x.sonraki[0] - x.puan) + ' puan kaldı.' : 'En üst seviyedesin.') + '</p>' +
+    (kendi ? '<div class="puan-kural">' +
+      '<div><b>+' + PUAN.sorunsuz + '</b>Zamanında ve sorunsuz iade ettiğin her kiralama</div>' +
+      '<div><b>+' + PUAN.sahip + '</b>Dolabından tamamlanan her kiralama</div>' +
+      '<div><b>' + PUAN.gec + '</b>Geç iade</div>' +
+      '<div><b>' + PUAN.hasar + '</b>Hasarlı ya da eksik iade</div></div>' +
+      '<p class="kucuk">Seviyeler: ' + SEVIYE.map(v => v[1] + ' ' + v[0] + '+').join(' · ') + '.</p>' : '') +
+    '<div class="puan-gecmis">' + (x.satir.length ? x.satir.slice(0, 30).map(r =>
+      '<div class="puan-satir"><span>' + esc(r.ad) + ' · <a href="#esya/' + esc(r.k.esyaId) + '">' + esc(r.k.esyaBaslik) + '</a> <span class="kucuk">' + tarihYaz(r.k.bitis) + '</span></span>' +
+      '<b class="' + (r.puan >= 0 ? 'arti' : 'eksi') + '">' + (r.puan > 0 ? '+' : '') + r.puan + '</b></div>').join('')
+      : '<p class="kucuk" style="margin-top:10px">Henüz tamamlanmış kiralama yok. İlk sorunsuz kiralamanda puanların gelmeye başlar.</p>') + '</div>';
+}
+
+/* ---------------------------------------------------------------- kampanya afişleri (ayarlar.js → kampanyalar) */
+function afisHTML() {
+  const l = (AYAR.kampanyalar || []).filter(k => k && k.baslik);
+  if (!l.length) return '';
+  return '<section class="afis" id="afis" aria-roledescription="carousel" aria-label="Kampanyalar"><div class="afis-ray">' +
+    l.map((k, i) => '<a class="afis-kart" href="' + esc(k.link || '#kesfet') + '" style="--afis-renk:' + esc(k.renk || '#2a1f1e') + '"' + (i ? ' aria-hidden="true" tabindex="-1"' : '') + '>' +
+      '<span class="afis-yazi">' + (k.ust ? '<small>' + esc(k.ust) + '</small>' : '') + '<b>' + esc(k.baslik) + '</b>' +
+        (k.metin ? '<span>' + esc(k.metin) + '</span>' : '') + (k.dugme ? '<em>' + esc(k.dugme) + ' →</em>' : '') + '</span>' +
+      (k.foto ? '<img src="' + esc(k.foto) + '" alt="" loading="' + (i ? 'lazy' : 'eager') + '">' : '') + '</a>').join('') + '</div>' +
+    (l.length > 1 ? '<div class="afis-nokta">' + l.map((_, i) => '<button type="button" data-afis="' + i + '" aria-label="' + (i + 1) + '. kampanya"' + (i ? '' : ' aria-current="true"') + '></button>').join('') + '</div>' : '') +
+    '</section>';
+}
+let afisZaman = null;
+function afisBaslat() {
+  clearInterval(afisZaman);
+  const a = $('#afis'); if (!a) return;
+  const ray = a.querySelector('.afis-ray'), n = ray.children.length; if (n < 2) return;
+  let i = 0, dur = false, x0 = null;
+  const git = j => {
+    i = (j + n) % n; ray.style.transform = 'translateX(' + (-100 * i) + '%)';
+    [...ray.children].forEach((c, x) => { if (x === i) { c.removeAttribute('aria-hidden'); c.removeAttribute('tabindex'); } else { c.setAttribute('aria-hidden', 'true'); c.tabIndex = -1; } });
+    a.querySelectorAll('[data-afis]').forEach((b, x) => x === i ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current'));
+  };
+  a.onclick = ev => { const b = ev.target.closest('[data-afis]'); if (b) { ev.preventDefault(); git(+b.dataset.afis); } };
+  a.onmouseenter = () => { dur = true; }; a.onmouseleave = () => { dur = false; };
+  a.ontouchstart = ev => { x0 = ev.touches[0].clientX; dur = true; };
+  a.ontouchend = ev => {
+    if (x0 !== null) { const dx = ev.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) git(i + (dx < 0 ? 1 : -1)); }
+    x0 = null; dur = false;
+  };
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  afisZaman = setInterval(() => {
+    if (!a.isConnected) { clearInterval(afisZaman); return; }
+    if (!dur && !document.hidden) git(i + 1);
+  }, 5000);
+}
 
 /* ---------------------------------------------------------------- sepet (bu tarayıcıda saklanır) */
 const LS_SEPET = 'elif_sepet';
@@ -485,12 +564,13 @@ function esyaKarti(e, kendi) {
 const kesfetS = { kategori: 'hepsi', ara: '', beden: '', maxFiyat: 0, sira: 'yeni' };
 let aramaSayac;
 async function kesfet(istek) {
-  icerik.innerHTML = '<div class="bas"><div><h1>Keşfet</h1><p>Herkesin dolabından kiralanabilir parçalar.</p></div>' +
+  icerik.innerHTML = afisHTML() + '<div class="bas"><div><h1>Keşfet</h1><p>Herkesin dolabından kiralanabilir parçalar.</p></div>' +
     '<a class="dug dug-vurgu" href="#dolabim">+ Dolabına eşya ekle</a></div>' +
     '<div class="kayitli-filtre" id="kayitliFiltre"></div>' +
     '<div class="suzgec" id="suzgec"></div>' +
     '<div class="suzgec suzgec-2" id="suzgec2"></div>' +
     '<div class="izgara" id="izgara"><p class="yukleniyor" style="grid-column:1/-1">Yükleniyor…</p></div>';
+  afisBaslat();
   let esyalar;
   try {
     esyalar = (await esyaListesi('onay', 'onaylandi')).filter(e => e.aktif);
@@ -930,6 +1010,11 @@ async function kiralamalar(gorunum, istek) {
       veri.sahipIletisim = (tel + ' · ' + (kullanici.email || '')).slice(0, 200);
       veri.sahipSozlesme = SOZLESME_SURUM;
     }
+    if (y === 'iade_edildi' && gorunum === 'sahip') {
+      const d = await iadePenceresi(k);
+      if (!d) return;
+      veri.iadeDurum = d;
+    }
     if (['iptal', 'reddedildi'].includes(y) && !confirm(y === 'iptal' ? 'İstek iptal edilsin mi?' : 'İstek reddedilsin mi?')) return;
     b.disabled = true;
     try { await dbGuncelle('dolapKiralamalar', k.id, veri); bildir('Güncellendi: ' + DURUM[y]); sayfaCiz(); }
@@ -960,6 +1045,23 @@ function onayPenceresi(k) {
       localStorage.setItem(LS_ILETISIM, tel);
       bitir(tel);
     };
+  });
+}
+
+function iadePenceresi(k) {
+  return new Promise(son => {
+    const p = $('#pencere');
+    p.innerHTML = '<div class="pencere-ic"><h2 id="pencereBas">Parça nasıl geri geldi?</h2>' +
+      '<p class="kucuk" style="margin-bottom:12px">' + esc(k.esyaBaslik) + ' · iade günü ' + tarihYaz(k.bitis) + ' · ' + esc(k.kiraciAd) + '</p>' +
+      '<div class="iade-secim">' + Object.keys(IADE_AD).map((d, i) =>
+        '<label><input type="radio" name="iDurum" value="' + d + '"' + (i ? '' : ' checked') + '><span><b>' + IADE_AD[d] + '</b> <span class="kucuk">kiracıya ' + (PUAN[d] > 0 ? '+' : '') + PUAN[d] + ' sadakat puanı</span></span></label>').join('') + '</div>' +
+      '<p class="kucuk" style="margin-top:10px">Geç ya da hasarlı iadede sözleşmedeki ücretler ayrıca geçerlidir; sorun yaşadıysan "Soru sor" ile ekibe de yaz.</p>' +
+      '<div class="pencere-alt"><button type="button" class="dug" id="iVazgec">Vazgeç</button><button type="button" class="dug dug-vurgu" id="iTamam">İade aldım</button></div></div>';
+    p.hidden = false; document.body.style.overflow = 'hidden';
+    const bitir = deger => { p.hidden = true; p.innerHTML = ''; document.body.style.overflow = ''; son(deger); };
+    $('#iVazgec').onclick = () => bitir(null);
+    p.onclick = ev => { if (ev.target === p) bitir(null); };
+    $('#iTamam').onclick = () => bitir($('input[name="iDurum"]:checked').value);
   });
 }
 
@@ -1008,7 +1110,8 @@ function kiraSatiri(k, gorunum) {
     '<div><h3><a href="#esya/' + esc(k.esyaId) + '">' + esc(k.esyaBaslik) + '</a></h3>' +
       '<p class="kira-detay">' + tarihYaz(k.baslangic) + ' → ' + tarihYaz(k.bitis) + ' · ' + k.gun + ' gün · <b>' + tl(k.toplam) + '</b></p>' +
       (gorunum === 'sahip' && k.not ? '<p class="kira-detay">Not: ' + esc(k.not) + '</p>' : '') +
-      '<p class="kira-detay"><span class="durum d-' + esc(d) + '">' + esc(DURUM[d] || d) + '</span> <span class="kucuk">' + refKod(k.id) + '</span></p></div>' +
+      '<p class="kira-detay"><span class="durum d-' + esc(d) + '">' + esc(DURUM[d] || d) + '</span> <span class="kucuk">' + refKod(k.id) +
+        (d === 'iade_edildi' && IADE_AD[k.iadeDurum] ? ' · ' + IADE_AD[k.iadeDurum] : '') + '</span></p></div>' +
     '<div class="eylem">' + eylem + '</div>' + gecikmeHTML(k) + ek + '</div>';
 }
 
@@ -1368,7 +1471,7 @@ async function panelKullanicilar(panel, istek) {
 }
 
 async function panelKisi(panel, uid, istek) {
-  const [u, ol, esyalar] = await Promise.all([uyeGetir(uid), olayListesi(30), esyaListesi('sahipId', uid)]);
+  const [u, ol, esyalar, sad] = await Promise.all([uyeGetir(uid), olayListesi(30), esyaListesi('sahipId', uid), sadakatGetir(uid).catch(() => null)]);
   if (istek !== aktifIstek) return;
   const kendi = ol.filter(o => o.uid === uid);
   const esyaO = kendi.filter(o => o.tur === 'esya');
@@ -1379,6 +1482,7 @@ async function panelKisi(panel, uid, istek) {
       '<p class="kucuk">' + (u && u.ilkGiris ? 'Üyelik: ' + tarihSaat(u.ilkGiris) + ' · ' : '') + (u && u.sonGiris ? 'Son giriş: ' + tarihSaat(u.sonGiris) : '') + '</p></div></div>' +
     '<div class="sayaclar">' + sayac('Oturum', new Set(kendi.map(o => o.oturum)).size) + sayac('Parça görüntüleme', esyaO.length) +
       sayac('Arama', kendi.filter(o => o.tur === 'arama').length) + sayac('İlan', esyalar.length) + '</div>' +
+    (sad ? '<section class="kutu"><h2>Sadakat puanı</h2>' + sadakatHTML(sad, false) + '</section>' : '') +
     '<div class="panel-izgara"><section class="kutu"><h2>Baktığı markalar</h2>' + cubuklar(say(esyaO, o => o.marka)) + '</section>' +
       '<section class="kutu"><h2>Baktığı parçalar</h2>' + cubuklar(say(esyaO, o => o.baslik)) + '</section></div>' +
     '<section class="kutu"><h2>Gezinti geçmişi · 30 gün</h2>' + olayTablosu(kendi.slice(0, 120), false) + '</section>' +
@@ -1712,7 +1816,7 @@ async function hesabim(bolum, istek) {
   if (!kullanici) return girisCagrisi('Hesabın', 'Bilgilerini, adreslerini ve kayıtlı filtrelerini görmek için giriş yap.');
   if (!uye) uye = { telefon: '', adresler: [], filtreler: [], bildirimEposta: true };
   const adresler = uye.adresler || [], filtreler = uye.filtreler || [];
-  const bolumler = [['profil', 'Profil'], ['adresler', 'Adreslerim'], ['kartlar', 'Kartlarım'], ['filtreler', 'Filtrelerim'], ['tercihler', 'Gizlilik ve bildirim'], ['hesap', 'Hesap']];
+  const bolumler = [['profil', 'Profil'], ['puan', 'Sadakat puanım'], ['adresler', 'Adreslerim'], ['kartlar', 'Kartlarım'], ['filtreler', 'Filtrelerim'], ['tercihler', 'Gizlilik ve bildirim'], ['hesap', 'Hesap']];
   icerik.innerHTML = '<div class="bas"><div><h1>Hesabım</h1><p>Bilgilerin ve ayarların.</p></div></div>' +
     '<div class="hesap-duzen"><nav class="hesap-menu" aria-label="Hesap bölümleri">' +
       bolumler.map(([k, ad]) => '<a href="#hesabim/' + k + '"' + ((bolum || 'profil') === k ? ' aria-current="true"' : '') + '>' + ad + '</a>').join('') + '</nav><div>' +
@@ -1725,6 +1829,8 @@ async function hesabim(bolum, istek) {
       '<div class="form-izgara" style="margin-top:14px"><div class="alan"><label for="hTel">Telefon</label><input id="hTel" type="tel" autocomplete="tel" value="' + esc(uye.telefon || '') + '"></div></div>' +
       '<p class="kucuk" style="margin-top:6px">Ad ve fotoğraf Google hesabından gelir.</p>' +
       '<button type="button" class="dug dug-ana" id="profilKaydet" style="margin-top:12px">Kaydet</button></section>' +
+    /* sadakat */
+    '<section class="kutu" id="b-puan"><h2>Sadakat puanım</h2><div id="sadakatIc"><p class="yukleniyor">Hesaplanıyor…</p></div></section>' +
     /* adresler */
     '<section class="kutu" id="b-adresler"><h2>Kayıtlı adreslerim</h2><div class="adresler">' +
       (adresler.length ? adresler.map((a, i) => '<div class="adres"><b>' + esc(a.baslik) + '</b><p>' + esc(a.adSoyad) + ' · ' + esc(a.telefon) + '</p><p>' + esc(a.adres) + '</p><p>' + esc(a.ilce) + ' / ' + esc(a.il) + '</p>' +
@@ -1751,6 +1857,8 @@ async function hesabim(bolum, istek) {
       '<p class="kucuk" style="margin-top:10px">Üyelik kaydını silmek telefon, adres ve filtrelerini siler. İlanların ve kiralama kayıtların için "Soru sor"dan bize yazabilirsin.</p></section>' +
     '</div></div>';
   if (bolum) { const h = $('#b-' + bolum); if (h) h.scrollIntoView({ block: 'start' }); }
+  sadakatGetir(kullanici.uid).then(x => { if (istek === aktifIstek && $('#sadakatIc')) $('#sadakatIc').innerHTML = sadakatHTML(x, true); })
+    .catch(h => { if ($('#sadakatIc')) $('#sadakatIc').innerHTML = '<p class="kucuk">Hesaplanamadı: ' + esc(hataMetni(h)) + '</p>'; });
 
   const kaydet = async (veri, mesaj) => { try { await uyeKaydet(veri); bildir(mesaj); sayfaCiz(); } catch (h) { bildir(hataMetni(h)); } };
   $('#profilKaydet').onclick = () => kaydet({ telefon: $('#hTel').value.trim().slice(0, 30) }, 'Profil kaydedildi.');

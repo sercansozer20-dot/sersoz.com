@@ -41,6 +41,21 @@ window.SERSOZ_AYAR = {
     'Hafta içi saat 15:00\'e kadar verilen siparişler aynı gün kargoda'
   ],
 
+  /* Elif'in Dolabı · Keşfet'in başında dönen kampanya afişleri (5 sn'de bir).
+     Sırayı değiştirebilir, yenisini ekleyebilir, silebilirsiniz. Boş [] bırakılırsa afiş çıkmaz.
+     ust: küçük üst yazı · baslik · metin · dugme: düğme yazısı · link: tıklanınca gidilecek yer
+     renk: afiş zemin rengi · foto: sağdaki görsel (gorsel/ klasöründen) */
+  kampanyalar: [
+    { ust: 'Yeni', baslik: 'Sepetini doldur, sırayla kirala', metin: 'Beğendiğin parçaları ♡ ile sepete at, istekleri tek tek gönder.',
+      dugme: 'Sepetime git', link: '#sepet', renk: '#7a2e3a', foto: 'gorsel/ornek/elbise-3.jpg' },
+    { ust: 'Sadakat puanı', baslik: 'Sorunsuz her kiralama puan kazandırır', metin: 'Bronz, Gümüş, Altın: seviyeni Hesabım\'da gör.',
+      dugme: 'Puanımı gör', link: '#hesabim/puan', renk: '#3d4a3a', foto: 'gorsel/ornek/canta-2.jpg' },
+    { ust: 'Dolabını kiraya ver', baslik: 'Giymediğin parçalar kazandırsın', metin: 'İlan vermek ücretsiz. Onaylanan parçan Keşfet\'te yayında.',
+      dugme: 'Parça ekle', link: '#dolabim', renk: '#2a1f1e', foto: 'gorsel/ornek/dis-giyim-2.jpg' },
+    { ust: 'Öne çıkar', baslik: 'İlanını Keşfet\'in en üstüne taşı', metin: 'Saatlik, günlük, haftalık ve aylık paketler.',
+      dugme: 'Dolabıma git', link: '#dolabim', renk: '#6b4423', foto: 'gorsel/ornek/ayakkabi-1.jpg' }
+  ],
+
   /* Elif'in Dolabı · öne çıkarma paketleri. Fiyatları değiştirebilirsiniz; "saat" değerlerini
      değiştirmeyin (firestore.rules ile eşleşir: 1 / 24 / 168 / 720). */
   oneCikarma: [
