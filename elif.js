@@ -14,7 +14,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where, serverTimestamp, Timestamp, onSnapshot }
+import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where, serverTimestamp, Timestamp, onSnapshot, writeBatch }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
@@ -155,10 +155,25 @@ function olay(tur, ek = {}) {
   }).catch(() => {});
 }
 async function olayListesi(gun) {
-  if (D) return D.olaylar;
+  if (D) { D.olaylar.forEach((o, i) => { if (!o.id) o.id = 'demo-ol-' + i; }); return D.olaylar.filter(o => zaman(o.zaman) >= Date.now() - gun * 864e5); }
   const sinir = Timestamp.fromMillis(Date.now() - gun * 864e5);
   return (await getDocs(query(collection(db, 'dolapOlaylar'), where('zaman', '>=', sinir))))
-    .docs.map(d => d.data()).sort((a, b) => zaman(b.zaman) - zaman(a.zaman));
+    .docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => zaman(b.zaman) - zaman(a.zaman));
+}
+async function tumOlaylar() {
+  if (D) { D.olaylar.forEach((o, i) => { if (!o.id) o.id = 'demo-ol-' + i; }); return D.olaylar.slice(); }
+  return (await getDocs(collection(db, 'dolapOlaylar'))).docs.map(d => ({ id: d.id, ...d.data() }));
+}
+/* Tam yetkili veri temizliği. Örnek modda bellekten siler (sayfa yenilenince geri gelir). */
+async function olaylariSil(kimlikler) {
+  if (!kimlikler.length) return 0;
+  if (D) { const k = new Set(kimlikler); D.olaylar = D.olaylar.filter(o => !k.has(o.id)); return kimlikler.length; }
+  for (let i = 0; i < kimlikler.length; i += 450) {
+    const b = writeBatch(db);
+    kimlikler.slice(i, i + 450).forEach(id => b.delete(doc(db, 'dolapOlaylar', id)));
+    await b.commit();
+  }
+  return kimlikler.length;
 }
 function izinSeridi() {
   let v; try { v = localStorage.getItem(LS_IZIN); } catch (e) { return; }
@@ -881,7 +896,33 @@ async function panelOzet(panel, istek) {
       '<section class="kutu"><h2>Aramalar</h2>' + cubuklar(say(aramaO, o => o.ara)) + '</section>' +
       '<section class="kutu"><h2>Sayfalar</h2>' + cubuklar(say(ol.filter(o => o.tur === 'sayfa'), o => SAYFA_AD[o.sayfa] || o.sayfa)) + '</section>' +
     '</div>' +
-    '<section class="kutu"><h2>Son hareketler</h2>' + olayTablosu(ol.slice(0, 40), true) + '</section>';
+    '<section class="kutu"><h2>Son hareketler</h2>' + olayTablosu(ol.slice(0, 40), true) + '</section>' +
+    (tamMi() ? '<section class="kutu tehlike-kutu"><h2>Veri yönetimi</h2>' +
+      '<p class="kucuk" style="margin-bottom:12px">Yalnız tam yetkili görür. Silinen gezinti kayıtları geri getirilemez.</p>' +
+      '<div class="satir-form"><label class="mini-alan">Şundan eski kayıtlar: <select id="silGun"><option value="7">7 gün</option><option value="30" selected>30 gün</option><option value="90">90 gün</option><option value="180">180 gün</option></select></label>' +
+        '<button type="button" class="dug dug-kucuk" id="eskiSil">Eski kayıtları sil</button>' +
+        '<button type="button" class="dug dug-kucuk dug-tehlike" id="hepsiniSil">Tüm gezinti kayıtlarını sıfırla</button></div></section>' : '');
+  panel.onclick = async ev => {
+    const b = ev.target.closest('[data-olay-sil],#eskiSil,#hepsiniSil'); if (!b || !tamMi()) return;
+    try {
+      let n = 0;
+      if (b.dataset.olaySil) n = await olaylariSil([b.dataset.olaySil]);
+      if (b.id === 'eskiSil') {
+        const gun = +$('#silGun').value, sinir = Date.now() - gun * 864e5;
+        const l = (await tumOlaylar()).filter(o => zaman(o.zaman) < sinir);
+        if (!l.length) { bildir(gun + ' günden eski kayıt yok.'); return; }
+        if (!confirm(gun + ' günden eski ' + l.length + ' kayıt silinsin mi?')) return;
+        n = await olaylariSil(l.map(o => o.id));
+      }
+      if (b.id === 'hepsiniSil') {
+        const onay = prompt('Bütün gezinti kayıtları silinecek ve panel sıfırlanacak. Onaylamak için SIFIRLA yazın:');
+        if (onay !== 'SIFIRLA') { if (onay !== null) bildir('Onay metni eşleşmedi, hiçbir şey silinmedi.'); return; }
+        n = await olaylariSil((await tumOlaylar()).map(o => o.id));
+      }
+      bildir(n + ' kayıt silindi.' + (DEMO ? ' (Örnek mod: sayfa yenilenince geri gelir.)' : ''));
+      sayfaCiz();
+    } catch (h) { bildir(hataMetni(h)); }
+  };
 }
 function olayMetni(o) {
   if (o.tur === 'esya') return 'Parçaya baktı: <a href="#esya/' + esc(o.esyaId) + '">' + esc(o.baslik) + '</a> <span class="kucuk">' + esc(o.marka) + '</span>';
@@ -891,11 +932,13 @@ function olayMetni(o) {
 }
 function olayTablosu(l, kisiGoster) {
   if (!l.length) return '<p class="kucuk">Kayıt yok.</p>';
-  return '<div class="tablo-kap"><table class="tablo"><thead><tr><th>Zaman</th>' + (kisiGoster ? '<th>Kişi</th>' : '') + '<th>Hareket</th></tr></thead><tbody>' +
+  const sil = tamMi();
+  return '<div class="tablo-kap"><table class="tablo"><thead><tr><th>Zaman</th>' + (kisiGoster ? '<th>Kişi</th>' : '') + '<th>Hareket</th>' + (sil ? '<th></th>' : '') + '</tr></thead><tbody>' +
     l.map(o => '<tr><td class="nw">' + tarihSaat(o.zaman) + '</td>' +
       (kisiGoster ? '<td>' + (o.uid ? '<a href="#yonetim/kisi/' + esc(o.uid) + '">' + esc(o.ad || 'Üye') + '</a>'
         : '<span class="kucuk">Ziyaretçi · ' + esc(String(o.oturum).slice(-4)) + '</span>') + '</td>' : '') +
-      '<td>' + olayMetni(o) + '</td></tr>').join('') + '</tbody></table></div>';
+      '<td>' + olayMetni(o) + '</td>' +
+      (sil ? '<td><button type="button" class="sil-dug" data-olay-sil="' + esc(o.id) + '" aria-label="Kaydı sil" title="Kaydı sil">×</button></td>' : '') + '</tr>').join('') + '</tbody></table></div>';
 }
 
 async function panelOnay(panel, istek) {
@@ -991,7 +1034,23 @@ async function panelKisi(panel, uid, istek) {
       sayac('Arama', kendi.filter(o => o.tur === 'arama').length) + sayac('İlan', esyalar.length) + '</div>' +
     '<div class="panel-izgara"><section class="kutu"><h2>Baktığı markalar</h2>' + cubuklar(say(esyaO, o => o.marka)) + '</section>' +
       '<section class="kutu"><h2>Baktığı parçalar</h2>' + cubuklar(say(esyaO, o => o.baslik)) + '</section></div>' +
-    '<section class="kutu"><h2>Gezinti geçmişi · 30 gün</h2>' + olayTablosu(kendi.slice(0, 120), false) + '</section>';
+    '<section class="kutu"><h2>Gezinti geçmişi · 30 gün</h2>' + olayTablosu(kendi.slice(0, 120), false) + '</section>' +
+    (tamMi() ? '<section class="kutu tehlike-kutu"><h2>Veri yönetimi</h2><p class="kucuk" style="margin-bottom:10px">Kişi verisinin silinmesini isterse (KVKK) ya da hatalı kayıtlar için.</p>' +
+      '<button type="button" class="dug dug-kucuk dug-tehlike" id="kisiSil">Bu kişinin tüm gezinti kayıtlarını sil</button></section>' : '');
+  panel.onclick = async ev => {
+    const b = ev.target.closest('[data-olay-sil],#kisiSil'); if (!b || !tamMi()) return;
+    try {
+      let n;
+      if (b.dataset.olaySil) n = await olaylariSil([b.dataset.olaySil]);
+      else {
+        const l = (await tumOlaylar()).filter(o => o.uid === uid);
+        if (!confirm((u ? u.ad : 'Bu kişi') + ' için ' + l.length + ' gezinti kaydı silinsin mi?')) return;
+        n = await olaylariSil(l.map(o => o.id));
+      }
+      bildir(n + ' kayıt silindi.' + (DEMO ? ' (Örnek mod: sayfa yenilenince geri gelir.)' : ''));
+      sayfaCiz();
+    } catch (h) { bildir(hataMetni(h)); }
+  };
 }
 
 async function panelYoneticiler(panel, istek) {
@@ -1138,7 +1197,8 @@ async function panelGelen(panel, secili, istek) {
       '<small>' + DURUM_AD[x.durum] + ' · ' + tarihSaat(x.sonZaman) + '</small></a>').join('') + '</div>' +
     '<div class="gelen-detay">' + (s ?
       '<div class="gelen-bas"><div><b>' + esc(s.ad) + '</b> <span class="kucuk">' + esc(s.eposta) + '</span></div>' +
-        (s.durum !== 'kapali' ? '<button type="button" class="dug dug-kucuk" id="sohbetKapat">Konuyu kapat</button>' : '') + '</div>' +
+        '<div class="eylem">' + (s.durum !== 'kapali' ? '<button type="button" class="dug dug-kucuk" id="sohbetKapat">Konuyu kapat</button>' : '') +
+        (tamMi() ? '<button type="button" class="dug dug-kucuk dug-tehlike" id="sohbetSil">Konuyu sil</button>' : '') + '</div></div>' +
       '<div class="gelen-akis">' + s.mesajlar.map(m => '<div class="mesaj m-' + (m.kimden === 'admin' ? 'admin' : 'kullanici') + '"><small>' +
         esc(m.kimden === 'admin' ? (m.ad || 'Ekip') : s.ad) + ' · ' + tarihSaat(m.zaman) + '</small>' + esc(m.metin) + '</div>').join('') + '</div>' +
       '<form class="asistan-form" id="yanitForm"><textarea id="yanitMetin" maxlength="2000" placeholder="Yanıtını yaz…" aria-label="Yanıt"></textarea><button type="submit" class="dug dug-vurgu">Yanıtla</button></form>'
@@ -1153,6 +1213,15 @@ async function panelGelen(panel, secili, istek) {
     try {
       await updateDoc(doc(db, 'dolapSohbet', s.id), { mesajlar: s.mesajlar.concat([mesaj]), durum: 'yanitlandi', sonZaman: serverTimestamp(), adminOkudu: true, kullaniciOkudu: false });
       bildir('Yanıt gönderildi.'); sayfaCiz();
+    } catch (h) { bildir(hataMetni(h)); }
+  };
+  const silDug = $('#sohbetSil');
+  if (silDug) silDug.onclick = async () => {
+    if (!confirm('Bu konu ve tüm mesajları silinsin mi? Geri alınamaz.')) return;
+    try {
+      if (D) D.sohbetler = D.sohbetler.filter(x => x.id !== s.id);
+      else await deleteDoc(doc(db, 'dolapSohbet', s.id));
+      bildir('Konu silindi.'); location.hash = '#yonetim/gelen';
     } catch (h) { bildir(hataMetni(h)); }
   };
   const kapat = $('#sohbetKapat');

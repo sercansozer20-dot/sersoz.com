@@ -294,3 +294,8 @@ main { padding: 28px 0 60px; }
 .filtre-satir .eylem { display: flex; gap: 6px; }
 section[id^="b-"] { scroll-margin-top: 84px; }
 @media (max-width: 760px) { .hesap-duzen { grid-template-columns: 1fr; } .hesap-menu { position: static; display: flex; overflow-x: auto; } .hesap-menu a { white-space: nowrap; } }
+
+/* tam yetkili veri yönetimi */
+.tehlike-kutu { border-color: #f2c9c4; background: #fffafa; }
+.sil-dug { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--cizgi); background: var(--kart); color: var(--ikinci); cursor: pointer; line-height: 1; }
+.sil-dug:hover { color: var(--kirmizi); border-color: var(--kirmizi); }
