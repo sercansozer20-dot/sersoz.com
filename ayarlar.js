@@ -16,7 +16,7 @@
  */
 window.SERSOZ_AYAR = {
   magazaAdi: 'SERSOZ',
-  sloganKisa: 'Makine görüşü yazılımı, donanımı ve hizmetleri',
+  sloganKisa: 'Elektronik ve Otomasyon Market',
   saticiAdi: 'Sercan Sözer',
   eposta: 'sercansozer20@gmail.com',
   telefon: '',          // örn. '+90 5xx xxx xx xx' — iletişimde görünür
@@ -33,6 +33,13 @@ window.SERSOZ_AYAR = {
   /* Bireysel satışta KDV eklenmez; fiyatlar son fiyattır. Şirket kurulursa
      buraya 0.20 yazılır ve sepet KDV satırını kendiliğinden gösterir. */
   kdvOrani: 0,
+
+  /* Sitenin en üstündeki turuncu şeritte görünen kısa duyurular.
+     Yerine getirebileceğiniz sözleri yazın; boş [] bırakılırsa kargo eşiği yazılır. */
+  duyurular: [
+    '2.000 TL ve üzeri siparişlerde kargo bedava',
+    'Hafta içi saat 15:00\'e kadar verilen siparişler aynı gün kargoda'
+  ],
 
   /* Kargo: fiziksel ürünlerde uygulanır. ucretsizEsik üstünde kargo bedava. */
   kargo: { ucret: 150, ucretsizEsik: 2000 }

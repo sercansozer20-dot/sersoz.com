@@ -3,12 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Satış Koşulları, İade ve Gizlilik — SERSOZ Mağaza</title>
+<title>Satış Koşulları, İade ve Gizlilik | SERSOZ</title>
 <meta name="description" content="SERSOZ Mağaza ön bilgilendirme, mesafeli satış koşulları, cayma/iade ve gizlilik bilgileri.">
-<meta name="theme-color" content="#c2410c">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2317140f'/%3E%3Ctext x='32' y='45' font-family='Consolas,monospace' font-size='36' font-weight='700' fill='%23f97316' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#e8590c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23e8590c'/%3E%3Ctext x='32' y='46' font-family='Arial' font-size='40' font-weight='900' fill='%23fff' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap">
 <link rel="stylesheet" href="magaza.css">
-<script>try{var t=localStorage.getItem('sersoz_tema');if(t==='koyu'||t==='acik')document.documentElement.setAttribute('data-tema',t)}catch(e){}</script>
 </head>
 <body>
 <a class="atla" href="#icerik">İçeriğe atla</a>
@@ -27,14 +29,14 @@
     <h2>2. Ürün, fiyat ve ödeme</h2>
     <p>Ürünlerin temel nitelikleri ve satış fiyatı ürün sayfasında yazılıdır. Sepette gösterilen toplam, kargo dahil ödenecek son tutardır. Ödeme kartla (Shopier güvenli ödeme sayfası üzerinden) veya havale/EFT ile yapılır. Kart bilgileri bu siteye girilmez ve saklanmaz.</p>
 
-    <h2>3. Teslimat</h2>
+    <h2 id="teslimat">3. Teslimat</h2>
     <ul>
       <li><strong>Dijital ürünler (lisanslar, modüller):</strong> ödeme onayından sonra en geç 1 iş günü içinde sipariş formundaki e-posta adresine gönderilir.</li>
       <li><strong>Fiziksel ürünler:</strong> ödeme onayından sonra kargoya verilir; tahmini teslim süresi ürün sayfasında yazılıdır. Yasal azami süre 30 gündür.</li>
       <li><strong>Hizmetler:</strong> sipariş sonrası alıcıyla birlikte belirlenen tarihte verilir.</li>
     </ul>
 
-    <h2>4. Cayma hakkı ve iade</h2>
+    <h2 id="iade">4. Cayma hakkı ve iade</h2>
     <p>Fiziksel ürünlerde alıcı, teslim tarihinden itibaren 14 gün içinde gerekçe göstermeden cayma hakkına sahiptir. Cayma bildirimi <span data-ayar="eposta"></span> adresine yazılı olarak yapılır; ürün kullanılmamış ve yeniden satılabilir durumda iade edilir. Bedel, iade ulaştıktan sonra 14 gün içinde ödemenin yapıldığı yöntemle geri ödenir.</p>
     <p>Mesafeli Sözleşmeler Yönetmeliği'nin 15. maddesi uyarınca; elektronik ortamda anında ifa edilen veya teslim edilmiş dijital içerikler (lisans anahtarları, yazılım modülleri) ile alıcının onayıyla ifasına başlanmış hizmetlerde cayma hakkı kullanılamaz.</p>
 
@@ -51,6 +53,7 @@
 
 <script src="ayarlar.js"></script>
 <script src="urunler.js"></script>
+<script src="urunler-ornek.js"></script>
 <script src="magaza.js"></script>
 <script>
   document.querySelectorAll('[data-ayar]').forEach(function (el) { el.textContent = Magaza.ayar[el.getAttribute('data-ayar')] || ''; });

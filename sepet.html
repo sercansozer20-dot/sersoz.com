@@ -3,25 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sepet ve Ödeme — SERSOZ Mağaza</title>
+<title>Sepet ve Ödeme | SERSOZ</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#c2410c">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2317140f'/%3E%3Ctext x='32' y='45' font-family='Consolas,monospace' font-size='36' font-weight='700' fill='%23f97316' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#e8590c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23e8590c'/%3E%3Ctext x='32' y='46' font-family='Arial' font-size='40' font-weight='900' fill='%23fff' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap">
 <link rel="stylesheet" href="magaza.css">
-<script>try{var t=localStorage.getItem('sersoz_tema');if(t==='koyu'||t==='acik')document.documentElement.setAttribute('data-tema',t)}catch(e){}</script>
 </head>
-<body data-sayfa="sepet">
+<body>
 <a class="atla" href="#icerik">İçeriğe atla</a>
 <header id="ust"></header>
 
 <main class="kap" id="icerik">
-  <nav class="iz" aria-label="Konum"><a href="index.html">Mağaza</a> / Sepet ve ödeme</nav>
-  <h1 style="font-size:clamp(28px,4vw,38px);font-weight:800;margin:14px 0 22px">Siparişi tamamla</h1>
+  <nav class="iz" aria-label="Konum"><a href="index.html">Ana Sayfa</a> › Sepetim</nav>
+  <h1 class="sayfa-bas">Sepetim ve Ödeme</h1>
 
   <div id="bos" hidden class="panel" style="text-align:center;padding:48px 20px">
-    <h2 style="justify-content:center">Sepetiniz boş</h2>
+    <h2 style="border:0">Sepetinizde ürün yok</h2>
     <p class="kucuk" style="font-size:15px;margin-bottom:20px">Sipariş vermek için önce ürün ekleyin.</p>
-    <a class="dug dug-ana" href="index.html#urunler">Ürünlere göz at</a>
+    <a class="dug dug-ana" href="index.html#urunler">Ürün listesine dön</a>
   </div>
 
   <form id="form" class="odeme-izgara" novalidate hidden>
@@ -51,7 +53,7 @@
           <label class="secenek" id="kartSecenek">
             <input type="radio" name="odeme" value="kart">
             <strong>Kredi / banka kartı</strong>
-            <span id="kartAciklama">Shopier'in güvenli ödeme sayfasına yönlendirilirsiniz. Kart bilgileriniz bu siteye girilmez.</span>
+            <span id="kartAciklama">Shopier'in ödeme sayfasına yönlendirilirsiniz. Kart bilgileriniz bu siteye girilmez.</span>
           </label>
           <label class="secenek">
             <input type="radio" name="odeme" value="havale" checked>
@@ -70,7 +72,7 @@
       <label class="onay-kutu"><input type="checkbox" id="onay" required><span><a href="kosullar.html" target="_blank">Ön bilgilendirme formu ve mesafeli satış koşullarını</a> okudum, kabul ediyorum.</span></label>
       <p class="hata-metin" id="hata" role="alert"></p>
       <button type="submit" class="dug dug-ana dug-buyuk dug-tam" id="gonder">Siparişi onayla</button>
-      <p class="kucuk" style="text-align:center;margin-top:10px">Üyelik gerekmez · <button type="button" class="sil" data-sepet-ac>Sepeti düzenle</button></p>
+      <p class="kucuk" style="text-align:center;margin-top:10px">Üyelik gerekmez · <button type="button" class="bag" data-sepet-ac>Sepeti düzenle</button></p>
     </aside>
   </form>
 </main>
@@ -79,6 +81,7 @@
 
 <script src="ayarlar.js"></script>
 <script src="urunler.js"></script>
+<script src="urunler-ornek.js"></script>
 <script src="magaza.js"></script>
 <script>
 (function () {
@@ -109,7 +112,7 @@
     var t = M.sepet.toplamlar();
     $('ozetSatirlar').innerHTML = st.map(function (l) { return M.satirHTML(l, false); }).join('');
     $('ozetToplam').innerHTML = M.toplamHTML(t);
-    $('gonder').textContent = 'Siparişi onayla · ' + M.tl(t.genel);
+    $('gonder').textContent = 'Siparişi Onayla · ' + M.tl(t.genel);
 
     $('adresPanel').hidden = !t.fiziksel;
     ['adres', 'ilce', 'il'].forEach(function (k) { $(k).required = t.fiziksel; });
@@ -191,6 +194,11 @@
       return;
     }
     var st = M.sepet.satirlar(), t = M.sepet.toplamlar();
+    var ornekler = st.filter(function (l) { return l.u.ornek; });
+    if (ornekler.length) {
+      hata.textContent = 'Sepetinizde örnek ürün var (' + ornekler.map(function (l) { return l.u.kod; }).join(', ') + '). Örnek ürünler satışta değildir; sepetten çıkarıp tekrar deneyin.';
+      return;
+    }
     var odeme = form.querySelector('input[name=odeme]:checked').value;
     var s = {
       no: siparisNo(),

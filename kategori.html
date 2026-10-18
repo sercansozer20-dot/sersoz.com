@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ürünler | SERSOZ</title>
+<meta name="description" content="SERSOZ elektronik ve otomasyon ürünleri.">
+<meta name="theme-color" content="#e8590c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23e8590c'/%3E%3Ctext x='32' y='46' font-family='Arial' font-size='40' font-weight='900' fill='%23fff' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap">
+<link rel="stylesheet" href="magaza.css">
+</head>
+<body>
+<a class="atla" href="#liste">Ürün listesine atla</a>
+<header id="ust"></header>
+
+<main class="kap" id="icerik">
+  <nav class="iz" aria-label="Konum"><a href="index.html">Ana Sayfa</a> › <span id="izAd">Ürünler</span></nav>
+  <div class="liste-duzen">
+    <aside class="filtre" id="filtre" aria-label="Filtreler">
+      <div class="filtre-grup">
+        <h3>Kategoriler</h3>
+        <div id="filtreKat"></div>
+      </div>
+      <div class="filtre-grup">
+        <h3>Fiyat aralığı</h3>
+        <div class="fiyat-aralik">
+          <label class="sr-only" for="fMin">En düşük fiyat</label>
+          <input id="fMin" type="number" min="0" inputmode="numeric" placeholder="En az">
+          <span>-</span>
+          <label class="sr-only" for="fMax">En yüksek fiyat</label>
+          <input id="fMax" type="number" min="0" inputmode="numeric" placeholder="En çok">
+        </div>
+      </div>
+      <div class="filtre-grup">
+        <h3>Ürün durumu</h3>
+        <label><input type="checkbox" id="fIndirim"> İndirimli ürünler</label>
+        <label><input type="checkbox" id="fYeni"> Yeni ürünler</label>
+        <label><input type="checkbox" id="fKargo"> Aynı gün kargo</label>
+      </div>
+      <div class="filtre-grup"><button type="button" class="bag" id="temizle">Filtreleri temizle</button></div>
+    </aside>
+
+    <section aria-labelledby="baslik">
+      <div class="liste-ust">
+        <h1 id="baslik">Ürünler</h1>
+        <div class="sag">
+          <button type="button" class="dug filtre-ac" id="filtreAc" aria-controls="filtre" aria-expanded="false">Filtrele</button>
+          <label class="sr-only" for="sirala">Sırala</label>
+          <select id="sirala">
+            <option value="onerilen">Önerilen sıralama</option>
+            <option value="artan">Fiyat: düşükten yükseğe</option>
+            <option value="azalan">Fiyat: yüksekten düşüğe</option>
+            <option value="indirim">İndirim oranı</option>
+            <option value="ad">Ürün adı (A-Z)</option>
+          </select>
+        </div>
+      </div>
+      <div class="izgara dort" id="liste"></div>
+    </section>
+  </div>
+</main>
+
+<footer id="alt"></footer>
+
+<script src="ayarlar.js"></script>
+<script src="urunler.js"></script>
+<script src="urunler-ornek.js"></script>
+<script src="magaza.js"></script>
+<script>
+(function () {
+  'use strict';
+  var M = window.Magaza, esc = M.esc;
+  var p = new URLSearchParams(location.search);
+  var kat = p.get('k') || '', liste = p.get('liste') || '', q = (p.get('q') || '').trim();
+  function $(id) { return document.getElementById(id); }
+  function kucuk(s) { return String(s).toLocaleLowerCase('tr-TR'); }
+
+  var c = M.kategori(kat);
+  var baslik = q ? '"' + q + '" için sonuçlar'
+    : c ? c.ad
+    : liste === 'indirim' ? 'İndirimli Ürünler'
+    : liste === 'yeni' ? 'Yeni Ürünler' : 'Tüm Ürünler';
+  document.title = baslik + ' | SERSOZ';
+  $('izAd').textContent = baslik;
+  if (liste === 'indirim') $('fIndirim').checked = true;
+  if (liste === 'yeni') $('fYeni').checked = true;
+
+  $('filtreKat').innerHTML =
+    '<a href="kategori.html?liste=hepsi"' + (!kat ? ' aria-current="page"' : '') + '>Tüm ürünler<span>' + M.urunler.length + '</span></a>' +
+    M.kategoriler.map(function (k) {
+      return '<a href="' + M.katLink(k.id) + '"' + (k.id === kat ? ' aria-current="page"' : '') + '>' + esc(k.ad) + '<span>' + M.katSayi(k.id) + '</span></a>';
+    }).join('');
+
+  function ciz() {
+    var min = parseFloat($('fMin').value), max = parseFloat($('fMax').value);
+    var sq = kucuk(q);
+    var l = M.urunler.filter(function (u) {
+      if (kat && u.kategori !== kat) return false;
+      if (sq && kucuk(u.ad + ' ' + u.kod + ' ' + (u.kisa || '') + ' ' + ((M.kategori(u.kategori) || {}).ad || '')).indexOf(sq) < 0) return false;
+      if (!isNaN(min) && u.fiyat < min) return false;
+      if (!isNaN(max) && u.fiyat > max) return false;
+      if ($('fIndirim').checked && !M.indirim(u)) return false;
+      if ($('fYeni').checked && !u.yeni) return false;
+      if ($('fKargo').checked && !/aynı gün/i.test(u.teslimKisa || '')) return false;
+      return true;
+    });
+    var s = $('sirala').value;
+    if (s === 'artan') l.sort(function (a, b) { return a.fiyat - b.fiyat; });
+    if (s === 'azalan') l.sort(function (a, b) { return b.fiyat - a.fiyat; });
+    if (s === 'indirim') l.sort(function (a, b) { return M.indirim(b) - M.indirim(a); });
+    if (s === 'ad') l.sort(function (a, b) { return a.ad.localeCompare(b.ad, 'tr'); });
+
+    $('baslik').innerHTML = esc(baslik) + '<span>' + l.length + ' ürün</span>';
+    $('liste').innerHTML = l.length ? l.map(M.kart).join('')
+      : '<div class="bos-durum"><b>Aradığınız kriterlere uygun ürün bulunamadı.</b><br><span class="kucuk">Filtreleri gevşetmeyi ya da farklı bir kelimeyle aramayı deneyin.</span></div>';
+  }
+
+  ['fMin', 'fMax'].forEach(function (id) { $(id).addEventListener('input', ciz); });
+  ['fIndirim', 'fYeni', 'fKargo', 'sirala'].forEach(function (id) { $(id).addEventListener('change', ciz); });
+  $('temizle').addEventListener('click', function () {
+    $('fMin').value = $('fMax').value = '';
+    $('fIndirim').checked = $('fYeni').checked = $('fKargo').checked = false;
+    ciz();
+  });
+  $('filtreAc').addEventListener('click', function () {
+    var acik = $('filtre').classList.toggle('acik');
+    this.setAttribute('aria-expanded', String(acik));
+  });
+  ciz();
+})();
+</script>
+</body>
+</html>

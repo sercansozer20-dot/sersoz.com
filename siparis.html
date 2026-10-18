@@ -3,20 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Siparişiniz alındı — SERSOZ Mağaza</title>
+<title>Siparişiniz alındı | SERSOZ</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#c2410c">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2317140f'/%3E%3Ctext x='32' y='45' font-family='Consolas,monospace' font-size='36' font-weight='700' fill='%23f97316' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#e8590c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23e8590c'/%3E%3Ctext x='32' y='46' font-family='Arial' font-size='40' font-weight='900' fill='%23fff' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap">
 <link rel="stylesheet" href="magaza.css">
-<script>try{var t=localStorage.getItem('sersoz_tema');if(t==='koyu'||t==='acik')document.documentElement.setAttribute('data-tema',t)}catch(e){}</script>
 </head>
-<body data-sayfa="siparis">
+<body>
 <header id="ust"></header>
 <main class="kap" id="icerik"><div class="sonuc" id="sonuc"></div></main>
 <footer id="alt"></footer>
 
 <script src="ayarlar.js"></script>
 <script src="urunler.js"></script>
+<script src="urunler-ornek.js"></script>
 <script src="magaza.js"></script>
 <script>
 (function () {
@@ -27,27 +30,26 @@
   try { s = JSON.parse(localStorage.getItem('sersoz_son_siparis')); } catch (e) {}
 
   if (!s) {
-    kap.innerHTML = '<h1>Görüntülenecek sipariş yok</h1><p class="kucuk" style="font-size:16px;margin-bottom:22px">Sipariş verdiyseniz onay e-postanızı kontrol edin.</p><a class="dug dug-ana" href="index.html">Mağazaya dön</a>';
+    kap.innerHTML = '<h1>Görüntülenecek sipariş yok</h1><p style="margin-bottom:18px">Sipariş verdiyseniz onay e-postanızı kontrol edin.</p><a class="dug dug-ana" href="index.html">Mağazaya dön</a>';
     return;
   }
 
   var h = A.havale || {};
   function satir(etiket, deger, kopya) {
     return '<div class="iban-satir"><div><small>' + etiket + '</small><b>' + esc(deger) + '</b></div>' +
-      (kopya ? '<button type="button" class="dug dug-cizgi kopyala" data-kopya="' + esc(deger) + '">Kopyala</button>' : '') + '</div>';
+      (kopya ? '<button type="button" class="dug kopyala" data-kopya="' + esc(deger) + '">Kopyala</button>' : '') + '</div>';
   }
 
   var html =
-    '<div class="sonuc-ikon">' + M.ikon.tik + '</div>' +
-    '<h1>Siparişiniz alındı</h1>' +
-    '<p style="color:var(--soluk);font-size:17px">Teşekkürler ' + esc(s.musteri.ad.split(' ')[0]) + '. Sipariş numaranız <span class="siparis-no">' + esc(s.no) + '</span>. ' +
+        '<h1>Siparişiniz alındı</h1>' +
+    '<p>Teşekkürler ' + esc(s.musteri.ad.split(' ')[0]) + '. Sipariş numaranız <span class="siparis-no">' + esc(s.no) + '</span>. ' +
     'Bilgilendirme <strong>' + esc(s.musteri.eposta) + '</strong> adresine gönderilecek.</p>';
 
   /* Bildirim gitmediyse (Web3Forms anahtarı yok/başarısız) müşteriden e-postayı göndermesini iste. */
   if (!s.bildirildi) {
     var mailto = 'mailto:' + A.eposta + '?subject=' + encodeURIComponent('Sipariş ' + s.no) + '&body=' + encodeURIComponent(s.metin);
-    html += '<div class="panel" style="margin-top:24px;border-color:var(--vurgu)"><h2 style="margin-bottom:8px">Son adım: siparişi iletin</h2>' +
-      '<p class="kucuk" style="font-size:15px;margin-bottom:14px">Siparişinizin bize ulaşması için aşağıdaki düğmeyle hazır e-postayı gönderin. Açılmazsa sipariş numaranızla <a href="mailto:' + esc(A.eposta) + '">' + esc(A.eposta) + '</a> adresine yazın.</p>' +
+    html += '<div class="panel" style="margin-top:22px;border-color:var(--vurgu)"><h2>Son adım: siparişi bana iletin</h2>' +
+      '<p style="margin-bottom:14px;color:var(--ikinci)">Siparişinizin bize ulaşması için aşağıdaki düğmeyle hazır e-postayı gönderin. Açılmazsa sipariş numaranızla <a href="mailto:' + esc(A.eposta) + '">' + esc(A.eposta) + '</a> adresine yazın.</p>' +
       '<a class="dug dug-ana dug-tam" href="' + esc(mailto) + '">Sipariş e-postasını gönder</a></div>';
   }
 
@@ -75,7 +77,7 @@
     }).join('') +
     '<div style="display:grid;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--cizgi)">' + M.toplamHTML(s.toplam) + '</div></div>' +
     '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:24px"><a class="dug dug-koyu" href="index.html">Alışverişe devam et</a>' +
-    '<button type="button" class="dug dug-cizgi" onclick="print()">Yazdır</button></div>';
+    '<button type="button" class="dug" onclick="print()">Yazdır</button></div>';
 
   kap.innerHTML = html;
 
