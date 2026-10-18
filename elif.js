@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019o';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019p';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -1227,6 +1227,7 @@ async function esyaSayfasi(id, istek) {
     if (gun > 60) { hata.textContent = 'En fazla 60 günlük kiralama yapılabilir.'; return; }
     if (tel.replace(/\D/g, '').length < 10) { hata.textContent = 'Geçerli bir telefon numarası yazın.'; return; }
     if (adres.length < 10 && aSec !== 'elden') { hata.textContent = 'Teslimat adresini yazın ya da "Elden teslim"i seçin.'; return; }
+    const notSorun = icerikSorunu($('#kNot').value); if (notSorun) { hata.textContent = 'Not: ' + notSorun + ' Telefonunu yukarıdaki alana yaz; ödeme onaylanınca açılır.'; return; }
     if (!$('#kSozlesme').checked) { hata.textContent = 'Devam etmek için kiralama sözleşmesini kabul edin.'; return; }
     localStorage.setItem(LS_ILETISIM, tel);
     const dug = $('#kGonder'); dug.disabled = true; dug.textContent = 'Gönderiliyor…';
@@ -1258,6 +1259,46 @@ async function esyaSayfasi(id, istek) {
     }
   };
 }
+
+/* ---------------------------------------------------------------- içerik denetimi
+ * Kullanıcı metinlerinde telefon, e-posta, sosyal medya/mesajlaşma yönlendirmesi, site dışında anlaşma girişimi
+ * ve küfür/hakaret engellenir. Telefon, e-posta, ağır küfür ve temel yönlendirmeler firestore.rules'ta da reddedilir. */
+const TR_ASCII = { 'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u' };
+const trAscii = x => String(x || '').toLocaleLowerCase('tr').replace(/[çğıöşü]/g, c => TR_ASCII[c]);
+const SAYI_KELIME = { sifir: 0, bir: 1, iki: 2, uc: 3, dort: 4, bes: 5, alti: 6, yedi: 7, sekiz: 8, dokuz: 9, on: 10, yirmi: 20, otuz: 30, kirk: 40, elli: 50, altmis: 60, yetmis: 70, seksen: 80, doksan: 90 };
+/* küfür denetimi ş ve ı'yı korur: "şık" ile küfür karışmasın */
+const yariAscii = x => String(x || '').toLocaleLowerCase('tr').replace(/[çğöü]/g, c => TR_ASCII[c]);
+const KUFUR_KOK = ['orospu', 'siktir', 'sikerim', 'sikeyim', 'siktig', 'sikik', 'sikiş', 'sikis', 'yarak', 'amına', 'amina', 'amcık', 'amcik', 'pezevenk', 'kahpe',
+  'şerefsiz', 'serefsiz', 'gerizekal', 'yavşak', 'yavsak', 'kaltak', 'surtuk', 'dalyarak', 'gotveren', 'avradın', 'avradin', 'ananı', 'anani', 'ananız', 'ananiz', 'bok'];
+const KUFUR_TAM = ['amk', 'aq', 'amq', 'mk', 'ibne', 'got', 'oc', 'puşt', 'pust', 'gavat', 'salak', 'aptal', 'dangalak', 'ebeni', 'pic'];
+const ILETISIM_IFADE = [
+  'whats ?app', 'watsap', 'vatsap', 'wats?ap', 'wp ?(den|dan|ye|ya|e|a)\\b', '\\bwp\\b', 'telegram', 'instagram', '\\binsta\\b', 'tiktok', 'facebook', 'snapchat', 'twitter',
+  '\\bdm\\b', '\\bdm ?(den|at|ye|e)\\b', 'ozel ?(den|mesaj)', '\\bpm\\b', 'mesaj ?at', 'bana ?yaz', 'bana ?ulas', 'beni ?ara', 'ara ?beni', 'arayin', 'arayabilir',
+  'numaram', 'numaran', 'numarasini', 'numara ?(ver|at|yaz|paylas)', 'telefon ?(no|num|numara)', 'telefonum', '\\btel ?no', 'cep ?(no|num|tel)', '\\bgsm\\b', 'iletisim ?(bilgi|numara|adres|kur|e gec|e gecin)',
+  'mail ?(at|adres|le|e|den)', '\\be-?posta', 'gmail', 'hotmail', 'outlook', 'yahoo', 'icloud', 'yandex', 'nokta ?com', '\\.com\\b',
+  '\\biban\\b', 'hesap ?(no|numara)', 'elden ?ode', 'elden ?para', 'site ?disi', 'siteden ?bagimsiz', 'komisyon(suz| ?ode(me|meden))', 'aramizda ?anlas', 'kendi ?aramizda', 'direkt ?anlas'
+].map(x => new RegExp(x));
+function icerikSorunu(metin) {
+  const ham = String(metin || '');
+  if (!ham.trim()) return null;
+  const a = trAscii(ham);
+  // telefon: rakamlar (yazıyla yazılanlar dahil) arada boşluk, nokta, tire olsa da 9+ hane
+  const rakam = a.replace(/[a-z]+/g, w => (w in SAYI_KELIME ? String(SAYI_KELIME[w]) : ' ' + w + ' '))
+    .replace(/(\d)[\s.\-\/()+_*,]+(?=\d)/g, '$1');
+  if (/\d{9,}/.test(rakam) || /\+\s*9\s*0/.test(ham)) return 'Telefon numarası paylaşılamaz.';
+  if (/[a-z0-9._%+-]+\s*(@|\(at\)|\[at\])\s*[a-z0-9-]+\s*(\.|nokta|dot)\s*[a-z]{2,}/i.test(a) || /(^|\s)@[a-z0-9_.]{3,}/.test(a)) return 'E-posta ya da kullanıcı adı paylaşılamaz.';
+  if (ILETISIM_IFADE.some(r => r.test(a))) return 'İletişim bilgisi vermeye ya da site dışında anlaşmaya yönelik ifadeler yazılamaz.';
+  const sade = yariAscii(ham).replace(/[013457@$]/g, c => ({ 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', '@': 'a', $: 's' })[c]);
+  const ham2 = sade.split(/[^a-zşı]+/).filter(Boolean), tok = [];
+  for (let i = 0; i < ham2.length; i++) {          // "s i k t i r" gibi harf harf yazılanları birleştir
+    if (ham2[i].length === 1) { let j = i, w = ''; while (j < ham2.length && ham2[j].length === 1) w += ham2[j++]; tok.push(w); i = j - 1; }
+    else tok.push(ham2[i]);
+  }
+  const kufur = tok.map(t => t.replace(/(.)\1+/g, '$1')).some(t => KUFUR_TAM.includes(t) || KUFUR_KOK.some(k => t.startsWith(k) && !(k === 'bok' && /^bok(ser|s)/.test(t))));
+  if (kufur) return 'Küfür ya da hakaret içeren ifadeler yazılamaz.';
+  return null;
+}
+const DENETIM_NOT = ' İletişim bilgileri ödeme onaylanınca site üzerinden açılır.';
 
 /* ---------------------------------------------------------------- satıcıya sor (dolapSorular, herkese açık) */
 async function soruListesi(alan, deger) {
@@ -1293,6 +1334,7 @@ async function sorulariCiz(e, istek) {
   if (gd) gd.onclick = async () => {
     const metin = $('#soruMetin').value.trim();
     if (metin.length < 3) { $('#soruHata').textContent = 'Sorunu yaz.'; return; }
+    const sorun = icerikSorunu(metin); if (sorun) { $('#soruHata').textContent = sorun + DENETIM_NOT; return; }
     gd.disabled = true;
     try {
       await dbEkle('dolapSorular', { esyaId: e.id, esyaBaslik: e.baslik.slice(0, 80), sahipId: e.sahipId, soranId: kullanici.uid,
@@ -1307,6 +1349,7 @@ async function sorulariCiz(e, istek) {
       if (c) {
         const v = ic.querySelector('[data-cevap-alan="' + CSS.escape(c.dataset.cevapla) + '"]').value.trim();
         if (!v) return;
+        const sorun = icerikSorunu(v); if (sorun) { bildir(sorun + DENETIM_NOT); return; }
         c.disabled = true;
         await dbGuncelle('dolapSorular', c.dataset.cevapla, { cevap: v.slice(0, 1000), durum: 'cevaplandi', cevapZaman: SIMDI() });
         bildir('Cevabın yayında.');
@@ -1497,6 +1540,7 @@ function esyaFormu(e) {
     const ucret = Math.round(+v('fUcret')), depozito = Math.round(+v('fDepozito') || 0);
     if (!fotolar.length) { hata.textContent = 'En az bir fotoğraf ekleyin.'; return; }
     if (v('fBaslik').length < 2) { hata.textContent = 'Başlık yazın.'; return; }
+    const sorun = icerikSorunu(v('fBaslik') + ' \n ' + v('fMarka') + ' \n ' + v('fAciklama')); if (sorun) { hata.textContent = 'Başlık / açıklama: ' + sorun + DENETIM_NOT; return; }
     if (!(ucret >= 1)) { hata.textContent = 'Günlük kira bedeli girin.'; return; }
     if (depozito < 0) { hata.textContent = 'Depozito eksi olamaz.'; return; }
     if (!$('#fSozlesme').checked) { hata.textContent = 'Eşya eklemek için kiraya veren şartlarını kabul edin.'; return; }
@@ -3011,6 +3055,7 @@ async function hesabim(bolum, istek) {
     kaydet({ iban, ibanAd: ad }, 'Ödeme bilgilerin kaydedildi.');
   };
   $('#profilKaydet').onclick = async () => {
+    const sorun = icerikSorunu($('#hHakkimda').value + ' \n ' + $('#hSehir').value); if (sorun) { bildir('Hakkımda: ' + sorun); return; }
     if (!D) {
       try {
         await setDoc(doc(db, 'dolapProfiller', kullanici.uid), { sehir: $('#hSehir').value.trim().slice(0, 40),

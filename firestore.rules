@@ -59,6 +59,15 @@ service cloud.firestore {
     function yeni()     { return request.resource.data; }
     function eski()     { return resource.data; }
     function degisenler() { return request.resource.data.diff(resource.data).affectedKeys(); }
+    /* Kullanıcı metni: telefon (10+ hane), e-posta, iletişim yönlendirmesi ve ağır küfür içeremez. */
+    function temizMetin(s) {
+      let k = s.lower();
+      return !s.matches('(?s).*([0-9][^0-9A-Za-z]{0,3}){9}[0-9].*')
+        && !s.matches('(?s).*[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+[.][A-Za-z]{2,}.*')
+        && !k.matches('(?s).*(whatsapp|watsap|vatsap|telegram|instagram|gmail|hotmail|numaram|telefonum|beni ara|bana ulaş|bana ulas|özelden|ozelden|iban|elden öde|elden ode|site dışı|site disi).*')
+        && !k.matches('(?s)(.*[^a-zçğıöşü])?(amk|aq|ibne|piç|göt|oç|puşt|gavat)([^a-zçğıöşü].*)?')
+        && !k.matches('(?s)(.*[^a-zçğıöşü])?(orospu|siktir|sikerim|sikeyim|yarrak|amına|amcık|pezevenk|kahpe|şerefsiz|yavşak|kaltak|sürtük|dalyarak).*');
+    }
 
     function dogrulanmis() {
       return girisli()
@@ -578,6 +587,7 @@ service cloud.firestore {
       allow create: if girisli() && !kisitli() && esyaGecerli()
         && yeni().sahipId == benim()
         && yeni().onay == 'bekliyor' && yeni().redNeden == ''
+        && temizMetin(yeni().baslik) && temizMetin(yeni().aciklama)
         && yeni().olusturma == request.time;
       /* sahip: yalnız yayın aç/kapa, ya da içerik değişikliği → yeniden onaya */
       allow update: if girisli() && eski().sahipId == benim() && !kisitli() && esyaGecerli()
@@ -585,7 +595,7 @@ service cloud.firestore {
         && yeni().olusturma == eski().olusturma
         && !degisenler().hasAny(['oneCikanBitis', 'begeni', 'onayZaman'])
         && (degisenler().hasOnly(['aktif'])
-            || (yeni().onay == 'bekliyor' && yeni().redNeden == ''));
+            || (yeni().onay == 'bekliyor' && yeni().redNeden == '' && temizMetin(yeni().baslik) && temizMetin(yeni().aciklama)));
       /* beğeni sayacı: yalnız ±1 ve aynı yazımda kişinin beğeni kaydı eklenip/silinirse */
       allow update: if girisli() && !kisitli() && degisenler().hasOnly(['begeni'])
         && ((yeni().begeni == eski().get('begeni', 0) + 1
@@ -766,7 +776,8 @@ service cloud.firestore {
         && yeni().kiraciAd is string && yeni().kiraciAd.size() <= 80
         && yeni().kiraciIletisim is string && yeni().kiraciIletisim.size() >= 5
         && yeni().kiraciIletisim.size() <= 200
-        && yeni().not is string && yeni().not.size() <= 500;
+        && yeni().not is string && yeni().not.size() <= 500
+        && temizMetin(yeni().not);
       allow update: if girisli() && (kiraGecis() || odemeTakip() || kartLinki());
       allow delete: if tamYetkili();
     }
@@ -823,13 +834,13 @@ service cloud.firestore {
         && yeni().keys().hasOnly(['esyaId', 'esyaBaslik', 'sahipId', 'soranId', 'soranAd', 'soru', 'cevap', 'durum', 'olusturma'])
         && yeni().soranId == benim() && yeni().sahipId != benim()
         && get(/databases/$(database)/documents/dolapEsyalar/$(yeni().esyaId)).data.sahipId == yeni().sahipId
-        && yeni().soru is string && yeni().soru.size() >= 3 && yeni().soru.size() <= 500
+        && yeni().soru is string && yeni().soru.size() >= 3 && yeni().soru.size() <= 500 && temizMetin(yeni().soru)
         && yeni().soranAd is string && yeni().soranAd.size() <= 40
         && yeni().esyaBaslik is string && yeni().esyaBaslik.size() <= 80
         && yeni().cevap == '' && yeni().durum == 'bekliyor' && yeni().olusturma == request.time;
       allow update: if girisli() && resource.data.sahipId == benim() && resource.data.durum == 'bekliyor'
         && degisenler().hasOnly(['cevap', 'durum', 'cevapZaman'])
-        && yeni().cevap is string && yeni().cevap.size() >= 1 && yeni().cevap.size() <= 1000
+        && yeni().cevap is string && yeni().cevap.size() >= 1 && yeni().cevap.size() <= 1000 && temizMetin(yeni().cevap)
         && yeni().durum == 'cevaplandi' && yeni().cevapZaman == request.time;
       allow delete: if girisli() && ((resource.data.soranId == benim() && resource.data.durum == 'bekliyor') || dolapAdmin());
     }
@@ -853,6 +864,7 @@ service cloud.firestore {
           && yeni().get('foto', '') is string && yeni().get('foto', '').size() <= 600
           && yeni().get('sehir', '') is string && yeni().get('sehir', '').size() <= 40
           && yeni().get('hakkimda', '') is string && yeni().get('hakkimda', '').size() <= 300
+          && temizMetin(yeni().get('hakkimda', '')) && temizMetin(yeni().get('sehir', ''))
           && (!yeni().keys().hasAny(['katilma']) || (yeni().katilma is timestamp && yeni().katilma <= request.time)))
         || (dolapAdmin() && resource != null && degisenler().hasOnly(['hakkimda']) && yeni().hakkimda == '');
       allow delete: if girisli() && (kimlik == benim() || tamYetkili());
