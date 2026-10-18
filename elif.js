@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019g';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019h';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -1538,12 +1538,19 @@ function adimCubugu(d) {
   return '<ol class="adim-cubuk" aria-label="Kiralama adımları">' + ADIMLAR.map((a, i) =>
     '<li class="' + (i < sira ? 'bitti' : i === sira ? 'simdi' : '') + '"' + (i === sira ? ' aria-current="step"' : '') + '>' + a + '</li>').join('') + '</ol>';
 }
+/* Eşya sahibinin payı. Kiracının ödemesi önce site hesabına gelir; sahibin payı ayrıca, teslimattan sonra aktarılır. */
 function kazancHTML(k) {
-  const h = kiraHesap(k);
-  return '<div class="kazanc">Sana ödenecek: <b>' + tl(h.sahibe) + '</b> <span class="kucuk">(kira ' + tl(h.brut) +
-    (h.komisyon ? ' − %' + k.komisyonYuzde + ' site komisyonu ' + tl(h.komisyon) : '') + ')</span>' +
-    (k.sahipOdeme === 'odendi' ? ' · <b class="arti">Hesabına ödendi ✓</b>'
-      : ['teslim_edildi', 'iade_yolda', 'iade_edildi'].includes(k.durum) ? ' · <span class="kucuk">teslimat onaylandı, ödeme sırada' + (uye && uye.iban ? '' : ' · <a href="#hesabim/odeme" style="text-decoration:underline">IBAN ekle</a>') + '</span>' : '') + '</div>';
+  const h = kiraHesap(k), d = k.durum;
+  const odemeGeldi = ['odendi', 'kargoda', 'teslim_edildi', 'iade_yolda', 'iade_edildi'].includes(d);
+  const teslimSonrasi = ['teslim_edildi', 'iade_yolda', 'iade_edildi'].includes(d);
+  const ibanYok = uye && uye.iban ? '' : ' <a href="#hesabim/odeme" style="text-decoration:underline">IBAN ekle</a>';
+  const durum = k.sahipOdeme === 'odendi'
+    ? '<b class="arti">✓ IBAN\'ına aktarıldı' + (k.sahipOdemeZaman && zaman(k.sahipOdemeZaman) ? ' · ' + tarihYaz(yerelGun(zaman(k.sahipOdemeZaman))) : '') + '</b>'
+    : !odemeGeldi ? 'Kiracı ödeyince para site hesabında tutulur; parça kiracıya ulaşınca sana aktarılır.'
+    : !teslimSonrasi ? 'Kiracının ödemesi site hesabında güvende. Kiracı parçayı teslim alınca sana aktarılır.'
+    : '<b>Henüz aktarılmadı.</b> Teslimat onaylandı; site yöneticisi payını IBAN\'ına gönderecek.' + ibanYok;
+  return '<div class="kazanc"><b>Senin payın: ' + tl(h.sahibe) + '</b> <span class="kucuk">(kira ' + tl(h.brut) +
+    (h.komisyon ? ' − %' + k.komisyonYuzde + ' site komisyonu ' + tl(h.komisyon) : '') + ')</span><br><span class="kucuk">' + durum + '</span></div>';
 }
 function kiraSatiri(k, gorunum) {
   const d = k.durum;
