@@ -910,6 +910,26 @@ service cloud.firestore {
       allow delete: if dolapAdmin();
     }
 
+    /* "Aradığını bulamadın mı?" talepleri: herkes okur (eşya sahipleri görsün), giriş yapan yazar. */
+    match /dolapTalepler/{talep} {
+      allow read: if true;
+      allow create: if girisli() && !kisitli()
+        && yeni().keys().hasOnly(['uid', 'ad', 'metin', 'beden', 'kategori', 'olusturma'])
+        && yeni().uid == benim() && yeni().olusturma == request.time
+        && yeni().metin is string && yeni().metin.size() >= 3 && yeni().metin.size() <= 120 && temizMetin(yeni().metin)
+        && yeni().beden is string && yeni().beden.size() <= 12 && temizMetin(yeni().beden)
+        && yeni().ad is string && yeni().ad.size() <= 40 && yeni().kategori is string && yeni().kategori.size() <= 20;
+      allow delete: if girisli() && (resource.data.uid == benim() || dolapAdmin());
+    }
+    /* Dolap takibi: belge kimliği takipEden_sahip */
+    match /dolapTakip/{takip} {
+      allow read: if true;
+      allow create: if girisli() && yeni().keys().hasOnly(['uid', 'sahipId', 'zaman'])
+        && yeni().uid == benim() && yeni().sahipId != benim() && takip == benim() + '_' + yeni().sahipId
+        && yeni().zaman == request.time;
+      allow delete: if girisli() && resource.data.uid == benim();
+    }
+
     match /dolapFotolar/{foto} {
       allow read: if true;
       allow create: if girisli() && !kisitli()

@@ -601,3 +601,21 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 @media (max-width: 640px) { .kh-izgara { grid-template-columns: 1fr 1fr; } }
 .kh-sonuc { font-size: 17px; margin: 12px 0 4px; }
 .kh-sonuc b { font-family: var(--serif); font-size: 24px; color: var(--vurgu-koyu); }
+
+/* tarih filtresi, SSS, talepler, takip */
+.tarih-alan input { width: 140px; }
+.sss { margin: 34px 0 10px; }
+.sss h2 { margin-bottom: 10px; }
+.sss details { border-top: 1px solid var(--cizgi); padding: 12px 0; }
+.sss summary { cursor: pointer; font-weight: 600; }
+.sss p { margin: 8px 0 0; color: var(--ikinci); font-size: 14.5px; }
+.talep { margin-top: 28px; }
+.talep h2 { margin: 0 0 4px; }
+.talep-form { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.talep-form input { flex: 1; min-width: 160px; padding: 10px 12px; border: 1px solid var(--cizgi); border-radius: 12px; font: inherit; }
+.talep-form #tBeden { flex: 0 0 110px; min-width: 0; }
+.aranan { margin-bottom: 16px; }
+.aranan summary { cursor: pointer; }
+.aranan ul { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
+.aranan li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--cizgi); font-size: 14px; flex-wrap: wrap; }
+.takip { margin-top: 10px; display: flex; gap: 8px; align-items: center; }
