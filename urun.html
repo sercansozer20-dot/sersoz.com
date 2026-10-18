@@ -17,7 +17,7 @@
 <header id="ust"></header>
 
 <main class="kap" id="icerik">
-  <nav class="iz" aria-label="Konum"><a href="index.html">Ana Sayfa</a> › <a id="izKat" href="kategori.html?liste=hepsi">Ürünler</a> › <span id="izAd"></span></nav>
+  <nav class="iz" aria-label="Konum"><a href="magaza.html">Ana Sayfa</a> › <a id="izKat" href="kategori.html?liste=hepsi">Ürünler</a> › <span id="izAd"></span></nav>
   <div id="urun"></div>
   <section class="bolum" aria-labelledby="benzerBas" id="benzerBolum">
     <div class="bolum-bas"><h2 id="benzerBas">Benzer Ürünler</h2><a id="benzerTum" href="kategori.html?liste=hepsi">Tümünü gör</a></div>
@@ -41,7 +41,7 @@
   if (!u) {
     document.title = 'Ürün bulunamadı | SERSOZ';
     document.getElementById('izAd').textContent = 'Bulunamadı';
-    kap.innerHTML = '<div class="panel" style="text-align:center;padding:48px 20px"><h1 style="font-size:22px;margin-bottom:8px">Ürün bulunamadı</h1><p class="kucuk" style="margin-bottom:18px">Ürün satıştan kaldırılmış ya da bağlantı hatalı olabilir.</p><a class="dug dug-ana" href="index.html">Ana sayfaya dön</a></div>';
+    kap.innerHTML = '<div class="panel" style="text-align:center;padding:48px 20px"><h1 style="font-size:22px;margin-bottom:8px">Ürün bulunamadı</h1><p class="kucuk" style="margin-bottom:18px">Ürün satıştan kaldırılmış ya da bağlantı hatalı olabilir.</p><a class="dug dug-ana" href="magaza.html">Ana sayfaya dön</a></div>';
     document.getElementById('benzerBolum').hidden = true;
     return;
   }

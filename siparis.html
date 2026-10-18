@@ -30,7 +30,7 @@
   try { s = JSON.parse(localStorage.getItem('sersoz_son_siparis')); } catch (e) {}
 
   if (!s) {
-    kap.innerHTML = '<h1>Görüntülenecek sipariş yok</h1><p style="margin-bottom:18px">Sipariş verdiyseniz onay e-postanızı kontrol edin.</p><a class="dug dug-ana" href="index.html">Mağazaya dön</a>';
+    kap.innerHTML = '<h1>Görüntülenecek sipariş yok</h1><p style="margin-bottom:18px">Sipariş verdiyseniz onay e-postanızı kontrol edin.</p><a class="dug dug-ana" href="magaza.html">Mağazaya dön</a>';
     return;
   }
 
@@ -76,7 +76,7 @@
       return M.satirHTML({ u: u, adet: l.adet, tutar: l.tutar }, false);
     }).join('') +
     '<div style="display:grid;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--cizgi)">' + M.toplamHTML(s.toplam) + '</div></div>' +
-    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:24px"><a class="dug dug-koyu" href="index.html">Alışverişe devam et</a>' +
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:24px"><a class="dug dug-koyu" href="magaza.html">Alışverişe devam et</a>' +
     '<button type="button" class="dug" onclick="print()">Yazdır</button></div>';
 
   kap.innerHTML = html;

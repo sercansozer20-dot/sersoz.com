@@ -1,0 +1,67 @@
+/* sersoz.com — giriş ve seçim sayfaları (index, projeler, elif) */
+:root {
+  --ana: #d9480f;
+  --grafit: #17191c;
+  --zemin: #f2f1ee;
+  --metin: #1f2328;
+  --ikinci: #5b6370;
+  --baslik: "Archivo", "Barlow", "Segoe UI", sans-serif;
+  --font: "Barlow", "Segoe UI", system-ui, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--zemin); color: var(--metin); font: 16px/1.5 var(--font); display: flex; flex-direction: column; }
+a { color: inherit; text-decoration: none; }
+h1, h2, h3 { margin: 0; font-family: var(--baslik); font-stretch: 118%; line-height: 1.15; }
+p { margin: 0; }
+:focus-visible { outline: 3px solid var(--ana); outline-offset: 3px; }
+
+.ust { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px clamp(16px, 4vw, 48px); }
+.geri { font-size: 14px; font-weight: 600; color: var(--ikinci); }
+.geri:hover { color: var(--metin); }
+
+/* yazı markası (magaza.css ile aynı) */
+.wm { display: inline-flex; align-items: center; font-family: var(--baslik); font-stretch: 125%; font-weight: 900; font-size: 26px; line-height: 1; color: var(--grafit); }
+.wm .mercek { position: relative; display: inline-block; width: .8em; height: .8em; margin: 0 .035em; border: .15em solid currentColor; border-radius: 50%; }
+.wm .mercek::before { content: ""; position: absolute; inset: 0; margin: auto; width: .22em; height: .22em; border-radius: 50%; background: var(--ana); }
+.wm .mercek::after { content: ""; position: absolute; left: -.42em; right: -.42em; top: 50%; height: .055em; transform: translateY(-50%) rotate(-12deg); background: var(--ana); }
+
+main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 8px clamp(16px, 4vw, 48px) 40px; max-width: 1240px; width: 100%; margin: 0 auto; }
+.giris-bas { margin-bottom: 26px; }
+.giris-bas h1 { font-size: clamp(28px, 4vw, 44px); font-weight: 900; }
+.giris-bas p { color: var(--ikinci); margin-top: 8px; font-size: 17px; }
+
+.kartlar { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.kartlar.iki { grid-template-columns: 1fr 1fr; }
+@media (max-width: 760px) { .kartlar.iki { grid-template-columns: 1fr; } }
+
+.secim {
+  position: relative; display: flex; flex-direction: column; justify-content: flex-end; min-height: 300px;
+  border-radius: 18px; overflow: hidden; padding: 28px; color: #fff; isolation: isolate;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.kartlar.iki .secim { min-height: min(62vh, 520px); }
+.secim:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0, 0, 0, .18); }
+.secim::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,.6) 100%); }
+.secim .arka { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.secim:hover .arka { transform: scale(1.04); }
+.secim .etiket { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; background: rgba(255,255,255,.18); backdrop-filter: blur(6px); padding: 5px 10px; border-radius: 999px; margin-bottom: auto; }
+.secim h2 { font-size: clamp(26px, 3vw, 38px); font-weight: 900; }
+.secim p { margin-top: 8px; opacity: .88; max-width: 30em; }
+.secim .git { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; font-weight: 700; }
+.secim .git::after { content: "→"; transition: transform .2s; }
+.secim:hover .git::after { transform: translateX(4px); }
+.secim.pasif { cursor: default; }
+.secim.pasif:hover { transform: none; box-shadow: none; }
+
+/* kart zeminleri (fotoğraf yokken) */
+.z-elif { background: radial-gradient(120% 90% at 20% 10%, #f6c7b6 0%, #d9897a 45%, #8e4a52 100%); }
+.z-elif .desen { position: absolute; inset: 0; z-index: -2; opacity: .22;
+  background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.7) 0 2px, transparent 2px 46px); }
+.z-sercan { background: var(--grafit); }
+.z-market { background: linear-gradient(135deg, #d9480f, #8a2c08); }
+.z-gorus { background: #0f2a2c; }
+.z-robot { background: linear-gradient(135deg, #2a2d33, #17191c); }
+.secim svg.ikon { position: absolute; right: 24px; top: 24px; width: 64px; height: 64px; opacity: .55; z-index: -1; }
+
+.alt { text-align: center; color: var(--ikinci); font-size: 13px; padding: 18px; }

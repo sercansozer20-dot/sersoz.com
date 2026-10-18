@@ -168,7 +168,7 @@
     $('#cekmeceBas').textContent = 'Sepetim' + (st.length ? ' (' + Sepet.adet() + ' ürün)' : '');
     if (!st.length) {
       govde.innerHTML = '<div class="cekmece-bos">' + IKON.sepet + '<p><b>Sepetiniz boş</b></p><p class="kucuk" style="margin-top:4px">Ürünleri inceleyip sepete ekleyebilirsiniz.</p></div>';
-      alt.innerHTML = '<a class="dug dug-ana dug-tam" href="index.html" data-kapat>Alışverişe başla</a>';
+      alt.innerHTML = '<a class="dug dug-ana dug-tam" href="magaza.html" data-kapat>Alışverişe başla</a>';
       return;
     }
     var t = Sepet.toplamlar();
@@ -226,7 +226,7 @@
 
     ust.className = 'ust';
     ust.innerHTML = '<div class="kap ust-ana">' +
-      '<a class="logo" href="index.html" aria-label="' + esc(AYAR.magazaAdi) + ' ana sayfa">' + '<span class="wm" aria-hidden="true">SERS<span class="mercek"></span>Z</span>' +
+      '<a class="logo" href="magaza.html" aria-label="' + esc(AYAR.magazaAdi) + ' ana sayfa">' + '<span class="wm" aria-hidden="true">SERS<span class="mercek"></span>Z</span>' +
         '<small>Elektronik · Robotik · Görüntü</small></a>' +
       '<form class="arama" action="kategori.html" role="search">' +
         '<label class="sr-only" for="ustAra">Ürün ara</label>' +
@@ -255,6 +255,7 @@
       ml('kategori.html?liste=yeni', 'Yeni Ürünler', 'yeni') +
       ml(katLink('makine-gorusu'), 'Makine Görüşü', 'makine-gorusu') +
       ml('kategori.html?liste=hepsi', 'Tüm Ürünler', 'hepsi') +
+      '<a class="menu-link" href="projeler.html">← Sercan'ın Projeleri</a>' +
       '<span class="sag">Destek: <b>' + esc(AYAR.telefon || AYAR.eposta) + '</b></span>' +
       '</div>';
     ust.parentNode.insertBefore(menu, ust.nextSibling);
@@ -277,12 +278,14 @@
     alt.className = 'alt';
     alt.id = 'iletisim';
     alt.innerHTML = '<div class="kap alt-ust">' +
-      '<div><a class="logo" href="index.html" aria-label="' + esc(AYAR.magazaAdi) + ' ana sayfa">' + '<span class="wm" aria-hidden="true">SERS<span class="mercek"></span>Z</span>' + '</a>' +
+      '<div><a class="logo" href="magaza.html" aria-label="' + esc(AYAR.magazaAdi) + ' ana sayfa">' + '<span class="wm" aria-hidden="true">SERS<span class="mercek"></span>Z</span>' + '</a>' +
         '<p>Geliştirme kartları, sensörler, motor ve sürücüler, ölçüm aletleri ve makine görüşü çözümleri.</p></div>' +
       '<div><h3>Kategoriler</h3><ul>' +
         KATEGORILER.slice(0, 6).map(function (c) { return '<li><a href="' + katLink(c.id) + '">' + esc(c.ad) + '</a></li>'; }).join('') +
       '</ul></div>' +
       '<div><h3>Müşteri Hizmetleri</h3><ul>' +
+        '<li><a href="projeler.html">Sercan'ın Projeleri</a></li>' +
+        '<li><a href="index.html">SERSOZ ana sayfa</a></li>' +
         '<li><a href="kosullar.html">Satış Koşulları</a></li>' +
         '<li><a href="kosullar.html#iade">İade ve Değişim</a></li>' +
         '<li><a href="kosullar.html#teslimat">Kargo ve Teslimat</a></li>' +
