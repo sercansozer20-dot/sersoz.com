@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018d';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018e';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -1269,11 +1269,12 @@ async function panelKullanicilar(panel, istek) {
     try {
       if (b.dataset.adminyap && tamMi()) {
         if (!confirm(b.dataset.adminyap + ' admin yapılsın mı? Ürün onayı, kullanıcı kısıtlama, gelen kutusu ve ödeme onayı yetkisi alır.')) return;
-        await rolYaz(b.dataset.adminyap, 'admin', ''); bildir(b.dataset.adminyap + ' artık admin.');
+        await rolYaz(b.dataset.adminyap, 'admin', ''); await adminDestegeEkle(b.dataset.adminyap).catch(() => {});
+        bildir(b.dataset.adminyap + ' artık admin. Destek mesajları için adresine doğrulama postası gitti.');
       }
       if (b.dataset.adminal && tamMi()) {
         if (!confirm(b.dataset.adminal + ' kişisinin admin yetkisi alınsın mı?')) return;
-        await rolSil(b.dataset.adminal); bildir('Admin yetkisi alındı.');
+        await rolSil(b.dataset.adminal); await adminDestektenCikar(b.dataset.adminal).catch(() => {}); bildir('Admin yetkisi alındı.');
       }
       if (b.dataset.kisitla) {
         const n = prompt('Kısıtlama nedeni (kullanıcıya gösterilir):', '');
@@ -1330,27 +1331,64 @@ async function panelKisi(panel, uid, istek) {
 
 async function panelYoneticiler(panel, istek) {
   const adminler = (await rolListesi()).filter(r => r.rol === 'admin');
+  let alicilar = [];
+  try { alicilar = await destekAlicilari(); } catch (e) {}
   if (istek !== aktifIstek) return;
+  const hedefi = ep => (alicilar.find(x => x.eposta === ep) || {}).hedef;
   panel.innerHTML = '<div class="kutu" style="margin-top:0"><h2>Admin ata</h2>' +
     '<p class="kucuk" style="margin-bottom:10px">Kişinin Google (Gmail) adresini yazın. Bu hesapla giriş yaptığında admin olur: ürün onayı, kullanıcı kısıtlama, gelen kutusu ve ödeme onayı. Admin atamayı yalnız tam yetkili yapabilir.</p>' +
     '<div class="satir-form"><input class="ara" id="yeniAdmin" type="email" placeholder="ornek@gmail.com" autocomplete="off"><button type="button" class="dug dug-vurgu" id="adminEkle">Admin yap</button></div>' +
     '<p class="hata" id="adminHata" role="alert"></p></div>' +
     '<div class="kutu"><h2>Yetkililer</h2><div class="tablo-kap"><table class="tablo"><tbody>' +
       '<tr><td><b>' + TAM_YETKILI + '</b></td><td><span class="rol-rozet r-tam">Tam yetkili</span></td><td></td></tr>' +
-      adminler.map(r => '<tr><td><b>' + esc(r.eposta) + '</b><br><span class="kucuk">' + esc(r.atayan) + ' atadı' + (r.zaman ? ' · ' + tarihSaat(r.zaman) : '') + '</span></td>' +
-        '<td><span class="rol-rozet r-admin">Admin</span></td><td class="eylem-hucre"><button type="button" class="dug dug-kucuk dug-tehlike" data-adminsil="' + esc(r.eposta) + '">Yetkiyi al</button></td></tr>').join('') +
-    '</tbody></table></div></div>';
+      adminler.map(r => {
+        const h = hedefi(r.eposta);
+        return '<tr><td><b>' + esc(r.eposta) + '</b><br><span class="kucuk">' + esc(r.atayan) + ' atadı' + (r.zaman ? ' · ' + tarihSaat(r.zaman) : '') + '</span><br>' +
+          '<span class="kucuk">Destek postası: ' + (!h ? '<b style="color:var(--kirmizi)">listede değil</b>' : h === r.eposta ? 'e-postaya (herkese açık listede görünür)' : 'gizli koda ✓') + '</span></td>' +
+          '<td><span class="rol-rozet r-admin">Admin</span></td><td class="eylem-hucre">' +
+          '<button type="button" class="dug dug-kucuk" data-aktivasyon="' + esc(r.eposta) + '">Doğrulama postası gönder</button>' +
+          '<button type="button" class="dug dug-kucuk" data-gizlikod="' + esc(r.eposta) + '">Gizli kod gir</button>' +
+          '<button type="button" class="dug dug-kucuk dug-tehlike" data-adminsil="' + esc(r.eposta) + '">Yetkiyi al</button></td></tr>';
+      }).join('') +
+    '</tbody></table></div>' +
+    '<p class="kucuk" style="margin-top:10px">"Ekibe ilet" mesajları yalnız buradaki adminlere gider (hiç admin yoksa site sahibine). Her admin, FormSubmit\'ten gelen doğrulama postasındaki <b>Activate Form</b>\'a bir kez basmalı. ' +
+    'Etkinleştirmeden sonra FormSubmit\'in verdiği gizli kodu "Gizli kod gir" ile kaydederseniz adminin e-postası herkese açık listede görünmez.</p>' +
+    '<button type="button" class="dug dug-kucuk" id="alicilarEsitle" style="margin-top:10px">Destek alıcılarını admin listesiyle eşitle</button></div>';
   $('#adminEkle').onclick = async () => {
     const e = $('#yeniAdmin').value.trim().toLowerCase(), h = $('#adminHata');
     h.textContent = '';
     if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(e)) { h.textContent = 'Geçerli bir e-posta adresi yazın.'; return; }
     if (e === TAM_YETKILI) { h.textContent = 'Bu hesap zaten tam yetkili.'; return; }
-    try { await rolYaz(e, 'admin', ''); bildir(e + ' admin yapıldı.'); sayfaCiz(); } catch (x) { h.textContent = hataMetni(x); }
+    try { await rolYaz(e, 'admin', ''); await adminDestegeEkle(e).catch(() => {}); bildir(e + ' admin yapıldı. Destek mesajları için adresine doğrulama postası gitti.'); sayfaCiz(); } catch (x) { h.textContent = hataMetni(x); }
   };
   panel.onclick = async ev => {
+    const a = ev.target.closest('[data-aktivasyon],[data-gizlikod],#alicilarEsitle');
+    if (a) {
+      try {
+        if (a.dataset.aktivasyon) { await adminDestegeEkle(a.dataset.aktivasyon); bildir(a.dataset.aktivasyon + ' adresine doğrulama postası gönderildi.'); }
+        if (a.dataset.gizlikod) {
+          const kod = prompt('FormSubmit\'in bu admin için verdiği gizli kod (etkinleştirme sonrası sayfada/postada yazar, ör. 1a2b3c4d…). Boş bırakılırsa e-posta kullanılır:', '');
+          if (kod === null) return;
+          const l = await destekAlicilari(), k = kod.trim();
+          const yeni = l.filter(x => x.eposta !== a.dataset.gizlikod).concat([{ eposta: a.dataset.gizlikod, hedef: /^[A-Za-z0-9]{6,64}$/.test(k) ? k : a.dataset.gizlikod }]);
+          await destekAlicilariYaz(yeni); bildir('Kaydedildi.');
+        }
+        if (a.id === 'alicilarEsitle') {
+          const l = await destekAlicilari(), adr = adminler.map(r => r.eposta);
+          const yeni = l.filter(x => adr.includes(x.eposta));
+          const eksik = adr.filter(e => !yeni.some(x => x.eposta === e));
+          eksik.forEach(e => yeni.push({ eposta: e, hedef: e }));
+          await destekAlicilariYaz(yeni);
+          await Promise.all(eksik.map(formsubmitAktivasyon));
+          bildir('Eşitlendi: ' + yeni.length + ' alıcı' + (eksik.length ? ', ' + eksik.length + ' yeni admine doğrulama postası gitti.' : '.'));
+        }
+        sayfaCiz();
+      } catch (x) { bildir(hataMetni(x)); }
+      return;
+    }
     const b = ev.target.closest('[data-adminsil]'); if (!b) return;
     if (!confirm(b.dataset.adminsil + ' kişisinin admin yetkisi alınsın mı?')) return;
-    try { await rolSil(b.dataset.adminsil); bildir('Yetki alındı.'); sayfaCiz(); } catch (x) { bildir(hataMetni(x)); }
+    try { await rolSil(b.dataset.adminsil); await adminDestektenCikar(b.dataset.adminsil).catch(() => {}); bildir('Yetki alındı, destek alıcılarından çıkarıldı.'); sayfaCiz(); } catch (x) { bildir(hataMetni(x)); }
   };
 }
 
@@ -1383,6 +1421,44 @@ async function benimSohbetim() {
   const l = (await getDocs(query(collection(db, 'dolapSohbet'), where('uid', '==', kullanici.uid)))).docs.map(d => ({ id: d.id, ...d.data() }));
   return l.sort((a, b) => zaman(b.sonZaman) - zaman(a.sonZaman))[0] || null;
 }
+/* Destek alıcıları (Blaze gerektirmez): mesajlar FormSubmit ile panelden atanmış ADMİNLERE gider.
+ *   ayarlarGenel/destek  { hedefler: [..] }        herkes okur: tarayıcı buraya gönderir
+ *   ayarlarGizli/destek  { alicilar: [{eposta, hedef}] }  yalnız adminler: hangi hedef kimin
+ * hedef: FormSubmit gizli kodu (girildiyse; e-posta görünmez) ya da adminin e-postası.
+ * Admin atanınca adresine FormSubmit doğrulama postası gider; "Activate Form"a basınca mailler düşmeye başlar.
+ * Hiç admin yoksa mesaj kaybolmasın diye site sahibine (ayarlar.js eposta) gider. */
+async function destekHedefleri() {
+  try { const s = await getDoc(doc(db, 'ayarlarGenel', 'destek')); return (s.exists() && s.data().hedefler) || []; } catch (e) { return []; }
+}
+async function destekAlicilari() {
+  if (DEMO) return [];
+  const s = await getDoc(doc(db, 'ayarlarGizli', 'destek'));
+  return (s.exists() && s.data().alicilar) || [];
+}
+async function destekAlicilariYaz(l) {
+  const b = writeBatch(db);
+  b.set(doc(db, 'ayarlarGizli', 'destek'), { alicilar: l });
+  b.set(doc(db, 'ayarlarGenel', 'destek'), { hedefler: [...new Set(l.map(x => x.hedef))] });
+  await b.commit();
+}
+function formsubmitAktivasyon(eposta) {
+  return fetch('https://formsubmit.co/ajax/' + encodeURIComponent(eposta), {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ _subject: 'Elif\'in Dolabı destek kanalı: e-postanızı etkinleştirin', _template: 'table', _captcha: 'false',
+      Bilgi: 'Elif\'in Dolabı (sersoz.com) yönetimine admin olarak eklendiniz. Ziyaretçilerin destek mesajlarını bu adreste alabilmek için FormSubmit\'ten gelen "Activate Form" düğmesine basın.' })
+  }).then(r => r.json()).catch(() => ({}));
+}
+async function adminDestegeEkle(eposta) {
+  if (DEMO) return;
+  const l = await destekAlicilari();
+  if (!l.some(x => x.eposta === eposta)) { l.push({ eposta, hedef: eposta }); await destekAlicilariYaz(l); }
+  await formsubmitAktivasyon(eposta);
+}
+async function adminDestektenCikar(eposta) {
+  if (DEMO) return;
+  await destekAlicilariYaz((await destekAlicilari()).filter(x => x.eposta !== eposta));
+}
+
 /* Destek postası: sunucu gerektirmeyen form hizmetiyle site sahibinin adresine gider.
    ayarlar.js'te web3formsKey varsa Web3Forms, yoksa FormSubmit (ilk gönderimde adrese bir kez
    "Activate Form" postası gelir; tıklanınca sonraki tüm iletiler doğrudan düşer). */
@@ -1390,20 +1466,16 @@ async function destekPostasi(v) {
   const konu = 'Elif\'in Dolabı destek: ' + v.konu;
   const govde = { name: v.ad, email: v.eposta, Konu: v.konu, Mesaj: v.mesaj, 'Sohbet geçmişi': v.gecmis || '-',
     Sayfa: location.origin + location.pathname, 'Giriş yapmış hesap': kullanici ? (kullanici.email || '') : 'Giriş yapılmamış' };
-  let url;
-  if (AYAR.web3formsKey) {
-    url = 'https://api.web3forms.com/submit';
-    Object.assign(govde, { access_key: AYAR.web3formsKey, subject: konu, from_name: v.ad, replyto: v.eposta });
-  } else {
-    url = 'https://formsubmit.co/ajax/' + encodeURIComponent(AYAR.eposta || TAM_YETKILI);
-    Object.assign(govde, { _subject: konu, _replyto: v.eposta, _template: 'table', _captcha: 'false' });
-  }
-  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(govde) });
-  const d = await r.json().catch(() => ({}));
-  const tamam = r.ok && String(d.success) !== 'false';
-  if (!tamam) {
-    const e = new Error(d.message || 'E-posta gönderilemedi.');
-    e.aktivasyon = /activat/i.test(d.message || '');
+  Object.assign(govde, { _subject: konu, _replyto: v.eposta, _template: 'table', _captcha: 'false' });
+  let hedefler = await destekHedefleri();
+  if (!hedefler.length) hedefler = [AYAR.eposta || TAM_YETKILI];   // hiç admin yoksa site sahibi
+  const sonuclar = await Promise.all(hedefler.map(h =>
+    fetch('https://formsubmit.co/ajax/' + encodeURIComponent(h), { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(govde) })
+      .then(async r => { const d = await r.json().catch(() => ({})); return { tamam: r.ok && String(d.success) !== 'false', mesaj: d.message || '' }; })
+      .catch(e => ({ tamam: false, mesaj: e.message }))));
+  if (!sonuclar.some(x => x.tamam)) {
+    const e = new Error(sonuclar[0].mesaj || 'E-posta gönderilemedi.');
+    e.aktivasyon = sonuclar.some(x => /activat/i.test(x.mesaj));
     throw e;
   }
 }
@@ -1493,7 +1565,7 @@ function asistanKur() {
     } else {
       dug.disabled = false; dug.textContent = 'Gönder';
       balon('bot', postaHatasi.aktivasyon
-        ? 'Destek e-postası ilk kez kuruluyor: site sahibinin adresine bir doğrulama postası gitti. Doğrulandıktan sonra gönderebileceksin; acilse ' + esc(AYAR.eposta) + ' adresine doğrudan yazabilirsin.'
+        ? 'Destek e-postası henüz etkinleştirilmemiş: yetkililere bir doğrulama postası gitti. Etkinleştirildikten sonra gönderebileceksin; acilse ' + esc(AYAR.eposta) + ' adresine doğrudan yazabilirsin.'
         : 'Gönderilemedi: ' + esc(postaHatasi.message) + '. Doğrudan ' + esc(AYAR.eposta) + ' adresine yazabilirsin.');
     }
   };

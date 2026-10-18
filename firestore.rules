@@ -770,6 +770,19 @@ service cloud.firestore {
       allow delete: if tamYetkili();
     }
 
+    /* Destek postası alıcıları: tarayıcı herkese açık hedeflere gönderir; hangi hedefin
+       kime ait olduğu yalnız adminlere açık. Yazmayı adminler yapar. */
+    match /ayarlarGenel/destek {
+      allow read: if true;
+      allow write: if dolapAdmin() && yeni().keys().hasOnly(['hedefler'])
+        && yeni().hedefler is list && yeni().hedefler.size() <= 20;
+    }
+    match /ayarlarGizli/destek {
+      allow read: if dolapAdmin();
+      allow write: if dolapAdmin() && yeni().keys().hasOnly(['alicilar'])
+        && yeni().alicilar is list && yeni().alicilar.size() <= 20;
+    }
+
     /* Örnek (demo) veri: elif.html?demo=1 buradan okur. Gerçek verilerden ayrı.
        Herkes okur; yalnız tam yetkili yükler / siler (panel → Veri yönetimi). */
     match /demoVeri/{belge} {
