@@ -619,3 +619,7 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 .aranan ul { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
 .aranan li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--cizgi); font-size: 14px; flex-wrap: wrap; }
 .takip { margin-top: 10px; display: flex; gap: 8px; align-items: center; }
+@media (max-width: 600px) {
+  .nasil ol { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 8px; padding-bottom: 4px; }
+  .nasil li { flex: 0 0 74%; scroll-snap-align: start; }
+}

@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019v';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019x';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -555,14 +555,14 @@ function canCiz() {
 }
 async function bildirimYenile(zorla) {
   if (!kullanici) return;
-  if (!zorla && Date.now() - bildirimZaman < 60000) return;
+  if (!zorla && Date.now() - bildirimZaman < 180000) return;   // okuma maliyeti: en sık 3 dakikada bir
   bildirimZaman = Date.now();
   try { bildirimler = await bildirimleriTopla(); } catch (h) { return; }
   const n = bildirimler.filter(x => x.t > bOkuma()).length, sy = $('#canSayi');
   if (sy) { sy.textContent = n > 9 ? '9+' : n; sy.hidden = !n || !$('#canMenu').hidden; }
   const m = $('#canMenu'); if (m && !m.hidden) canCiz();
 }
-setInterval(() => { if (!document.hidden) bildirimYenile(); }, 90000);
+setInterval(() => { if (!document.hidden) bildirimYenile(); }, 300000);
 window.addEventListener('hashchange', () => bildirimYenile());
 
 function hesapCiz() {
@@ -779,7 +779,9 @@ async function profilSayfasi(uid, istek) {
   if (!p) { icerik.innerHTML = '<div class="bos"><h3>Profil bulunamadı</h3><a class="dug" href="#kesfet">Keşfet\'e dön</a></div>'; return; }
   const kendisi = kullanici && kullanici.uid === uid;
   const yl = esyalar.flatMap(e => yorumlar(e.id));
-  const ort = yl.length ? (yl.reduce((t, y) => t + y.puan, 0) / yl.length).toFixed(1).replace('.', ',') : null;
+  const yTop = yl.reduce((t, y) => t + y.puan, 0) + esyalar.reduce((t, e) => t + (e.puanToplam || 0), 0);
+  const yAdet = yl.length + esyalar.reduce((t, e) => t + (e.puanAdet || 0), 0);
+  const ort = yAdet ? (yTop / yAdet).toFixed(1).replace('.', ',') : null;
   const katilma = p.katilma && zaman(p.katilma) ? new Date(zaman(p.katilma)).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }) : '';
   const sayac = (ad, v) => '<div class="sayac"><b>' + v + '</b><span>' + ad + '</span></div>';
   icerik.innerHTML = '<div class="profil-bas">' +
@@ -792,7 +794,7 @@ async function profilSayfasi(uid, istek) {
     (p.hakkimda ? '<p class="profil-hakkimda">' + esc(p.hakkimda) + '</p>' +
       (adminMi() && !p.ornek && !kendisi ? '<button type="button" class="dug dug-kucuk dug-tehlike" id="hakkimdaKaldir">Hakkında yazısını kaldır</button>' : '') : '') +
     '<div class="sayaclar">' + sayac('Sadakat puanı', sad ? sad.puan : '–') + sayac('Seviye', sad ? esc(sad.seviye) : '–') +
-      sayac('Tamamlanan kiralama', sad ? sad.satir.length : '–') + sayac('İlan', esyalar.length) + (ort ? sayac('Ort. yorum puanı (' + yl.length + ')', '★ ' + ort) : '') + '</div>' +
+      sayac('Tamamlanan kiralama', sad ? sad.satir.length : '–') + sayac('İlan', esyalar.length) + (ort ? sayac('Ort. yorum puanı (' + yAdet + ')', '★ ' + ort) : '') + '</div>' +
     (sad ? '<section class="kutu"><h2>Sadakat</h2>' + sadakatHTML(sad, false, kendisi || adminMi()) + '</section>' : '') +
     '<h2 class="profil-alt-bas">' + (kendisi ? 'Dolabın' : esc(iyelik(p.ad || 'Üye')) + ' dolabı') + '</h2>' +
     (esyalar.length ? '<div class="izgara">' + esyalar.map(e => esyaKarti(e, kendisi)).join('') + '</div>' : '<p class="kucuk">Yayında parça yok.</p>');
