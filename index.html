@@ -10,39 +10,29 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2317191c'/%3E%3Ccircle cx='32' cy='32' r='17' fill='none' stroke='%23fff' stroke-width='7'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23d9480f'/%3E%3Cpath d='M6 37.5 58 26.5' stroke='%23d9480f' stroke-width='3'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112..125,700..900&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112..125,700..900&family=Fraunces:ital,wght@0,600;1,400&family=Barlow:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="giris.css">
 </head>
 <body class="giris">
-<header class="ust">
-  <a href="index.html" aria-label="SERSOZ ana sayfa"><span class="wm" aria-hidden="true">SERS<span class="mercek"></span>Z</span></a>
-</header>
+<a class="giris-logo" href="index.html" aria-label="SERSOZ ana sayfa"><span class="wm" aria-hidden="true">SERS<span class="mercek"></span>Z</span></a>
 
-<main>
-  <div class="giris-bas">
-    <h1>Hangi kapıdan girelim?</h1>
-  </div>
-  <div class="kapilar">
-    <a class="giris-kapi kapi-elif" href="elif.html" aria-label="Elif'in Dolabı">
-      <span class="tabela"><small>Giyim · Aksesuar</small><b>Elif'in Dolabı</b></span>
-      <span class="kasa">
-        <span class="ic"><span>İçeri gir →</span></span>
-        <span class="kanat"><span class="panel"></span><span class="panel"></span><span class="kol"></span></span>
-      </span>
-      <span class="aciklama">Seçilmiş kıyafetler ve aksesuarlar, beden ve stok takibi.</span>
-    </a>
-    <a class="giris-kapi kapi-sercan" href="projeler.html" aria-label="Sercan'ın Projeleri">
-      <span class="tabela"><small>3D Görüş · Robotik</small><b>Sercan'ın Projeleri</b></span>
-      <span class="kasa">
-        <span class="ic"><img src="gorsel/tarama.jpg" alt="" width="620" height="470"><span>İçeri gir →</span></span>
-        <span class="kanat"><span class="panel"></span><span class="panel"></span><span class="kol"></span></span>
-      </span>
-      <span class="aciklama">Makine görüşü, robotik projeler ve elektronik market.</span>
-    </a>
-  </div>
+<main class="bolunmus">
+  <a class="yari yari-elif" href="elif.html">
+    <span class="ust-yazi">Giyim · Aksesuar · Stok takibi</span>
+    <h2>Elif'in<br><b>Dolabı</b></h2>
+    <p>Seçilmiş kıyafetler, markalar ve beden stokları tek yerde.</p>
+    <span class="gir"><i aria-hidden="true">→</i>Dolaba gir</span>
+  </a>
+  <a class="yari yari-sercan" href="projeler.html">
+    <img src="gorsel/tarama.jpg" alt="" width="620" height="470">
+    <span class="ust-yazi">3D Görüş · Robotik · Elektronik</span>
+    <h2>Sercan'ın<br>Projeleri<span>.</span></h2>
+    <p>Makine görüşü, robotik çalışmalar ve elektronik market.</p>
+    <span class="gir"><i aria-hidden="true">→</i>Projelere gir</span>
+  </a>
 </main>
 
-<footer class="alt">© <span id="yil"></span> SERSOZ</footer>
+<footer class="giris-alt">© <span id="yil"></span> SERSOZ</footer>
 <script>document.getElementById('yil').textContent = new Date().getFullYear();</script>
 </body>
 </html>

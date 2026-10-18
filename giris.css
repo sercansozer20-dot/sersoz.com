@@ -66,73 +66,63 @@ main { flex: 1; display: flex; flex-direction: column; justify-content: center; 
 
 .alt { text-align: center; color: var(--ikinci); font-size: 13px; padding: 18px; }
 
-/* ---- giriş: duvardaki iki kapı ----
-   Yapı: tabela (kapının üstünde) → kasa → iç mekân (arkada) + kanat (önde, sol menteşe).
-   Kanat hafif aralık durur; üzerine gelince açılır ve içerisi görünür. */
-body.giris { background: linear-gradient(180deg, #ebe7e0 0%, #e4dfd6 78%, #d6d0c5 78%, #cfc8bc 100%); }
-.kapilar { display: grid; grid-template-columns: repeat(2, minmax(0, 280px)); justify-content: center; gap: clamp(28px, 8vw, 120px); margin-top: 8px; }
-.giris-kapi { display: flex; flex-direction: column; align-items: center; color: var(--metin); }
-.tabela { text-align: center; margin-bottom: 18px; }
-.tabela small { display: block; font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--ikinci); }
-.tabela b { display: block; font-family: var(--baslik); font-stretch: 118%; font-weight: 900; font-size: clamp(19px, 2.3vw, 27px); margin-top: 4px; }
-.tabela::after { content: ""; display: block; width: 28px; height: 3px; margin: 10px auto 0; background: var(--vurgu-kapi, var(--ana)); border-radius: 2px; }
+/* ---- giriş: ekranı ikiye bölen iki dünya ----
+   Üzerine gelinen taraf genişler, diğeri daralır; "Gir" düğmesi belirginleşir. */
+body.giris { background: #111; }
+main.bolunmus { position: relative; display: flex; min-height: 100vh; min-height: 100svh; padding: 0; margin: 0; max-width: none; }
+.yari {
+  position: relative; flex: 1 1 50%; min-height: 560px; display: flex; flex-direction: column; justify-content: flex-end;
+  padding: clamp(22px, 5vw, 72px); overflow: hidden; isolation: isolate;
+  transition: flex-grow .7s cubic-bezier(.2,.8,.2,1);
+}
+.bolunmus:hover .yari { flex-grow: .75; }
+.bolunmus .yari:hover, .bolunmus .yari:focus-visible { flex-grow: 1.35; }
+.yari:focus-visible { outline: none; box-shadow: inset 0 0 0 4px var(--ana); }
+.yari .ust-yazi { position: absolute; top: clamp(78px, 12vh, 120px); left: clamp(22px, 5vw, 72px); font-size: 12px; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; opacity: .75; }
+.yari h2 { line-height: .95; }
+.yari p { margin-top: 14px; max-width: 26em; font-size: clamp(14px, 1.3vw, 17px); opacity: .85; }
+.gir {
+  display: inline-flex; align-items: center; gap: 14px; margin-top: clamp(22px, 4vh, 40px);
+  font-weight: 700; font-size: 15px; letter-spacing: .06em; text-transform: uppercase;
+}
+.gir i { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 22px; transition: transform .4s cubic-bezier(.2,.8,.2,1), background .3s; }
+.yari:hover .gir i, .yari:focus-visible .gir i { transform: translateX(8px); }
 
-.kasa {
-  position: relative; width: 100%; aspect-ratio: 9 / 19; perspective: 1100px;
-  padding: 12px 12px 0; border-radius: 4px 4px 0 0;
-  background: #f7f4ef; box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 1px 0 #fff inset, 0 18px 30px -18px rgba(0,0,0,.35);
-}
-.kasa::after { /* eşik gölgesi */
-  content: ""; position: absolute; left: -6%; right: -6%; bottom: -14px; height: 14px; border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(0,0,0,.28), transparent); pointer-events: none;
-}
-.ic {
-  position: absolute; inset: 12px 12px 0; overflow: hidden; display: flex; align-items: flex-end; justify-content: center;
-  padding-bottom: 18%; color: #fff; font-weight: 700; letter-spacing: .04em;
-}
-.ic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.ic span { position: relative; padding: 8px 14px; border-radius: 999px; background: rgba(0,0,0,.35); backdrop-filter: blur(4px); font-size: 14px; }
-.kanat {
-  position: absolute; inset: 12px 12px 0; transform-origin: left center; transform: rotateY(-14deg);
-  transition: transform .9s cubic-bezier(.2,.75,.15,1), box-shadow .9s;
-  background: var(--kanat); box-shadow: inset -10px 0 18px -12px rgba(0,0,0,.45), 6px 0 14px rgba(0,0,0,.18);
-  display: grid; grid-template-rows: 1fr 1.35fr; gap: 9%; padding: 13% 14% 14%;
-}
-.kanat .panel { border-radius: 3px; box-shadow: inset 2px 2px 3px rgba(0,0,0,.22), inset -2px -2px 3px rgba(255,255,255,.12); }
-.kanat .kol {
-  position: absolute; right: 9%; top: 47%; width: 6px; height: 17%; border-radius: 3px; background: var(--kol);
-  box-shadow: 1px 2px 3px rgba(0,0,0,.35);
-}
-.giris-kapi:hover .kanat, .giris-kapi:focus-visible .kanat { transform: rotateY(-72deg); box-shadow: inset -10px 0 18px -12px rgba(0,0,0,.45), 18px 0 30px rgba(0,0,0,.3); }
-.giris-kapi:focus-visible { outline: none; }
-.giris-kapi:focus-visible .kasa { outline: 3px solid var(--ana); outline-offset: 4px; }
-.aciklama { margin-top: 26px; text-align: center; font-size: 14px; color: var(--ikinci); max-width: 24em; }
-
-/* Elif: pudra pembesi lake kanat, pirinç kol, içeride sıcak ışık */
-.kapi-elif { --kanat: linear-gradient(160deg, #d9a39b, #c48880); --kol: linear-gradient(90deg, #8a6420, #e9c77a, #8a6420); --vurgu-kapi: #c48880; }
-.kapi-elif .ic { background: radial-gradient(90% 70% at 50% 30%, #fff1e6 0%, #f2c6b4 45%, #a45f5c 100%); }
-.kapi-elif .ic::before { /* askıdaki kıyafet siluetleri */
-  content: ""; position: absolute; left: 10%; right: 10%; top: 16%; height: 46%;
+/* Elif: kırık beyaz kumaş, pudra, editoryal serif */
+.yari-elif { color: #3b2422; background: #f4e7e1; }
+.yari-elif::before { content: ""; position: absolute; inset: 0; z-index: -1;
   background:
-    linear-gradient(#7a4a48, #7a4a48) 0 0 / 100% 3px no-repeat,
-    radial-gradient(ellipse 18% 100% at 22% 100%, rgba(122,74,72,.55) 98%, transparent) 0 6px / 100% 100% no-repeat,
-    radial-gradient(ellipse 16% 90% at 52% 100%, rgba(160,92,86,.5) 98%, transparent) 0 6px / 100% 100% no-repeat,
-    radial-gradient(ellipse 17% 95% at 80% 100%, rgba(110,62,62,.5) 98%, transparent) 0 6px / 100% 100% no-repeat;
-}
-.kapi-elif .panel { background: rgba(255,255,255,.08); }
+    radial-gradient(70% 60% at 75% 25%, rgba(222,160,150,.55), transparent 70%),
+    radial-gradient(60% 50% at 10% 90%, rgba(196,136,128,.35), transparent 70%),
+    repeating-linear-gradient(45deg, rgba(59,36,34,.025) 0 2px, transparent 2px 6px); }
+.yari-elif h2 { font-family: "Fraunces", Georgia, serif; font-stretch: normal; font-weight: 400; font-style: italic; font-size: clamp(42px, 7.5vw, 112px); letter-spacing: -.02em; }
+.yari-elif h2 b { font-style: normal; font-weight: 600; }
+.yari-elif .gir i { background: #3b2422; color: #f4e7e1; }
+.yari-elif:hover .gir i { background: #b5655d; }
 
-/* Sercan: grafit kanat, turuncu şerit, çelik kol, içeride nokta bulutu */
-.kapi-sercan { --kanat: linear-gradient(160deg, #2c3036, #1b1d21); --kol: linear-gradient(90deg, #6f757d, #e3e6ea, #6f757d); --vurgu-kapi: var(--ana); }
-.kapi-sercan .kanat::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--ana); }
-.kapi-sercan .panel { background: rgba(255,255,255,.03); }
+/* Sercan: grafit, nokta bulutu, geniş endüstriyel yazı */
+.yari-sercan { color: #fff; background: #0d0e10; }
+.yari-sercan img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; opacity: .55; transform: scale(1.06); transition: transform 1.2s cubic-bezier(.2,.8,.2,1), opacity .6s; }
+.yari-sercan:hover img { transform: scale(1); opacity: .75; }
+.yari-sercan::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(13,14,16,.2) 0%, rgba(13,14,16,.9) 85%); }
+.yari-sercan h2 { font-family: var(--baslik); font-stretch: 125%; font-weight: 900; font-size: clamp(34px, 5.6vw, 86px); letter-spacing: -.01em; }
+.yari-sercan h2 span { color: var(--ana); }
+.yari-sercan .gir i { background: var(--ana); color: #fff; }
 
-@media (max-width: 560px) {
-  .kapilar { gap: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .kasa { padding: 8px 8px 0; }
-  .ic, .kanat { inset: 8px 8px 0; }
-  .ic span { font-size: 11px; padding: 5px 9px; }
-  .aciklama { display: none; }
-  .tabela small { font-size: 9px; letter-spacing: .12em; }
+/* üstte ortada logo, ortada ince ayraç */
+.giris-logo { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); z-index: 5; background: rgba(255,255,255,.92); backdrop-filter: blur(8px); padding: 10px 16px; border-radius: 999px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+.giris-logo .wm { font-size: 20px; }
+.giris-alt { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; font-size: 12px; color: rgba(255,255,255,.55); z-index: 5; pointer-events: none; mix-blend-mode: difference; }
+
+@media (max-width: 700px) {
+  .bolunmus { flex-direction: column; }
+  .yari { min-height: 50svh; }
+  .bolunmus:hover .yari, .bolunmus .yari:hover { flex-grow: 1; }
+  .yari { padding: 22px 22px 28px; }
+  .yari .ust-yazi { top: 22px; }
+  .yari-elif .ust-yazi { top: 84px; }
+  .yari p { display: none; }
+  .gir { margin-top: 16px; }
+  .gir i { width: 44px; height: 44px; font-size: 18px; }
 }
-@media (prefers-reduced-motion: reduce) { .kanat { transition: none; } }
-body.giris .giris-bas { text-align: center; margin-bottom: 34px; }
+@media (prefers-reduced-motion: reduce) { .yari, .yari-sercan img, .gir i { transition: none; } }
