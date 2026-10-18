@@ -229,6 +229,7 @@ async function esyaSayfasi(id, istek) {
       '<div class="galeri"><div class="buyuk"><img id="buyukFoto" src="' + esc(e.fotolar[0]) + '" alt="' + esc(e.baslik) + '"></div>' +
         (e.fotolar.length > 1 ? '<div class="kucukler">' + e.fotolar.map((f, i) =>
           '<button type="button" data-f="' + esc(f) + '" aria-current="' + (i === 0) + '" aria-label="Fotoğraf ' + (i + 1) + '"><img src="' + esc(f) + '" alt=""></button>').join('') + '</div>' : '') +
+        (e.kaynak ? '<p class="kucuk" style="margin-top:8px">Fotoğraf: <a href="' + esc(e.kaynak.url) + '" target="_blank" rel="noopener" style="text-decoration:underline">' + esc(e.kaynak.yazar) + '</a> · ' + esc(e.kaynak.lisans) + '</p>' : '') +
       '</div>' +
       '<div class="bilgi">' +
         '<span class="kucuk">' + esc(KATEGORI[e.kategori] || '') + '</span>' +

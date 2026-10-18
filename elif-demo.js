@@ -5,6 +5,8 @@
  * "Örnek veri" şeridi görünür. Gerçek yayında kullanılmaz.
  */
 
+import { ORNEK_FOTO } from './elif-demo-foto.js';
+
 /* tekrarlanabilir rastgelelik: her açılışta aynı örnekler */
 let tohum = 7;
 const r = () => { tohum = (tohum * 16807) % 2147483647; return (tohum - 1) / 2147483646; };
@@ -84,6 +86,7 @@ export function demoVeri() {
 
   /* parçalar: her kişiye 2-3 parça */
   const esyalar = [];
+  const fotoSira = {};
   kullanicilar.forEach((k, ki) => {
     const adet = ki === 0 ? 4 : aralik(2, 3);
     for (let j = 0; j < adet; j++) {
@@ -91,11 +94,16 @@ export function demoVeri() {
       const [renkAd, renk] = sec(RENKLER);
       const premium = r() < .25;
       const gunluk = (kategori === 'aksesuar' ? aralik(4, 12) : kategori === 'ayakkabi' ? aralik(8, 20) : premium ? aralik(35, 90) : aralik(12, 40)) * 5;
-      const foto = cizim(kategori, renk);
+      /* Gerçek (CC lisanslı) fotoğraf varsa onu kullan; renk bilinmediği için başlığa renk yazılmaz. */
+      const havuz = ORNEK_FOTO[kategori] || [];
+      const sira = fotoSira[kategori] = (fotoSira[kategori] ?? -1) + 1;
+      const f = havuz.length ? havuz[sira % havuz.length] : null;
+      const foto = f ? f.src : cizim(kategori, renk);
       esyalar.push({
         id: 'demo-esya-' + esyalar.length, sahipId: k.uid, sahipAd: k.ad, sahipFoto: k.foto,
-        baslik: renkAd + ' ' + sec(PARCALAR[kategori]).toLocaleLowerCase('tr-TR'), marka: sec(MARKALAR), kategori,
-        beden: sec(BEDEN[kategori] || ['XS', 'S', 'M', 'L', '36', '38', '40']), renk: renkAd,
+        baslik: f ? sec(PARCALAR[kategori]) : renkAd + ' ' + sec(PARCALAR[kategori]).toLocaleLowerCase('tr-TR'), marka: sec(MARKALAR), kategori,
+        beden: sec(BEDEN[kategori] || ['XS', 'S', 'M', 'L', '36', '38', '40']), renk: f ? '' : renkAd,
+        kaynak: f ? { yazar: f.yazar, lisans: f.lisans, url: f.kaynak } : null,
         aciklama: sec(['Bir kez giyildi, kuru temizlemeden yeni geldi.', 'Astarlı, kalıbı tam oturuyor. Boy 1,68 için diz altı.',
           'Özel gün için aldım, dolapta duruyor. Kılıfıyla teslim edilir.', 'Kumaşı esnek değil, ölçüyü dikkate alın.',
           'Ütülü ve temiz teslim edilir. Evcil hayvan ve sigara olmayan evden.']),
