@@ -608,14 +608,61 @@ service cloud.firestore {
         || (sahip && e == 'teslim_edildi' && y == 'iade_edildi'
           && degisenler().hasOnly(['durum', 'guncelleme', 'iadeDurum'])
           && request.resource.data.get('iadeDurum', 'sorunsuz') in ['sorunsuz', 'gec', 'hasar'])
+        || (sahip && e == 'odendi' && y == 'kargoda'
+          && degisenler().hasOnly(['durum', 'guncelleme', 'kargoFirma', 'kargoTakip', 'kargoZaman'])
+          && request.resource.data.kargoFirma is string && request.resource.data.kargoFirma.size() >= 2
+          && request.resource.data.kargoFirma.size() <= 40
+          && request.resource.data.kargoTakip is string && request.resource.data.kargoTakip.size() <= 40
+          && request.resource.data.kargoZaman == request.time)
+        || (e == 'kargoda' && y == 'teslim_edildi'
+          && degisenler().hasOnly(['durum', 'guncelleme', 'teslimOnay'])
+          && ((kiraci && request.resource.data.teslimOnay == 'kiraci')
+              || (dolapAdmin() && request.resource.data.teslimOnay == 'admin')))
+        || (kiraci && e == y && e in ['kargoda', 'teslim_edildi']
+          && degisenler().hasOnly(['guncelleme', 'teslimSorun'])
+          && request.resource.data.teslimSorun is string && request.resource.data.teslimSorun.size() <= 300)
         || (degisenler().hasOnly(['durum', 'guncelleme']) && (
              (sahip && e == 'beklemede' && y == 'reddedildi')
-          || (sahip && e == 'odendi' && y == 'teslim_edildi')
           || (kiraci && e in ['beklemede', 'onaylandi'] && y == 'iptal')
           || (kiraci && e == 'onaylandi' && y == 'odeme_bildirildi')
           || (dolapAdmin() && e == 'odeme_bildirildi' && y in ['odendi', 'onaylandi'])
         ))
       );
+    }
+
+    /* Gelir oranları (ayarlarGenel/gelir); belge yoksa 0. */
+    function gelirOrani(alan) {
+      let y = /databases/$(database)/documents/ayarlarGenel/gelir;
+      return exists(y) ? get(y).data.get(alan, 0) : 0;
+    }
+    /* Admin: eşya sahibine ödeme ve depozito iadesi kaydı (teslimden sonra). */
+    function odemeTakip() {
+      return dolapAdmin() && request.resource.data.guncelleme == request.time
+        && degisenler().hasOnly(['sahipOdeme', 'sahipOdemeZaman', 'depozitoDurum', 'depozitoKesinti', 'depozitoNot', 'depozitoZaman', 'guncelleme'])
+        && resource.data.durum in ['teslim_edildi', 'iade_edildi'];
+    }
+
+    /* Teslimat adresi: kiralamayla aynı yazımda kiracı oluşturur. Eşya sahibi yalnız ödeme
+       admin tarafından onaylandıktan sonra (odendi ve sonrası) okuyabilir. */
+    match /dolapKiraGizli/{kira} {
+      allow create: if girisli()
+        && yeni().keys().hasOnly(['adres', 'kiraciId', 'sahipId'])
+        && yeni().kiraciId == benim()
+        && yeni().adres is string && yeni().adres.size() >= 3 && yeni().adres.size() <= 400
+        && !exists(/databases/$(database)/documents/dolapKiralamalar/$(kira))
+        && getAfter(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data.kiraciId == benim()
+        && getAfter(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data.sahipId == yeni().sahipId;
+      allow read: if girisli() && (resource.data.kiraciId == benim() || dolapAdmin()
+        || (resource.data.sahipId == benim()
+            && get(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data.durum in ['odendi', 'kargoda', 'teslim_edildi', 'iade_edildi']));
+      allow update, delete: if tamYetkili();
+    }
+
+    match /ayarlarGenel/gelir {
+      allow read: if true;
+      allow write: if tamYetkili() && yeni().keys().hasOnly(['hizmetYuzde', 'komisyonYuzde'])
+        && yeni().hizmetYuzde is int && yeni().hizmetYuzde >= 0 && yeni().hizmetYuzde <= 30
+        && yeni().komisyonYuzde is int && yeni().komisyonYuzde >= 0 && yeni().komisyonYuzde <= 30;
     }
 
     match /dolapKiralamalar/{kira} {
@@ -625,7 +672,7 @@ service cloud.firestore {
         && yeni().keys().hasOnly(['esyaId', 'esyaBaslik', 'esyaFoto', 'sahipId', 'kiraciId',
              'kiraciAd', 'kiraciIletisim', 'sahipIletisim', 'baslangic', 'bitis', 'gun',
              'gunlukUcret', 'kira', 'depozito', 'toplam', 'not', 'durum', 'olusturma', 'guncelleme', 'sozlesme',
-             'indirimYuzde', 'indirim'])
+             'indirimYuzde', 'indirim', 'hizmetYuzde', 'hizmetBedeli', 'komisyonYuzde'])
         && yeni().sozlesme == 'v1'
         && yeni().kiraciId == benim()
         && yeni().sahipId != benim()
@@ -644,7 +691,12 @@ service cloud.firestore {
         && yeni().get('indirim', 0) * 100 <= yeni().gun * yeni().gunlukUcret * yeni().get('indirimYuzde', 0)
         && (yeni().get('indirim', 0) + 1) * 100 > yeni().gun * yeni().gunlukUcret * yeni().get('indirimYuzde', 0)
         && yeni().kira == yeni().gun * yeni().gunlukUcret - yeni().get('indirim', 0)
-        && yeni().toplam == yeni().kira + yeni().depozito
+        && yeni().get('hizmetYuzde', 0) == gelirOrani('hizmetYuzde')
+        && yeni().get('komisyonYuzde', 0) == gelirOrani('komisyonYuzde')
+        && yeni().get('hizmetBedeli', 0) is int
+        && yeni().get('hizmetBedeli', 0) * 100 <= yeni().gun * yeni().gunlukUcret * yeni().get('hizmetYuzde', 0)
+        && (yeni().get('hizmetBedeli', 0) + 1) * 100 > yeni().gun * yeni().gunlukUcret * yeni().get('hizmetYuzde', 0)
+        && yeni().toplam == yeni().kira + yeni().get('hizmetBedeli', 0) + yeni().depozito
         && yeni().baslangic is string && yeni().baslangic.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && yeni().bitis is string && yeni().bitis.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && yeni().bitis > yeni().baslangic
@@ -654,7 +706,7 @@ service cloud.firestore {
         && yeni().kiraciIletisim is string && yeni().kiraciIletisim.size() >= 5
         && yeni().kiraciIletisim.size() <= 200
         && yeni().not is string && yeni().not.size() <= 500;
-      allow update: if girisli() && kiraGecis();
+      allow update: if girisli() && (kiraGecis() || odemeTakip());
       allow delete: if tamYetkili();
     }
 
@@ -696,7 +748,9 @@ service cloud.firestore {
       allow read: if girisli() && (kimlik == benim() || dolapAdmin());
       allow create, update: if girisli() && kimlik == benim()
         && yeni().keys().hasOnly(['uid', 'ad', 'eposta', 'foto', 'telefon', 'adresler', 'filtreler',
-                                  'bildirimEposta', 'istatistikIzni', 'ilkGiris', 'sonGiris'])
+                                  'bildirimEposta', 'istatistikIzni', 'ilkGiris', 'sonGiris', 'iban', 'ibanAd'])
+        && yeni().get('iban', '') is string && yeni().get('iban', '').size() <= 34
+        && yeni().get('ibanAd', '') is string && yeni().get('ibanAd', '').size() <= 80
         && yeni().uid == benim()
         && yeni().eposta == request.auth.token.email
         && yeni().get('telefon', '') is string && yeni().get('telefon', '').size() <= 30

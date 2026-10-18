@@ -399,3 +399,12 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 [data-seviye] .seviye { padding: 2px 8px; font-size: 11.5px; }
 .indirim-not { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--sari); font-size: 14px; }
 .ozet-satir.indirim { color: var(--yesil); font-weight: 600; }
+
+/* gelir ve ödemeler */
+.kazanc { margin-top: 8px; padding: 9px 12px; border-radius: 12px; background: var(--zemin); font-size: 14px; }
+.sayac small { display: block; margin-top: 4px; font-size: 11.5px; color: var(--ikinci); }
+.gelir-satir { display: grid; grid-template-columns: 1.4fr 1.4fr .8fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--cizgi); font-size: 14px; }
+.gelir-satir > div > .kucuk { display: block; }
+.gelir-satir .eylem { display: flex; gap: 6px; flex-wrap: wrap; }
+#kAdresYeni { margin-top: 8px; min-height: 70px; }
+@media (max-width: 720px) { .gelir-satir { grid-template-columns: 1fr 1fr; } }
