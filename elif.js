@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019l';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019m';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -398,6 +398,22 @@ const G_IKON = '<svg class="g-ikon" viewBox="0 0 48 48" aria-hidden="true"><path
 const ZIL = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
   '<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
 let bildirimler = [], bildirimZaman = 0, acikOkuma = null;
+const ZARF = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>';
+/* Adminler için başlıkta gelen mesaj kısayolu: okunmamış sayısı canlı izlenir. */
+let mesajDinle = null;
+function mesajIzle() {
+  if (mesajDinle) { mesajDinle(); mesajDinle = null; }
+  const yaz = n => { const sy = $('#mesajSayi'); if (sy) { sy.textContent = n > 9 ? '9+' : n; sy.hidden = !n; } };
+  if (!kullanici || !adminMi()) return;
+  if (D) { yaz((D.sohbetler || []).filter(x => !x.adminOkudu).length); return; }
+  let ilk = true;
+  mesajDinle = onSnapshot(query(collection(db, 'dolapSohbet'), where('adminOkudu', '==', false)), sn => {
+    yaz(sn.size);
+    if (!ilk && sn.docChanges().some(c => c.type !== 'removed')) bildirimYenile(true);
+    ilk = false;
+  }, () => {});
+}
 const KALP = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
   '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>';
 const bOkuma = () => (uye && uye.bildirimOkuma) || 0;
@@ -488,11 +504,13 @@ function hesapCiz() {
   if (!kullanici) {
     h.innerHTML = '<a class="can-dug fav-dug" href="#favoriler" aria-label="Favorilerim" title="Favorilerim">' + KALP + '</a>' +
       '<button type="button" class="dug" id="girisDug">' + G_IKON + 'Google ile giriş</button>';
-    $('#girisDug').onclick = girisYap;
+    $('#girisDug').onclick = girisYap; mesajIzle();
     return;
   }
   const ad = kullanici.displayName || kullanici.email || '';
   h.innerHTML = '<a class="can-dug fav-dug" href="#favoriler" aria-label="Favorilerim" title="Favorilerim">' + KALP + '</a>' +
+    (adminMi() ? '<a class="can-dug mesaj-dug" href="#yonetim/gelen" aria-label="Gelen mesajlar" title="Gelen mesajlar">' + ZARF +
+      '<span class="can-sayi" id="mesajSayi" hidden></span></a>' : '') +
     '<div class="can-kap"><button type="button" class="can-dug" id="canDug" aria-haspopup="true" aria-expanded="false" aria-controls="canMenu" aria-label="Bildirimler">' +
       ZIL + '<span class="can-sayi" id="canSayi" hidden></span></button><div class="can-menu" id="canMenu" hidden></div></div>' +
     '<div class="menu-kap">' +
@@ -512,7 +530,7 @@ function hesapCiz() {
       '<a role="menuitem" href="#hesabim/kartlar">Kayıtlı kartlarım</a>' +
       '<a role="menuitem" href="#hesabim/filtreler">Kayıtlı filtrelerim</a>' +
       '<a role="menuitem" href="#kiralamalar">Kiralamalarım</a>' +
-      (adminMi() ? '<a role="menuitem" href="#yonetim">Yönetim paneli</a>' : '') +
+      (adminMi() ? '<a role="menuitem" href="#yonetim/gelen">✉ Gelen mesajlar</a><a role="menuitem" href="#yonetim">Yönetim paneli</a>' : '') +
       '<button type="button" role="menuitem" id="cikisDug">Çıkış yap</button>' +
     '</div></div>';
   const m = $('#hesapMenu'), d = $('#avatarDug');
@@ -539,6 +557,7 @@ function hesapCiz() {
     if (location.hash === x.link) sayfaCiz(); else location.hash = x.link;
   };
   bildirimYenile(true);
+  mesajIzle();
   m.onclick = () => { m.hidden = true; d.setAttribute('aria-expanded', 'false'); };
   $('#cikisDug').onclick = () => { if (!demoEngel()) signOut(auth); };
 }

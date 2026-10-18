@@ -484,3 +484,7 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 .ornek-k { font-size: 10.5px; color: var(--ikinci); border: 1px solid var(--cizgi); border-radius: 999px; padding: 1px 6px; flex: none; }
 .sirala-alt { padding: 10px 16px 14px; border-top: 1px solid var(--cizgi); }
 @media (max-width: 600px) { .sirala-dug { right: 136px; bottom: 14px; padding: 0 15px; } .sirala-dug span { display: none; } .sirala-kutu { right: 12px; bottom: 74px; } }
+
+.mesaj-dug { text-decoration: none; }
+.mesaj-dug:hover { color: var(--vurgu-koyu); }
+@media (max-width: 600px) { .hesap .ad, .hesap .rol-rozet { display: none; } .can-dug { width: 36px; height: 36px; } }
