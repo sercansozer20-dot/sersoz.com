@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019k';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019l';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -712,6 +712,68 @@ async function profilSayfasi(uid, istek) {
     if (!confirm('Bu kişinin "Hakkında" yazısı kaldırılsın mı?')) return;
     try { await updateDoc(doc(db, 'dolapProfiller', uid), { hakkimda: '' }); bildir('Kaldırıldı.'); sayfaCiz(); } catch (h) { bildir(hataMetni(h)); }
   };
+}
+
+/* ---------------------------------------------------------------- sadakat sıralaması (sağ alt)
+ * Herkese açık puan kayıtlarından (dolapPuanlar) hesaplanır; örnek kullanıcılar "örnek" etiketiyle görünür. */
+let siralamaOnbellek = null;
+async function siralamaHesapla() {
+  if (siralamaOnbellek && Date.now() - siralamaOnbellek.t < 300000) return siralamaOnbellek.l;
+  const kisiler = new Map();
+  const al = uid => { if (!kisiler.has(uid)) kisiler.set(uid, { uid, kiraci: [], sahip: [] }); return kisiler.get(uid); };
+  const isle = (liste, ornek) => liste.filter(k => k.durum === 'iade_edildi').forEach(k => {
+    const a = al(k.kiraciId); a.kiraci.push(k); a.ad = a.ad || k.kiraciAd; a.ornek = ornek;
+    const b = al(k.sahipId); b.sahip.push(k); b.ornek = ornek;
+  });
+  if (D) isle(D.kiralamalar, true);
+  else {
+    const sn = await getDocs(collection(db, 'dolapPuanlar'));
+    isle(sn.docs.map(x => ({ ...x.data(), durum: 'iade_edildi', guncelleme: x.data().zaman })), false);
+    if (ORNEK) {
+      if (!ornekKira) { const s2 = await getDoc(doc(db, 'demoVeri', 'kiralamalar')); ornekKira = s2.exists() ? demoAc(s2.data().veri) : []; }
+      isle(ornekKira, true);
+    }
+  }
+  const l = [...kisiler.values()].map(k => ({ ...k, x: sadakatHesapla(k.kiraci, k.sahip) })).filter(k => k.x.puan > 0)
+    .sort((a, b) => b.x.puan - a.x.puan);
+  await Promise.all(l.slice(0, 10).map(async k => {
+    if (D) { const u = D.kullanicilar.find(y => y.uid === k.uid); if (u) { k.ad = u.ad; k.foto = u.foto; } return; }
+    if (k.ornek) { const e = ORNEK && ORNEK.esyalar.find(y => y.sahipId === k.uid); if (e) { k.ad = e.sahipAd; k.foto = e.sahipFoto; } return; }
+    const pr = await profilGetir(k.uid).catch(() => null);
+    if (pr) { k.ad = pr.ad || k.ad; k.foto = pr.foto || ''; }
+  }));
+  siralamaOnbellek = { t: Date.now(), l };
+  return l;
+}
+function siralamaKur() {
+  document.body.insertAdjacentHTML('beforeend',
+    '<button type="button" class="sirala-dug" id="siralaDug" aria-expanded="false" aria-controls="siralaKutu" title="Sadakat sıralaması">🏆 <span>Sıralama</span></button>' +
+    '<div class="sirala-kutu" id="siralaKutu" role="dialog" aria-label="Sadakat sıralaması" hidden></div>');
+  const dug = $('#siralaDug'), kutu = $('#siralaKutu');
+  const bas = '<div class="sirala-bas"><b>🏆 Sadakat sıralaması</b><button type="button" class="dug-metin" data-kapat>Kapat</button></div>';
+  const kapat = () => { kutu.hidden = true; dug.setAttribute('aria-expanded', 'false'); };
+  dug.onclick = async () => {
+    if (!kutu.hidden) { kapat(); return; }
+    const as = $('#asistan'); if (as && !as.hidden) $('#asistanDug').click();
+    kutu.hidden = false; dug.setAttribute('aria-expanded', 'true');
+    kutu.innerHTML = bas + '<p class="yukleniyor" style="padding:14px 16px">Hesaplanıyor…</p>';
+    try {
+      const l = await siralamaHesapla();
+      const ben = kullanici ? l.findIndex(k => k.uid === kullanici.uid) : -1;
+      kutu.innerHTML = bas + (l.length ? '<ol class="sirala-liste">' + l.slice(0, 10).map((k, i) =>
+        '<li' + (kullanici && k.uid === kullanici.uid ? ' class="ben"' : '') + '><span class="sira">' + (i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1) + '</span>' +
+        (k.foto ? '<img src="' + esc(k.foto) + '" alt="" referrerpolicy="no-referrer">' : '<span class="harf">' + esc((k.ad || '?')[0]) + '</span>') +
+        '<a href="#profil/' + esc(k.uid) + '" data-kapat>' + esc(k.ad || 'Üye') + '</a>' + (k.ornek ? '<span class="ornek-k">örnek</span>' : '') +
+        seviyeRozet(k.x) + '<b>' + k.x.puan + '</b></li>').join('') + '</ol>'
+        : '<p class="kucuk" style="padding:14px 16px">Henüz puan alan yok. İlk sorunsuz kiralamayla sıralamaya gir!</p>') +
+        '<p class="sirala-alt kucuk">' + (ben >= 0 ? 'Senin yerin: <b>' + (ben + 1) + '.</b> · ' + l[ben].x.puan + ' puan. '
+          : kullanici ? 'Sorunsuz kiralamalarla puan kazan, sıralamaya gir. ' : 'Giriş yap, kiralamalarınla puan kazan. ') +
+        '<a href="#hesabim/puan" data-kapat style="text-decoration:underline">Puan nasıl kazanılır?</a></p>';
+    } catch (h) { kutu.innerHTML = bas + '<p class="kucuk" style="padding:14px 16px">Yüklenemedi: ' + esc(hataMetni(h)) + '</p>'; }
+  };
+  kutu.onclick = ev => { if (ev.target.closest('[data-kapat]')) kapat(); };
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !kutu.hidden) kapat(); });
+  const ad = $('#asistanDug'); if (ad) ad.addEventListener('click', kapat);
 }
 
 /* ---------------------------------------------------------------- kampanya afişleri (ayarlar.js → kampanyalar) */
@@ -2905,6 +2967,7 @@ async function oturumHazirla(u) {
 }
 
 asistanKur();
+siralamaKur();
 izinSeridi();
 if (DEMO) {
   kullanici = { ...DEMO_KULLANICI, photoURL: D.kullanicilar[0].foto };
