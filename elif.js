@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018e';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018f';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -1344,15 +1344,14 @@ async function panelYoneticiler(panel, istek) {
       adminler.map(r => {
         const h = hedefi(r.eposta);
         return '<tr><td><b>' + esc(r.eposta) + '</b><br><span class="kucuk">' + esc(r.atayan) + ' atadı' + (r.zaman ? ' · ' + tarihSaat(r.zaman) : '') + '</span><br>' +
-          '<span class="kucuk">Destek postası: ' + (!h ? '<b style="color:var(--kirmizi)">listede değil</b>' : h === r.eposta ? 'e-postaya (herkese açık listede görünür)' : 'gizli koda ✓') + '</span></td>' +
+          '<span class="kucuk">Destek postası: ' + (h ? 'listede ✓ (doğrulama postasındaki “Activate Form”a basıldıysa mesajlar gelir)' : '<b style="color:var(--kirmizi)">listede değil</b>') + '</span></td>' +
           '<td><span class="rol-rozet r-admin">Admin</span></td><td class="eylem-hucre">' +
           '<button type="button" class="dug dug-kucuk" data-aktivasyon="' + esc(r.eposta) + '">Doğrulama postası gönder</button>' +
-          '<button type="button" class="dug dug-kucuk" data-gizlikod="' + esc(r.eposta) + '">Gizli kod gir</button>' +
           '<button type="button" class="dug dug-kucuk dug-tehlike" data-adminsil="' + esc(r.eposta) + '">Yetkiyi al</button></td></tr>';
       }).join('') +
     '</tbody></table></div>' +
-    '<p class="kucuk" style="margin-top:10px">"Ekibe ilet" mesajları yalnız buradaki adminlere gider (hiç admin yoksa site sahibine). Her admin, FormSubmit\'ten gelen doğrulama postasındaki <b>Activate Form</b>\'a bir kez basmalı. ' +
-    'Etkinleştirmeden sonra FormSubmit\'in verdiği gizli kodu "Gizli kod gir" ile kaydederseniz adminin e-postası herkese açık listede görünmez.</p>' +
+    '<p class="kucuk" style="margin-top:10px">"Ekibe ilet" mesajları yalnız buradaki adminlere gider (hiç admin yoksa site sahibine). Her admin, FormSubmit\'ten gelen doğrulama postasındaki <b>Activate Form</b>\'a bir kez basmalı; başka bir şey gerekmez. ' +
+    'Doğrulama postası gelmediyse "Doğrulama postası gönder" ile yeniden gönderebilirsin.</p>' +
     '<button type="button" class="dug dug-kucuk" id="alicilarEsitle" style="margin-top:10px">Destek alıcılarını admin listesiyle eşitle</button></div>';
   $('#adminEkle').onclick = async () => {
     const e = $('#yeniAdmin').value.trim().toLowerCase(), h = $('#adminHata');
