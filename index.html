@@ -13,32 +13,31 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112..125,700..900&family=Barlow:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="giris.css">
 </head>
-<body>
+<body class="giris">
 <header class="ust">
   <a href="index.html" aria-label="SERSOZ ana sayfa"><span class="wm" aria-hidden="true">SERS<span class="mercek"></span>Z</span></a>
 </header>
 
 <main>
   <div class="giris-bas">
-    <h1>Hoş geldiniz</h1>
-    <p>Gitmek istediğiniz bölümü seçin.</p>
+    <h1>Hangi kapıdan girelim?</h1>
   </div>
   <div class="kapilar">
-    <a class="secim kapi z-elif" href="elif.html">
-      <span class="tokmak"></span>
-      <span class="desen"></span>
-      <span class="etiket">Giyim · Aksesuar</span>
-      <h2>Elif'in Dolabı</h2>
-      <p>Elif'in seçtiği kıyafetler ve aksesuarlar.</p>
-      <span class="git">Kapıyı aç</span>
+    <a class="giris-kapi kapi-elif" href="elif.html" aria-label="Elif'in Dolabı">
+      <span class="tabela"><small>Giyim · Aksesuar</small><b>Elif'in Dolabı</b></span>
+      <span class="kasa">
+        <span class="ic"><span>İçeri gir →</span></span>
+        <span class="kanat"><span class="panel"></span><span class="panel"></span><span class="kol"></span></span>
+      </span>
+      <span class="aciklama">Seçilmiş kıyafetler ve aksesuarlar, beden ve stok takibi.</span>
     </a>
-    <a class="secim kapi z-sercan" href="projeler.html">
-      <span class="tokmak"></span>
-      <img class="arka" src="gorsel/tarama.jpg" alt="" width="620" height="470">
-      <span class="etiket">3D Görüş · Robotik · Elektronik</span>
-      <h2>Sercan'ın Projeleri</h2>
-      <p>Makine görüşü, robotik projeler ve elektronik market.</p>
-      <span class="git">Kapıyı aç</span>
+    <a class="giris-kapi kapi-sercan" href="projeler.html" aria-label="Sercan'ın Projeleri">
+      <span class="tabela"><small>3D Görüş · Robotik</small><b>Sercan'ın Projeleri</b></span>
+      <span class="kasa">
+        <span class="ic"><img src="gorsel/tarama.jpg" alt="" width="620" height="470"><span>İçeri gir →</span></span>
+        <span class="kanat"><span class="panel"></span><span class="panel"></span><span class="kol"></span></span>
+      </span>
+      <span class="aciklama">Makine görüşü, robotik projeler ve elektronik market.</span>
     </a>
   </div>
 </main>
