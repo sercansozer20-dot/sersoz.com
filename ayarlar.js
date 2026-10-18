@@ -51,7 +51,7 @@ window.SERSOZ_AYAR = {
      ust: küçük üst yazı · baslik · metin · dugme: düğme yazısı · link: tıklanınca gidilecek yer
      renk: afiş zemin rengi · foto: sağdaki görsel (gorsel/ klasöründen) */
   kampanyalar: [
-    { ust: 'Yeni', baslik: 'Sepetini doldur, sırayla kirala', metin: 'Beğendiğin parçaları ♡ ile sepete at, istekleri tek tek gönder.',
+    { ust: 'Yeni', baslik: 'Sepetini doldur, sırayla kirala', metin: 'Beğendiğin parçaları 🛒 ile sepete at, istekleri tek tek gönder.',
       dugme: 'Sepetime git', link: '#sepet', renk: '#7a2e3a', foto: 'gorsel/ornek/elbise-3.jpg' },
     { ust: 'Sadakat puanı', baslik: 'Seviyen yükseldikçe indirimin artar', metin: 'Bronz %5 · Gümüş %10 · Altın %15 kira indirimi. Sorunsuz her kiralama puan kazandırır.',
       dugme: 'Puanımı gör', link: '#hesabim/puan', renk: '#3d4a3a', foto: 'gorsel/ornek/canta-2.jpg' },

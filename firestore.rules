@@ -547,7 +547,7 @@ service cloud.firestore {
 
     function dolapAlanlari() {
       return ['sahipId', 'sahipAd', 'sahipFoto', 'baslik', 'marka', 'kategori', 'beden',
-              'renk', 'aciklama', 'gunlukUcret', 'depozito', 'fotolar', 'fotoBelge', 'aktif', 'olusturma', 'sozlesme', 'onay', 'redNeden', 'oneCikanBitis'];
+              'renk', 'aciklama', 'gunlukUcret', 'depozito', 'fotolar', 'fotoBelge', 'begeni', 'aktif', 'olusturma', 'sozlesme', 'onay', 'redNeden', 'oneCikanBitis'];
     }
     function esyaGecerli() {
       let d = request.resource.data;
@@ -583,9 +583,17 @@ service cloud.firestore {
       allow update: if girisli() && eski().sahipId == benim() && !kisitli() && esyaGecerli()
         && yeni().sahipId == eski().sahipId
         && yeni().olusturma == eski().olusturma
-        && !degisenler().hasAny(['oneCikanBitis'])
+        && !degisenler().hasAny(['oneCikanBitis', 'begeni'])
         && (degisenler().hasOnly(['aktif'])
             || (yeni().onay == 'bekliyor' && yeni().redNeden == ''));
+      /* beğeni sayacı: yalnız ±1 ve aynı yazımda kişinin beğeni kaydı eklenip/silinirse */
+      allow update: if girisli() && !kisitli() && degisenler().hasOnly(['begeni'])
+        && ((yeni().begeni == eski().get('begeni', 0) + 1
+             && !exists(/databases/$(database)/documents/dolapBegeniler/$(esya + '_' + benim()))
+             && existsAfter(/databases/$(database)/documents/dolapBegeniler/$(esya + '_' + benim())))
+          || (yeni().begeni == eski().get('begeni', 0) - 1
+             && exists(/databases/$(database)/documents/dolapBegeniler/$(esya + '_' + benim()))
+             && !existsAfter(/databases/$(database)/documents/dolapBegeniler/$(esya + '_' + benim()))));
       /* admin: onay / red / yayından kaldırma */
       allow update: if dolapAdmin() && esyaGecerli()
         && degisenler().hasOnly(['onay', 'redNeden', 'aktif', 'oneCikanBitis']);
@@ -607,7 +615,13 @@ service cloud.firestore {
           && request.resource.data.sahipIletisim is string
           && request.resource.data.sahipIletisim.size() >= 5
           && request.resource.data.sahipIletisim.size() <= 200)
-        || (sahip && e == 'teslim_edildi' && y == 'iade_edildi'
+        || (kiraci && e == 'teslim_edildi' && y == 'iade_yolda'
+          && degisenler().hasOnly(['durum', 'guncelleme', 'iadeFirma', 'iadeTakip', 'iadeZaman'])
+          && request.resource.data.iadeFirma is string && request.resource.data.iadeFirma.size() >= 2
+          && request.resource.data.iadeFirma.size() <= 40
+          && request.resource.data.iadeTakip is string && request.resource.data.iadeTakip.size() <= 40
+          && request.resource.data.iadeZaman == request.time)
+        || (sahip && e in ['teslim_edildi', 'iade_yolda'] && y == 'iade_edildi'
           && degisenler().hasOnly(['durum', 'guncelleme', 'iadeDurum'])
           && request.resource.data.get('iadeDurum', 'sorunsuz') in ['sorunsuz', 'gec', 'hasar'])
         || (sahip && e == 'odendi' && y == 'kargoda'
@@ -642,7 +656,7 @@ service cloud.firestore {
       return dolapAdmin() && (tamYetkili() || (resource.data.kiraciId != benim() && resource.data.sahipId != benim()))
         && request.resource.data.guncelleme == request.time
         && degisenler().hasOnly(['sahipOdeme', 'sahipOdemeZaman', 'depozitoDurum', 'depozitoKesinti', 'depozitoNot', 'depozitoZaman', 'guncelleme'])
-        && resource.data.durum in ['teslim_edildi', 'iade_edildi'];
+        && resource.data.durum in ['teslim_edildi', 'iade_yolda', 'iade_edildi'];
     }
 
     /* Admin: kiracıya kartla ödeme linki (Shopier) ekler. */
@@ -667,7 +681,24 @@ service cloud.firestore {
         && getAfter(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data.sahipId == yeni().sahipId;
       allow read: if girisli() && (resource.data.kiraciId == benim() || dolapAdmin()
         || (resource.data.sahipId == benim()
-            && get(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data.durum in ['odendi', 'kargoda', 'teslim_edildi', 'iade_edildi']));
+            && get(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data.durum in ['odendi', 'kargoda', 'teslim_edildi', 'iade_yolda', 'iade_edildi']));
+      allow update, delete: if tamYetkili();
+    }
+
+    /* İade adresi: eşya sahibi, kiralamayı "kargoda"ya geçirdiği aynı yazımda oluşturur.
+       Kiracı parça kargoya çıktıktan sonra okur. */
+    match /dolapIadeAdres/{kira} {
+      allow create: if girisli()
+        && yeni().keys().hasOnly(['adres', 'sahipId', 'kiraciId'])
+        && yeni().sahipId == benim()
+        && yeni().adres is string && yeni().adres.size() >= 3 && yeni().adres.size() <= 400
+        && get(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data.durum == 'odendi'
+        && get(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data.sahipId == benim()
+        && get(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data.kiraciId == yeni().kiraciId
+        && getAfter(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data.durum == 'kargoda';
+      allow read: if girisli() && (resource.data.sahipId == benim() || dolapAdmin()
+        || (resource.data.kiraciId == benim()
+            && get(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data.durum in ['kargoda', 'teslim_edildi', 'iade_yolda', 'iade_edildi']));
       allow update, delete: if tamYetkili();
     }
 
@@ -724,6 +755,19 @@ service cloud.firestore {
     }
 
     /* Parça fotoğrafları (tam boy, sıkıştırılmış JPEG data URL). Herkes okur; sahibi ekler/siler, admin silebilir. */
+    match /dolapBegeniler/{begeni} {
+      allow read: if girisli() && resource.data.uid == benim();
+      allow create: if girisli() && !kisitli()
+        && yeni().keys().hasOnly(['esyaId', 'uid', 'zaman'])
+        && yeni().uid == benim() && begeni == yeni().esyaId + '_' + benim()
+        && yeni().zaman == request.time
+        && getAfter(/databases/$(database)/documents/dolapEsyalar/$(yeni().esyaId)).data.get('begeni', 0)
+           == get(/databases/$(database)/documents/dolapEsyalar/$(yeni().esyaId)).data.get('begeni', 0) + 1;
+      allow delete: if girisli() && resource.data.uid == benim()
+        && getAfter(/databases/$(database)/documents/dolapEsyalar/$(resource.data.esyaId)).data.get('begeni', 0)
+           == get(/databases/$(database)/documents/dolapEsyalar/$(resource.data.esyaId)).data.get('begeni', 0) - 1;
+    }
+
     match /dolapFotolar/{foto} {
       allow read: if true;
       allow create: if girisli() && !kisitli()
@@ -754,7 +798,7 @@ service cloud.firestore {
       let once = get(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data;
       let sonra = getAfter(/databases/$(database)/documents/dolapKiralamalar/$(kira)).data;
       let p = request.resource.data;
-      return once.durum == 'teslim_edildi' && sonra.durum == 'iade_edildi' && once.sahipId == benim()
+      return once.durum in ['teslim_edildi', 'iade_yolda'] && sonra.durum == 'iade_edildi' && once.sahipId == benim()
         && p.keys().hasOnly(['kiraciId', 'kiraciAd', 'sahipId', 'esyaId', 'esyaBaslik', 'bitis', 'iadeDurum', 'zaman'])
         && p.kiraciId == once.kiraciId && p.kiraciAd == once.kiraciAd && p.sahipId == once.sahipId
         && p.esyaId == once.esyaId && p.esyaBaslik == once.esyaBaslik && p.bitis == once.bitis

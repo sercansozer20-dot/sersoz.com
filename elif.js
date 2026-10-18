@@ -14,11 +14,11 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where, serverTimestamp, Timestamp, onSnapshot, writeBatch }
+import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where, serverTimestamp, Timestamp, onSnapshot, writeBatch, increment }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019e';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019f';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -227,7 +227,7 @@ const yildiz = n => '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5
 const KATEGORI = { elbise: 'Elbise', ust: 'Üst giyim', alt: 'Alt giyim', 'dis-giyim': 'Dış giyim', ayakkabi: 'Ayakkabı', canta: 'Çanta', aksesuar: 'Aksesuar', diger: 'Diğer' };
 const DURUM = {
   beklemede: 'Onay bekliyor', onaylandi: 'Onaylandı · ödeme bekleniyor', odeme_bildirildi: 'Ödeme kontrol ediliyor',
-  odendi: 'Ödendi · kargo bekleniyor', kargoda: 'Kargoda', teslim_edildi: 'Kirada · teslim alındı', iade_edildi: 'İade edildi', reddedildi: 'Reddedildi', iptal: 'İptal edildi'
+  odendi: 'Ödendi · kargo bekleniyor', kargoda: 'Kargoda', teslim_edildi: 'Kirada · teslim alındı', iade_yolda: 'İade kargoda', iade_edildi: 'İade edildi', reddedildi: 'Reddedildi', iptal: 'İptal edildi'
 };
 const TL = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 });
 
@@ -618,6 +618,54 @@ function afisBaslat() {
   }, 5000);
 }
 
+/* ---------------------------------------------------------------- beğeniler
+ * dolapBegeniler/{esyaId_uid} + dolapEsyalar.begeni sayacı aynı yazımda değişir (kurallar eşleşmeyi zorlar).
+ * Örnek ilanlarda sayı örnektir; beğeni yalnız bu tarayıcıda tutulur. */
+let begenilerim = new Set();
+const LS_ORNEK_BEGENI = 'elif_ornek_begeni';
+function ornekBegeniler() { try { return new Set(JSON.parse(localStorage.getItem(LS_ORNEK_BEGENI) || '[]')); } catch (h) { return new Set(); } }
+function begendimMi(e) { return e.ornek || D ? ornekBegeniler().has(e.id) : begenilerim.has(e.id); }
+function begeniSayisi(e) {
+  if (typeof e.begeni === 'number') return e.begeni;
+  if (e.ornek || D) { let h = 0; for (const c of e.id) h = (h * 31 + c.charCodeAt(0)) % 997; return 3 + h % 38 + yorumlar(e.id).length * 2; }
+  return 0;
+}
+function begeniDugme(e, uzun) {
+  const b = begendimMi(e), n = begeniSayisi(e) + (b && (e.ornek || D) ? 1 : 0);
+  return '<span class="begeni-dug' + (uzun ? ' uzun' : '') + (b ? ' secili' : '') + '" data-begen="' + esc(e.id) + '" data-n="' + n + '" data-ornek="' + (e.ornek || D ? 1 : 0) + '" role="button" aria-pressed="' + b + '" title="Beğen">' +
+    '<i>' + (b ? '♥' : '♡') + '</i> <b>' + n + '</b>' + (uzun ? ' beğeni' : '') + '</span>';
+}
+async function begenileriYukle() {
+  if (!kullanici || D) { begenilerim = new Set(); return; }
+  try {
+    const sn = await getDocs(query(collection(db, 'dolapBegeniler'), where('uid', '==', kullanici.uid)));
+    begenilerim = new Set(sn.docs.map(x => x.data().esyaId));
+    document.querySelectorAll('[data-begen][data-ornek="0"]').forEach(el => {
+      const b = begenilerim.has(el.dataset.begen); el.classList.toggle('secili', b); el.setAttribute('aria-pressed', b); el.querySelector('i').textContent = b ? '♥' : '♡';
+    });
+  } catch (h) {}
+}
+async function begeniDegistir(el) {
+  const id = el.dataset.begen, ornek = el.dataset.ornek === '1';
+  const tum = document.querySelectorAll('[data-begen="' + CSS.escape(id) + '"]');
+  const once = el.classList.contains('secili'), n = +el.dataset.n + (once ? -1 : 1);
+  const ciz = (b, m) => tum.forEach(x => { x.classList.toggle('secili', b); x.setAttribute('aria-pressed', b); x.dataset.n = m; x.querySelector('i').textContent = b ? '♥' : '♡'; x.querySelector('b').textContent = m; });
+  if (ornek) {
+    const s2 = ornekBegeniler(); once ? s2.delete(id) : s2.add(id);
+    try { localStorage.setItem(LS_ORNEK_BEGENI, JSON.stringify([...s2])); } catch (h) {}
+    ciz(!once, n); return;
+  }
+  if (!kullanici) { bildir('Beğenmek için giriş yap.'); return; }
+  if (rol === 'kisitli') { bildir('Hesabın kısıtlı.'); return; }
+  ciz(!once, n);
+  try {
+    const bt = writeBatch(db), lref = doc(db, 'dolapBegeniler', id + '_' + kullanici.uid), eref = doc(db, 'dolapEsyalar', id);
+    if (once) { bt.delete(lref); bt.update(eref, { begeni: increment(-1) }); begenilerim.delete(id); }
+    else { bt.set(lref, { esyaId: id, uid: kullanici.uid, zaman: serverTimestamp() }); bt.update(eref, { begeni: increment(1) }); begenilerim.add(id); }
+    await bt.commit();
+  } catch (h) { ciz(once, n + (once ? 1 : -1)); once ? begenilerim.add(id) : begenilerim.delete(id); bildir(hataMetni(h)); }
+}
+
 /* ---------------------------------------------------------------- sepet (bu tarayıcıda saklanır) */
 const LS_SEPET = 'elif_sepet';
 function sepetListe() { try { return JSON.parse(localStorage.getItem(LS_SEPET) || '[]'); } catch (h) { return []; } }
@@ -626,6 +674,8 @@ function sepette(id) { return sepetListe().includes(id); }
 function sepetCikar(id) { sepetKaydet(sepetListe().filter(x => x !== id)); }
 function sepetSayac() { const n = sepetListe().length, el = document.getElementById('sepetSay'); if (el) el.textContent = n ? n : ''; }
 document.addEventListener('click', ev => {
+  const bg = ev.target.closest('[data-begen]');
+  if (bg) { ev.preventDefault(); ev.stopPropagation(); begeniDegistir(bg); return; }
   const ko = ev.target.closest('[data-kopya]');
   if (ko) {
     ev.preventDefault();
@@ -645,7 +695,7 @@ document.addEventListener('click', ev => {
   sepetKaydet(vardi ? l.filter(x => x !== id) : l.concat(id));
   document.querySelectorAll('[data-sepet="' + CSS.escape(id) + '"]').forEach(x => {
     x.classList.toggle('secili', !vardi);
-    x.textContent = x.dataset.uzun ? (vardi ? '♡ Sepete ekle' : '♥ Sepette') : (vardi ? '♡' : '♥');
+    x.textContent = x.dataset.uzun ? (vardi ? '🛒 Sepete ekle' : '✓ Sepette') : (vardi ? '🛒' : '✓');
   });
   bildir(vardi ? 'Sepetten çıkarıldı.' : 'Sepete eklendi. Sepetim\'den sırayla kiralayabilirsin.');
 }, true);
@@ -656,7 +706,7 @@ async function sepetSayfasi(istek) {
   icerik.innerHTML = '<div class="sepet-bas"><h1>Sepetim</h1><p class="kucuk">Beğendiğin parçaları burada topla. Her parçanın sahibi ayrı olduğu için kiralama istekleri tek tek gönderilir; "Sırayla kirala" seni sırayla her parçanın formuna götürür.</p></div>' +
     '<div id="sepetIc"><p class="yukleniyor">Yükleniyor…</p></div>';
   if (!ids.length) {
-    $('#sepetIc').innerHTML = '<div class="bos"><h3>Sepetin boş</h3><p>Keşfet\'teki kartlarda ♡ işaretine basarak parça ekleyebilirsin.</p><a class="dug" href="#kesfet">Keşfet\'e git</a></div>';
+    $('#sepetIc').innerHTML = '<div class="bos"><h3>Sepetin boş</h3><p>Keşfet\'teki kartlarda 🛒 işaretine basarak parça ekleyebilirsin.</p><a class="dug" href="#kesfet">Keşfet\'e git</a></div>';
     return;
   }
   const esyalar = (await Promise.all(ids.map(id => esyaGetir(id).catch(() => null)))).filter(Boolean);
@@ -689,7 +739,7 @@ async function sepetSayfasi(istek) {
 /* ---------------------------------------------------------------- eşya kartı */
 function esyaKarti(e, kendi) {
   return '<a class="esya" href="#esya/' + esc(e.id) + '">' +
-    '<span class="foto"><img src="' + esc(e.fotolar[0]) + '" alt="" loading="lazy">' +
+    '<span class="foto"><img src="' + esc(e.fotolar[0]) + '" alt="" loading="lazy">' + (e.aktif ? begeniDugme(e, false) : '') +
       '<span class="etiket' + (e.aktif ? '' : ' pasif-etiket') + '">' + (e.aktif ? esc(KATEGORI[e.kategori] || '') : 'Yayında değil') + '</span>' +
       (e.aktif && oneCikanMi(e) ? '<span class="etiket one-cikan">★ Öne çıkan</span>' : '') +
       (e.ornek ? '<span class="etiket ornek-etiket">Örnek</span>' : '') + '</span>' +
@@ -699,7 +749,7 @@ function esyaKarti(e, kendi) {
     (kendi ? '' : '<span class="sahip" data-profil="' + esc(e.sahipId) + '" title="Profilini gör">' + (e.sahipFoto ? '<img src="' + esc(e.sahipFoto) + '" alt="" referrerpolicy="no-referrer">' : '') + esc(iyelik(e.sahipAd)) + ' dolabı</span>') +
     (kendi || !e.aktif ? '' : '<span class="kart-dug">' +
       '<span class="kirala-dug" data-kirala="' + esc(e.id) + '">Kirala</span>' +
-      '<span class="sepet-dug' + (sepette(e.id) ? ' secili' : '') + '" data-sepet="' + esc(e.id) + '" title="Sepete ekle / çıkar">' + (sepette(e.id) ? '♥' : '♡') + '</span></span>') +
+      '<span class="sepet-dug' + (sepette(e.id) ? ' secili' : '') + '" data-sepet="' + esc(e.id) + '" title="Sepete ekle / çıkar">' + (sepette(e.id) ? '✓' : '🛒') + '</span></span>') +
     '</a>';
 }
 
@@ -831,7 +881,8 @@ async function esyaSayfasi(id, istek) {
         (e.aciklama ? '<p class="aciklama">' + esc(e.aciklama) + '</p>' : '') +
         '<a class="sahip sahip-link" href="#profil/' + esc(e.sahipId) + '" style="margin-top:14px">' + (e.sahipFoto ? '<img src="' + esc(e.sahipFoto) + '" alt="" referrerpolicy="no-referrer">' : '') + esc(iyelik(e.sahipAd)) + ' dolabından <span data-seviye="' + esc(e.sahipId) + '"></span></a>' +
         (e.ornek ? '' : adminEsyaAraclari(e)) +
-        (kendi || !e.aktif ? '' : '<span class="dug sepet-dug-uzun' + (sepette(e.id) ? ' secili' : '') + '" data-sepet="' + esc(e.id) + '" data-uzun="1">' + (sepette(e.id) ? '♥ Sepette' : '♡ Sepete ekle') + '</span>') +
+        (e.aktif ? '<div class="begeni-satir">' + begeniDugme(e, true) + '</div>' : '') +
+        (kendi || !e.aktif ? '' : '<span class="dug sepet-dug-uzun' + (sepette(e.id) ? ' secili' : '') + '" data-sepet="' + esc(e.id) + '" data-uzun="1">' + (sepette(e.id) ? '✓ Sepette' : '🛒 Sepete ekle') + '</span>') +
         '<div class="kutu" id="kiraKutu"></div>' +
       '</div>' +
     '</div>' +
@@ -1219,7 +1270,18 @@ async function kiralamalar(gorunum, istek) {
   adresleriDoldur($('#liste'));
   $('#liste').onclick = async ev => {
     const fb = ev.target.closest('[data-form]');
-    if (fb) { gonderiFormu(l.find(x => x.id === fb.dataset.form)); return; }
+    if (fb) { gonderiFormu(l.find(x => x.id === fb.dataset.form), fb.dataset.yon || 'gidis'); return; }
+    const ib = ev.target.closest('[data-iade-gonder]');
+    if (ib) {
+      const k = l.find(x => x.id === ib.dataset.iadeGonder);
+      const r = await iadeGonderPenceresi(k);
+      if (!r) return;
+      try {
+        await dbGuncelle('dolapKiralamalar', k.id, { durum: 'iade_yolda', iadeFirma: r.firma, iadeTakip: r.takip, iadeZaman: SIMDI(), guncelleme: SIMDI() });
+        bildir('İade kaydedildi. Eşya sahibi teslim alınca depozito süreci başlar.'); sayfaCiz();
+      } catch (h) { bildir(hataMetni(h)); }
+      return;
+    }
     const sb = ev.target.closest('[data-sorun]');
     if (sb) {
       const metin = (prompt('Sorunu kısaca yaz (ör. parça gelmedi, lekeli, yanlış beden). Ekip ve eşya sahibi görür:') || '').trim().slice(0, 300);
@@ -1238,10 +1300,12 @@ async function kiralamalar(gorunum, istek) {
       veri.sahipIletisim = (tel + ' · ' + (kullanici.email || '')).slice(0, 200);
       veri.sahipSozlesme = SOZLESME_SURUM;
     }
+    let iadeAdresi = null;
     if (y === 'kargoda') {
       const kg = await kargoPenceresi(k);
       if (!kg) return;
       veri.kargoFirma = kg.firma; veri.kargoTakip = kg.takip; veri.kargoZaman = SIMDI();
+      iadeAdresi = kg.iadeAdres;
     }
     if (y === 'teslim_edildi') {
       if (!confirm('Parçayı teslim aldın ve sorunsuz mu? Onaylayınca eşya sahibinin ödemesi serbest kalır.')) return;
@@ -1255,7 +1319,15 @@ async function kiralamalar(gorunum, istek) {
     if (['iptal', 'reddedildi'].includes(y) && !confirm(y === 'iptal' ? 'İstek iptal edilsin mi?' : 'İstek reddedilsin mi?')) return;
     b.disabled = true;
     try {
-      if (veri.iadeDurum && !D) {
+      if (iadeAdresi !== null) {
+        if (D) { (D.iadeAdres = D.iadeAdres || {})[k.id] = { adres: iadeAdresi }; await dbGuncelle('dolapKiralamalar', k.id, veri); }
+        else {
+          const bt = writeBatch(db);
+          bt.update(doc(db, 'dolapKiralamalar', k.id), veri);
+          bt.set(doc(db, 'dolapIadeAdres', k.id), { adres: iadeAdresi, sahipId: k.sahipId, kiraciId: k.kiraciId });
+          await bt.commit();
+        }
+      } else if (veri.iadeDurum && !D) {
         const bt = writeBatch(db);
         bt.update(doc(db, 'dolapKiralamalar', k.id), veri);
         bt.set(doc(db, 'dolapPuanlar', k.id), { kiraciId: k.kiraciId, kiraciAd: k.kiraciAd, sahipId: k.sahipId, esyaId: k.esyaId,
@@ -1300,8 +1372,10 @@ function iadePenceresi(k) {
     const p = $('#pencere');
     p.innerHTML = '<div class="pencere-ic"><h2 id="pencereBas">Parça nasıl geri geldi?</h2>' +
       '<p class="kucuk" style="margin-bottom:12px">' + esc(k.esyaBaslik) + ' · iade günü ' + tarihYaz(k.bitis) + ' · ' + esc(k.kiraciAd) + '</p>' +
-      '<div class="iade-secim">' + Object.keys(IADE_AD).map((d, i) =>
-        '<label><input type="radio" name="iDurum" value="' + d + '"' + (i ? '' : ' checked') + '><span><b>' + IADE_AD[d] + '</b> <span class="kucuk">kiracıya ' + (PUAN[d] > 0 ? '+' : '') + PUAN[d] + ' sadakat puanı</span></span></label>').join('') + '</div>' +
+      (k.iadeZaman && zaman(k.iadeZaman) ? '<p class="kucuk" style="margin-bottom:10px">Kiracı ' + tarihYaz(yerelGun(zaman(k.iadeZaman))) + ' tarihinde ' + esc(k.iadeFirma || '') + ' ile gönderdi' +
+        (yerelGun(zaman(k.iadeZaman)) > k.bitis ? ' — <b class="eksi">iade gününden sonra</b>.' : ' — zamanında.') + '</p>' : '') +
+      '<div class="iade-secim">' + Object.keys(IADE_AD).map(d =>
+        '<label><input type="radio" name="iDurum" value="' + d + '"' + (d === (k.iadeZaman && zaman(k.iadeZaman) && yerelGun(zaman(k.iadeZaman)) > k.bitis ? 'gec' : 'sorunsuz') ? ' checked' : '') + '><span><b>' + IADE_AD[d] + '</b> <span class="kucuk">kiracıya ' + (PUAN[d] > 0 ? '+' : '') + PUAN[d] + ' sadakat puanı</span></span></label>').join('') + '</div>' +
       '<p class="kucuk" style="margin-top:10px">Geç ya da hasarlı iadede sözleşmedeki ücretler ayrıca geçerlidir; sorun yaşadıysan "Soru sor" ile ekibe de yaz.</p>' +
       '<div class="pencere-alt"><button type="button" class="dug" id="iVazgec">Vazgeç</button><button type="button" class="dug dug-vurgu" id="iTamam">İade aldım</button></div></div>';
     p.hidden = false; document.body.style.overflow = 'hidden';
@@ -1324,6 +1398,49 @@ function gecikmeHTML(k) {
     '</div>';
 }
 
+/* İade adresi: eşya sahibi kargoya verirken girer (dolapIadeAdres/{kiraId}); kiracı parça kargoya çıkınca görür. */
+async function iadeAdresGetir(id) {
+  if (D) return (D.iadeAdres || {})[id] || null;
+  const sn = await getDoc(doc(db, 'dolapIadeAdres', id));
+  return sn.exists() ? sn.data() : null;
+}
+const adresYazi = a => [a.adSoyad, a.telefon, a.adres, a.ilce + ' / ' + a.il].filter(Boolean).join(' · ');
+const yerelGun = t => new Date(t - new Date(t).getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+function iadeKargoHTML(k) {
+  if (!k.iadeFirma) return '';
+  return '<div class="kazanc">↩︎ İade: ' + esc(k.iadeFirma) + (k.iadeTakip ? ' · takip no <b>' + esc(k.iadeTakip) + '</b>' : '') +
+    (k.iadeZaman && zaman(k.iadeZaman) ? ' · ' + tarihYaz(yerelGun(zaman(k.iadeZaman))) + ' gönderildi' : '') + '</div>';
+}
+/* Kiracı: işi bitince (erken de olabilir) iadeyi başlatır */
+function iadeGonderPenceresi(k) {
+  return new Promise(async son => {
+    const p = $('#pencere');
+    p.innerHTML = '<div class="pencere-ic"><p class="yukleniyor">Yükleniyor…</p></div>';
+    p.hidden = false; document.body.style.overflow = 'hidden';
+    let ia = null;
+    try { ia = await iadeAdresGetir(k.id); } catch (h) {}
+    const erken = bugun() < k.bitis;
+    p.innerHTML = '<div class="pencere-ic"><h2 id="pencereBas">Parçayı iade et</h2>' +
+      '<p class="kucuk" style="margin-bottom:12px">' + esc(k.esyaBaslik) + ' · iade günü ' + tarihYaz(k.bitis) + '</p>' +
+      (erken ? '<p class="uyari" style="margin-bottom:12px">İşin erken bittiyse iade edebilirsin. Kullanmadığın günlerin kira bedeli iade edilmez; depozito parça sağlam ulaşınca iade edilir.</p>' : '') +
+      '<div class="kazanc" style="margin:0 0 12px"><b>İade adresi</b><br>' + esc(ia && ia.adres ? ia.adres : 'Eşya sahibi adres girmemiş; elden teslim için iletişim bilgisinden ulaş.') + '</div>' +
+      '<div class="form-izgara"><div class="alan"><label for="iaFirma">Nasıl gönderiyorsun?</label><select id="iaFirma">' + KARGO_FIRMALARI.map(f => '<option>' + f + '</option>').join('') + '</select></div>' +
+      '<div class="alan"><label for="iaTakip">Takip numarası</label><input id="iaTakip" maxlength="40" autocomplete="off"></div></div>' +
+      '<p class="kucuk" style="margin-top:6px">Paketi kargoya verdikten sonra takip numarasıyla kaydet. Kargoya verdiğin gün iade günün sayılır; gecikme bedeli işlemez.</p>' +
+      '<p class="hata" id="iaHata" role="alert"></p>' +
+      '<div class="pencere-alt"><button type="button" class="dug" id="iaForm">İade gönderi formu</button><button type="button" class="dug" id="iaVazgec">Vazgeç</button>' +
+        '<button type="button" class="dug dug-vurgu" id="iaTamam">İadeyi gönderdim</button></div></div>';
+    const bitir = v => { p.hidden = true; p.innerHTML = ''; document.body.style.overflow = ''; son(v); };
+    $('#iaVazgec').onclick = () => bitir(null);
+    $('#iaForm').onclick = () => gonderiFormu(k, 'iade');
+    p.onclick = ev => { if (ev.target === p) bitir(null); };
+    $('#iaTamam').onclick = () => {
+      const firma = $('#iaFirma').value, takip = $('#iaTakip').value.trim().slice(0, 40);
+      if (firma !== 'Elden teslim' && takip.length < 4) { $('#iaHata').textContent = 'Takip numarasını yaz (kargo fişinde yazar).'; return; }
+      bitir({ firma, takip });
+    };
+  });
+}
 const KARGO_FIRMALARI = ['Yurtiçi Kargo', 'Aras Kargo', 'MNG Kargo', 'PTT Kargo', 'Sürat Kargo', 'HepsiJet', 'Kolay Gelsin', 'Elden teslim', 'Diğer'];
 function kargoBilgiHTML(k) {
   if (!k.kargoFirma) return '';
@@ -1336,30 +1453,46 @@ function kargoPenceresi(k) {
     p.innerHTML = '<div class="pencere-ic"><h2 id="pencereBas">Kargoya verdim</h2>' +
       '<p class="kucuk" style="margin-bottom:12px">' + esc(k.esyaBaslik) + ' · ' + refKod(k.id) + '</p>' +
       '<div class="form-izgara"><div class="alan"><label for="kgFirma">Kargo firması</label><select id="kgFirma">' + KARGO_FIRMALARI.map(f => '<option>' + f + '</option>').join('') + '</select></div>' +
-      '<div class="alan"><label for="kgTakip">Takip numarası</label><input id="kgTakip" maxlength="40" autocomplete="off"></div></div>' +
+      '<div class="alan"><label for="kgTakip">Takip numarası</label><input id="kgTakip" maxlength="40" autocomplete="off"></div>' +
+      '<div class="alan tam"><label for="kgIade">İade adresin <span class="kucuk">(kiracı parçayı buraya geri gönderir; yalnız o görür)</span></label><select id="kgIade">' +
+        ((uye && uye.adresler) || []).map((a, i) => '<option value="' + i + '">' + esc(a.baslik) + ' · ' + esc(a.ilce) + ' / ' + esc(a.il) + '</option>').join('') +
+        '<option value="yeni">Yeni adres yaz</option><option value="elden">Elden teslim alacağım</option></select>' +
+        '<textarea id="kgIadeYeni" maxlength="400" placeholder="Ad soyad, telefon, açık adres, ilçe / il"' + (((uye && uye.adresler) || []).length ? ' hidden' : '') + '></textarea></div></div>' +
       '<p class="hata" id="kgHata" role="alert"></p>' +
       '<div class="pencere-alt"><button type="button" class="dug" id="kgVazgec">Vazgeç</button><button type="button" class="dug dug-vurgu" id="kgTamam">Kaydet</button></div></div>';
     p.hidden = false; document.body.style.overflow = 'hidden';
     const bitir = v => { p.hidden = true; p.innerHTML = ''; document.body.style.overflow = ''; son(v); };
     $('#kgVazgec').onclick = () => bitir(null);
     p.onclick = ev => { if (ev.target === p) bitir(null); };
+    $('#kgIade').onchange = () => { $('#kgIadeYeni').hidden = $('#kgIade').value !== 'yeni'; };
     $('#kgTamam').onclick = () => {
-      const firma = $('#kgFirma').value, takip = $('#kgTakip').value.trim().slice(0, 40);
+      const firma = $('#kgFirma').value, takip = $('#kgTakip').value.trim().slice(0, 40), sec = $('#kgIade').value;
+      const iadeAdres = (sec === 'elden' ? 'Elden teslim' : sec === 'yeni' ? $('#kgIadeYeni').value.trim() : adresYazi(uye.adresler[+sec])).slice(0, 400);
       if (firma !== 'Elden teslim' && takip.length < 4) { $('#kgHata').textContent = 'Takip numarasını yaz (kargo fişinde yazar).'; return; }
-      bitir({ firma, takip });
+      if (sec === 'yeni' && iadeAdres.length < 10) { $('#kgHata').textContent = 'İade adresini yaz.'; return; }
+      bitir({ firma, takip, iadeAdres });
     };
   });
 }
 /* Yazdırılabilir kargo gönderi formu: gönderen (eşya sahibi) ve alıcı (kiracı) adresiyle. Ödeme onaylandıktan sonra açılır. */
-async function gonderiFormu(k) {
+async function gonderiFormu(k, yon = 'gidis') {
   const pen = window.open('', '_blank');
   if (!pen) { bildir('Açılır pencere engellendi; tarayıcıda izin ver.'); return; }
   pen.document.write('<p style="font-family:Arial">Hazırlanıyor…</p>');
-  let g = null;
+  let g = null, ia = null;
   try { g = await kiraGizliGetir(k.id); } catch (h) {}
+  if (yon === 'iade') { try { ia = await iadeAdresGetir(k.id); } catch (h) {} }
   const a = ((uye && uye.adresler) || [])[0];
-  const gonderen = a ? [a.adSoyad, a.adres, a.ilce + ' / ' + a.il, 'Tel: ' + a.telefon] : [kullanici.displayName || '', '(Adresini elle yaz — Hesabım → Adreslerim\'e eklersen otomatik dolar)', '', 'Tel: ' + (k.sahipIletisim || '').split(' · ')[0]];
-  const tel = (k.kiraciIletisim || '').split(' · ')[0];
+  const benimAdres = a ? [a.adSoyad, a.adres, a.ilce + ' / ' + a.il, 'Tel: ' + a.telefon] : [kullanici.displayName || '', '(Adresini elle yaz — Hesabım → Adreslerim\'e eklersen otomatik dolar)', ''];
+  let gonderen = benimAdres, alici, tel;
+  if (yon === 'iade') {
+    if (g && g.adres && g.adres !== 'Elden teslim') gonderen = [k.kiraciAd, g.adres];
+    alici = ia && ia.adres ? ia.adres : '(iade adresi girilmemiş)';
+    tel = (k.sahipIletisim || '').split(' · ')[0];
+  } else {
+    alici = g && g.adres ? g.adres : '(adres görüntülenemedi)';
+    tel = (k.kiraciIletisim || '').split(' · ')[0];
+  }
   const x = v => esc(v || '');
   pen.document.open();
   pen.document.write('<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Gönderi formu ' + refKod(k.id) + '</title><style>' +
@@ -1367,11 +1500,12 @@ async function gonderiFormu(k) {
     'h1{font-size:17px;margin:0 0 6px}.ref{font-size:30px;font-weight:700;letter-spacing:3px;margin:6px 0 12px}' +
     '.k{border:1px solid #000;padding:10px 12px;margin:10px 0;font-size:15px;line-height:1.5}.k b.b{display:block;font-size:12px;letter-spacing:.1em}' +
     '.alt{font-size:12px;color:#333}button{margin-top:16px;padding:10px 18px;font-size:15px}@media print{button{display:none}body{margin:0}}</style></head><body>' +
-    '<div class="etiket"><h1>Elif\'in Dolabı · Kargo gönderi formu</h1><div class="alt">sersoz.com · Kiralık giyim eşyası gönderimi (satış değildir)</div>' +
+    '<div class="etiket"><h1>Elif\'in Dolabı · ' + (yon === 'iade' ? 'İade gönderi formu' : 'Kargo gönderi formu') + '</h1><div class="alt">sersoz.com · Kiralık giyim eşyası gönderimi (satış değildir)</div>' +
     '<div class="ref">' + refKod(k.id) + '</div>' +
     '<div class="k"><b class="b">GÖNDEREN</b>' + gonderen.map(x).join('<br>') + '</div>' +
-    '<div class="k"><b class="b">ALICI</b>' + (g && g.adres ? x(g.adres) : '(adres görüntülenemedi)') + '<br>' + x(k.kiraciAd) + (tel ? ' · Tel: ' + x(tel) : '') + '</div>' +
-    '<div class="k"><b class="b">İÇERİK</b>1 adet: ' + x(k.esyaBaslik) + '<br>Kiralama: ' + tarihYaz(k.baslangic) + ' → ' + tarihYaz(k.bitis) + ' · en geç ' + tarihYaz(k.baslangic) + ' tarihinde teslim edilmeli</div>' +
+    '<div class="k"><b class="b">ALICI</b>' + x(alici) + (yon === 'iade' ? '' : '<br>' + x(k.kiraciAd)) + (tel ? ' · Tel: ' + x(tel) : '') + '</div>' +
+    '<div class="k"><b class="b">İÇERİK</b>1 adet: ' + x(k.esyaBaslik) + '<br>Kiralama: ' + tarihYaz(k.baslangic) + ' → ' + tarihYaz(k.bitis) +
+      (yon === 'iade' ? ' · iade gönderisi' : ' · en geç ' + tarihYaz(k.baslangic) + ' tarihinde teslim edilmeli') + '</div>' +
     '<div class="alt">Bu formu kargo şubesinde gösterin ya da paketin üstüne yapıştırın. Gönderiden sonra takip numarasını sitede "Kargoya verdim" ile girin. ' +
     'Ödemeniz, kiracı parçayı sorunsuz teslim aldıktan sonra hesabınıza aktarılır.</div></div>' +
     '<button onclick="print()">Yazdır</button></body></html>');
@@ -1400,7 +1534,7 @@ function odemeKutusuHTML(k) {
 const ADIMLAR = ['İstek', 'Ödeme', 'Hazırlanıyor', 'Kargoda', 'Sende', 'İade'];
 function adimCubugu(d) {
   if (['reddedildi', 'iptal'].includes(d)) return '';
-  const sira = { beklemede: 0, onaylandi: 1, odeme_bildirildi: 1, odendi: 2, kargoda: 3, teslim_edildi: 4, iade_edildi: 6 }[d] ?? 0;
+  const sira = { beklemede: 0, onaylandi: 1, odeme_bildirildi: 1, odendi: 2, kargoda: 3, teslim_edildi: 4, iade_yolda: 5, iade_edildi: 6 }[d] ?? 0;
   return '<ol class="adim-cubuk" aria-label="Kiralama adımları">' + ADIMLAR.map((a, i) =>
     '<li class="' + (i < sira ? 'bitti' : i === sira ? 'simdi' : '') + '"' + (i === sira ? ' aria-current="step"' : '') + '>' + a + '</li>').join('') + '</ol>';
 }
@@ -1409,13 +1543,13 @@ function kazancHTML(k) {
   return '<div class="kazanc">Sana ödenecek: <b>' + tl(h.sahibe) + '</b> <span class="kucuk">(kira ' + tl(h.brut) +
     (h.komisyon ? ' − %' + k.komisyonYuzde + ' site komisyonu ' + tl(h.komisyon) : '') + ')</span>' +
     (k.sahipOdeme === 'odendi' ? ' · <b class="arti">Hesabına ödendi ✓</b>'
-      : ['teslim_edildi', 'iade_edildi'].includes(k.durum) ? ' · <span class="kucuk">teslimat onaylandı, ödeme sırada' + (uye && uye.iban ? '' : ' · <a href="#hesabim/odeme" style="text-decoration:underline">IBAN ekle</a>') + '</span>' : '') + '</div>';
+      : ['teslim_edildi', 'iade_yolda', 'iade_edildi'].includes(k.durum) ? ' · <span class="kucuk">teslimat onaylandı, ödeme sırada' + (uye && uye.iban ? '' : ' · <a href="#hesabim/odeme" style="text-decoration:underline">IBAN ekle</a>') + '</span>' : '') + '</div>';
 }
 function kiraSatiri(k, gorunum) {
   const d = k.durum;
   const gecis = (y, ad, sinif) => '<button type="button" class="dug dug-kucuk ' + (sinif || '') + '" data-id="' + esc(k.id) + '" data-gecis="' + y + '">' + ad + '</button>';
   let eylem = '', ek = '';
-  const kesin = ['odendi', 'kargoda', 'teslim_edildi', 'iade_edildi'].includes(d);
+  const kesin = ['odendi', 'kargoda', 'teslim_edildi', 'iade_yolda', 'iade_edildi'].includes(d);
 
   if (gorunum === 'kiraci') {
     if (d === 'beklemede') eylem = gecis('iptal', 'İsteği iptal et', 'dug-tehlike');
@@ -1429,7 +1563,14 @@ function kiraSatiri(k, gorunum) {
       eylem = gecis('teslim_edildi', 'Teslim aldım, sorunsuz', 'dug-vurgu') + '<button type="button" class="dug dug-kucuk dug-tehlike" data-sorun="' + esc(k.id) + '">Sorun bildir</button>';
       ek += kargoBilgiHTML(k) + '<div class="odeme-kutu">Parça eline ulaşınca kontrol et ve "Teslim aldım"a bas. Eşya sahibine ödeme ancak sen onaylayınca (ya da site teslimatı doğrulayınca) yapılır.</div>';
     }
-    if (d === 'teslim_edildi') ek += kargoBilgiHTML(k);
+    if (d === 'teslim_edildi') {
+      eylem = '<button type="button" class="dug dug-kucuk dug-vurgu" data-iade-gonder="' + esc(k.id) + '">İade et</button>';
+      ek += kargoBilgiHTML(k) + '<div class="odeme-kutu">İade günü <b>' + tarihYaz(k.bitis) + '</b>. İşin daha erken biterse hemen iade edebilirsin: "İade et"e bas, iade adresini ve gönderi formunu gör, kargoya verince takip numarasını gir.</div>';
+    }
+    if (d === 'iade_yolda') {
+      eylem = '<button type="button" class="dug dug-kucuk" data-form="' + esc(k.id) + '" data-yon="iade">İade gönderi formu</button>';
+      ek += iadeKargoHTML(k) + '<div class="odeme-kutu">İade yolda. Eşya sahibi teslim alınca depozito iadesi başlar.</div>';
+    }
     if (k.teslimSorun) ek += '<div class="gecikme"><b>Bildirdiğin sorun:</b> ' + esc(k.teslimSorun) + ' · Ekip inceliyor.</div>';
     if (d === 'iade_edildi' && k.depozito) ek += '<div class="kazanc">Depozito ' + tl(k.depozito) + ': ' +
       (k.depozitoDurum === 'iade' ? '<b class="arti">iade edildi ✓</b>'
@@ -1445,6 +1586,7 @@ function kiraSatiri(k, gorunum) {
       '<br>Teslimat adresi: <b data-adres="' + esc(k.id) + '">yükleniyor…</b></div>';
     if (d === 'odendi') ek += '<div class="odeme-kutu">Ödeme site hesabına geldi. Gönderi formunu yazdırıp parçayı kargoya ver, sonra "Kargoya verdim"e takip numarasıyla bas. Kazancın, kiracı parçayı sorunsuz teslim aldıktan sonra hesabına aktarılır.</div>';
     if (d === 'kargoda' || d === 'teslim_edildi') ek += kargoBilgiHTML(k);
+    if (d === 'iade_yolda') { eylem = gecis('iade_edildi', 'İade aldım', 'dug-vurgu'); ek += iadeKargoHTML(k) + '<div class="odeme-kutu">Kiracı parçayı geri gönderdi. Eline ulaşınca kontrol et ve "İade aldım"a bas.</div>'; }
     if (k.teslimSorun) ek += '<div class="gecikme"><b>Kiracı sorun bildirdi:</b> ' + esc(k.teslimSorun) + ' · Ekip inceliyor; ödeme bu sırada bekletilir.</div>';
     if (!['reddedildi', 'iptal'].includes(d)) ek += kazancHTML(k);
   } else if (gorunum === 'yonetim') {
@@ -1650,11 +1792,11 @@ async function panelOdemeler(panel, istek) {
 async function panelGelir(panel, istek) {
   const [l, boostlar] = await Promise.all([tumKiralamalar(), boostListesi()]);
   if (istek !== aktifIstek) return;
-  const kesin = l.filter(k => ['odendi', 'teslim_edildi', 'iade_edildi'].includes(k.durum));
+  const kesin = l.filter(k => ['odendi', 'kargoda', 'teslim_edildi', 'iade_yolda', 'iade_edildi'].includes(k.durum));
   const top = (dizi, f) => dizi.reduce((t, k) => t + f(k), 0);
   const H = f => top(kesin, k => kiraHesap(k)[f]);
   const boost = boostlar.filter(b => b.durum === 'aktif').reduce((t, b) => t + (b.fiyat || 0), 0);
-  const sahipBekleyen = kesin.filter(k => ['teslim_edildi', 'iade_edildi'].includes(k.durum) && k.sahipOdeme !== 'odendi');
+  const sahipBekleyen = kesin.filter(k => ['teslim_edildi', 'iade_yolda', 'iade_edildi'].includes(k.durum) && k.sahipOdeme !== 'odendi');
   const kargodakiler = l.filter(k => k.durum === 'kargoda' || (k.durum === 'odendi'));
   const depBekleyen = kesin.filter(k => k.durum === 'iade_edildi' && !k.depozitoDurum && k.depozito > 0);
   const elde = top(kesin.filter(k => !k.depozitoDurum), k => k.depozito || 0);
@@ -2459,7 +2601,7 @@ async function oturumHazirla(u) {
     setDoc(doc(db, 'dolapProfiller', u.uid), { ad: temel.ad, foto: temel.foto, katilma: (uye && uye.ilkGiris && uye.ilkGiris.toMillis) ? uye.ilkGiris : SIMDI() }, { merge: true }).catch(() => {});
     if (ilkKez) olay('giris', { sayfa: yol()[0] || 'kesfet' });
   }
-  hesapCiz(); sayfaCiz(); sohbetIzle();
+  hesapCiz(); sayfaCiz(); sohbetIzle(); begenileriYukle();
 }
 
 asistanKur();

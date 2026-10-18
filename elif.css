@@ -424,3 +424,14 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 .ayrac { display: flex; align-items: center; gap: 10px; margin: 14px 0 4px; color: var(--ikinci); font-size: 12.5px; }
 .ayrac::before, .ayrac::after { content: ''; flex: 1; height: 1px; background: var(--cizgi); }
 .kart-link { min-width: 0; flex: 1; padding: 7px 10px; border: 1px solid var(--cizgi); border-radius: 10px; font-size: 13px; }
+
+/* beğeni */
+.esya .foto { position: relative; }
+.begeni-dug { position: absolute; right: 8px; bottom: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.92); color: var(--metin); font-size: 13px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+.begeni-dug i { font-style: normal; font-size: 15px; line-height: 1; }
+.begeni-dug.secili i { color: #d6336c; }
+.begeni-dug:hover i { transform: scale(1.15); }
+.begeni-dug.uzun { position: static; box-shadow: none; border: 1px solid var(--cizgi); background: var(--kart); padding: 8px 14px; font-size: 14px; }
+.begeni-satir { margin-top: 14px; }
+#kgIadeYeni { margin-top: 8px; min-height: 64px; }
