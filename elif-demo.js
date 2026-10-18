@@ -108,7 +108,8 @@ export function demoVeri() {
           'Özel gün için aldım, dolapta duruyor. Kılıfıyla teslim edilir.', 'Kumaşı esnek değil, ölçüyü dikkate alın.',
           'Ütülü ve temiz teslim edilir. Evcil hayvan ve sigara olmayan evden.']),
         gunlukUcret: gunluk, depozito: Math.round(gunluk * aralik(3, 8) / 50) * 50,
-        fotolar: [foto], aktif: !(ki === 0 && j === 3), olusturma: ts(aralik(1, 60) * 864e5)
+        fotolar: [foto], aktif: !(ki === 0 && j === 3), olusturma: ts(aralik(1, 60) * 864e5),
+        onay: 'onaylandi', redNeden: '', sozlesme: 'v1'
       });
     }
   });
@@ -147,5 +148,76 @@ export function demoVeri() {
   [['beklemede', 5, 2, 3], ['beklemede', 14, 1, 7], ['odendi', 3, 3, 9], ['teslim_edildi', -12, 3, 12], ['iade_edildi', -30, 2, 15], ['iptal', 8, 1, 4]]
     .forEach(([d, b, g, ki]) => kira(elifinki[ki % elifinki.length], kullanicilar[ki], d, b, g));
 
-  return { kullanicilar, esyalar, yorumlar, kiralamalar };
+  /* onay kuyruğu: birkaç parça admin onayı bekliyor, biri reddedilmiş */
+  [3, 11, 19, 27, 35].forEach(i => { if (esyalar[i]) esyalar[i].onay = 'bekliyor'; });
+  const elifEsyalari = esyalar.filter(e => e.sahipId === 'demo-0');
+  if (elifEsyalari[1]) elifEsyalari[1].onay = 'bekliyor';
+  if (esyalar[42]) { esyalar[42].onay = 'reddedildi'; esyalar[42].redNeden = 'Fotoğraf ürünü net göstermiyor, lütfen yeniden çekin.'; }
+
+  /* üyeler (dolapUyeler) */
+  const eposta = k => k.ad.toLocaleLowerCase('tr-TR').replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ö/g, 'o').replace(' ', '.') + '@gmail.com';
+  const uyeler = kullanicilar.map((k, i) => ({
+    uid: k.uid, ad: k.ad, foto: k.foto, eposta: i === 0 ? 'sercansozer20@gmail.com' : eposta(k),
+    telefon: '0532 000 00 ' + String(10 + i), ilkGiris: ts(aralik(20, 90) * 864e5), sonGiris: ts(aralik(0, 72) * 36e5),
+    adresler: i === 0 ? [
+      { baslik: 'Ev', adSoyad: 'Elif Yılmaz', telefon: '0532 000 00 10', adres: 'Caferağa Mah. Moda Cad. No: 12 D: 4', ilce: 'Kadıköy', il: 'İstanbul' },
+      { baslik: 'İş', adSoyad: 'Elif Yılmaz', telefon: '0532 000 00 10', adres: 'Levent Mah. Büyükdere Cad. No: 185', ilce: 'Beşiktaş', il: 'İstanbul' }] : [],
+    filtreler: i === 0 ? [
+      { ad: 'Elbiseler, 300 TL altı', kategori: 'elbise', ara: '', beden: '', maxFiyat: 300 },
+      { ad: 'Uygun çantalar', kategori: 'canta', ara: '', beden: '', maxFiyat: 150 },
+      { ad: 'Zara her şey', kategori: 'hepsi', ara: 'zara', beden: '', maxFiyat: 0 }] : [],
+    bildirimEposta: true, istatistikIzni: true
+  }));
+
+  /* roller (dolapRoller): iki admin, bir kısıtlı */
+  const roller = [
+    { eposta: uyeler[1].eposta, rol: 'admin', neden: '', atayan: 'sercansozer20@gmail.com', zaman: ts(15 * 864e5) },
+    { eposta: uyeler[2].eposta, rol: 'admin', neden: '', atayan: 'sercansozer20@gmail.com', zaman: ts(9 * 864e5) },
+    { eposta: uyeler[7].eposta, rol: 'kisitli', neden: 'İki kiralamada eşyayı geç iade etti, depozito anlaşmazlığı.', atayan: uyeler[1].eposta, zaman: ts(3 * 864e5) }
+  ];
+
+  /* gezinti kayıtları (dolapOlaylar): son 30 gün */
+  const olaylar = [];
+  const ARAMALAR = ['zara elbise', 'abiye', 'mezuniyet', 'siyah elbise', 'çanta', 'topuklu', 'blazer', 'düğün', 'mango', 'kaban', 'saten', 'kırmızı'];
+  const yayinda = esyalar.filter(e => e.onay === 'onaylandi');
+  for (let o = 0; o < 260; o++) {
+    const girisli = r() < .6;
+    const k = girisli ? sec(kullanicilar) : null;
+    const oturum = 'ot-' + o;
+    let t = aralik(0, 29) * 864e5 + aralik(0, 86000) * 1000;
+    const adim = (tur, ek) => {
+      olaylar.push(Object.assign({ tur, sayfa: '', esyaId: '', marka: '', kategori: '', baslik: '', ara: '', oturum,
+        uid: k ? k.uid : '', ad: k ? k.ad : '', zaman: ts(t) }, ek));
+      t -= aralik(8, 140) * 1000;   // sonraki adım biraz daha yeni
+      if (t < 0) t = 0;
+    };
+    if (girisli && r() < .3) adim('giris', { sayfa: 'kesfet' });
+    adim('sayfa', { sayfa: 'kesfet' });
+    const n = aralik(1, 6);
+    for (let j = 0; j < n; j++) {
+      const x = r();
+      if (x < .55) { const e = sec(yayinda); adim('esya', { sayfa: 'esya', esyaId: e.id, marka: e.marka, kategori: e.kategori, baslik: e.baslik }); }
+      else if (x < .75) adim('arama', { sayfa: 'kesfet', ara: sec(ARAMALAR) });
+      else adim('sayfa', { sayfa: sec(girisli ? ['dolabim', 'kiralamalar', 'hesabim', 'kesfet'] : ['kesfet']) });
+    }
+  }
+  olaylar.sort((a, b) => b.zaman.toMillis() - a.zaman.toMillis());
+
+  /* gelen kutusu örnekleri (dolapSohbet) */
+  const m = (kimden, ad, metin, saatOnce) => ({ kimden, ad, metin, zaman: simdi - saatOnce * 36e5 });
+  const sohbetler = [
+    { id: 'demo-soh-1', uid: 'demo-4', ad: 'Selin Arslan', eposta: uyeler[4].eposta, konu: 'Abiyeyi bir gün erken alabilir miyim?', durum: 'acik', adminOkudu: false, kullaniciOkudu: true,
+      mesajlar: [m('kullanici', 'Selin Arslan', 'Merhaba, kiraladığım abiyeyi düğünden bir gün önce alabilir miyim? Ekstra ücret çıkar mı?', 3)], sonZaman: ts(3 * 36e5) },
+    { id: 'demo-soh-2', uid: 'demo-9', ad: 'Gizem Polat', eposta: uyeler[9].eposta, konu: 'Ödememi yaptım ama durum değişmedi', durum: 'acik', adminOkudu: false, kullaniciOkudu: true,
+      mesajlar: [m('kullanici', 'Gizem Polat', 'Dün akşam havale yaptım, açıklamaya EK kodunu da yazdım ama hâlâ "ödeme kontrol ediliyor" görünüyor.', 20)], sonZaman: ts(20 * 36e5) },
+    { id: 'demo-soh-3', uid: 'demo-12', ad: 'Melis Özkan', eposta: uyeler[12].eposta, konu: 'Ürünüm neden reddedildi?', durum: 'yanitlandi', adminOkudu: true, kullaniciOkudu: false,
+      mesajlar: [m('kullanici', 'Melis Özkan', 'Eklediğim çanta reddedilmiş, sebebini anlamadım.', 30),
+        m('admin', 'Zeynep Kaya', 'Merhaba Melis, fotoğrafta çantanın tamamı görünmüyordu. Gün ışığında, tamamı görünecek şekilde yeniden çekip düzenlersen hemen onaylarız.', 26)], sonZaman: ts(26 * 36e5) },
+    { id: 'demo-soh-4', uid: 'demo-15', ad: 'Ezgi Aksoy', eposta: uyeler[15].eposta, konu: 'Kargoyla gönderim', durum: 'kapali', adminOkudu: true, kullaniciOkudu: true,
+      mesajlar: [m('kullanici', 'Ezgi Aksoy', 'İzmir\'deyim, kargoyla kiralama yapılabiliyor mu?', 80),
+        m('admin', 'Elif Yılmaz', 'Evet, kiraya verenle anlaşarak kargoyla gönderim yapabilirsiniz. Kargo ücreti ve süresi kira süresine dahil edilmeli.', 76),
+        m('kullanici', 'Ezgi Aksoy', 'Çok teşekkürler!', 75)], sonZaman: ts(75 * 36e5) }
+  ];
+
+  return { kullanicilar, esyalar, yorumlar, kiralamalar, uyeler, roller, olaylar, sohbetler };
 }

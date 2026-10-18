@@ -530,9 +530,24 @@ service cloud.firestore {
        Liste sorguları tek alanla süzülür (sahipId / kiraciId / aktif / durum);
        sıralama istemcide yapılır → bileşik dizin GEREKMEZ.
        ===================================================================== */
+    /* Yetki: tam yetkili sabit e-posta; adminler ve kısıtlılar dolapRoller/{gmail} belgesinde.
+       Admin atamayı yalnız tam yetkili yapar; adminler yalnız normal kullanıcıyı kısıtlar. */
+    function tamYetkili() {
+      return girisli() && request.auth.token.email_verified == true
+             && request.auth.token.email == 'sercansozer20@gmail.com';
+    }
+    function rolYolu() { return /databases/$(database)/documents/dolapRoller/$(request.auth.token.email); }
+    function dolapAdmin() {
+      return tamYetkili() || (girisli() && request.auth.token.email_verified == true
+             && exists(rolYolu()) && get(rolYolu()).data.rol == 'admin');
+    }
+    function kisitli() {
+      return girisli() && exists(rolYolu()) && get(rolYolu()).data.rol == 'kisitli';
+    }
+
     function dolapAlanlari() {
       return ['sahipId', 'sahipAd', 'sahipFoto', 'baslik', 'marka', 'kategori', 'beden',
-              'renk', 'aciklama', 'gunlukUcret', 'depozito', 'fotolar', 'aktif', 'olusturma', 'sozlesme'];
+              'renk', 'aciklama', 'gunlukUcret', 'depozito', 'fotolar', 'aktif', 'olusturma', 'sozlesme', 'onay', 'redNeden'];
     }
     function esyaGecerli() {
       let d = request.resource.data;
@@ -548,19 +563,29 @@ service cloud.firestore {
         && d.fotolar is list && d.fotolar.size() >= 1 && d.fotolar.size() <= 4
         && d.aktif is bool
         && d.sozlesme == 'v1'
+        && d.onay in ['bekliyor', 'onaylandi', 'reddedildi']
+        && d.redNeden is string && d.redNeden.size() <= 200
         && d.sahipAd is string && d.sahipAd.size() <= 80
         && d.sahipFoto is string && d.sahipFoto.size() <= 600;
     }
 
     match /dolapEsyalar/{esya} {
-      allow read: if true;
-      allow create: if girisli() && esyaGecerli()
+      allow read: if resource.data.onay == 'onaylandi'
+        || (girisli() && (resource.data.sahipId == benim() || dolapAdmin()));
+      allow create: if girisli() && !kisitli() && esyaGecerli()
         && yeni().sahipId == benim()
+        && yeni().onay == 'bekliyor' && yeni().redNeden == ''
         && yeni().olusturma == request.time;
-      allow update: if girisli() && eski().sahipId == benim() && esyaGecerli()
+      /* sahip: yalnız yayın aç/kapa, ya da içerik değişikliği → yeniden onaya */
+      allow update: if girisli() && eski().sahipId == benim() && !kisitli() && esyaGecerli()
         && yeni().sahipId == eski().sahipId
-        && yeni().olusturma == eski().olusturma;
-      allow delete: if girisli() && (eski().sahipId == benim() || yonetici());
+        && yeni().olusturma == eski().olusturma
+        && (degisenler().hasOnly(['aktif'])
+            || (yeni().onay == 'bekliyor' && yeni().redNeden == ''));
+      /* admin: onay / red / yayından kaldırma */
+      allow update: if dolapAdmin() && esyaGecerli()
+        && degisenler().hasOnly(['onay', 'redNeden', 'aktif']);
+      allow delete: if girisli() && (eski().sahipId == benim() || dolapAdmin());
     }
 
     function kiraEsyasi() {
@@ -584,14 +609,14 @@ service cloud.firestore {
           || (sahip && e == 'teslim_edildi' && y == 'iade_edildi')
           || (kiraci && e in ['beklemede', 'onaylandi'] && y == 'iptal')
           || (kiraci && e == 'onaylandi' && y == 'odeme_bildirildi')
-          || (yonetici() && e == 'odeme_bildirildi' && y in ['odendi', 'onaylandi'])
+          || (dolapAdmin() && e == 'odeme_bildirildi' && y in ['odendi', 'onaylandi'])
         ))
       );
     }
 
     match /dolapKiralamalar/{kira} {
       allow read: if girisli()
-        && (eski().kiraciId == benim() || eski().sahipId == benim() || yonetici());
+        && (eski().kiraciId == benim() || eski().sahipId == benim() || dolapAdmin());
       allow create: if girisli()
         && yeni().keys().hasOnly(['esyaId', 'esyaBaslik', 'esyaFoto', 'sahipId', 'kiraciId',
              'kiraciAd', 'kiraciIletisim', 'sahipIletisim', 'baslangic', 'bitis', 'gun',
@@ -602,7 +627,9 @@ service cloud.firestore {
         && yeni().durum == 'beklemede'
         && yeni().sahipIletisim == ''
         && yeni().olusturma == request.time && yeni().guncelleme == request.time
+        && !kisitli()
         && kiraEsyasi().aktif == true
+        && kiraEsyasi().onay == 'onaylandi'
         && kiraEsyasi().sahipId == yeni().sahipId
         && kiraEsyasi().gunlukUcret == yeni().gunlukUcret
         && kiraEsyasi().depozito == yeni().depozito
@@ -619,7 +646,92 @@ service cloud.firestore {
         && yeni().kiraciIletisim.size() <= 200
         && yeni().not is string && yeni().not.size() <= 500;
       allow update: if girisli() && kiraGecis();
-      allow delete: if yonetici();
+      allow delete: if tamYetkili();
+    }
+
+    /* Üye kaydı: profil, telefon, adresler, kayıtlı filtreler, tercihler.
+       Kişi kendi kaydını yazar; adminler okur (kullanıcı listesi). Kart bilgisi TUTULMAZ. */
+    match /dolapUyeler/{kimlik} {
+      allow read: if girisli() && (kimlik == benim() || dolapAdmin());
+      allow create, update: if girisli() && kimlik == benim()
+        && yeni().keys().hasOnly(['uid', 'ad', 'eposta', 'foto', 'telefon', 'adresler', 'filtreler',
+                                  'bildirimEposta', 'istatistikIzni', 'ilkGiris', 'sonGiris'])
+        && yeni().uid == benim()
+        && yeni().eposta == request.auth.token.email
+        && yeni().get('telefon', '') is string && yeni().get('telefon', '').size() <= 30
+        && yeni().get('adresler', []) is list && yeni().get('adresler', []).size() <= 10
+        && yeni().get('filtreler', []) is list && yeni().get('filtreler', []).size() <= 20;
+      allow delete: if girisli() && (kimlik == benim() || tamYetkili());
+    }
+
+    /* Roller: belge kimliği Gmail adresi. rol: 'admin' | 'kisitli' */
+    match /dolapRoller/{eposta} {
+      allow read: if girisli() && (eposta == request.auth.token.email || dolapAdmin());
+      allow create: if yeni().keys().hasOnly(['rol', 'neden', 'atayan', 'zaman'])
+        && yeni().neden is string && yeni().neden.size() <= 200
+        && yeni().atayan == request.auth.token.email && yeni().zaman == request.time
+        && eposta != 'sercansozer20@gmail.com'
+        && ((tamYetkili() && yeni().rol in ['admin', 'kisitli'])
+            || (dolapAdmin() && yeni().rol == 'kisitli'));
+      allow update: if yeni().keys().hasOnly(['rol', 'neden', 'atayan', 'zaman'])
+        && yeni().atayan == request.auth.token.email && yeni().zaman == request.time
+        && ((tamYetkili() && yeni().rol in ['admin', 'kisitli'])
+            || (dolapAdmin() && eski().rol == 'kisitli' && yeni().rol == 'kisitli'));
+      allow delete: if tamYetkili() || (dolapAdmin() && eski().rol == 'kisitli');
+    }
+
+    /* Soru-cevap: kullanıcı kendi konusunu açar ve yazar; adminler okur, yanıtlar, kapatır.
+       Mesajlar dizide tutulur; eski mesajlar silinemez/değiştirilemez (hasAll). */
+    match /dolapSohbet/{konu} {
+      allow read: if girisli() && (resource.data.uid == benim() || dolapAdmin());
+      allow create: if girisli()
+        && yeni().keys().hasOnly(['uid', 'ad', 'eposta', 'konu', 'durum', 'mesajlar', 'sonZaman', 'adminOkudu', 'kullaniciOkudu'])
+        && yeni().uid == benim() && yeni().eposta == request.auth.token.email
+        && yeni().ad is string && yeni().ad.size() <= 80
+        && yeni().konu is string && yeni().konu.size() <= 120
+        && yeni().durum == 'acik' && yeni().adminOkudu == false && yeni().kullaniciOkudu == true
+        && yeni().mesajlar is list && yeni().mesajlar.size() == 1
+        && yeni().mesajlar[0].kimden == 'kullanici' && yeni().mesajlar[0].metin.size() <= 2000
+        && yeni().sonZaman == request.time;
+      allow update: if girisli() && (
+        (eski().uid == benim() && degisenler().hasOnly(['kullaniciOkudu']))
+        || (dolapAdmin() && degisenler().hasOnly(['adminOkudu']))
+        || (eski().uid == benim() && eski().durum != 'kapali'
+            && degisenler().hasOnly(['mesajlar', 'durum', 'sonZaman', 'adminOkudu'])
+            && yeni().sonZaman == request.time && yeni().durum == 'acik' && yeni().adminOkudu == false
+            && yeni().mesajlar.size() == eski().mesajlar.size() + 1 && yeni().mesajlar.size() <= 200
+            && yeni().mesajlar.hasAll(eski().mesajlar)
+            && yeni().mesajlar[yeni().mesajlar.size() - 1].kimden == 'kullanici'
+            && yeni().mesajlar[yeni().mesajlar.size() - 1].metin.size() <= 2000)
+        || (dolapAdmin()
+            && degisenler().hasOnly(['mesajlar', 'durum', 'sonZaman', 'adminOkudu', 'kullaniciOkudu'])
+            && yeni().sonZaman == request.time && yeni().durum in ['acik', 'yanitlandi', 'kapali']
+            && yeni().mesajlar.hasAll(eski().mesajlar) && yeni().mesajlar.size() <= 200
+            && (yeni().mesajlar.size() == eski().mesajlar.size()
+                || (yeni().mesajlar.size() == eski().mesajlar.size() + 1
+                    && yeni().mesajlar[yeni().mesajlar.size() - 1].kimden == 'admin')))
+      );
+      allow delete: if tamYetkili();
+    }
+
+    /* Gezinti kayıtları (yalnız izin veren ziyaretçiden). Herkes yazar, şekil zorunlu;
+       yalnız adminler okur. Liste sorgusu tek alan (zaman >=) → dizin gerekmez. */
+    match /dolapOlaylar/{olay} {
+      allow create: if yeni().keys().hasOnly(['tur', 'sayfa', 'esyaId', 'marka', 'kategori', 'baslik',
+                                             'ara', 'oturum', 'uid', 'ad', 'zaman'])
+        && yeni().tur in ['sayfa', 'esya', 'arama', 'giris']
+        && yeni().sayfa is string && yeni().sayfa.size() <= 60
+        && yeni().esyaId is string && yeni().esyaId.size() <= 60
+        && yeni().marka is string && yeni().marka.size() <= 40
+        && yeni().kategori is string && yeni().kategori.size() <= 20
+        && yeni().baslik is string && yeni().baslik.size() <= 80
+        && yeni().ara is string && yeni().ara.size() <= 60
+        && yeni().oturum is string && yeni().oturum.size() <= 40
+        && yeni().ad is string && yeni().ad.size() <= 80
+        && (yeni().uid == '' || (girisli() && yeni().uid == benim()))
+        && yeni().zaman == request.time;
+      allow read: if dolapAdmin();
+      allow delete: if tamYetkili();
     }
 
     /* Açıkça eşleşmeyen her yol kapalıdır (varsayılan zaten budur; niyet beyanı). */

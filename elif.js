@@ -7,11 +7,14 @@
  *
  * Sayfalar (adres çubuğundaki #):
  *   #kesfet · #esya/{id} · #dolabim · #kiralamalar · #kiralamalar/sahip · #kiralamalar/yonetim
+ *   #hesabim/{profil|adresler|kartlar|filtreler|tercihler|hesap}
+ *   #yonetim/{ozet|onay|gelen/{id}|kullanicilar|kisi/{uid}|yoneticiler|odemeler}  (yalnız admin)
+ * Roller: tam yetkili (TAM_YETKILI) admin atar; admin onaylar/kısıtlar; kısıtlı yalnız gezer.
  */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where, serverTimestamp }
+import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where, serverTimestamp, Timestamp, onSnapshot }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
@@ -29,7 +32,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-const YONETICI = 'sercansozer20@gmail.com';
+const TAM_YETKILI = 'sercansozer20@gmail.com';
 const AYAR = window.SERSOZ_AYAR || {};
 const LS_ILETISIM = 'elif_iletisim';
 /* Sözleşme metni elif-sozlesme.html; madde değişirse sürümü artırın (firestore.rules'taki 'v1' ile birlikte). */
@@ -92,12 +95,107 @@ const icerik = $('#icerik');
 let kullanici = null;
 let aktifIstek = 0;   // eski sayfa yüklemeleri yenisinin üstüne yazmasın
 
+/* ---------------------------------------------------------------- roller ve üye kaydı
+ * tam: sercansozer20@gmail.com (admin atar) · admin: dolapRoller/{gmail}.rol == 'admin'
+ * kisitli: siteyi gezer, ürün ekleyemez/kiralayamaz · uye: normal kullanıcı */
+let rol = 'misafir';
+let rolNeden = '';
+let uye = null;                 // dolapUyeler/{uid}: telefon, adresler, filtreler, tercihler
+const adminMi = () => rol === 'tam' || rol === 'admin';
+const tamMi = () => rol === 'tam';
+const ROL_AD = { tam: 'Tam yetkili', admin: 'Admin', kisitli: 'Kısıtlı', uye: 'Üye', misafir: 'Misafir' };
+
+async function uyeGetir(uid) {
+  if (D) return D.uyeler.find(u => u.uid === uid) || null;
+  const s = await getDoc(doc(db, 'dolapUyeler', uid));
+  return s.exists() ? s.data() : null;
+}
+async function uyeKaydet(veri) {
+  if (!DEMO) await setDoc(doc(db, 'dolapUyeler', kullanici.uid), { uid: kullanici.uid, eposta: kullanici.email, ...veri }, { merge: true });
+  Object.assign(uye, veri);
+}
+async function uyeListesi() {
+  if (D) return D.uyeler.map(u => ({ ...u }));
+  return (await getDocs(collection(db, 'dolapUyeler'))).docs.map(d => d.data());
+}
+async function tumEsyalar() {
+  if (D) return D.esyalar.map(e => ({ ...e }));
+  return (await getDocs(collection(db, 'dolapEsyalar'))).docs.map(d => ({ id: d.id, ...d.data() }));
+}
+async function rolGetir(eposta) {
+  if (D) return D.roller.find(x => x.eposta === eposta) || null;
+  const s = await getDoc(doc(db, 'dolapRoller', eposta));
+  return s.exists() ? { eposta, ...s.data() } : null;
+}
+async function rolListesi() {
+  if (D) return D.roller.map(x => ({ ...x }));
+  return (await getDocs(collection(db, 'dolapRoller'))).docs.map(d => ({ eposta: d.id, ...d.data() }));
+}
+const rolYaz = (eposta, r, neden) => setDoc(doc(db, 'dolapRoller', eposta),
+  { rol: r, neden: neden || '', atayan: kullanici.email, zaman: serverTimestamp() });
+const rolSil = eposta => deleteDoc(doc(db, 'dolapRoller', eposta));
+
+/* ---------------------------------------------------------------- gezinti kaydı (KVKK: yalnız izinle) */
+const LS_IZIN = 'elif_gezinti_izni';
+const oturumId = (() => {
+  try {
+    let o = sessionStorage.getItem('elif_oturum');
+    if (!o) { o = Math.random().toString(36).slice(2, 12); sessionStorage.setItem('elif_oturum', o); }
+    return o;
+  } catch (e) { return 'yok'; }
+})();
+function izinVar() { try { return localStorage.getItem(LS_IZIN) === 'evet'; } catch (e) { return false; } }
+function olay(tur, ek = {}) {
+  if (DEMO || !izinVar()) return;
+  const k = (v, n) => String(v || '').slice(0, n);
+  addDoc(collection(db, 'dolapOlaylar'), {
+    tur, sayfa: k(ek.sayfa, 60), esyaId: k(ek.esyaId, 60), marka: k(ek.marka, 40), kategori: k(ek.kategori, 20),
+    baslik: k(ek.baslik, 80), ara: k(ek.ara, 60), oturum: oturumId,
+    uid: kullanici ? kullanici.uid : '', ad: kullanici ? k(kullanici.displayName, 80) : '', zaman: serverTimestamp()
+  }).catch(() => {});
+}
+async function olayListesi(gun) {
+  if (D) return D.olaylar;
+  const sinir = Timestamp.fromMillis(Date.now() - gun * 864e5);
+  return (await getDocs(query(collection(db, 'dolapOlaylar'), where('zaman', '>=', sinir))))
+    .docs.map(d => d.data()).sort((a, b) => zaman(b.zaman) - zaman(a.zaman));
+}
+function izinSeridi() {
+  let v; try { v = localStorage.getItem(LS_IZIN); } catch (e) { return; }
+  if (v) return;
+  document.body.insertAdjacentHTML('beforeend',
+    '<div class="izin-serit" id="izinSerit" role="dialog" aria-label="Gezinti kaydı izni"><p><b>Gezinti kaydı.</b> Hangi sayfalara ve parçalara baktığınızı, siteyi ve önerileri geliştirmek için kaydetmemize izin veriyor musunuz? ' +
+    'Kararınızı Hesabım\'dan istediğiniz zaman değiştirebilirsiniz. <a href="kosullar.html#gizlilik">Ayrıntılar</a></p>' +
+    '<div><button type="button" class="dug dug-kucuk" data-izin="hayir">İzin verme</button><button type="button" class="dug dug-kucuk dug-ana" data-izin="evet">İzin ver</button></div></div>');
+  $('#izinSerit').onclick = ev => {
+    const b = ev.target.closest('[data-izin]'); if (!b) return;
+    try { localStorage.setItem(LS_IZIN, b.dataset.izin); } catch (e) {}
+    $('#izinSerit').remove();
+    if (b.dataset.izin === 'evet') olay('sayfa', { sayfa: yol()[0] || 'kesfet' });
+  };
+}
+
+/* ---------------------------------------------------------------- küçük grafik yardımcıları */
+function say(liste, f) {
+  const m = new Map();
+  liste.forEach(x => { const k = f(x); if (k) m.set(k, (m.get(k) || 0) + 1); });
+  return [...m].sort((a, b) => b[1] - a[1]);
+}
+function cubuklar(liste, n = 8) {
+  const ust = liste.slice(0, n);
+  if (!ust.length) return '<p class="kucuk">Henüz veri yok.</p>';
+  const mx = Math.max(1, ...ust.map(x => x[1]));
+  return ust.map(([ad, s]) => '<div class="cubuk-satir"><span class="cubuk-ad" title="' + esc(ad) + '">' + esc(ad) + '</span>' +
+    '<span class="cubuk"><i style="width:' + (s / mx * 100).toFixed(1) + '%"></i></span><b>' + s + '</b></div>').join('');
+}
+const tarihSaat = t => new Date(zaman(t) || t || 0).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
 /* ---------------------------------------------------------------- yardımcılar */
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 const tl = n => TL.format(n || 0);
-const yonetici = () => !!kullanici && kullanici.email === YONETICI && kullanici.emailVerified;
+const yonetici = () => adminMi();
 const zaman = d => (d && d.toMillis ? d.toMillis() : 0);
 const refKod = id => 'EK-' + id.slice(0, 6).toUpperCase();
 const bugun = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
@@ -128,16 +226,44 @@ const G_IKON = '<svg class="g-ikon" viewBox="0 0 48 48" aria-hidden="true"><path
 
 function hesapCiz() {
   const h = $('#hesap');
+  const ys = $('#yonetimSekme');
+  if (ys) ys.hidden = !adminMi();
   if (!kullanici) {
     h.innerHTML = '<button type="button" class="dug" id="girisDug">' + G_IKON + 'Google ile giriş</button>';
     $('#girisDug').onclick = girisYap;
     return;
   }
-  h.innerHTML = (kullanici.photoURL ? '<img class="avatar" src="' + esc(kullanici.photoURL) + '" alt="" referrerpolicy="no-referrer">' : '') +
-    '<span class="ad">' + esc(kullanici.displayName || kullanici.email) + '</span>' +
-    '<button type="button" class="dug dug-kucuk" id="cikisDug">Çıkış</button>';
-  $('#cikisDug').onclick = () => signOut(auth);
+  const ad = kullanici.displayName || kullanici.email || '';
+  h.innerHTML = '<div class="menu-kap">' +
+    '<button type="button" class="avatar-dug" id="avatarDug" aria-haspopup="menu" aria-expanded="false" aria-controls="hesapMenu">' +
+      (kullanici.photoURL ? '<img class="avatar" src="' + esc(kullanici.photoURL) + '" alt="" referrerpolicy="no-referrer">'
+        : '<span class="avatar harf">' + esc(ad.slice(0, 1).toUpperCase()) + '</span>') +
+      '<span class="ad">' + esc(ad) + '</span>' +
+      (rol !== 'uye' ? '<span class="rol-rozet r-' + rol + '">' + ROL_AD[rol] + '</span>' : '') +
+      '<span class="ok" aria-hidden="true">▾</span></button>' +
+    '<div class="menu" id="hesapMenu" role="menu" hidden>' +
+      '<div class="menu-bas"><b>' + esc(ad) + '</b><span>' + esc(kullanici.email || '') + '</span></div>' +
+      '<a role="menuitem" href="#hesabim">Hesabım ve ayarlar</a>' +
+      '<a role="menuitem" href="#hesabim/adresler">Kayıtlı adreslerim</a>' +
+      '<a role="menuitem" href="#hesabim/kartlar">Kayıtlı kartlarım</a>' +
+      '<a role="menuitem" href="#hesabim/filtreler">Kayıtlı filtrelerim</a>' +
+      '<a role="menuitem" href="#kiralamalar">Kiralamalarım</a>' +
+      (adminMi() ? '<a role="menuitem" href="#yonetim">Yönetim paneli</a>' : '') +
+      '<button type="button" role="menuitem" id="cikisDug">Çıkış yap</button>' +
+    '</div></div>';
+  const m = $('#hesapMenu'), d = $('#avatarDug');
+  d.onclick = ev => { ev.stopPropagation(); m.hidden = !m.hidden; d.setAttribute('aria-expanded', String(!m.hidden)); };
+  m.onclick = () => { m.hidden = true; d.setAttribute('aria-expanded', 'false'); };
+  $('#cikisDug').onclick = () => { if (!demoEngel()) signOut(auth); };
 }
+document.addEventListener('click', ev => {
+  const m = $('#hesapMenu');
+  if (m && !m.hidden && !ev.target.closest('.menu-kap')) m.hidden = true;
+});
+document.addEventListener('keydown', ev => {
+  const m = $('#hesapMenu');
+  if (ev.key === 'Escape' && m && !m.hidden) { m.hidden = true; $('#avatarDug').focus(); }
+});
 function girisCagrisi(baslik, metin) {
   icerik.innerHTML = '<div class="giris-cagri"><h2>' + esc(baslik) + '</h2><p>' + esc(metin) + '</p>' +
     '<button type="button" class="dug dug-ana" id="cagriGiris">' + G_IKON + 'Google ile giriş yap</button></div>';
@@ -153,6 +279,10 @@ function sayfaCiz() {
     if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
   const istek = ++aktifIstek;
+  icerik.onclick = icerik.oninput = icerik.onchange = null;   // önceki sayfanın dinleyicileri
+  if (s !== 'esya') olay('sayfa', { sayfa: s || 'kesfet' });
+  if (s === 'hesabim') return hesabim(p || '', istek);
+  if (s === 'yonetim') return yonetim(p || 'ozet', yol()[2], istek);
   if (s === 'esya' && p) return esyaSayfasi(p, istek);
   if (s === 'dolabim') return dolabim(istek);
   if (s === 'kiralamalar') return kiralamalar(p || 'kiraci', istek);
@@ -173,14 +303,19 @@ function esyaKarti(e, kendi) {
 }
 
 /* ---------------------------------------------------------------- KEŞFET */
-let kesfetSuzgec = 'hepsi', kesfetAra = '';
+/* Süzgeç durumu: kayıtlı filtreler de bu şekildedir { ad, kategori, ara, beden, maxFiyat } */
+const kesfetS = { kategori: 'hepsi', ara: '', beden: '', maxFiyat: 0, sira: 'yeni' };
+let aramaSayac;
 async function kesfet(istek) {
   icerik.innerHTML = '<div class="bas"><div><h1>Keşfet</h1><p>Herkesin dolabından kiralanabilir parçalar.</p></div>' +
     '<a class="dug dug-vurgu" href="#dolabim">+ Dolabına eşya ekle</a></div>' +
-    '<div class="suzgec" id="suzgec"></div><div class="izgara" id="izgara"><p class="yukleniyor" style="grid-column:1/-1">Yükleniyor…</p></div>';
+    '<div class="kayitli-filtre" id="kayitliFiltre"></div>' +
+    '<div class="suzgec" id="suzgec"></div>' +
+    '<div class="suzgec suzgec-2" id="suzgec2"></div>' +
+    '<div class="izgara" id="izgara"><p class="yukleniyor" style="grid-column:1/-1">Yükleniyor…</p></div>';
   let esyalar;
   try {
-    esyalar = (await esyaListesi('aktif', true)).sort((a, b) => zaman(b.olusturma) - zaman(a.olusturma));
+    esyalar = (await esyaListesi('onay', 'onaylandi')).filter(e => e.aktif);
   } catch (e) {
     if (istek !== aktifIstek) return;
     $('#izgara').innerHTML = '<div class="bos"><h3>Liste yüklenemedi</h3><p>' + esc(hataMetni(e)) + '</p></div>';
@@ -188,26 +323,73 @@ async function kesfet(istek) {
   }
   if (istek !== aktifIstek) return;
 
-  $('#suzgec').innerHTML = [['hepsi', 'Tümü']].concat(Object.entries(KATEGORI)).map(([k, ad]) =>
-    '<button type="button" class="cip" data-k="' + k + '" aria-pressed="' + (k === kesfetSuzgec) + '">' + ad + '</button>').join('') +
-    '<input class="ara" id="ara" type="search" placeholder="Marka, renk, parça ara…" value="' + esc(kesfetAra) + '" aria-label="Ara">';
+  const bedenler = [...new Set(esyalar.map(e => e.beden).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'tr', { numeric: true }));
+  const kayitliCiz = () => {
+    const l = (uye && uye.filtreler) || [];
+    $('#kayitliFiltre').innerHTML = kullanici && l.length
+      ? '<span class="kucuk">Kayıtlı filtrelerin:</span>' + l.map((f, i) => '<button type="button" class="cip cip-kayitli" data-fi="' + i + '">★ ' + esc(f.ad) + '</button>').join('')
+      : '';
+  };
+  const suzgecCiz = () => {
+    $('#suzgec').innerHTML = [['hepsi', 'Tümü']].concat(Object.entries(KATEGORI)).map(([k, ad]) =>
+      '<button type="button" class="cip" data-k="' + k + '" aria-pressed="' + (k === kesfetS.kategori) + '">' + ad + '</button>').join('') +
+      '<input class="ara" id="ara" type="search" placeholder="Marka, renk, parça ara…" value="' + esc(kesfetS.ara) + '" aria-label="Ara">';
+    $('#suzgec2').innerHTML =
+      '<label class="mini-alan">Beden <select id="sBeden"><option value="">Hepsi</option>' +
+        bedenler.map(b => '<option' + (b === kesfetS.beden ? ' selected' : '') + '>' + esc(b) + '</option>').join('') + '</select></label>' +
+      '<label class="mini-alan">En çok <input id="sMax" type="number" min="0" step="10" inputmode="numeric" placeholder="TL/gün" value="' + (kesfetS.maxFiyat || '') + '"></label>' +
+      '<label class="mini-alan">Sırala <select id="sSira">' +
+        [['yeni', 'En yeni'], ['ucuz', 'Fiyat: artan'], ['pahali', 'Fiyat: azalan'], ['puan', 'En yüksek puan']].map(([k, ad]) =>
+          '<option value="' + k + '"' + (k === kesfetS.sira ? ' selected' : '') + '>' + ad + '</option>').join('') + '</select></label>' +
+      (kullanici ? '<button type="button" class="dug dug-kucuk" id="filtreKaydet">☆ Bu filtreyi kaydet</button>' : '') +
+      '<button type="button" class="bag-dug" id="filtreTemizle">Temizle</button>';
+  };
   const ciz = () => {
-    const q = kesfetAra.toLocaleLowerCase('tr-TR');
-    const l = esyalar.filter(e => (kesfetSuzgec === 'hepsi' || e.kategori === kesfetSuzgec) &&
+    const q = kesfetS.ara.toLocaleLowerCase('tr-TR');
+    let l = esyalar.filter(e => (kesfetS.kategori === 'hepsi' || e.kategori === kesfetS.kategori) &&
+      (!kesfetS.beden || e.beden === kesfetS.beden) &&
+      (!kesfetS.maxFiyat || e.gunlukUcret <= kesfetS.maxFiyat) &&
       (!q || [e.baslik, e.marka, e.renk, e.beden].join(' ').toLocaleLowerCase('tr-TR').includes(q)));
+    const puan = e => { const p = puanOzeti(e.id); return p ? parseFloat(p.ort.replace(',', '.')) : 0; };
+    l.sort({ yeni: (a, b) => zaman(b.olusturma) - zaman(a.olusturma), ucuz: (a, b) => a.gunlukUcret - b.gunlukUcret,
+      pahali: (a, b) => b.gunlukUcret - a.gunlukUcret, puan: (a, b) => puan(b) - puan(a) }[kesfetS.sira]);
     $('#izgara').innerHTML = l.length ? l.map(e => esyaKarti(e, kullanici && e.sahipId === kullanici.uid)).join('')
-      : '<div class="bos"><h3>' + (esyalar.length ? 'Aramaya uyan parça yok' : 'Dolaplar henüz boş') + '</h3><p>' +
-        (esyalar.length ? 'Başka bir kategori ya da kelime deneyin.' : 'İlk parçayı sen ekle, kiraya veren ilk kişi ol.') + '</p>' +
+      : '<div class="bos"><h3>' + (esyalar.length ? 'Bu filtreye uyan parça yok' : 'Dolaplar henüz boş') + '</h3><p>' +
+        (esyalar.length ? 'Filtreleri gevşetmeyi deneyin.' : 'İlk parçayı sen ekle, kiraya veren ilk kişi ol.') + '</p>' +
         (esyalar.length ? '' : '<a class="dug dug-vurgu" href="#dolabim">Dolabına eşya ekle</a>') + '</div>';
   };
-  $('#suzgec').addEventListener('click', e => {
-    const b = e.target.closest('[data-k]'); if (!b) return;
-    kesfetSuzgec = b.dataset.k;
-    document.querySelectorAll('#suzgec .cip').forEach(c => c.setAttribute('aria-pressed', String(c === b)));
-    ciz();
-  });
-  $('#ara').addEventListener('input', e => { kesfetAra = e.target.value; ciz(); });
-  ciz();
+  const hepsi = () => { suzgecCiz(); kayitliCiz(); ciz(); };
+
+  icerik.onclick = async ev => {
+    const k = ev.target.closest('#suzgec [data-k]');
+    if (k) { kesfetS.kategori = k.dataset.k; hepsi(); return; }
+    const f = ev.target.closest('[data-fi]');
+    if (f) { const s = uye.filtreler[+f.dataset.fi]; Object.assign(kesfetS, { kategori: s.kategori || 'hepsi', ara: s.ara || '', beden: s.beden || '', maxFiyat: s.maxFiyat || 0 }); hepsi(); return; }
+    if (ev.target.closest('#filtreTemizle')) { Object.assign(kesfetS, { kategori: 'hepsi', ara: '', beden: '', maxFiyat: 0, sira: 'yeni' }); hepsi(); return; }
+    if (ev.target.closest('#filtreKaydet')) {
+      const l = uye.filtreler || [];
+      if (l.length >= 20) { bildir('En fazla 20 filtre kaydedebilirsin. Hesabım\'dan eskileri sil.'); return; }
+      const oneri = [KATEGORI[kesfetS.kategori], kesfetS.beden && kesfetS.beden + ' beden', kesfetS.maxFiyat && kesfetS.maxFiyat + ' TL altı', kesfetS.ara].filter(Boolean).join(', ') || 'Tüm parçalar';
+      const ad = prompt('Filtreye bir ad ver:', oneri);
+      if (!ad) return;
+      const yeni = { ad: ad.trim().slice(0, 40), kategori: kesfetS.kategori, ara: kesfetS.ara.slice(0, 60), beden: kesfetS.beden, maxFiyat: kesfetS.maxFiyat || 0 };
+      try { await uyeKaydet({ filtreler: l.concat([yeni]) }); kayitliCiz(); bildir(DEMO ? 'Örnek modda yalnız bu oturumda saklandı.' : 'Filtre kaydedildi.'); }
+      catch (h) { bildir(hataMetni(h)); }
+    }
+  };
+  icerik.oninput = ev => {
+    if (ev.target.id === 'ara') {
+      kesfetS.ara = ev.target.value; ciz();
+      clearTimeout(aramaSayac);
+      aramaSayac = setTimeout(() => { if (kesfetS.ara.trim().length >= 2) olay('arama', { sayfa: 'kesfet', ara: kesfetS.ara.trim() }); }, 1200);
+    }
+    if (ev.target.id === 'sMax') { kesfetS.maxFiyat = Math.max(0, Math.round(+ev.target.value || 0)); ciz(); }
+  };
+  icerik.onchange = ev => {
+    if (ev.target.id === 'sBeden') { kesfetS.beden = ev.target.value; ciz(); }
+    if (ev.target.id === 'sSira') { kesfetS.sira = ev.target.value; ciz(); }
+  };
+  hepsi();
 }
 
 /* ---------------------------------------------------------------- EŞYA SAYFASI */
@@ -223,6 +405,7 @@ async function esyaSayfasi(id, istek) {
   }
   if (istek !== aktifIstek) return;
   const kendi = kullanici && kullanici.uid === e.sahipId;
+  olay('esya', { sayfa: 'esya', esyaId: e.id, marka: e.marka, kategori: e.kategori, baslik: e.baslik });
 
   icerik.innerHTML = '<p class="kucuk" style="margin-bottom:14px"><a href="#kesfet">← Keşfet</a></p>' +
     '<div class="ayrinti">' +
@@ -241,6 +424,7 @@ async function esyaSayfasi(id, istek) {
         '<p class="kucuk" style="margin-top:4px"><a href="elif-sozlesme.html" target="_blank" style="text-decoration:underline">Kiralama şartları</a> · geç iade ve teslim etmeme kuralları</p>' +
         (e.aciklama ? '<p class="aciklama">' + esc(e.aciklama) + '</p>' : '') +
         '<p class="sahip" style="margin-top:14px">' + (e.sahipFoto ? '<img src="' + esc(e.sahipFoto) + '" alt="" referrerpolicy="no-referrer">' : '') + esc(e.sahipAd) + '\'nin dolabından</p>' +
+        adminEsyaAraclari(e) +
         '<div class="kutu" id="kiraKutu"></div>' +
       '</div>' +
     '</div>' +
@@ -252,13 +436,28 @@ async function esyaSayfasi(id, istek) {
     icerik.querySelectorAll('.kucukler button').forEach(x => x.setAttribute('aria-current', String(x === b)));
   });
 
+  const yon = icerik.querySelector('.admin-kutu');
+  if (yon) yon.onclick = async ev => {
+    const b = ev.target.closest('[data-yon]'); if (!b) return;
+    if (demoEngel()) return;
+    let veri = { onay: 'onaylandi', redNeden: '' };
+    if (b.dataset.yon === 'kaldir') {
+      const n = prompt('Kaldırma nedeni (ürün sahibine gösterilir):', '');
+      if (n === null) return;
+      veri = { onay: 'reddedildi', redNeden: n.trim().slice(0, 200) || 'Yönetici tarafından kaldırıldı.', aktif: false };
+    }
+    try { await updateDoc(doc(db, 'dolapEsyalar', e.id), veri); bildir('Güncellendi.'); sayfaCiz(); } catch (h) { bildir(hataMetni(h)); }
+  };
+
   const kutu = $('#kiraKutu');
   if (kendi) {
-    kutu.innerHTML = '<h2>Bu parça senin dolabında</h2><p class="kucuk" style="margin-bottom:12px">' + (e.aktif ? 'Keşfet\'te görünüyor.' : 'Şu an yayında değil.') + '</p>' +
+    kutu.innerHTML = '<h2>Bu parça senin dolabında</h2><p class="kucuk" style="margin-bottom:12px">' +
+      (e.onay === 'bekliyor' ? 'Ekip onayı bekliyor; onaylanınca Keşfet\'te görünür.' : e.onay === 'reddedildi' ? 'Reddedildi: ' + esc(e.redNeden) : e.aktif ? 'Keşfet\'te görünüyor.' : 'Şu an yayında değil.') + '</p>' +
       '<a class="dug" href="#dolabim">Dolabıma git</a>';
     return;
   }
-  if (!e.aktif) { kutu.innerHTML = '<h2>Şu an kiralanamıyor</h2><p class="kucuk">Sahibi bu parçayı yayından kaldırdı.</p>'; return; }
+  if (!e.aktif || e.onay !== 'onaylandi') { kutu.innerHTML = '<h2>Şu an kiralanamıyor</h2><p class="kucuk">' + (e.onay === 'bekliyor' ? 'Bu parça ekip onayı bekliyor.' : 'Bu parça yayında değil.') + '</p>'; return; }
+  if (rol === 'kisitli') { kutu.innerHTML = '<h2>Kiralama yapamıyorsun</h2><p class="kucuk">Hesabın kısıtlandı' + (rolNeden ? ': ' + esc(rolNeden) : '') + '. Yardım için sağ alttaki "Soru sor"u kullan.</p>'; return; }
   if (!kullanici) {
     kutu.innerHTML = '<h2>Kiralamak için giriş yap</h2><p class="kucuk" style="margin-bottom:12px">Google hesabınla saniyeler içinde giriş yapabilirsin.</p>' +
       '<button type="button" class="dug dug-ana dug-tam" id="kiraGiris">' + G_IKON + 'Google ile giriş yap</button>';
@@ -341,6 +540,7 @@ async function dolabim(istek) {
   icerik.innerHTML = '<div class="bas"><div><h1>Dolabım</h1><p>Kiraya verdiğin parçalar.</p></div>' +
     '<button type="button" class="dug dug-vurgu" id="yeniEsya">+ Eşya ekle</button></div><div class="liste" id="liste"><p class="yukleniyor">Yükleniyor…</p></div>';
   $('#yeniEsya').onclick = () => esyaFormu();
+  if (rol === 'kisitli') $('#yeniEsya').outerHTML = '<p class="uyari">Hesabın kısıtlandı' + (rolNeden ? ': ' + esc(rolNeden) : '') + '. Yeni parça ekleyemezsin.</p>';
   let l;
   try {
     l = (await esyaListesi('sahipId', kullanici.uid)).sort((a, b) => zaman(b.olusturma) - zaman(a.olusturma));
@@ -358,7 +558,9 @@ async function dolabim(istek) {
     '<div class="satir"><img class="k" src="' + esc(e.fotolar[0]) + '" alt="">' +
       '<div><h3><a href="#esya/' + esc(e.id) + '">' + esc(e.baslik) + '</a></h3>' +
         '<p class="kira-detay">' + esc([KATEGORI[e.kategori], e.marka, e.beden].filter(Boolean).join(' · ')) + ' · <b>' + tl(e.gunlukUcret) + '/gün</b></p>' +
-        '<p class="kira-detay">' + (e.aktif ? '<span class="durum d-onaylandi">Yayında</span>' : '<span class="durum">Yayında değil</span>') + '</p></div>' +
+        '<p class="kira-detay">' + (e.onay === 'bekliyor' ? '<span class="durum d-beklemede">Onay bekliyor</span>'
+          : e.onay === 'reddedildi' ? '<span class="durum d-reddedildi">Reddedildi</span> <span class="kucuk">' + esc(e.redNeden) + '</span>'
+          : e.aktif ? '<span class="durum d-onaylandi">Yayında</span>' : '<span class="durum">Yayında değil</span>') + '</p></div>' +
       '<div class="eylem">' +
         '<button type="button" class="dug dug-kucuk" data-duzenle="' + esc(e.id) + '">Düzenle</button>' +
         '<button type="button" class="dug dug-kucuk" data-yayin="' + esc(e.id) + '">' + (e.aktif ? 'Yayından kaldır' : 'Yayınla') + '</button>' +
@@ -401,6 +603,7 @@ function kucult(dosya) {
 }
 
 function esyaFormu(e) {
+  if (rol === 'kisitli') { bildir('Hesabın kısıtlandı; parça ekleyemez ya da düzenleyemezsin.'); return; }
   const p = $('#pencere');
   let fotolar = e ? e.fotolar.map(u => ({ url: u })) : [];   // {url} mevcut, {dosya, onizleme} yeni
   const kaldirilan = [];
@@ -473,13 +676,14 @@ function esyaFormu(e) {
       const veri = {
         baslik: v('fBaslik'), kategori: v('fKat'), marka: v('fMarka'), beden: v('fBeden'), renk: v('fRenk'),
         aciklama: v('fAciklama'), gunlukUcret: ucret, depozito, fotolar: urller, sozlesme: SOZLESME_SURUM,
+        onay: 'bekliyor', redNeden: '',
         sahipAd: (kullanici.displayName || 'Kullanıcı').slice(0, 80), sahipFoto: (kullanici.photoURL || '').slice(0, 600)
       };
       if (e) await updateDoc(doc(db, 'dolapEsyalar', e.id), veri);
       else await addDoc(collection(db, 'dolapEsyalar'), { ...veri, sahipId: kullanici.uid, aktif: true, olusturma: serverTimestamp() });
       kaldirilan.forEach(u => deleteObject(ref(storage, u)).catch(() => {}));
       kapat();
-      bildir(e ? 'Kaydedildi.' : 'Dolabına eklendi, Keşfet\'te görünüyor.');
+      bildir('Ekip onayına gönderildi. Onaylanınca Keşfet\'te görünecek.');
       sayfaCiz();
     } catch (h) {
       hata.textContent = hataMetni(h);
@@ -609,12 +813,495 @@ function kiraSatiri(k, gorunum) {
     '<div class="eylem">' + eylem + '</div>' + gecikmeHTML(k) + ek + '</div>';
 }
 
+/* ---------------------------------------------------------------- YÖNETİM PANELİ (#yonetim/...) */
+const SAYFA_AD = { kesfet: 'Keşfet', esya: 'Parça sayfası', dolabim: 'Dolabım', kiralamalar: 'Kiralamalarım', hesabim: 'Hesabım', yonetim: 'Yönetim' };
+
+async function yonetim(sekme, ek, istek) {
+  if (!kullanici) return girisCagrisi('Yönetim paneli', 'Panel için yetkili hesabınla giriş yap.');
+  if (!adminMi()) {
+    icerik.innerHTML = '<div class="bos"><h3>Bu sayfaya erişim yetkin yok</h3><p>Yönetim paneli yalnız adminlere açıktır.</p><a class="dug" href="#kesfet">Keşfet\'e dön</a></div>';
+    return;
+  }
+  const sekmeler = [['ozet', 'Özet'], ['onay', 'Onay bekleyenler'], ['gelen', 'Gelen kutusu'], ['kullanicilar', 'Kullanıcılar']]
+    .concat(tamMi() ? [['yoneticiler', 'Yöneticiler']] : []).concat([['odemeler', 'Ödemeler']]);
+  icerik.innerHTML = '<div class="bas"><div><h1>Yönetim paneli</h1><p>' + ROL_AD[rol] + ' olarak giriş yaptın.</p></div></div>' +
+    '<div class="alt-sekme">' + sekmeler.map(([k, ad]) =>
+      '<a class="cip" href="#yonetim/' + k + '" aria-pressed="' + (sekme === k || (sekme === 'kisi' && k === 'kullanicilar')) + '">' + ad +
+      (k === 'onay' || k === 'gelen' ? ' <span class="sayi" id="sayi-' + k + '" hidden></span>' : '') + '</a>').join('') + '</div>' +
+    '<div id="panel"><p class="yukleniyor">Yükleniyor…</p></div>';
+  const panel = $('#panel');
+  rozetSayilari();
+  try {
+    if (sekme === 'onay') await panelOnay(panel, istek);
+    else if (sekme === 'gelen') await panelGelen(panel, ek, istek);
+    else if (sekme === 'kullanicilar') await panelKullanicilar(panel, istek);
+    else if (sekme === 'kisi' && ek) await panelKisi(panel, ek, istek);
+    else if (sekme === 'yoneticiler' && tamMi()) await panelYoneticiler(panel, istek);
+    else if (sekme === 'odemeler') location.hash = '#kiralamalar/yonetim';
+    else await panelOzet(panel, istek);
+  } catch (h) {
+    if (istek === aktifIstek) panel.innerHTML = '<div class="bos"><h3>Yüklenemedi</h3><p>' + esc(hataMetni(h)) + '</p></div>';
+  }
+}
+async function rozetSayilari() {
+  try {
+    const [bek, soh] = await Promise.all([esyaListesi('onay', 'bekliyor'), sohbetListesi()]);
+    const yaz = (id, n) => { const s = $('#sayi-' + id); if (s) { s.textContent = n; s.hidden = !n; } };
+    yaz('onay', bek.length);
+    yaz('gelen', soh.filter(x => !x.adminOkudu).length);
+  } catch (e) {}
+}
+
+async function panelOzet(panel, istek) {
+  const ol = await olayListesi(30);
+  if (istek !== aktifIstek) return;
+  const esyaO = ol.filter(o => o.tur === 'esya'), aramaO = ol.filter(o => o.tur === 'arama');
+  const gunler = [];
+  for (let i = 13; i >= 0; i--) {
+    const g = new Date(Date.now() - i * 864e5);
+    gunler.push([g.toISOString().slice(0, 10), g.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })]);
+  }
+  const gunSay = new Map();
+  ol.forEach(o => { const k = new Date(zaman(o.zaman)).toISOString().slice(0, 10); (gunSay.get(k) || gunSay.set(k, new Set()).get(k)).add(o.oturum); });
+  const maxG = Math.max(1, ...gunler.map(([k]) => (gunSay.get(k) || new Set()).size));
+  const sayac = (ad, s) => '<div class="sayac"><b>' + s.toLocaleString('tr-TR') + '</b><span>' + ad + '</span></div>';
+  panel.innerHTML =
+    '<p class="kucuk" style="margin-bottom:12px">Son 30 gün · yalnız gezinti kaydına izin veren ziyaretçiler sayılır.</p>' +
+    '<div class="sayaclar">' + sayac('Ziyaret (oturum)', new Set(ol.map(o => o.oturum)).size) +
+      sayac('Giriş yapmış kişi', new Set(ol.filter(o => o.uid).map(o => o.uid)).size) +
+      sayac('Parça görüntüleme', esyaO.length) + sayac('Arama', aramaO.length) + '</div>' +
+    '<div class="panel-izgara">' +
+      '<section class="kutu"><h2>Günlük ziyaret · 14 gün</h2><div class="gunluk">' + gunler.map(([k, ad]) => {
+        const s = (gunSay.get(k) || new Set()).size;
+        return '<div class="gun" title="' + ad + ': ' + s + ' ziyaret"><i style="height:' + (s / maxG * 100).toFixed(1) + '%"></i><span>' + ad.split(' ')[0] + '</span></div>';
+      }).join('') + '</div></section>' +
+      '<section class="kutu"><h2>En çok bakılan markalar</h2>' + cubuklar(say(esyaO, o => o.marka)) + '</section>' +
+      '<section class="kutu"><h2>En çok bakılan parçalar</h2>' + cubuklar(say(esyaO, o => o.baslik)) + '</section>' +
+      '<section class="kutu"><h2>Kategoriler</h2>' + cubuklar(say(esyaO, o => KATEGORI[o.kategori] || o.kategori)) + '</section>' +
+      '<section class="kutu"><h2>Aramalar</h2>' + cubuklar(say(aramaO, o => o.ara)) + '</section>' +
+      '<section class="kutu"><h2>Sayfalar</h2>' + cubuklar(say(ol.filter(o => o.tur === 'sayfa'), o => SAYFA_AD[o.sayfa] || o.sayfa)) + '</section>' +
+    '</div>' +
+    '<section class="kutu"><h2>Son hareketler</h2>' + olayTablosu(ol.slice(0, 40), true) + '</section>';
+}
+function olayMetni(o) {
+  if (o.tur === 'esya') return 'Parçaya baktı: <a href="#esya/' + esc(o.esyaId) + '">' + esc(o.baslik) + '</a> <span class="kucuk">' + esc(o.marka) + '</span>';
+  if (o.tur === 'arama') return 'Aradı: “' + esc(o.ara) + '”';
+  if (o.tur === 'giris') return 'Giriş yaptı';
+  return 'Sayfa: ' + esc(SAYFA_AD[o.sayfa] || o.sayfa);
+}
+function olayTablosu(l, kisiGoster) {
+  if (!l.length) return '<p class="kucuk">Kayıt yok.</p>';
+  return '<div class="tablo-kap"><table class="tablo"><thead><tr><th>Zaman</th>' + (kisiGoster ? '<th>Kişi</th>' : '') + '<th>Hareket</th></tr></thead><tbody>' +
+    l.map(o => '<tr><td class="nw">' + tarihSaat(o.zaman) + '</td>' +
+      (kisiGoster ? '<td>' + (o.uid ? '<a href="#yonetim/kisi/' + esc(o.uid) + '">' + esc(o.ad || 'Üye') + '</a>'
+        : '<span class="kucuk">Ziyaretçi · ' + esc(String(o.oturum).slice(-4)) + '</span>') + '</td>' : '') +
+      '<td>' + olayMetni(o) + '</td></tr>').join('') + '</tbody></table></div>';
+}
+
+async function panelOnay(panel, istek) {
+  const l = (await esyaListesi('onay', 'bekliyor')).sort((a, b) => zaman(a.olusturma) - zaman(b.olusturma));
+  if (istek !== aktifIstek) return;
+  if (!l.length) { panel.innerHTML = '<div class="bos"><h3>Onay bekleyen ürün yok</h3><p>Yeni eklenen ya da düzenlenen ürünler buraya düşer.</p></div>'; return; }
+  panel.innerHTML = '<div class="liste">' + l.map(e => '<div class="satir"><img class="k" src="' + esc(e.fotolar[0]) + '" alt="">' +
+    '<div><h3><a href="#esya/' + esc(e.id) + '">' + esc(e.baslik) + '</a></h3>' +
+      '<p class="kira-detay">' + esc([KATEGORI[e.kategori], e.marka, e.beden].filter(Boolean).join(' · ')) + ' · <b>' + tl(e.gunlukUcret) + '/gün</b> · depozito ' + tl(e.depozito) + '</p>' +
+      '<p class="kira-detay">' + esc(e.sahipAd) + (e.aciklama ? ' · ' + esc(e.aciklama.slice(0, 140)) : '') + '</p></div>' +
+    '<div class="eylem"><button type="button" class="dug dug-kucuk dug-vurgu" data-onay="' + esc(e.id) + '">Onayla</button>' +
+      '<button type="button" class="dug dug-kucuk dug-tehlike" data-red="' + esc(e.id) + '">Reddet</button></div></div>').join('') + '</div>';
+  panel.onclick = async ev => {
+    const b = ev.target.closest('[data-onay],[data-red]'); if (!b) return;
+    if (demoEngel()) return;
+    let veri = { onay: 'onaylandi', redNeden: '' };
+    if (b.dataset.red) {
+      const n = prompt('Red nedeni (ürün sahibine gösterilir):', '');
+      if (n === null) return;
+      veri = { onay: 'reddedildi', redNeden: n.trim().slice(0, 200) || 'Uygun bulunmadı.' };
+    }
+    b.disabled = true;
+    try { await updateDoc(doc(db, 'dolapEsyalar', b.dataset.onay || b.dataset.red), veri); bildir(veri.onay === 'onaylandi' ? 'Onaylandı, Keşfet\'te yayında.' : 'Reddedildi.'); sayfaCiz(); }
+    catch (h) { bildir(hataMetni(h)); b.disabled = false; }
+  };
+}
+
+async function panelKullanicilar(panel, istek) {
+  const [uyeler, roller, esyalar] = await Promise.all([uyeListesi(), rolListesi(), tumEsyalar()]);
+  if (istek !== aktifIstek) return;
+  const rolMap = new Map(roller.map(r => [r.eposta, r]));
+  const ilan = new Map();
+  esyalar.forEach(e => ilan.set(e.sahipId, (ilan.get(e.sahipId) || 0) + 1));
+  const rolu = u => (u.eposta === TAM_YETKILI ? 'tam' : (rolMap.get(u.eposta) || {}).rol || 'uye');
+  let ara = '';
+  const ciz = () => {
+    const q = ara.toLocaleLowerCase('tr-TR');
+    const l = uyeler.filter(u => !q || (u.ad + ' ' + u.eposta).toLocaleLowerCase('tr-TR').includes(q)).sort((a, b) => zaman(b.sonGiris) - zaman(a.sonGiris));
+    $('#uyeTablo').innerHTML = '<table class="tablo"><thead><tr><th>Kişi</th><th>Rol</th><th>İlan</th><th>Son giriş</th><th></th></tr></thead><tbody>' +
+      l.map(u => {
+        const r = rolu(u), kayit = rolMap.get(u.eposta), n = ilan.get(u.uid) || 0;
+        const yonetilebilir = r === 'uye' || r === 'kisitli';
+        return '<tr><td><b>' + esc(u.ad) + '</b><br><span class="kucuk">' + esc(u.eposta) + '</span></td>' +
+          '<td><span class="rol-rozet r-' + r + '">' + ROL_AD[r] + '</span>' + (r === 'kisitli' && kayit && kayit.neden ? '<br><span class="kucuk">' + esc(kayit.neden) + '</span>' : '') + '</td>' +
+          '<td>' + n + '</td><td class="nw">' + (u.sonGiris ? tarihSaat(u.sonGiris) : '') + '</td>' +
+          '<td class="eylem-hucre"><a class="dug dug-kucuk" href="#yonetim/kisi/' + esc(u.uid) + '">Gezinti</a>' +
+            (r === 'uye' ? '<button type="button" class="dug dug-kucuk dug-tehlike" data-kisitla="' + esc(u.eposta) + '">Kısıtla</button>' : '') +
+            (r === 'kisitli' ? '<button type="button" class="dug dug-kucuk" data-ac="' + esc(u.eposta) + '">Kısıtı kaldır</button>' : '') +
+            (yonetilebilir && n ? '<button type="button" class="dug dug-kucuk dug-tehlike" data-urunkaldir="' + esc(u.uid) + '">Ürünlerini kaldır</button>' : '') +
+          '</td></tr>';
+      }).join('') + '</tbody></table>';
+  };
+  panel.innerHTML = '<input class="ara" id="uyeAra" type="search" placeholder="Ad veya e-posta ara…" style="margin:0 0 14px">' +
+    '<div class="tablo-kap" id="uyeTablo"></div>' +
+    '<p class="kucuk" style="margin-top:10px">Kısıtlanan kullanıcı siteyi gezebilir ama ürün ekleyemez ve kiralama yapamaz. Adminleri yalnız tam yetkili yönetir.</p>';
+  $('#uyeAra').oninput = ev => { ara = ev.target.value; ciz(); };
+  ciz();
+  panel.onclick = async ev => {
+    const b = ev.target.closest('[data-kisitla],[data-ac],[data-urunkaldir]'); if (!b) return;
+    if (demoEngel()) return;
+    try {
+      if (b.dataset.kisitla) {
+        const n = prompt('Kısıtlama nedeni (kullanıcıya gösterilir):', '');
+        if (n === null) return;
+        await rolYaz(b.dataset.kisitla, 'kisitli', n.trim().slice(0, 200));
+        bildir('Kullanıcı kısıtlandı.');
+      }
+      if (b.dataset.ac) { await rolSil(b.dataset.ac); bildir('Kısıt kaldırıldı.'); }
+      if (b.dataset.urunkaldir) {
+        const n = prompt('Ürünleri kaldırma nedeni (ürün sahibine gösterilir):', 'Topluluk kurallarına aykırı içerik.');
+        if (n === null) return;
+        for (const e of esyalar.filter(x => x.sahipId === b.dataset.urunkaldir)) {
+          await updateDoc(doc(db, 'dolapEsyalar', e.id), { onay: 'reddedildi', redNeden: n.trim().slice(0, 200) || 'Yönetici tarafından kaldırıldı.', aktif: false });
+        }
+        bildir('Kullanıcının ürünleri yayından kaldırıldı.');
+      }
+      sayfaCiz();
+    } catch (h) { bildir(hataMetni(h)); }
+  };
+}
+
+async function panelKisi(panel, uid, istek) {
+  const [u, ol, esyalar] = await Promise.all([uyeGetir(uid), olayListesi(30), esyaListesi('sahipId', uid)]);
+  if (istek !== aktifIstek) return;
+  const kendi = ol.filter(o => o.uid === uid);
+  const esyaO = kendi.filter(o => o.tur === 'esya');
+  const sayac = (ad, s) => '<div class="sayac"><b>' + s + '</b><span>' + ad + '</span></div>';
+  panel.innerHTML = '<p class="kucuk" style="margin-bottom:12px"><a href="#yonetim/kullanicilar">← Kullanıcılar</a></p>' +
+    '<div class="kisi-bas">' + (u && u.foto ? '<img class="avatar buyuk" src="' + esc(u.foto) + '" alt="" referrerpolicy="no-referrer">' : '') +
+      '<div><h2>' + esc(u ? u.ad : 'Kullanıcı') + '</h2><p class="kucuk">' + esc([u && u.eposta, u && u.telefon].filter(Boolean).join(' · ')) + '</p>' +
+      '<p class="kucuk">' + (u && u.ilkGiris ? 'Üyelik: ' + tarihSaat(u.ilkGiris) + ' · ' : '') + (u && u.sonGiris ? 'Son giriş: ' + tarihSaat(u.sonGiris) : '') + '</p></div></div>' +
+    '<div class="sayaclar">' + sayac('Oturum', new Set(kendi.map(o => o.oturum)).size) + sayac('Parça görüntüleme', esyaO.length) +
+      sayac('Arama', kendi.filter(o => o.tur === 'arama').length) + sayac('İlan', esyalar.length) + '</div>' +
+    '<div class="panel-izgara"><section class="kutu"><h2>Baktığı markalar</h2>' + cubuklar(say(esyaO, o => o.marka)) + '</section>' +
+      '<section class="kutu"><h2>Baktığı parçalar</h2>' + cubuklar(say(esyaO, o => o.baslik)) + '</section></div>' +
+    '<section class="kutu"><h2>Gezinti geçmişi · 30 gün</h2>' + olayTablosu(kendi.slice(0, 120), false) + '</section>';
+}
+
+async function panelYoneticiler(panel, istek) {
+  const adminler = (await rolListesi()).filter(r => r.rol === 'admin');
+  if (istek !== aktifIstek) return;
+  panel.innerHTML = '<div class="kutu" style="margin-top:0"><h2>Admin ata</h2>' +
+    '<p class="kucuk" style="margin-bottom:10px">Kişinin Google (Gmail) adresini yazın. Bu hesapla giriş yaptığında admin olur: ürün onayı, kullanıcı kısıtlama, gelen kutusu ve ödeme onayı. Admin atamayı yalnız tam yetkili yapabilir.</p>' +
+    '<div class="satir-form"><input class="ara" id="yeniAdmin" type="email" placeholder="ornek@gmail.com" autocomplete="off"><button type="button" class="dug dug-vurgu" id="adminEkle">Admin yap</button></div>' +
+    '<p class="hata" id="adminHata" role="alert"></p></div>' +
+    '<div class="kutu"><h2>Yetkililer</h2><div class="tablo-kap"><table class="tablo"><tbody>' +
+      '<tr><td><b>' + TAM_YETKILI + '</b></td><td><span class="rol-rozet r-tam">Tam yetkili</span></td><td></td></tr>' +
+      adminler.map(r => '<tr><td><b>' + esc(r.eposta) + '</b><br><span class="kucuk">' + esc(r.atayan) + ' atadı' + (r.zaman ? ' · ' + tarihSaat(r.zaman) : '') + '</span></td>' +
+        '<td><span class="rol-rozet r-admin">Admin</span></td><td class="eylem-hucre"><button type="button" class="dug dug-kucuk dug-tehlike" data-adminsil="' + esc(r.eposta) + '">Yetkiyi al</button></td></tr>').join('') +
+    '</tbody></table></div></div>';
+  $('#adminEkle').onclick = async () => {
+    const e = $('#yeniAdmin').value.trim().toLowerCase(), h = $('#adminHata');
+    h.textContent = '';
+    if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(e)) { h.textContent = 'Geçerli bir e-posta adresi yazın.'; return; }
+    if (e === TAM_YETKILI) { h.textContent = 'Bu hesap zaten tam yetkili.'; return; }
+    if (demoEngel()) return;
+    try { await rolYaz(e, 'admin', ''); bildir(e + ' admin yapıldı.'); sayfaCiz(); } catch (x) { h.textContent = hataMetni(x); }
+  };
+  panel.onclick = async ev => {
+    const b = ev.target.closest('[data-adminsil]'); if (!b) return;
+    if (demoEngel()) return;
+    if (!confirm(b.dataset.adminsil + ' kişisinin admin yetkisi alınsın mı?')) return;
+    try { await rolSil(b.dataset.adminsil); bildir('Yetki alındı.'); sayfaCiz(); } catch (x) { bildir(hataMetni(x)); }
+  };
+}
+
+/* ---------------------------------------------------------------- SOHBET: soru-cevap asistanı + admin gelen kutusu
+ * dolapSohbet/{id}: { uid, ad, eposta, konu, durum, mesajlar[{kimden, ad, metin, zaman}], sonZaman, adminOkudu, kullaniciOkudu }
+ * Asistan sık sorulanları kendisi yanıtlar; yanıt yoksa soru giriş yapılarak ekibe (adminlere) iletilir. */
+const SSS = [
+  { s: 'Nasıl kiralarım?', k: ['kirala', 'nasıl', 'istek'], c: 'Keşfet\'te beğendiğin parçayı aç, başlangıç ve iade tarihini seç, sözleşmeyi onaylayıp "İstek gönder"e bas. Sahibi onaylayınca ödeme bilgileri Kiralamalarım\'da görünür.' },
+  { s: 'Depozito nedir, ne zaman iade edilir?', k: ['depozito', 'teminat', 'iade edil'], c: 'Depozito, parçanın güvencesi olarak kira bedeliyle birlikte ödenir. Parça zamanında ve hasarsız iade edilince, sahibi iadeyi onayladıktan sonra en geç 3 iş günü içinde sana geri ödenir.' },
+  { s: 'Geç iade edersem ne olur?', k: ['geç', 'gecik', 'teslim etmez', 'kayıp'], c: 'Geciken her gün için günlük kiranın 1,5 katı depozitodan düşülür. İade gününden 7 gün geçerse parça teslim edilmemiş sayılır ve depozitonun tamamı sahibine ödenir. Ayrıntılar kiralama sözleşmesinde.' },
+  { s: 'Ödemeyi nasıl yaparım?', k: ['öde', 'havale', 'eft', 'iban', 'kart'], c: 'Sahibi isteği onaylayınca Kiralamalarım\'da IBAN ve referans kodu çıkar. Havale/EFT açıklamasına referans kodunu yazıp "Ödemeyi yaptım"a basman yeterli. Kartla ödeme yakında.' },
+  { s: 'Dolabıma nasıl parça eklerim?', k: ['ekle', 'ilan', 'dolabım', 'kiraya ver'], c: 'Dolabım\'dan "+ Eşya ekle"ye bas; 1-4 fotoğraf, beden, günlük kira ve depozitoyu gir. Parça ekibimiz onayladıktan sonra Keşfet\'te görünür.' },
+  { s: 'Parçam neden Keşfet\'te görünmüyor?', k: ['görünmüyor', 'onay', 'yayında değil', 'reddedil'], c: 'Yeni eklenen ya da düzenlenen parçalar ekip onayından sonra yayına girer. Dolabım\'da "Onay bekliyor" ya da red nedeni yazıyorsa durum oradan görünür.' },
+  { s: 'Hasar ya da leke olursa?', k: ['hasar', 'leke', 'yırt', 'bozul'], c: 'Onarım ya da profesyonel temizlik bedeli depozitodan düşülür. Teslim ve iadede parçanın fotoğrafını çekmeni öneririz; anlaşmazlıkta bu fotoğraflar esas alınır.' },
+  { s: 'İptal edebilir miyim?', k: ['iptal', 'vazgeç'], c: 'Kiralama başlangıcına 48 saat kalana kadar ücretsiz iptal edebilirsin. Sonrasında kira bedelinin %50\'si sahibine ödenir.' }
+];
+function sssBul(metin) {
+  const m = metin.toLocaleLowerCase('tr-TR');
+  let en = null, puan = 0;
+  SSS.forEach(x => { const p = x.k.filter(k => m.includes(k)).length; if (p > puan) { puan = p; en = x; } });
+  return en;
+}
+async function sohbetListesi() {
+  if (D) return D.sohbetler.map(x => ({ ...x }));
+  return (await getDocs(collection(db, 'dolapSohbet'))).docs.map(d => ({ id: d.id, ...d.data() }));
+}
+async function benimSohbetim() {
+  if (!kullanici) return null;
+  if (D) return D.sohbetler.find(x => x.uid === kullanici.uid) || null;
+  const l = (await getDocs(query(collection(db, 'dolapSohbet'), where('uid', '==', kullanici.uid)))).docs.map(d => ({ id: d.id, ...d.data() }));
+  return l.sort((a, b) => zaman(b.sonZaman) - zaman(a.sonZaman))[0] || null;
+}
+async function soruGonder(metin) {
+  const mesaj = { kimden: 'kullanici', ad: (kullanici.displayName || '').slice(0, 80), metin: metin.slice(0, 2000), zaman: Date.now() };
+  const mevcut = await benimSohbetim();
+  if (mevcut && mevcut.durum !== 'kapali') {
+    await updateDoc(doc(db, 'dolapSohbet', mevcut.id), { mesajlar: mevcut.mesajlar.concat([mesaj]), durum: 'acik', sonZaman: serverTimestamp(), adminOkudu: false });
+  } else {
+    await addDoc(collection(db, 'dolapSohbet'), { uid: kullanici.uid, ad: mesaj.ad, eposta: kullanici.email, konu: metin.slice(0, 120),
+      durum: 'acik', mesajlar: [mesaj], sonZaman: serverTimestamp(), adminOkudu: false, kullaniciOkudu: true });
+  }
+}
+
+let sohbetDinle = null;
+function asistanKur() {
+  document.body.insertAdjacentHTML('beforeend',
+    '<button type="button" class="asistan-dug" id="asistanDug" aria-expanded="false" aria-controls="asistan">Soru sor <span class="sayi" id="asistanSayi" hidden>1</span></button>' +
+    '<section class="asistan" id="asistan" hidden aria-label="Soru sor"><header><b>Elif\'in Dolabı · Yardım</b><button type="button" id="asistanKapat" aria-label="Kapat">×</button></header>' +
+    '<div class="asistan-akis" id="asistanAkis"></div>' +
+    '<form class="asistan-form" id="asistanForm"><input id="asistanMetin" maxlength="2000" placeholder="Sorunu yaz…" autocomplete="off" aria-label="Sorun"><button type="submit" class="dug dug-kucuk dug-ana">Gönder</button></form></section>');
+  const akis = $('#asistanAkis'), kutu = $('#asistan'), dug = $('#asistanDug');
+  const balon = (kimden, html) => { akis.insertAdjacentHTML('beforeend', '<div class="mesaj m-' + kimden + '">' + html + '</div>'); akis.scrollTop = akis.scrollHeight; };
+  let gecmisCizildi = false, sonSoru = '';
+  const ilet = '<button type="button" class="bag-dug" data-ilet="1">Ekibe ilet →</button>';
+  const giris = () => {
+    akis.innerHTML = '';
+    balon('bot', 'Merhaba! Kiralama, depozito, ödeme ya da dolabına parça ekleme hakkında sorabilirsin.');
+    balon('bot', '<div class="sss-cipler">' + SSS.map((x, i) => '<button type="button" class="cip" data-sss="' + i + '">' + esc(x.s) + '</button>').join('') + '</div>');
+  };
+  const gecmis = async () => {
+    const s = await benimSohbetim().catch(() => null);
+    if (!s) return;
+    balon('bot', '<span class="kucuk">Ekiple yazışman</span>');
+    s.mesajlar.forEach(m => balon(m.kimden === 'admin' ? 'admin' : 'kullanici', (m.kimden === 'admin' ? '<b>' + esc(m.ad || 'Ekip') + ':</b> ' : '') + esc(m.metin)));
+    if (s.durum === 'yanitlandi' && !s.kullaniciOkudu && !DEMO) updateDoc(doc(db, 'dolapSohbet', s.id), { kullaniciOkudu: true }).catch(() => {});
+  };
+  dug.onclick = async () => {
+    kutu.hidden = !kutu.hidden; dug.setAttribute('aria-expanded', String(!kutu.hidden));
+    $('#asistanSayi').hidden = true;
+    if (!kutu.hidden && !gecmisCizildi) { gecmisCizildi = true; giris(); await gecmis(); }
+    if (!kutu.hidden) $('#asistanMetin').focus();
+  };
+  $('#asistanKapat').onclick = () => { kutu.hidden = true; dug.setAttribute('aria-expanded', 'false'); dug.focus(); };
+  akis.onclick = async ev => {
+    const s = ev.target.closest('[data-sss]');
+    if (s) { const x = SSS[+s.dataset.sss]; balon('kullanici', esc(x.s)); balon('bot', esc(x.c) + '<br>' + ilet); sonSoru = x.s; return; }
+    if (ev.target.closest('[data-ilet]')) {
+      if (!kullanici) { balon('bot', 'Sorunu ekibe iletebilmem için Google ile giriş yapman gerekiyor; yanıtı burada göreceksin. <button type="button" class="bag-dug" data-giris="1">Giriş yap</button>'); return; }
+      if (!sonSoru) { balon('bot', 'Önce sorunu aşağıya yaz.'); return; }
+      if (demoEngel()) return;
+      try { await soruGonder(sonSoru); balon('bot', 'İletildi ✓ Ekibimiz yanıtlayınca burada göreceksin.'); sonSoru = ''; }
+      catch (h) { balon('bot', esc(hataMetni(h))); }
+    }
+    if (ev.target.closest('[data-giris]')) girisYap();
+  };
+  $('#asistanForm').onsubmit = ev => {
+    ev.preventDefault();
+    const m = $('#asistanMetin').value.trim();
+    if (!m) return;
+    $('#asistanMetin').value = '';
+    balon('kullanici', esc(m));
+    sonSoru = m;
+    const x = sssBul(m);
+    balon('bot', x ? esc(x.c) + '<br><span class="kucuk">Yanıt sorunu çözmediyse:</span> ' + ilet
+      : 'Bunun yanıtını bilmiyorum, ama ekibimiz yanıtlayabilir. ' + ilet);
+  };
+}
+/* giriş yapan kullanıcıya gelen yeni yanıtı balonda rozetle göster */
+function sohbetIzle() {
+  if (sohbetDinle) { sohbetDinle(); sohbetDinle = null; }
+  if (!kullanici || DEMO) return;
+  sohbetDinle = onSnapshot(query(collection(db, 'dolapSohbet'), where('uid', '==', kullanici.uid)), snap => {
+    const yeni = snap.docs.some(d => d.data().durum === 'yanitlandi' && !d.data().kullaniciOkudu);
+    const r = $('#asistanSayi'); if (r && $('#asistan').hidden) r.hidden = !yeni;
+  }, () => {});
+}
+
+async function panelGelen(panel, secili, istek) {
+  const l = (await sohbetListesi()).sort((a, b) => (a.adminOkudu - b.adminOkudu) || (zaman(b.sonZaman) - zaman(a.sonZaman)));
+  if (istek !== aktifIstek) return;
+  if (!l.length) { panel.innerHTML = '<div class="bos"><h3>Gelen kutusu boş</h3><p>Ziyaretçilerin soru-cevap asistanından ilettiği sorular buraya düşer.</p></div>'; return; }
+  const s = l.find(x => x.id === secili) || null;
+  const DURUM_AD = { acik: 'Yanıt bekliyor', yanitlandi: 'Yanıtlandı', kapali: 'Kapandı' };
+  panel.innerHTML = '<div class="gelen">' +
+    '<div class="gelen-liste">' + l.map(x => '<a class="gelen-oge' + (x.id === secili ? ' secili' : '') + (x.adminOkudu ? '' : ' okunmadi') + '" href="#yonetim/gelen/' + esc(x.id) + '">' +
+      '<b>' + esc(x.ad) + '</b><span>' + esc(x.mesajlar[x.mesajlar.length - 1].metin.slice(0, 70)) + '</span>' +
+      '<small>' + DURUM_AD[x.durum] + ' · ' + tarihSaat(x.sonZaman) + '</small></a>').join('') + '</div>' +
+    '<div class="gelen-detay">' + (s ?
+      '<div class="gelen-bas"><div><b>' + esc(s.ad) + '</b> <span class="kucuk">' + esc(s.eposta) + '</span></div>' +
+        (s.durum !== 'kapali' ? '<button type="button" class="dug dug-kucuk" id="sohbetKapat">Konuyu kapat</button>' : '') + '</div>' +
+      '<div class="gelen-akis">' + s.mesajlar.map(m => '<div class="mesaj m-' + (m.kimden === 'admin' ? 'admin' : 'kullanici') + '"><small>' +
+        esc(m.kimden === 'admin' ? (m.ad || 'Ekip') : s.ad) + ' · ' + tarihSaat(m.zaman) + '</small>' + esc(m.metin) + '</div>').join('') + '</div>' +
+      '<form class="asistan-form" id="yanitForm"><textarea id="yanitMetin" maxlength="2000" placeholder="Yanıtını yaz…" aria-label="Yanıt"></textarea><button type="submit" class="dug dug-vurgu">Yanıtla</button></form>'
+      : '<p class="kucuk" style="padding:20px">Soldan bir konu seç.</p>') + '</div></div>';
+  if (!s) return;
+  if (!s.adminOkudu && !DEMO) updateDoc(doc(db, 'dolapSohbet', s.id), { adminOkudu: true }).catch(() => {});
+  $('#yanitForm').onsubmit = async ev => {
+    ev.preventDefault();
+    const m = $('#yanitMetin').value.trim();
+    if (!m || demoEngel()) return;
+    const mesaj = { kimden: 'admin', ad: (kullanici.displayName || 'Ekip').slice(0, 80), metin: m.slice(0, 2000), zaman: Date.now() };
+    try {
+      await updateDoc(doc(db, 'dolapSohbet', s.id), { mesajlar: s.mesajlar.concat([mesaj]), durum: 'yanitlandi', sonZaman: serverTimestamp(), adminOkudu: true, kullaniciOkudu: false });
+      bildir('Yanıt gönderildi.'); sayfaCiz();
+    } catch (h) { bildir(hataMetni(h)); }
+  };
+  const kapat = $('#sohbetKapat');
+  if (kapat) kapat.onclick = async () => {
+    if (demoEngel()) return;
+    try { await updateDoc(doc(db, 'dolapSohbet', s.id), { durum: 'kapali', sonZaman: serverTimestamp() }); sayfaCiz(); } catch (h) { bildir(hataMetni(h)); }
+  };
+}
+
+/* ---------------------------------------------------------------- HESABIM (#hesabim/{bolum}) */
+async function hesabim(bolum, istek) {
+  if (!kullanici) return girisCagrisi('Hesabın', 'Bilgilerini, adreslerini ve kayıtlı filtrelerini görmek için giriş yap.');
+  if (!uye) uye = { telefon: '', adresler: [], filtreler: [], bildirimEposta: true };
+  const adresler = uye.adresler || [], filtreler = uye.filtreler || [];
+  const bolumler = [['profil', 'Profil'], ['adresler', 'Adreslerim'], ['kartlar', 'Kartlarım'], ['filtreler', 'Filtrelerim'], ['tercihler', 'Gizlilik ve bildirim'], ['hesap', 'Hesap']];
+  icerik.innerHTML = '<div class="bas"><div><h1>Hesabım</h1><p>Bilgilerin ve ayarların.</p></div></div>' +
+    '<div class="hesap-duzen"><nav class="hesap-menu" aria-label="Hesap bölümleri">' +
+      bolumler.map(([k, ad]) => '<a href="#hesabim/' + k + '"' + ((bolum || 'profil') === k ? ' aria-current="true"' : '') + '>' + ad + '</a>').join('') + '</nav><div>' +
+    /* profil */
+    '<section class="kutu" id="b-profil"><h2>Profil</h2><div class="kisi-bas">' +
+      (kullanici.photoURL ? '<img class="avatar buyuk" src="' + esc(kullanici.photoURL) + '" alt="" referrerpolicy="no-referrer">' : '') +
+      '<div><b>' + esc(kullanici.displayName || '') + '</b><p class="kucuk">' + esc(kullanici.email || '') + ' · <span class="rol-rozet r-' + rol + '">' + ROL_AD[rol] + '</span></p>' +
+      (rol === 'kisitli' ? '<p class="uyari" style="margin-top:8px">Hesabın kısıtlandı' + (rolNeden ? ': ' + esc(rolNeden) : '') + '. Siteyi gezebilirsin ama parça ekleyemez ve kiralama yapamazsın. Yardım için sağ alttaki "Soru sor"u kullan.</p>' : '') +
+      '</div></div>' +
+      '<div class="form-izgara" style="margin-top:14px"><div class="alan"><label for="hTel">Telefon</label><input id="hTel" type="tel" autocomplete="tel" value="' + esc(uye.telefon || '') + '"></div></div>' +
+      '<p class="kucuk" style="margin-top:6px">Ad ve fotoğraf Google hesabından gelir.</p>' +
+      '<button type="button" class="dug dug-ana" id="profilKaydet" style="margin-top:12px">Kaydet</button></section>' +
+    /* adresler */
+    '<section class="kutu" id="b-adresler"><h2>Kayıtlı adreslerim</h2><div class="adresler">' +
+      (adresler.length ? adresler.map((a, i) => '<div class="adres"><b>' + esc(a.baslik) + '</b><p>' + esc(a.adSoyad) + ' · ' + esc(a.telefon) + '</p><p>' + esc(a.adres) + '</p><p>' + esc(a.ilce) + ' / ' + esc(a.il) + '</p>' +
+        '<div class="eylem"><button type="button" class="dug dug-kucuk" data-adres-duzenle="' + i + '">Düzenle</button><button type="button" class="dug dug-kucuk dug-tehlike" data-adres-sil="' + i + '">Sil</button></div></div>').join('')
+        : '<p class="kucuk">Kayıtlı adresin yok. Teslimatlarda hızlıca seçebilmek için ekleyebilirsin.</p>') +
+      '</div>' + (adresler.length < 10 ? '<button type="button" class="dug" id="adresEkle" style="margin-top:12px">+ Adres ekle</button>' : '') + '</section>' +
+    /* kartlar */
+    '<section class="kutu" id="b-kartlar"><h2>Kayıtlı kartlarım</h2>' +
+      '<p class="uyari">Güvenliğin için kart numaraları bu sitede <b>saklanmaz</b>. Kartla ödeme altyapısı bağlandığında kartını ödeme kuruluşunun güvenli kasasına (PCI DSS uyumlu) kaydedebilecek, sonraki kiralamalarda tek dokunuşla ödeyebileceksin. Şimdilik ödemeler havale/EFT ile yapılıyor.</p></section>' +
+    /* filtreler */
+    '<section class="kutu" id="b-filtreler"><h2>Kayıtlı filtrelerim</h2>' +
+      (filtreler.length ? '<div class="liste">' + filtreler.map((f, i) => '<div class="filtre-satir"><div><b>' + esc(f.ad) + '</b><p class="kucuk">' +
+        esc([f.kategori && f.kategori !== 'hepsi' ? KATEGORI[f.kategori] : 'Tüm kategoriler', f.beden && 'Beden ' + f.beden, f.maxFiyat && 'En çok ' + tl(f.maxFiyat) + '/gün', f.ara && '“' + f.ara + '”'].filter(Boolean).join(' · ')) + '</p></div>' +
+        '<div class="eylem"><button type="button" class="dug dug-kucuk dug-vurgu" data-filtre-uygula="' + i + '">Uygula</button><button type="button" class="dug dug-kucuk dug-tehlike" data-filtre-sil="' + i + '">Sil</button></div></div>').join('') + '</div>'
+        : '<p class="kucuk">Henüz kayıtlı filtren yok. Keşfet\'te süzgeçleri ayarlayıp "☆ Bu filtreyi kaydet"e bas.</p>') + '</section>' +
+    /* tercihler */
+    '<section class="kutu" id="b-tercihler"><h2>Gizlilik ve bildirim</h2>' +
+      '<label class="onay-kutu"><input type="checkbox" id="tIzin"' + (izinVar() ? ' checked' : '') + '><span><b>Gezinti kaydı.</b> Baktığım sayfaların ve parçaların, siteyi geliştirmek için kaydedilmesine izin veriyorum.</span></label>' +
+      '<label class="onay-kutu"><input type="checkbox" id="tEposta"' + (uye.bildirimEposta !== false ? ' checked' : '') + '><span><b>E-posta bildirimleri.</b> Kiralama istekleri, onaylar ve yanıtlar için e-posta al.</span></label>' +
+      '<button type="button" class="dug dug-ana" id="tercihKaydet" style="margin-top:12px">Kaydet</button></section>' +
+    /* hesap */
+    '<section class="kutu" id="b-hesap"><h2>Hesap</h2><div class="eylem" style="justify-content:flex-start">' +
+      '<button type="button" class="dug" id="hCikis">Çıkış yap</button><button type="button" class="dug dug-tehlike" id="hSil">Üyelik kaydımı sil</button></div>' +
+      '<p class="kucuk" style="margin-top:10px">Üyelik kaydını silmek telefon, adres ve filtrelerini siler. İlanların ve kiralama kayıtların için "Soru sor"dan bize yazabilirsin.</p></section>' +
+    '</div></div>';
+  if (bolum) { const h = $('#b-' + bolum); if (h) h.scrollIntoView({ block: 'start' }); }
+
+  const kaydet = async (veri, mesaj) => { if (demoEngel()) return; try { await uyeKaydet(veri); bildir(mesaj); sayfaCiz(); } catch (h) { bildir(hataMetni(h)); } };
+  $('#profilKaydet').onclick = () => kaydet({ telefon: $('#hTel').value.trim().slice(0, 30) }, 'Profil kaydedildi.');
+  $('#tercihKaydet').onclick = () => {
+    try { localStorage.setItem(LS_IZIN, $('#tIzin').checked ? 'evet' : 'hayir'); } catch (e) {}
+    kaydet({ istatistikIzni: $('#tIzin').checked, bildirimEposta: $('#tEposta').checked }, 'Tercihler kaydedildi.');
+  };
+  $('#hCikis').onclick = () => { if (!demoEngel()) signOut(auth); };
+  $('#hSil').onclick = async () => {
+    if (demoEngel()) return;
+    if (!confirm('Üyelik kaydın (telefon, adresler, filtreler) silinsin mi?')) return;
+    try { await deleteDoc(doc(db, 'dolapUyeler', kullanici.uid)); uye = null; bildir('Üyelik kaydın silindi.'); signOut(auth); } catch (h) { bildir(hataMetni(h)); }
+  };
+  const adresBtn = $('#adresEkle');
+  if (adresBtn) adresBtn.onclick = () => adresFormu(-1);
+  icerik.querySelector('.hesap-duzen').onclick = async ev => {
+    const b = ev.target.closest('[data-adres-duzenle],[data-adres-sil],[data-filtre-uygula],[data-filtre-sil]'); if (!b) return;
+    if (b.dataset.adresDuzenle) return adresFormu(+b.dataset.adresDuzenle);
+    if (b.dataset.adresSil) { if (confirm('Adres silinsin mi?')) kaydet({ adresler: adresler.filter((_, i) => i !== +b.dataset.adresSil) }, 'Adres silindi.'); return; }
+    if (b.dataset.filtreSil) { kaydet({ filtreler: filtreler.filter((_, i) => i !== +b.dataset.filtreSil) }, 'Filtre silindi.'); return; }
+    if (b.dataset.filtreUygula) {
+      const f = filtreler[+b.dataset.filtreUygula];
+      Object.assign(kesfetS, { kategori: f.kategori || 'hepsi', ara: f.ara || '', beden: f.beden || '', maxFiyat: f.maxFiyat || 0 });
+      location.hash = '#kesfet';
+    }
+  };
+}
+function adresFormu(i) {
+  const a = i >= 0 ? uye.adresler[i] : { baslik: '', adSoyad: kullanici.displayName || '', telefon: uye.telefon || '', adres: '', ilce: '', il: '' };
+  const p = $('#pencere');
+  const alan = (id, ad, v, tam) => '<div class="alan' + (tam ? ' tam' : '') + '"><label for="a' + id + '">' + ad + '</label>' +
+    (id === 'Adres' ? '<textarea id="aAdres" maxlength="300">' + esc(v) + '</textarea>' : '<input id="a' + id + '" maxlength="80" value="' + esc(v) + '">') + '</div>';
+  p.innerHTML = '<div class="pencere-ic"><h2 id="pencereBas">' + (i >= 0 ? 'Adresi düzenle' : 'Adres ekle') + '</h2><div class="form-izgara">' +
+    alan('Baslik', 'Adres başlığı (Ev, İş…)', a.baslik) + alan('AdSoyad', 'Ad soyad', a.adSoyad) + alan('Telefon', 'Telefon', a.telefon) +
+    alan('Il', 'İl', a.il) + alan('Ilce', 'İlçe', a.ilce) + alan('Adres', 'Açık adres', a.adres, true) + '</div>' +
+    '<p class="hata" id="aHata" role="alert"></p><div class="pencere-alt"><button type="button" class="dug" id="aVazgec">Vazgeç</button><button type="button" class="dug dug-vurgu" id="aKaydet">Kaydet</button></div></div>';
+  p.hidden = false; document.body.style.overflow = 'hidden';
+  const kapat = () => { p.hidden = true; p.innerHTML = ''; document.body.style.overflow = ''; };
+  $('#aVazgec').onclick = kapat;
+  p.onclick = ev => { if (ev.target === p) kapat(); };
+  $('#aKaydet').onclick = async () => {
+    const v = id => $('#a' + id).value.trim();
+    const yeni = { baslik: v('Baslik') || 'Adres', adSoyad: v('AdSoyad'), telefon: v('Telefon'), adres: v('Adres'), ilce: v('Ilce'), il: v('Il') };
+    if (!yeni.adres || !yeni.il) { $('#aHata').textContent = 'Açık adres ve il zorunlu.'; return; }
+    if (demoEngel()) return;
+    const l = (uye.adresler || []).slice();
+    if (i >= 0) l[i] = yeni; else l.push(yeni);
+    try { await uyeKaydet({ adresler: l }); kapat(); bildir('Adres kaydedildi.'); sayfaCiz(); } catch (h) { $('#aHata').textContent = hataMetni(h); }
+  };
+}
+
+/* yönetici araçları: parça sayfasında onay / red / kaldır */
+function adminEsyaAraclari(e) {
+  if (!adminMi()) return '';
+  const DURUM_AD = { bekliyor: 'Onay bekliyor', onaylandi: 'Onaylı', reddedildi: 'Reddedildi' };
+  return '<div class="kutu admin-kutu"><h2>Yönetici</h2><p class="kucuk" style="margin-bottom:10px">Durum: <b>' + DURUM_AD[e.onay] + '</b>' +
+    (e.redNeden ? ' · ' + esc(e.redNeden) : '') + ' · ' + (e.aktif ? 'yayın açık' : 'yayın kapalı') + '</p><div class="eylem" style="justify-content:flex-start">' +
+    (e.onay !== 'onaylandi' ? '<button type="button" class="dug dug-kucuk dug-vurgu" data-yon="onayla">Onayla</button>' : '') +
+    (e.onay !== 'reddedildi' ? '<button type="button" class="dug dug-kucuk dug-tehlike" data-yon="kaldir">Yayından kaldır</button>' : '') +
+    '</div></div>';
+}
+
 /* ---------------------------------------------------------------- başlat */
+/* Girişte: rolü (tam / admin / kısıtlı / üye) belirle, üye kaydını oluştur ya da güncelle. */
+async function oturumHazirla(u) {
+  const ilkKez = !kullanici && !!u;
+  kullanici = u; rol = u ? 'uye' : 'misafir'; rolNeden = ''; uye = null;
+  if (u) {
+    if (u.email === TAM_YETKILI && u.emailVerified) rol = 'tam';
+    else {
+      try {
+        const r = await rolGetir(u.email);
+        if (r && (r.rol === 'admin' || r.rol === 'kisitli')) { rol = r.rol; rolNeden = r.neden || ''; }
+      } catch (e) {}
+    }
+    try { uye = await uyeGetir(u.uid); } catch (e) {}
+    const temel = { ad: (u.displayName || '').slice(0, 80), foto: (u.photoURL || '').slice(0, 600), sonGiris: serverTimestamp() };
+    if (!uye) {
+      uye = { telefon: '', adresler: [], filtreler: [], bildirimEposta: true, istatistikIzni: izinVar() };
+      Object.assign(temel, uye, { ilkGiris: serverTimestamp() });
+    }
+    setDoc(doc(db, 'dolapUyeler', u.uid), { uid: u.uid, eposta: u.email, ...temel }, { merge: true }).catch(() => {});
+    if (ilkKez) olay('giris', { sayfa: yol()[0] || 'kesfet' });
+  }
+  hesapCiz(); sayfaCiz(); sohbetIzle();
+}
+
+asistanKur();
+izinSeridi();
 if (DEMO) {
   kullanici = { ...DEMO_KULLANICI, photoURL: D.kullanicilar[0].foto };
+  rol = 'tam';
+  uye = D.uyeler[0];
   document.body.insertAdjacentHTML('afterbegin',
-    '<div class="demo-serit">Örnek veri: 20 sahte kullanıcı ve parçaları. Hiçbir şey kaydedilmez. <a href="elif.html">Gerçek siteye dön</a></div>');
+    '<div class="demo-serit">Örnek veri: 20 sahte kullanıcı, parçalar, kiralamalar ve gezinti kayıtları. Seni tam yetkili gösteriyor; hiçbir şey kaydedilmez. <a href="elif.html">Gerçek siteye dön</a></div>');
   hesapCiz(); sayfaCiz();
 } else {
-  onAuthStateChanged(auth, u => { kullanici = u; hesapCiz(); sayfaCiz(); });
+  onAuthStateChanged(auth, u => { oturumHazirla(u); });
 }
