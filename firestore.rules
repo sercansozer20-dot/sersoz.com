@@ -547,7 +547,7 @@ service cloud.firestore {
 
     function dolapAlanlari() {
       return ['sahipId', 'sahipAd', 'sahipFoto', 'baslik', 'marka', 'kategori', 'beden',
-              'renk', 'aciklama', 'gunlukUcret', 'depozito', 'fotolar', 'aktif', 'olusturma', 'sozlesme', 'onay', 'redNeden', 'oneCikanBitis'];
+              'renk', 'aciklama', 'gunlukUcret', 'depozito', 'fotolar', 'fotoBelge', 'aktif', 'olusturma', 'sozlesme', 'onay', 'redNeden', 'oneCikanBitis'];
     }
     function esyaGecerli() {
       let d = request.resource.data;
@@ -561,6 +561,8 @@ service cloud.firestore {
         && d.gunlukUcret is number && d.gunlukUcret > 0 && d.gunlukUcret <= 100000
         && d.depozito is number && d.depozito >= 0 && d.depozito <= 1000000
         && d.fotolar is list && d.fotolar.size() >= 1 && d.fotolar.size() <= 4
+        && d.fotolar[0] is string && d.fotolar[0].size() <= 120000
+        && (!d.keys().hasAny(['fotoBelge']) || (d.fotoBelge is list && d.fotoBelge.size() <= 4))
         && d.aktif is bool
         && d.sozlesme == 'v1'
         && d.onay in ['bekliyor', 'onaylandi', 'reddedildi']
@@ -710,13 +712,24 @@ service cloud.firestore {
         && yeni().bitis is string && yeni().bitis.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && yeni().bitis > yeni().baslangic
         && yeni().esyaBaslik is string && yeni().esyaBaslik.size() <= 80
-        && yeni().esyaFoto is string && yeni().esyaFoto.size() <= 600
+        && yeni().esyaFoto is string && yeni().esyaFoto.size() <= 120000
         && yeni().kiraciAd is string && yeni().kiraciAd.size() <= 80
         && yeni().kiraciIletisim is string && yeni().kiraciIletisim.size() >= 5
         && yeni().kiraciIletisim.size() <= 200
         && yeni().not is string && yeni().not.size() <= 500;
       allow update: if girisli() && (kiraGecis() || odemeTakip() || kartLinki());
       allow delete: if tamYetkili();
+    }
+
+    /* Parça fotoğrafları (tam boy, sıkıştırılmış JPEG data URL). Herkes okur; sahibi ekler/siler, admin silebilir. */
+    match /dolapFotolar/{foto} {
+      allow read: if true;
+      allow create: if girisli() && !kisitli()
+        && yeni().keys().hasOnly(['sahipId', 'veri', 'olusturma'])
+        && yeni().sahipId == benim()
+        && yeni().veri is string && yeni().veri.size() <= 950000
+        && yeni().olusturma == request.time;
+      allow delete: if girisli() && (resource.data.sahipId == benim() || dolapAdmin());
     }
 
     /* Herkese açık profil: ad, foto, şehir, hakkında. Telefon/adres/e-posta burada TUTULMAZ. */
@@ -855,7 +868,7 @@ service cloud.firestore {
         && yeni().fiyat is number && yeni().fiyat > 0 && yeni().fiyat <= 100000
         && yeni().durum == 'odeme_bekliyor' && yeni().baslangic == null && yeni().bitis == null
         && yeni().esyaBaslik is string && yeni().esyaBaslik.size() <= 80
-        && yeni().esyaFoto is string && yeni().esyaFoto.size() <= 600
+        && yeni().esyaFoto is string && yeni().esyaFoto.size() <= 120000
         && yeni().sahipAd is string && yeni().sahipAd.size() <= 80
         && yeni().olusturma == request.time && yeni().guncelleme == request.time;
       allow update: if girisli() && yeni().guncelleme == request.time && (

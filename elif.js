@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019c';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019d';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -813,7 +813,10 @@ async function esyaSayfasi(id, istek) {
   icerik.innerHTML = '<p class="kucuk" style="margin-bottom:14px"><a href="#kesfet">← Keşfet</a></p>' +
     '<div class="ayrinti">' +
       '<div class="galeri"><div class="buyuk"><img id="buyukFoto" src="' + esc(e.fotolar[0]) + '" alt="' + esc(e.baslik) + '"></div>' +
-        (e.fotolar.length > 1 ? '<div class="kucukler">' + e.fotolar.map((f, i) =>
+        (e.fotoBelge && e.fotoBelge.length ? (e.fotoBelge.length > 1 ? '<div class="kucukler">' + e.fotoBelge.map((id, i) =>
+          '<button type="button" data-belge="' + esc(id) + '"' + (i === 0 ? ' data-f="' + esc(kapakFoto(e)) + '"' : '') + ' aria-current="' + (i === 0) + '" aria-label="Fotoğraf ' + (i + 1) + '">' +
+          '<img src="' + (i === 0 ? esc(kapakFoto(e)) : '') + '" alt=""></button>').join('') + '</div>' : '') :
+        e.fotolar.length > 1 ? '<div class="kucukler">' + e.fotolar.map((f, i) =>
           '<button type="button" data-f="' + esc(f) + '" aria-current="' + (i === 0) + '" aria-label="Fotoğraf ' + (i + 1) + '"><img src="' + esc(f) + '" alt=""></button>').join('') + '</div>' : '') +
         (e.kaynak ? '<p class="kucuk" style="margin-top:8px">Fotoğraf: <a href="' + esc(e.kaynak.url) + '" target="_blank" rel="noopener" style="text-decoration:underline">' + esc(e.kaynak.yazar) + '</a> · ' + esc(e.kaynak.lisans) + '</p>' : '') +
       '</div>' +
@@ -853,6 +856,12 @@ async function esyaSayfasi(id, istek) {
   };
 
   seviyeleriDoldur(icerik);
+  (e.fotoBelge || []).forEach((id, i) => fotoGetir(id).then(v => {
+    if (!v || istek !== aktifIstek) return;
+    const b = icerik.querySelector('[data-belge="' + CSS.escape(id) + '"]');
+    if (b) { b.dataset.f = v; b.querySelector('img').src = v; }
+    if (i === 0 && $('#buyukFoto')) $('#buyukFoto').src = v;
+  }).catch(() => {}));
   const kutu = $('#kiraKutu');
   const ornekForm = !!e.ornek;   // örnek ilan: form görünür, gönderim kapalı
   if (!ornekForm && (kendi)) {
@@ -931,7 +940,7 @@ async function esyaSayfasi(id, istek) {
     const dug = $('#kGonder'); dug.disabled = true; dug.textContent = 'Gönderiliyor…';
     try {
       await kiraEkle({
-        esyaId: e.id, esyaBaslik: e.baslik, esyaFoto: e.fotolar[0], sahipId: e.sahipId,
+        esyaId: e.id, esyaBaslik: e.baslik, esyaFoto: kapakFoto(e), sahipId: e.sahipId,
         kiraciId: kullanici.uid, kiraciAd: (kullanici.displayName || kullanici.email || '').slice(0, 80),
         kiraciIletisim: (tel + ' · ' + (kullanici.email || '')).slice(0, 200), sahipIletisim: '',
         baslangic: $('#kBas').value, bitis: $('#kBit').value, gun,
@@ -1024,7 +1033,7 @@ async function dolabim(istek) {
       if (b.dataset.sil) {
         if (!confirm('"' + e.baslik + '" dolabından silinsin mi? Bu geri alınamaz.')) return;
         await dbSil('dolapEsyalar', e.id);
-        if (!DEMO) e.fotolar.forEach(f => deleteObject(ref(storage, f)).catch(() => {}));
+        if (!DEMO) (e.fotoBelge || []).forEach(id => dbSil('dolapFotolar', id).catch(() => {}));
         bildir('Silindi.');
       }
       sayfaCiz();
@@ -1033,6 +1042,34 @@ async function dolabim(istek) {
 }
 
 /* fotoğrafı tarayıcıda küçült: uzun kenar en fazla 1400 px, JPEG */
+/* Fotoğraflar Firestore'da (Storage/Blaze gerekmez):
+ *   dolapEsyalar.fotolar[0] = küçük kapak (data URL, ~30-60 KB) → kartlar ve listeler hızlı
+ *   dolapEsyalar.fotoBelge  = tam boy fotoğrafların dolapFotolar/{id} kimlikleri → yalnız parça sayfasında yüklenir */
+function kucultVeri(kaynak, enCok, kalite) {
+  return new Promise((ok, hata) => {
+    const img = new Image();
+    img.onload = () => {
+      const o = Math.min(1, enCok / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * o); c.height = Math.round(img.height * o);
+      const x = c.getContext('2d');
+      x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+      x.drawImage(img, 0, 0, c.width, c.height);
+      if (kaynak instanceof Blob) URL.revokeObjectURL(img.src);
+      let q = kalite, v = c.toDataURL('image/jpeg', q);
+      while (v.length > 900000 && q > 0.35) { q -= 0.1; v = c.toDataURL('image/jpeg', q); }
+      ok(v);
+    };
+    img.onerror = () => hata(new Error('Bu dosya açılamadı. JPG veya PNG seçin.'));
+    img.src = kaynak instanceof Blob ? URL.createObjectURL(kaynak) : kaynak;
+  });
+}
+const fotoOnbellek = new Map();
+function fotoGetir(id) {
+  if (!fotoOnbellek.has(id)) fotoOnbellek.set(id, getDoc(doc(db, 'dolapFotolar', id)).then(sn => (sn.exists() ? sn.data().veri : '')));
+  return fotoOnbellek.get(id);
+}
+const kapakFoto = e => { const f = (e.fotolar && e.fotolar[0]) || ''; return f.length <= 120000 ? f : ''; };
 function kucult(dosya) {
   return new Promise((ok, hata) => {
     const img = new Image();
@@ -1052,8 +1089,11 @@ function kucult(dosya) {
 function esyaFormu(e) {
   if (rol === 'kisitli') { bildir('Hesabın kısıtlandı; parça ekleyemez ya da düzenleyemezsin.'); return; }
   const p = $('#pencere');
-  let fotolar = e ? e.fotolar.map(u => ({ url: u })) : [];   // {url} mevcut, {dosya, onizleme} yeni
-  const kaldirilan = [];
+  /* {belge, onizleme} veritabanındaki fotoğraf · {url} eski tip/örnek · {dosya, onizleme} yeni */
+  let fotolar = !e ? [] : e.fotoBelge && e.fotoBelge.length
+    ? e.fotoBelge.map((id, i) => ({ belge: id, onizleme: i === 0 ? kapakFoto(e) : '' }))
+    : e.fotolar.map(u => ({ url: u }));
+  const kaldirilan = [], kaldirilanBelge = [];
   p.innerHTML = '<div class="pencere-ic">' +
     '<h2 id="pencereBas">' + (e ? 'Parçayı düzenle' : 'Dolabına eşya ekle') + '</h2>' +
     '<div class="alan" style="margin-bottom:12px"><label>Fotoğraflar <span class="kucuk">(1-4 adet, ilk fotoğraf kapak olur)</span></label><div class="foto-sec" id="fotoSec"></div>' +
@@ -1087,7 +1127,7 @@ function esyaFormu(e) {
   };
   $('#fotoSec').onclick = ev => {
     const s = ev.target.closest('[data-i]');
-    if (s) { const [f] = fotolar.splice(+s.dataset.i, 1); if (f.url) kaldirilan.push(f.url); fotoCiz(); return; }
+    if (s) { const [f] = fotolar.splice(+s.dataset.i, 1); if (f.url) kaldirilan.push(f.url); if (f.belge) kaldirilanBelge.push(f.belge); fotoCiz(); return; }
     if (ev.target.closest('#fotoEkle')) $('#fotoDosya').click();
   };
   $('#fotoDosya').onchange = ev => {
@@ -1096,6 +1136,7 @@ function esyaFormu(e) {
     fotoCiz();
   };
   fotoCiz();
+  fotolar.forEach(f => { if (f.belge) fotoGetir(f.belge).then(v => { if (v) { f.onizleme = v; fotoCiz(); } }).catch(() => {}); });
 
   $('#fKaydet').onclick = async () => {
     const hata = $('#fHata'); hata.textContent = '';
@@ -1108,27 +1149,35 @@ function esyaFormu(e) {
     if (!$('#fSozlesme').checked) { hata.textContent = 'Eşya eklemek için kiraya veren şartlarını kabul edin.'; return; }
     const dug = $('#fKaydet'); dug.disabled = true;
     try {
-      const urller = [];
+      const urller = [], belgeler = [];
+      let kapak = '';
       for (let i = 0; i < fotolar.length; i++) {
         const f = fotolar[i];
+        if (DEMO) { urller.push(f.url || f.onizleme); continue; }    // örnek mod: fotoğraf tarayıcıda kalır
         if (f.url) { urller.push(f.url); continue; }
-        if (DEMO) { urller.push(f.onizleme); continue; }    // örnek mod: fotoğraf tarayıcıda kalır
-        dug.textContent = 'Fotoğraf yükleniyor ' + (i + 1) + '/' + fotolar.length + '…';
-        const blob = await kucult(f.dosya);
-        const r = ref(storage, 'dolap/' + kullanici.uid + '/' + Date.now() + '-' + i + '.jpg');
-        await uploadBytes(r, blob, { contentType: 'image/jpeg' });
-        urller.push(await getDownloadURL(r));
+        dug.textContent = 'Fotoğraf hazırlanıyor ' + (i + 1) + '/' + fotolar.length + '…';
+        if (f.belge) {
+          belgeler.push(f.belge);
+          if (!kapak) kapak = await kucultVeri(f.onizleme || await fotoGetir(f.belge), 480, 0.72);
+          continue;
+        }
+        const tam = await kucultVeri(f.dosya, 1280, 0.8);
+        const r = await dbEkle('dolapFotolar', { sahipId: kullanici.uid, veri: tam, olusturma: SIMDI() });
+        belgeler.push(r.id);
+        fotoOnbellek.set(r.id, Promise.resolve(tam));
+        if (!kapak) kapak = await kucultVeri(tam, 480, 0.72);
       }
+      const fotoAlanlari = belgeler.length ? { fotolar: [kapak], fotoBelge: belgeler } : { fotolar: urller, fotoBelge: [] };
       dug.textContent = 'Kaydediliyor…';
       const veri = {
         baslik: v('fBaslik'), kategori: v('fKat'), marka: v('fMarka'), beden: v('fBeden'), renk: v('fRenk'),
-        aciklama: v('fAciklama'), gunlukUcret: ucret, depozito, fotolar: urller, sozlesme: SOZLESME_SURUM,
+        aciklama: v('fAciklama'), gunlukUcret: ucret, depozito, ...fotoAlanlari, sozlesme: SOZLESME_SURUM,
         onay: 'bekliyor', redNeden: '',
         sahipAd: (kullanici.displayName || 'Kullanıcı').slice(0, 80), sahipFoto: (kullanici.photoURL || '').slice(0, 600)
       };
       if (e) await dbGuncelle('dolapEsyalar', e.id, veri);
       else await dbEkle('dolapEsyalar', { ...veri, sahipId: kullanici.uid, aktif: true, olusturma: SIMDI() });
-      if (!DEMO) kaldirilan.forEach(u => deleteObject(ref(storage, u)).catch(() => {}));
+      if (!DEMO) kaldirilanBelge.forEach(id => dbSil('dolapFotolar', id).catch(() => {}));
       kapat();
       bildir('Ekip onayına gönderildi. Onaylanınca Keşfet\'te görünecek.');
       sayfaCiz();
@@ -1469,7 +1518,7 @@ function oneCikarFormu(e) {
     const dug = $('#ocTamam'); dug.disabled = true;
     try {
       await dbEkle('dolapBoostlar', {
-        esyaId: e.id, esyaBaslik: e.baslik.slice(0, 80), esyaFoto: (e.fotolar[0] || '').slice(0, 600), sahipId: kullanici.uid,
+        esyaId: e.id, esyaBaslik: e.baslik.slice(0, 80), esyaFoto: kapakFoto(e), sahipId: kullanici.uid,
         sahipAd: (kullanici.displayName || '').slice(0, 80), paket: k.paket, saat: k.saat, fiyat: k.fiyat,
         durum: 'odeme_bekliyor', baslangic: null, bitis: null, olusturma: SIMDI(), guncelleme: SIMDI()
       });
