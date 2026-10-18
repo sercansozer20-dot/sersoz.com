@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019d';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019e';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -1190,15 +1190,15 @@ function esyaFormu(e) {
 
 /* ---------------------------------------------------------------- KİRALAMALARIM */
 async function kiralamalar(gorunum, istek) {
+  if (gorunum === 'yonetim') { location.replace('#yonetim/odemeler'); return; }   // ödeme onayları Yönetim panelinde
   if (!kullanici) return girisCagrisi('Kiralamaların burada', 'Kiraladığın ve dolabından kiralanan parçaları görmek için giriş yap.');
   const sekme = (k, ad) => '<a class="cip" href="#kiralamalar' + (k === 'kiraci' ? '' : '/' + k) + '" aria-pressed="' + (gorunum === k) + '">' + ad + '</a>';
   icerik.innerHTML = '<div class="bas"><div><h1>Kiralamalarım</h1><p>İsteklerin ve dolabına gelen istekler.</p></div></div>' +
-    '<div class="alt-sekme">' + sekme('kiraci', 'Kiraladıklarım') + sekme('sahip', 'Dolabımdan kiralananlar') + (yonetici() ? sekme('yonetim', 'Ödeme onayı') : '') + '</div>' +
+    '<div class="alt-sekme">' + sekme('kiraci', 'Kiraladıklarım') + sekme('sahip', 'Dolabımdan kiralananlar') + '</div>' +
     '<div class="liste" id="liste"><p class="yukleniyor">Yükleniyor…</p></div>';
 
   let alan = 'kiraciId', deger = kullanici.uid;
   if (gorunum === 'sahip') alan = 'sahipId';
-  else if (gorunum === 'yonetim' && yonetici()) { alan = 'durum'; deger = 'odeme_bildirildi'; }
   else gorunum = 'kiraci';
 
   let l;
@@ -1448,7 +1448,9 @@ function kiraSatiri(k, gorunum) {
     if (k.teslimSorun) ek += '<div class="gecikme"><b>Kiracı sorun bildirdi:</b> ' + esc(k.teslimSorun) + ' · Ekip inceliyor; ödeme bu sırada bekletilir.</div>';
     if (!['reddedildi', 'iptal'].includes(d)) ek += kazancHTML(k);
   } else if (gorunum === 'yonetim') {
-    eylem = gecis('odendi', 'Ödeme geldi', 'dug-vurgu') + gecis('onaylandi', 'Ödeme bulunamadı');
+    const taraf = kullanici && (k.kiraciId === kullanici.uid || k.sahipId === kullanici.uid);
+    eylem = taraf && !tamMi() ? '<span class="kucuk eksi">Bu kiralamada tarafsın; onayı başka bir admin vermeli.</span>'
+      : gecis('odendi', 'Ödeme geldi', 'dug-vurgu') + gecis('onaylandi', 'Ödeme bulunamadı');
     ek = '<div class="odeme-kutu">Referans: <b>' + refKod(k.id) + '</b> · Beklenen tutar: <b>' + tl(k.toplam) + '</b>' +
       (k.indirim ? ' (−' + tl(k.indirim) + ' sadakat indirimi dahil)' : '') +
       ' · Kiracı: <a href="#profil/' + esc(k.kiraciId) + '">' + esc(k.kiraciAd) + '</a> <span data-seviye="' + esc(k.kiraciId) + '" data-beyan="' + (+k.indirimYuzde || 0) + '"></span></div>';
@@ -1605,6 +1607,46 @@ async function panelOneCikar(panel, istek) {
 /* ---------------------------------------------------------------- YÖNETİM PANELİ (#yonetim/...) */
 const SAYFA_AD = { kesfet: 'Keşfet', esya: 'Parça sayfası', dolabim: 'Dolabım', kiralamalar: 'Kiralamalarım', hesabim: 'Hesabım', yonetim: 'Yönetim', profil: 'Profil', sepet: 'Sepetim' };
 
+async function panelOdemeler(panel, istek) {
+  const [bildirilen, odemeBekleyen] = await Promise.all([kiraListesi('durum', 'odeme_bildirildi'), kiraListesi('durum', 'onaylandi')]);
+  if (istek !== aktifIstek) return;
+  bildirilen.sort((a, b) => zaman(a.guncelleme) - zaman(b.guncelleme));
+  panel.innerHTML = '<section class="kutu"><h2>Ödemesi bildirilenler</h2><p class="kucuk" style="margin-bottom:10px">Kiracı "Ödemeyi yaptım" dedi. ' +
+      'Banka hesabında (ya da Shopier\'de) referans kodlu ödemeyi gör, sonra <b>"Ödeme geldi"</b> düğmesine bas: eşya sahibine kiracının telefonu ve teslimat adresi ancak o zaman açılır. ' +
+      'Ödeme yoksa <b>"Ödeme bulunamadı"</b> de; kiracı ödeme adımına geri döner.</p>' +
+      '<div class="liste">' + (bildirilen.length ? bildirilen.map(k => kiraSatiri(k, 'yonetim')).join('') : '<p class="kucuk">Onay bekleyen ödeme yok.</p>') + '</div></section>' +
+    '<section class="kutu"><h2>Kiracı ödemesi bekleyenler</h2><p class="kucuk" style="margin-bottom:10px">Kartla ödeme için Shopier\'de tutarı bu kadar olan bir ürün/ödeme linki oluştur ve buraya yapıştır; kiracı "Kartla öde" düğmesini görür. Link eklemezsen kiracı havale/FAST ile öder.</p>' +
+      (odemeBekleyen.length ? odemeBekleyen.map(k => '<div class="gelir-satir">' +
+        '<div><b><a href="#esya/' + esc(k.esyaId) + '">' + esc(k.esyaBaslik) + '</a></b><span class="kucuk">' + refKod(k.id) + ' · ' + esc(DURUM[k.durum]) + '</span></div>' +
+        '<div><a href="#profil/' + esc(k.kiraciId) + '">' + esc(k.kiraciAd) + '</a></div>' +
+        '<div><b>' + tl(k.toplam) + '</b></div>' +
+        '<div class="eylem"><input class="kart-link" data-kart-alan="' + esc(k.id) + '" placeholder="https://www.shopier.com/…" value="' + esc(k.kartLink || '') + '">' +
+          '<button type="button" class="dug dug-kucuk" data-kart-kaydet="' + esc(k.id) + '">Kaydet</button></div></div>').join('')
+        : '<p class="kucuk">Ödeme bekleyen yok.</p>') + '</section>';
+  seviyeleriDoldur(panel);
+  panel.onclick = async ev => {
+    const g = ev.target.closest('[data-gecis]'), kb = ev.target.closest('[data-kart-kaydet]');
+    if (!g && !kb) return;
+    try {
+      if (g) {
+        const k = bildirilen.find(x => x.id === g.dataset.id), y = g.dataset.gecis;
+        if (!confirm(y === 'odendi'
+          ? tl(k.toplam) + ' tutarındaki ödeme (' + refKod(k.id) + ') hesaba geldi mi?\nOnaylayınca eşya sahibine kiracının telefonu ve adresi açılır.'
+          : 'Ödeme bulunamadı olarak işaretlensin mi? Kiracı tekrar ödeme adımına döner.')) return;
+        g.disabled = true;
+        await dbGuncelle('dolapKiralamalar', k.id, { durum: y, guncelleme: SIMDI() });
+        bildir(y === 'odendi' ? 'Ödeme onaylandı; eşya sahibi kargoya hazırlanabilir.' : 'Kiracı ödeme adımına geri döndü.');
+      } else {
+        const link = panel.querySelector('[data-kart-alan="' + CSS.escape(kb.dataset.kartKaydet) + '"]').value.trim();
+        if (link && !/^https:\/\/(www\.)?shopier\.com\/\S+$/.test(link)) { bildir('Link https://www.shopier.com/ ile başlamalı.'); return; }
+        await dbGuncelle('dolapKiralamalar', kb.dataset.kartKaydet, { kartLink: link, guncelleme: SIMDI() });
+        bildir(link ? 'Kart ödeme linki eklendi; kiracı görüyor.' : 'Link kaldırıldı.');
+      }
+      sayfaCiz();
+    } catch (h) { bildir(hataMetni(h)); g && (g.disabled = false); }
+  };
+}
+
 async function panelGelir(panel, istek) {
   const [l, boostlar] = await Promise.all([tumKiralamalar(), boostListesi()]);
   if (istek !== aktifIstek) return;
@@ -1614,7 +1656,6 @@ async function panelGelir(panel, istek) {
   const boost = boostlar.filter(b => b.durum === 'aktif').reduce((t, b) => t + (b.fiyat || 0), 0);
   const sahipBekleyen = kesin.filter(k => ['teslim_edildi', 'iade_edildi'].includes(k.durum) && k.sahipOdeme !== 'odendi');
   const kargodakiler = l.filter(k => k.durum === 'kargoda' || (k.durum === 'odendi'));
-  const odemeBekleyen = l.filter(k => k.durum === 'onaylandi' || k.durum === 'odeme_bildirildi');
   const depBekleyen = kesin.filter(k => k.durum === 'iade_edildi' && !k.depozitoDurum && k.depozito > 0);
   const elde = top(kesin.filter(k => !k.depozitoDurum), k => k.depozito || 0);
   const uidler = [...new Set(sahipBekleyen.map(k => k.sahipId).concat(depBekleyen.map(k => k.kiraciId)))];
@@ -1637,14 +1678,6 @@ async function panelGelir(panel, istek) {
         '<div class="alan"><label for="gKom">Eşya sahibinden komisyon (%)</label><input id="gKom" type="number" min="0" max="30" step="1" value="' + GELIR.komisyonYuzde + '"' + kilit + '></div></div>' +
       '<p class="kucuk" style="margin-top:8px">Örnek, 1.000 TL kira: kiracı ' + tl(1000 + ornek) + ' öder (+ depozito), eşya sahibi ' + tl(1000 - ornekK) + ' alır, site ' + tl(ornek + ornekK) + ' kazanır (sadakat indirimi varsa o kadar az).</p>' +
       (tamMi() ? '<button type="button" class="dug dug-ana" id="gKaydet" style="margin-top:10px">Oranları kaydet</button>' : '<p class="kucuk">Oranları yalnız tam yetkili değiştirebilir.</p>') + '</section>' +
-    '<section class="kutu"><h2>Kiracı ödemesi bekleyenler</h2><p class="kucuk" style="margin-bottom:10px">Kartla ödeme için Shopier\'de tutarı bu kadar olan bir ürün/ödeme linki oluştur ve buraya yapıştır; kiracı "Kartla öde" düğmesini görür. Link eklemezsen kiracı havale/FAST ile öder.</p>' +
-      (odemeBekleyen.length ? odemeBekleyen.map(k => '<div class="gelir-satir">' +
-        '<div><b><a href="#esya/' + esc(k.esyaId) + '">' + esc(k.esyaBaslik) + '</a></b><span class="kucuk">' + refKod(k.id) + ' · ' + esc(DURUM[k.durum]) + '</span></div>' +
-        '<div><a href="#profil/' + esc(k.kiraciId) + '">' + esc(k.kiraciAd) + '</a></div>' +
-        '<div><b>' + tl(k.toplam) + '</b></div>' +
-        '<div class="eylem"><input class="kart-link" data-kart-alan="' + esc(k.id) + '" placeholder="https://www.shopier.com/…" value="' + esc(k.kartLink || '') + '">' +
-          '<button type="button" class="dug dug-kucuk" data-kart-kaydet="' + esc(k.id) + '">Kaydet</button></div></div>').join('')
-        : '<p class="kucuk">Ödeme bekleyen yok.</p>') + '</section>' +
     '<section class="kutu"><h2>Teslimat bekleyenler</h2><p class="kucuk" style="margin-bottom:10px">Ödemesi onaylanmış, kiracıya henüz ulaşmamış parçalar. Kiracı "Teslim aldım" demeyi unutursa kargo takibinden teslimatı kontrol edip buradan onaylayabilirsin.</p>' +
       (kargodakiler.length ? kargodakiler.map(k => '<div class="gelir-satir">' +
         '<div><b><a href="#esya/' + esc(k.esyaId) + '">' + esc(k.esyaBaslik) + '</a></b><span class="kucuk">' + refKod(k.id) + ' · ' + esc(DURUM[k.durum]) + '</span></div>' +
@@ -1719,11 +1752,11 @@ async function yonetim(sekme, ek, istek) {
     return;
   }
   const sekmeler = [['ozet', 'Özet'], ['onay', 'Onay bekleyenler'], ['onecikar', 'Öne çıkarma'], ['gelen', 'Gelen kutusu'], ['kullanicilar', 'Kullanıcılar']]
-    .concat(tamMi() ? [['yoneticiler', 'Admin atama']] : []).concat([['gelir', 'Gelir ve ödemeler'], ['odemeler', 'Ödeme onayları']]);
+    .concat(tamMi() ? [['yoneticiler', 'Admin atama']] : []).concat([['odemeler', 'Ödeme onayları'], ['gelir', 'Gelir ve ödemeler']]);
   icerik.innerHTML = '<div class="bas"><div><h1>Yönetim paneli</h1><p>' + ROL_AD[rol] + ' olarak giriş yaptın.</p></div></div>' +
     '<div class="alt-sekme">' + sekmeler.map(([k, ad]) =>
       '<a class="cip" href="#yonetim/' + k + '" aria-pressed="' + (sekme === k || (sekme === 'kisi' && k === 'kullanicilar')) + '">' + ad +
-      (k === 'onay' || k === 'gelen' || k === 'onecikar' ? ' <span class="sayi" id="sayi-' + k + '" hidden></span>' : '') + '</a>').join('') + '</div>' +
+      (k === 'onay' || k === 'gelen' || k === 'onecikar' || k === 'odemeler' ? ' <span class="sayi" id="sayi-' + k + '" hidden></span>' : '') + '</a>').join('') + '</div>' +
     '<div id="panel"><p class="yukleniyor">Yükleniyor…</p></div>';
   const panel = $('#panel');
   rozetSayilari();
@@ -1735,7 +1768,7 @@ async function yonetim(sekme, ek, istek) {
     else if (sekme === 'kisi' && ek) await panelKisi(panel, ek, istek);
     else if (sekme === 'yoneticiler' && tamMi()) await panelYoneticiler(panel, istek);
     else if (sekme === 'gelir') await panelGelir(panel, istek);
-    else if (sekme === 'odemeler') location.hash = '#kiralamalar/yonetim';
+    else if (sekme === 'odemeler') await panelOdemeler(panel, istek);
     else await panelOzet(panel, istek);
   } catch (h) {
     if (istek === aktifIstek) panel.innerHTML = '<div class="bos"><h3>Yüklenemedi</h3><p>' + esc(hataMetni(h)) + '</p></div>';
@@ -1743,8 +1776,9 @@ async function yonetim(sekme, ek, istek) {
 }
 async function rozetSayilari() {
   try {
-    const [bek, soh, oc] = await Promise.all([esyaListesi('onay', 'bekliyor'), sohbetListesi(), boostListesi('durum', 'odeme_bildirildi')]);
+    const [bek, soh, oc, od] = await Promise.all([esyaListesi('onay', 'bekliyor'), sohbetListesi(), boostListesi('durum', 'odeme_bildirildi'), kiraListesi('durum', 'odeme_bildirildi')]);
     const yaz = (id, n) => { const s = $('#sayi-' + id); if (s) { s.textContent = n; s.hidden = !n; } };
+    yaz('odemeler', od.length);
     yaz('onay', bek.length);
     yaz('gelen', soh.filter(x => !x.adminOkudu).length);
     yaz('onecikar', oc.length);

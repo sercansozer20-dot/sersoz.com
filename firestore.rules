@@ -619,7 +619,7 @@ service cloud.firestore {
         || (e == 'kargoda' && y == 'teslim_edildi'
           && degisenler().hasOnly(['durum', 'guncelleme', 'teslimOnay'])
           && ((kiraci && request.resource.data.teslimOnay == 'kiraci')
-              || (dolapAdmin() && request.resource.data.teslimOnay == 'admin')))
+              || (dolapAdmin() && (tamYetkili() || !(sahip || kiraci)) && request.resource.data.teslimOnay == 'admin')))
         || (kiraci && e == y && e in ['kargoda', 'teslim_edildi']
           && degisenler().hasOnly(['guncelleme', 'teslimSorun'])
           && request.resource.data.teslimSorun is string && request.resource.data.teslimSorun.size() <= 300)
@@ -627,7 +627,7 @@ service cloud.firestore {
              (sahip && e == 'beklemede' && y == 'reddedildi')
           || (kiraci && e in ['beklemede', 'onaylandi'] && y == 'iptal')
           || (kiraci && e == 'onaylandi' && y == 'odeme_bildirildi')
-          || (dolapAdmin() && e == 'odeme_bildirildi' && y in ['odendi', 'onaylandi'])
+          || (dolapAdmin() && (tamYetkili() || !(sahip || kiraci)) && e == 'odeme_bildirildi' && y in ['odendi', 'onaylandi'])
         ))
       );
     }
@@ -639,14 +639,16 @@ service cloud.firestore {
     }
     /* Admin: eşya sahibine ödeme ve depozito iadesi kaydı (teslimden sonra). */
     function odemeTakip() {
-      return dolapAdmin() && request.resource.data.guncelleme == request.time
+      return dolapAdmin() && (tamYetkili() || (resource.data.kiraciId != benim() && resource.data.sahipId != benim()))
+        && request.resource.data.guncelleme == request.time
         && degisenler().hasOnly(['sahipOdeme', 'sahipOdemeZaman', 'depozitoDurum', 'depozitoKesinti', 'depozitoNot', 'depozitoZaman', 'guncelleme'])
         && resource.data.durum in ['teslim_edildi', 'iade_edildi'];
     }
 
     /* Admin: kiracıya kartla ödeme linki (Shopier) ekler. */
     function kartLinki() {
-      return dolapAdmin() && request.resource.data.guncelleme == request.time
+      return dolapAdmin() && (tamYetkili() || (resource.data.kiraciId != benim() && resource.data.sahipId != benim()))
+        && request.resource.data.guncelleme == request.time
         && degisenler().hasOnly(['kartLink', 'guncelleme'])
         && resource.data.durum in ['onaylandi', 'odeme_bildirildi']
         && request.resource.data.kartLink is string && request.resource.data.kartLink.size() <= 300
