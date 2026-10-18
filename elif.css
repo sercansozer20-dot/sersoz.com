@@ -575,3 +575,29 @@ section[id^="b-"] { scroll-margin-top: 84px; }
   .yapiskan-kirala .dug { padding-left: 28px; padding-right: 28px; }
   body:has(.yapiskan-kirala) .asistan-dug, body:has(.yapiskan-kirala) .sirala-dug { bottom: 76px; }
 }
+
+/* yorum yazma */
+.yildiz-sec { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 4px; margin-bottom: 10px; }
+.yildiz-sec input { position: absolute; opacity: 0; pointer-events: none; }
+.yildiz-sec span { font-size: 30px; color: var(--cizgi); cursor: pointer; line-height: 1; }
+.yildiz-sec label:has(input:checked) span, .yildiz-sec label:has(input:checked) ~ label span, .yildiz-sec label:hover span, .yildiz-sec label:hover ~ label span { color: #e0a100; }
+#yMetin { width: 100%; min-height: 90px; padding: 10px 12px; border: 1px solid var(--cizgi); border-radius: 12px; font: inherit; }
+.yorum .avatar.harf { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--vurgu-acik); color: var(--vurgu-koyu); font-weight: 700; flex: none; }
+
+/* müsaitlik, hızlı süre, ölçüler, kazanç hesaplayıcı */
+.hizli-sure { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.hizli-sure .cip[aria-pressed="true"] { background: var(--metin); color: #fff; }
+.dolu-not { color: var(--vurgu-koyu); }
+.olcu-izgara { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.olcu-izgara input, .olcu-izgara select { min-width: 0; }
+@media (max-width: 520px) { .olcu-izgara { grid-template-columns: repeat(2, 1fr); } }
+#fiyatOneri { display: block; margin-top: 4px; }
+.olculer { margin-top: 4px; }
+.kazanc-hesap { margin-bottom: 16px; }
+.kazanc-hesap summary { cursor: pointer; }
+.kh-izgara { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+.kh-izgara label { display: grid; gap: 4px; font-size: 13px; color: var(--ikinci); }
+.kh-izgara input { padding: 8px 10px; border: 1px solid var(--cizgi); border-radius: 10px; font: inherit; }
+@media (max-width: 640px) { .kh-izgara { grid-template-columns: 1fr 1fr; } }
+.kh-sonuc { font-size: 17px; margin: 12px 0 4px; }
+.kh-sonuc b { font-family: var(--serif); font-size: 24px; color: var(--vurgu-koyu); }
