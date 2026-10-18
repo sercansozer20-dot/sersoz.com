@@ -72,7 +72,7 @@ main { padding: 28px 0 60px; }
 /* eşya ızgarası */
 .izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 22px 18px; }
 .esya { display: block; }
-.esya .foto { position: relative; aspect-ratio: 3 / 4; border-radius: 16px; overflow: hidden; background: var(--vurgu-acik); }
+.esya .foto { display: block; position: relative; aspect-ratio: 3 / 4; border-radius: 16px; overflow: hidden; background: var(--vurgu-acik); }
 .esya .foto img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
 .esya:hover .foto img { transform: scale(1.04); }
 .esya .etiket { position: absolute; left: 10px; top: 10px; background: rgba(255, 255, 255, .92); border-radius: 999px; padding: 3px 9px; font-size: 12px; font-weight: 600; }
