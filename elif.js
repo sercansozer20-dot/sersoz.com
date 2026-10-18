@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019x';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019y';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -3053,8 +3053,24 @@ async function rozetSayilari() {
 }
 
 async function panelOzet(panel, istek) {
-  const ol = await olayListesi(30);
+  const [ol, kl] = await Promise.all([olayListesi(30), tumKiralamalar().catch(() => [])]);
   if (istek !== aktifIstek) return;
+  /* sipariş göstergeleri */
+  const ayBas = new Date(); ayBas.setDate(1); ayBas.setHours(0, 0, 0, 0);
+  const dikkat = kl.filter(k => siparisUyarilari(k, kl).length).length;
+  const odemeBek = kl.filter(k => k.durum === 'odeme_bildirildi').length;
+  const sorun = kl.filter(k => k.teslimSorun && k.sorunDurum !== 'cozuldu').length;
+  const aktif = kl.filter(k => AKTIF_DURUM.includes(k.durum)).length;
+  const buAy = kl.filter(k => k.durum === 'iade_edildi' && (zaman(k.guncelleme) || 0) >= ayBas.getTime());
+  const buAyPay = kl.filter(k => k.komisyonAlindi && (zaman(k.komisyonZaman) || 0) >= ayBas.getTime()).reduce((t, k) => t + (k.komisyonTutar ?? kiraHesap(k).site), 0);
+  const istek30 = kl.filter(k => (zaman(k.olusturma) || 0) > Date.now() - 30 * 864e5).length;
+  const goruntu30 = ol.filter(o => o.tur === 'esya').length;
+  const kpi = (ad, v, link, uyari) => '<a class="sayac' + (uyari && v ? ' sayac-uyari' : '') + '" href="' + link + '"><b>' + v + '</b><span>' + ad + '</span></a>';
+  const siparisOzet = '<section class="kutu" style="margin-bottom:16px"><h2>Siparişler</h2><div class="sayaclar">' +
+    kpi('⚠ Dikkat isteyen', dikkat, '#yonetim/siparisler', true) + kpi('Ödeme onayı bekleyen', odemeBek, '#yonetim/odemeler', true) +
+    kpi('Açık sorun', sorun, '#yonetim/siparisler', true) + kpi('Süren kiralama', aktif, '#yonetim/siparisler', false) +
+    kpi('Bu ay tamamlanan', buAy.length, '#yonetim/siparisler', false) + kpi('Bu ay kasaya giren site payı', tl(buAyPay), '#yonetim/gelir', false) +
+    kpi('Son 30 gün istek / görüntüleme', istek30 + ' / ' + goruntu30 + (goruntu30 ? ' (%' + Math.round(100 * istek30 / goruntu30) + ')' : ''), '#yonetim/siparisler', false) + '</div></section>';
   const esyaO = ol.filter(o => o.tur === 'esya'), aramaO = ol.filter(o => o.tur === 'arama');
   const gunler = [];
   for (let i = 13; i >= 0; i--) {
@@ -3065,7 +3081,7 @@ async function panelOzet(panel, istek) {
   ol.forEach(o => { const k = new Date(zaman(o.zaman)).toISOString().slice(0, 10); (gunSay.get(k) || gunSay.set(k, new Set()).get(k)).add(o.oturum); });
   const maxG = Math.max(1, ...gunler.map(([k]) => (gunSay.get(k) || new Set()).size));
   const sayac = (ad, s) => '<div class="sayac"><b>' + s.toLocaleString('tr-TR') + '</b><span>' + ad + '</span></div>';
-  panel.innerHTML =
+  panel.innerHTML = siparisOzet +
     '<p class="kucuk" style="margin-bottom:12px">Son 30 gün · yalnız gezinti kaydına izin veren ziyaretçiler sayılır.</p>' +
     '<div class="sayaclar">' + sayac('Ziyaret (oturum)', new Set(ol.map(o => o.oturum)).size) +
       sayac('Giriş yapmış kişi', new Set(ol.filter(o => o.uid).map(o => o.uid)).size) +

@@ -623,3 +623,7 @@ section[id^="b-"] { scroll-margin-top: 84px; }
   .nasil ol { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 8px; padding-bottom: 4px; }
   .nasil li { flex: 0 0 74%; scroll-snap-align: start; }
 }
+
+a.sayac { text-decoration: none; color: inherit; }
+a.sayac:hover { border-color: var(--vurgu); }
+.sayac-uyari b { color: var(--kirmizi); }
