@@ -15,6 +15,7 @@ import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -31,6 +32,44 @@ const storage = getStorage(app);
 const YONETICI = 'sercansozer20@gmail.com';
 const AYAR = window.SERSOZ_AYAR || {};
 const LS_ILETISIM = 'elif_iletisim';
+
+/* ?demo=1 → tarayıcıda üretilen örnek veriyle çalışır, veritabanına yazmaz (elif-demo.js) */
+const DEMO = new URLSearchParams(location.search).has('demo');
+const D = DEMO ? demoVeri() : null;
+function demoEngel() {
+  if (!DEMO) return false;
+  bildir('Örnek modda değişiklik kaydedilmez.');
+  return true;
+}
+
+/* veri katmanı: örnek modda bellekten, normalde Firestore'dan */
+async function esyaListesi(alan, deger) {
+  if (D) return D.esyalar.filter(e => e[alan] === deger).map(e => ({ ...e }));
+  const snap = await getDocs(query(collection(db, 'dolapEsyalar'), where(alan, '==', deger)));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+async function esyaGetir(id) {
+  if (D) {
+    const e = D.esyalar.find(x => x.id === id);
+    if (!e) throw { message: 'Bu parça bulunamadı ya da kaldırıldı.' };
+    return { ...e };
+  }
+  const s = await getDoc(doc(db, 'dolapEsyalar', id));
+  if (!s.exists()) throw { message: 'Bu parça bulunamadı ya da kaldırıldı.' };
+  return { id: s.id, ...s.data() };
+}
+async function kiraListesi(alan, deger) {
+  if (D) return D.kiralamalar.filter(k => k[alan] === deger).map(k => ({ ...k }));
+  return (await getDocs(query(collection(db, 'dolapKiralamalar'), where(alan, '==', deger)))).docs.map(d => ({ id: d.id, ...d.data() }));
+}
+/* Yorumlar şimdilik yalnız örnek modda var; gerçek yorum yazma sonraki adım. */
+const yorumlar = id => (D && D.yorumlar[id]) || [];
+function puanOzeti(id) {
+  const y = yorumlar(id);
+  if (!y.length) return null;
+  return { ort: (y.reduce((t, x) => t + x.puan, 0) / y.length).toFixed(1).replace('.', ','), adet: y.length };
+}
+const yildiz = n => '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5 - n);
 
 const KATEGORI = { elbise: 'Elbise', ust: 'Üst giyim', alt: 'Alt giyim', 'dis-giyim': 'Dış giyim', ayakkabi: 'Ayakkabı', canta: 'Çanta', aksesuar: 'Aksesuar', diger: 'Diğer' };
 const DURUM = {
@@ -118,6 +157,7 @@ function esyaKarti(e, kendi) {
     '<span class="foto"><img src="' + esc(e.fotolar[0]) + '" alt="" loading="lazy">' +
       '<span class="etiket' + (e.aktif ? '' : ' pasif-etiket') + '">' + (e.aktif ? esc(KATEGORI[e.kategori] || '') : 'Yayında değil') + '</span></span>' +
     '<h3>' + esc(e.baslik) + '</h3>' +
+    (puanOzeti(e.id) ? '<span class="puan">★ ' + puanOzeti(e.id).ort + ' <span>(' + puanOzeti(e.id).adet + ')</span></span>' : '') +
     '<span class="alt"><span>' + esc([e.marka, e.beden].filter(Boolean).join(' · ')) + '</span><span class="fiyat">' + tl(e.gunlukUcret) + ' / gün</span></span>' +
     (kendi ? '' : '<span class="sahip">' + (e.sahipFoto ? '<img src="' + esc(e.sahipFoto) + '" alt="" referrerpolicy="no-referrer">' : '') + esc(e.sahipAd) + '\'nin dolabı</span>') +
     '</a>';
@@ -131,8 +171,7 @@ async function kesfet(istek) {
     '<div class="suzgec" id="suzgec"></div><div class="izgara" id="izgara"><p class="yukleniyor" style="grid-column:1/-1">Yükleniyor…</p></div>';
   let esyalar;
   try {
-    const snap = await getDocs(query(collection(db, 'dolapEsyalar'), where('aktif', '==', true)));
-    esyalar = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => zaman(b.olusturma) - zaman(a.olusturma));
+    esyalar = (await esyaListesi('aktif', true)).sort((a, b) => zaman(b.olusturma) - zaman(a.olusturma));
   } catch (e) {
     if (istek !== aktifIstek) return;
     $('#izgara').innerHTML = '<div class="bos"><h3>Liste yüklenemedi</h3><p>' + esc(hataMetni(e)) + '</p></div>';
@@ -167,9 +206,7 @@ async function esyaSayfasi(id, istek) {
   icerik.innerHTML = '<p class="yukleniyor">Yükleniyor…</p>';
   let e;
   try {
-    const s = await getDoc(doc(db, 'dolapEsyalar', id));
-    if (!s.exists()) throw { message: 'Bu parça bulunamadı ya da kaldırıldı.' };
-    e = { id: s.id, ...s.data() };
+    e = await esyaGetir(id);
   } catch (h) {
     if (istek !== aktifIstek) return;
     icerik.innerHTML = '<div class="bos"><h3>Parça bulunamadı</h3><p>' + esc(hataMetni(h)) + '</p><a class="dug" href="#kesfet">Keşfet\'e dön</a></div>';
@@ -188,13 +225,15 @@ async function esyaSayfasi(id, istek) {
         '<span class="kucuk">' + esc(KATEGORI[e.kategori] || '') + '</span>' +
         '<h1>' + esc(e.baslik) + '</h1>' +
         '<p class="marka-beden">' + esc([e.marka, e.beden && 'Beden ' + e.beden, e.renk].filter(Boolean).join(' · ')) + '</p>' +
+        (puanOzeti(e.id) ? '<p class="puan" style="margin-top:6px">★ ' + puanOzeti(e.id).ort + ' <span>· ' + puanOzeti(e.id).adet + ' yorum</span></p>' : '') +
         '<p class="ucret">' + tl(e.gunlukUcret) + ' <small>/ gün</small></p>' +
         (e.depozito ? '<p class="kucuk">+ ' + tl(e.depozito) + ' depozito (iade edilir)</p>' : '') +
         (e.aciklama ? '<p class="aciklama">' + esc(e.aciklama) + '</p>' : '') +
         '<p class="sahip" style="margin-top:14px">' + (e.sahipFoto ? '<img src="' + esc(e.sahipFoto) + '" alt="" referrerpolicy="no-referrer">' : '') + esc(e.sahipAd) + '\'nin dolabından</p>' +
         '<div class="kutu" id="kiraKutu"></div>' +
       '</div>' +
-    '</div>';
+    '</div>' +
+    yorumBolumu(e.id);
 
   icerik.querySelector('.kucukler')?.addEventListener('click', ev => {
     const b = ev.target.closest('[data-f]'); if (!b) return;
@@ -243,6 +282,7 @@ async function esyaSayfasi(id, istek) {
   }));
   $('#kGonder').onclick = async () => {
     const hata = $('#kHata'); hata.textContent = '';
+    if (demoEngel()) return;
     const gun = hesapla(), tel = $('#kIlet').value.trim();
     if (!(gun >= 1)) { hata.textContent = 'Başlangıç ve iade tarihini seçin (iade, başlangıçtan sonra olmalı).'; return; }
     if (gun > 60) { hata.textContent = 'En fazla 60 günlük kiralama yapılabilir.'; return; }
@@ -268,6 +308,19 @@ async function esyaSayfasi(id, istek) {
   };
 }
 
+function yorumBolumu(id) {
+  const y = yorumlar(id);
+  const tarih = t => new Date(t.toMillis()).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' });
+  return '<section class="yorumlar" aria-labelledby="yorumBas"><h2 id="yorumBas">Yorumlar' +
+    (y.length ? ' <span class="kucuk">(' + y.length + ')</span>' : '') + '</h2>' +
+    (y.length ? y.map(x =>
+      '<article class="yorum"><img src="' + esc(x.foto) + '" alt=""><div>' +
+        '<p class="yorum-bas"><b>' + esc(x.ad) + '</b> <span class="yildiz" aria-label="' + x.puan + ' yıldız">' + yildiz(x.puan) + '</span> ' +
+        '<span class="kucuk">' + tarih(x.tarih) + '</span></p><p>' + esc(x.metin) + '</p></div></article>').join('')
+      : '<p class="kucuk">Bu parça için henüz yorum yok. Kiralayanlar teslimden sonra yorum bırakabilecek.</p>') +
+    '</section>';
+}
+
 /* ---------------------------------------------------------------- DOLABIM */
 async function dolabim(istek) {
   if (!kullanici) return girisCagrisi('Dolabın seni bekliyor', 'Google hesabınla giriş yap, kiraya vermek istediğin parçaları ekle.');
@@ -276,8 +329,7 @@ async function dolabim(istek) {
   $('#yeniEsya').onclick = () => esyaFormu();
   let l;
   try {
-    const snap = await getDocs(query(collection(db, 'dolapEsyalar'), where('sahipId', '==', kullanici.uid)));
-    l = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => zaman(b.olusturma) - zaman(a.olusturma));
+    l = (await esyaListesi('sahipId', kullanici.uid)).sort((a, b) => zaman(b.olusturma) - zaman(a.olusturma));
   } catch (h) {
     if (istek === aktifIstek) $('#liste').innerHTML = '<div class="bos"><h3>Yüklenemedi</h3><p>' + esc(hataMetni(h)) + '</p></div>';
     return;
@@ -302,6 +354,7 @@ async function dolabim(istek) {
     const b = ev.target.closest('button'); if (!b) return;
     const e = l.find(x => x.id === (b.dataset.duzenle || b.dataset.yayin || b.dataset.sil));
     if (!e) return;
+    if (!b.dataset.duzenle && demoEngel()) return;
     try {
       if (b.dataset.duzenle) return esyaFormu(e);
       if (b.dataset.yayin) { b.disabled = true; await updateDoc(doc(db, 'dolapEsyalar', e.id), { aktif: !e.aktif }); bildir(e.aktif ? 'Yayından kaldırıldı.' : 'Yayında.'); }
@@ -380,6 +433,7 @@ function esyaFormu(e) {
 
   $('#fKaydet').onclick = async () => {
     const hata = $('#fHata'); hata.textContent = '';
+    if (demoEngel()) return;
     const v = id => $('#' + id).value.trim();
     const ucret = Math.round(+v('fUcret')), depozito = Math.round(+v('fDepozito') || 0);
     if (!fotolar.length) { hata.textContent = 'En az bir fotoğraf ekleyin.'; return; }
@@ -425,14 +479,14 @@ async function kiralamalar(gorunum, istek) {
     '<div class="alt-sekme">' + sekme('kiraci', 'Kiraladıklarım') + sekme('sahip', 'Dolabımdan kiralananlar') + (yonetici() ? sekme('yonetim', 'Ödeme onayı') : '') + '</div>' +
     '<div class="liste" id="liste"><p class="yukleniyor">Yükleniyor…</p></div>';
 
-  let q;
-  if (gorunum === 'sahip') q = query(collection(db, 'dolapKiralamalar'), where('sahipId', '==', kullanici.uid));
-  else if (gorunum === 'yonetim' && yonetici()) q = query(collection(db, 'dolapKiralamalar'), where('durum', '==', 'odeme_bildirildi'));
-  else { gorunum = 'kiraci'; q = query(collection(db, 'dolapKiralamalar'), where('kiraciId', '==', kullanici.uid)); }
+  let alan = 'kiraciId', deger = kullanici.uid;
+  if (gorunum === 'sahip') alan = 'sahipId';
+  else if (gorunum === 'yonetim' && yonetici()) { alan = 'durum'; deger = 'odeme_bildirildi'; }
+  else gorunum = 'kiraci';
 
   let l;
   try {
-    l = (await getDocs(q)).docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => zaman(b.guncelleme) - zaman(a.guncelleme));
+    l = (await kiraListesi(alan, deger)).sort((a, b) => zaman(b.guncelleme) - zaman(a.guncelleme));
   } catch (h) {
     if (istek === aktifIstek) $('#liste').innerHTML = '<div class="bos"><h3>Yüklenemedi</h3><p>' + esc(hataMetni(h)) + '</p></div>';
     return;
@@ -446,6 +500,7 @@ async function kiralamalar(gorunum, istek) {
   $('#liste').innerHTML = l.map(k => kiraSatiri(k, gorunum)).join('');
   $('#liste').onclick = async ev => {
     const b = ev.target.closest('[data-gecis]'); if (!b) return;
+    if (demoEngel()) return;
     const k = l.find(x => x.id === b.dataset.id);
     const y = b.dataset.gecis;
     const veri = { durum: y, guncelleme: serverTimestamp() };
@@ -500,4 +555,11 @@ function kiraSatiri(k, gorunum) {
 }
 
 /* ---------------------------------------------------------------- başlat */
-onAuthStateChanged(auth, u => { kullanici = u; hesapCiz(); sayfaCiz(); });
+if (DEMO) {
+  kullanici = { ...DEMO_KULLANICI, photoURL: D.kullanicilar[0].foto };
+  document.body.insertAdjacentHTML('afterbegin',
+    '<div class="demo-serit">Örnek veri: 20 sahte kullanıcı ve parçaları. Hiçbir şey kaydedilmez. <a href="elif.html">Gerçek siteye dön</a></div>');
+  hesapCiz(); sayfaCiz();
+} else {
+  onAuthStateChanged(auth, u => { kullanici = u; hesapCiz(); sayfaCiz(); });
+}

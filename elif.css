@@ -156,3 +156,17 @@ main { padding: 28px 0 60px; }
 
 .bildirim { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 80; background: var(--metin); color: #fff; padding: 11px 18px; border-radius: 12px; font-size: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, .25); max-width: calc(100vw - 32px); }
 .yukleniyor { padding: 60px 0; text-align: center; color: var(--ikinci); }
+
+/* puan ve yorumlar */
+.puan { display: inline-block; font-size: 13px; font-weight: 700; color: #b7791f; margin-top: 2px; }
+.puan span { color: var(--ikinci); font-weight: 400; }
+.yorumlar { margin-top: 40px; max-width: 760px; }
+.yorumlar h2 { font-family: var(--serif); font-size: 24px; font-weight: 600; margin-bottom: 14px; }
+.yorum { display: grid; grid-template-columns: 40px 1fr; gap: 12px; padding: 14px 0; border-top: 1px solid var(--cizgi); }
+.yorum img { width: 40px; height: 40px; border-radius: 50%; }
+.yorum-bas { margin-bottom: 4px; }
+.yildiz { color: #d69e2e; letter-spacing: 1px; }
+
+/* örnek mod şeridi */
+.demo-serit { background: #2a1f1e; color: #fff; text-align: center; font-size: 13px; padding: 7px 12px; }
+.demo-serit a { text-decoration: underline; margin-left: 6px; }
