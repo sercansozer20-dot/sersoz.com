@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Projeler sayfası alternatifleri</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112..125,700..900&family=Barlow:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.5 "Barlow", sans-serif; background: #e9e7e3; }
+  a { color: inherit; text-decoration: none; }
+  .etiket-ust { position: sticky; top: 0; z-index: 10; display: flex; gap: 8px; justify-content: center; padding: 10px; background: rgba(20,20,20,.92); }
+  .etiket-ust a { color: #fff; font-weight: 600; font-size: 14px; padding: 6px 14px; border-radius: 999px; background: rgba(255,255,255,.1); }
+  .etiket-ust a:hover { background: #d9480f; }
+  section { min-height: 100vh; padding: 72px clamp(16px, 5vw, 64px); display: flex; flex-direction: column; justify-content: center; }
+  .not { font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 18px; }
+
+  /* ---------------- A: Apple bento ---------------- */
+  #a { background: #f5f5f7; color: #1d1d1f; font-family: "Inter", sans-serif; }
+  #a .not { color: #86868b; }
+  #a h2 { font-family: "Inter", sans-serif; font-weight: 600; font-size: clamp(32px, 4.5vw, 56px); letter-spacing: -.02em; margin: 0 0 32px; }
+  .bento { display: grid; grid-template-columns: 1.4fr 1fr; grid-template-rows: 1fr 1fr; gap: 16px; max-width: 1100px; width: 100%; min-height: 560px; }
+  .kutu { position: relative; border-radius: 28px; overflow: hidden; padding: 30px; display: flex; flex-direction: column; justify-content: flex-end; background: #fff; transition: transform .4s cubic-bezier(.2,.8,.2,1); }
+  .kutu:hover { transform: scale(1.015); }
+  .kutu h3 { margin: 0; font-size: clamp(22px, 2.4vw, 32px); font-weight: 600; letter-spacing: -.01em; }
+  .kutu p { margin: 6px 0 0; color: #6e6e73; font-size: 15px; }
+  .kutu .dg { margin-top: 14px; color: #0066cc; font-weight: 500; font-size: 15px; }
+  .kutu .dg::after { content: " ›"; }
+  .k-market { grid-row: span 2; background: linear-gradient(180deg, #fff 0%, #fff 45%, #ffe8dc 100%); }
+  .k-market svg { position: absolute; top: 34px; left: 30px; width: 96px; color: #d9480f; }
+  .k-market h3 { font-size: clamp(30px, 3.6vw, 48px); }
+  .k-gorus { background: #000; color: #f5f5f7; }
+  .k-gorus img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .7; }
+  .k-gorus > * { position: relative; }
+  .k-gorus p { color: #a1a1a6; } .k-gorus .dg { color: #2997ff; }
+  .k-robot p::before { content: "Yakında · "; color: #bf4800; font-weight: 600; }
+  @media (max-width: 760px) { .bento { grid-template-columns: 1fr; grid-template-rows: none; } .k-market { grid-row: auto; min-height: 320px; } .kutu { min-height: 220px; } }
+
+  /* ---------------- B: Linear / Vercel koyu ---------------- */
+  #b { background: #08090a; color: #f7f8f8; font-family: "Inter", sans-serif; }
+  #b .not { color: #8a8f98; }
+  #b h2 { font-weight: 600; font-size: clamp(30px, 4vw, 52px); letter-spacing: -.03em; margin: 0 0 8px; background: linear-gradient(180deg, #fff, #9a9da3); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #b .alt { color: #8a8f98; margin: 0 0 40px; }
+  .izgara-b { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; overflow: hidden; max-width: 1100px; }
+  .kart-b { position: relative; background: #0e0f11; padding: 32px 28px 30px; min-height: 300px; display: flex; flex-direction: column; transition: background .3s; }
+  .kart-b::before { content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity .4s; background: radial-gradient(500px circle at var(--x, 50%) var(--y, 0%), rgba(217,72,15,.18), transparent 45%); }
+  .kart-b:hover::before { opacity: 1; }
+  .kart-b .ikon { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03); margin-bottom: auto; }
+  .kart-b .ikon svg { width: 22px; color: #d0d6e0; }
+  .kart-b h3 { margin: 40px 0 6px; font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
+  .kart-b p { margin: 0; color: #8a8f98; font-size: 15px; }
+  .kart-b .dg { margin-top: 20px; font-size: 14px; color: #d0d6e0; }
+  .kart-b .dg::after { content: " →"; }
+  .kart-b .durum { position: absolute; top: 30px; right: 26px; font-size: 12px; color: #8a8f98; border: 1px solid rgba(255,255,255,.12); padding: 2px 8px; border-radius: 999px; }
+  @media (max-width: 860px) { .izgara-b { grid-template-columns: 1fr; } }
+
+  /* ---------------- C: Awwwards editoryal liste ---------------- */
+  #c { background: #f2efe9; color: #141414; position: relative; overflow: hidden; }
+  #c .not { color: #8b857c; }
+  .liste-c { max-width: 1100px; width: 100%; border-top: 1px solid #141414; }
+  .satir { position: relative; display: grid; grid-template-columns: 70px 1fr auto; align-items: baseline; gap: 20px; padding: 28px 0; border-bottom: 1px solid #141414; transition: padding .35s cubic-bezier(.2,.8,.2,1), color .3s; }
+  .satir .no { font-size: 14px; font-weight: 600; color: #8b857c; }
+  .satir h3 { margin: 0; font-family: "Archivo", sans-serif; font-stretch: 125%; font-weight: 900; font-size: clamp(30px, 6vw, 84px); line-height: 1; letter-spacing: -.02em; text-transform: uppercase; }
+  .satir .yan { font-size: 15px; color: #57524b; text-align: right; max-width: 18em; }
+  .satir:hover { padding-left: 28px; color: #d9480f; }
+  .satir .onizleme { position: absolute; right: 22%; top: 50%; width: 260px; aspect-ratio: 4/3; border-radius: 6px; overflow: hidden; transform: translateY(-50%) rotate(-4deg) scale(.85); opacity: 0; pointer-events: none; transition: opacity .3s, transform .4s cubic-bezier(.2,.8,.2,1); z-index: 2; box-shadow: 0 20px 40px rgba(0,0,0,.25); display: grid; place-items: center; }
+  .satir:hover .onizleme { opacity: 1; transform: translateY(-50%) rotate(-4deg) scale(1); }
+  .onizleme img { width: 100%; height: 100%; object-fit: cover; }
+  .o-market { background: #d9480f; color: #fff; } .o-market svg { width: 40%; }
+  .o-robot { background: #2a2d33; color: #9aa0a8; font-weight: 700; }
+  .satir.pasif { color: #9b958c; } .satir.pasif:hover { color: #9b958c; padding-left: 0; }
+  @media (max-width: 760px) { .satir { grid-template-columns: 40px 1fr; } .satir .yan { grid-column: 2; text-align: left; } .satir .onizleme { display: none; } }
+</style>
+</head>
+<body>
+<nav class="etiket-ust"><a href="#a">A · Apple bento</a><a href="#b">B · Linear koyu</a><a href="#c">C · Editoryal liste</a></nav>
+
+<!-- A -->
+<section id="a">
+  <div class="not">Alternatif A — Apple ürün sayfaları tarzı bento ızgara</div>
+  <h2>Sercan'ın Projeleri.</h2>
+  <div class="bento">
+    <a class="kutu k-market" href="../magaza.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6 5 3H2"/><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></svg>
+      <h3>Elektronik Market</h3>
+      <p>Geliştirme kartları, sensörler, motorlar ve ölçüm aletleri.</p>
+      <span class="dg">Markete gir</span>
+    </a>
+    <a class="kutu k-gorus" href="../kategori.html?k=makine-gorusu">
+      <img src="../gorsel/tarama.jpg" alt="">
+      <h3>3D Makine Görüşü</h3>
+      <p>Tarama, ölçüm, kusur tespiti, PLC.</p>
+      <span class="dg">Çözümleri gör</span>
+    </a>
+    <div class="kutu k-robot">
+      <h3>Robotik Projeler</h3>
+      <p>Robot kol ve dört ayaklı robot.</p>
+    </div>
+  </div>
+</section>
+
+<!-- B -->
+<section id="b">
+  <div class="not">Alternatif B — Linear / Vercel tarzı koyu tema</div>
+  <h2>Sercan'ın Projeleri</h2>
+  <p class="alt">Görüntü işleme, robotik ve elektronik üzerine çalışmalar.</p>
+  <div class="izgara-b">
+    <a class="kart-b" href="../magaza.html">
+      <span class="ikon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6 5 3H2"/><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></svg></span>
+      <h3>Elektronik Market</h3>
+      <p>Geliştirme kartları, sensörler, motorlar ve ölçüm aletleri.</p>
+      <span class="dg">Markete gir</span>
+    </a>
+    <a class="kart-b" href="../kategori.html?k=makine-gorusu">
+      <span class="ikon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M2 14 22 10"/></svg></span>
+      <h3>3D Makine Görüşü</h3>
+      <p>Vision Detection App: tarama, ölçüm, kusur tespiti, PLC.</p>
+      <span class="dg">Çözümleri gör</span>
+    </a>
+    <div class="kart-b">
+      <span class="durum">Yakında</span>
+      <span class="ikon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h7M7.5 20v-3"/><circle cx="7.5" cy="15.5" r="1.5"/><path d="m8.6 14.4 5-5"/><circle cx="14.5" cy="8.5" r="1.4"/><path d="m15.6 7.6 3.4 1.9"/></svg></span>
+      <h3>Robotik Projeler</h3>
+      <p>Robot kol ve dört ayaklı robot çalışmaları.</p>
+    </div>
+  </div>
+</section>
+
+<!-- C -->
+<section id="c">
+  <div class="not">Alternatif C — Awwwards tarzı editoryal liste</div>
+  <div class="liste-c">
+    <a class="satir" href="../magaza.html">
+      <span class="no">01</span><h3>Market</h3><span class="yan">Elektronik komponent ve ölçüm aletleri</span>
+      <span class="onizleme o-market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6 5 3H2"/><circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/></svg></span>
+    </a>
+    <a class="satir" href="../kategori.html?k=makine-gorusu">
+      <span class="no">02</span><h3>3D Görüş</h3><span class="yan">Tarama, ölçüm, kusur tespiti, PLC</span>
+      <span class="onizleme"><img src="../gorsel/tarama.jpg" alt=""></span>
+    </a>
+    <div class="satir pasif">
+      <span class="no">03</span><h3>Robotik</h3><span class="yan">Yakında: robot kol ve dört ayaklı robot</span>
+    </div>
+  </div>
+</section>
+
+<script>
+  /* B: ışık imleci takip etsin */
+  document.querySelectorAll('.kart-b').forEach(k => k.addEventListener('pointermove', e => {
+    const r = k.getBoundingClientRect();
+    k.style.setProperty('--x', (e.clientX - r.left) + 'px');
+    k.style.setProperty('--y', (e.clientY - r.top) + 'px');
+  }));
+</script>
+</body>
+</html>
