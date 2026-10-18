@@ -40,7 +40,7 @@
   a.kutu:hover .dg { text-decoration: underline; }
 
   .k-market { grid-row: span 2; background: linear-gradient(180deg, #fff 0%, #fff 45%, #ffe8dc 100%); }
-  .k-market svg { position: absolute; top: 34px; left: 30px; width: 96px; color: var(--ana); }
+  .k-market svg { flex: none; width: 96px; height: auto; margin-bottom: auto; padding-bottom: 24px; color: var(--ana); }
   .k-market h2 { font-size: clamp(30px, 3.6vw, 48px); }
   .k-gorus { background: #000; color: #f5f5f7; }
   .k-gorus img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .7; transition: transform .8s cubic-bezier(.2, .8, .2, 1); }
@@ -54,7 +54,8 @@
 
   @media (max-width: 760px) {
     .bento { grid-template-columns: 1fr; grid-template-rows: none; min-height: 0; }
-    .k-market { grid-row: auto; min-height: 320px; }
+    .k-market { grid-row: auto; min-height: 300px; }
+    .k-market svg { width: 64px; }
     .kutu { min-height: 220px; }
   }
   @media (prefers-reduced-motion: reduce) { .kutu, .k-gorus img { transition: none; } }
