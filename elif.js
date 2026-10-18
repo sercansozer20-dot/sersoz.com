@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018c';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018d';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -1480,18 +1480,21 @@ function asistanKur() {
     if (!v.ad || !v.konu || !v.mesaj || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.eposta)) { balon('bot', 'Ad, geçerli bir e-posta, konu ve mesaj gerekli.'); return; }
     v.gecmis = gunluk.slice(-12).join('\n');
     const dug = f.querySelector('button'); dug.disabled = true; dug.textContent = 'Gönderiliyor…';
-    try {
-      await destekPostasi(v);
-      if (kullanici) soruGonder(v.konu + ' — ' + v.mesaj).catch(() => {});   // giriş yapılmışsa gelen kutusuna da
+    /* Giriş yapılmışsa önce panelin gelen kutusuna kaydet; e-posta bundan bağımsız gider. */
+    let kutuda = false;
+    if (kullanici) { try { await soruGonder(v.konu + ' — ' + v.mesaj); kutuda = true; } catch (h) {} }
+    let postaHatasi = null;
+    try { await destekPostasi(v); } catch (h) { postaHatasi = h; }
+    if (kutuda || !postaHatasi) {
       f.closest('.mesaj').remove();
       balon('kullanici', '<b>' + esc(v.konu) + '</b><br>' + esc(v.mesaj));
-      balon('bot', 'İletildi ✓ Ekibimiz ' + esc(v.eposta) + ' adresine yanıt verecek.');
+      balon('bot', 'İletildi ✓ Ekibimiz ' + (kutuda ? 'yanıtı burada ve ' : '') + esc(v.eposta) + ' adresinde verecek.');
       sonSoru = '';
-    } catch (h) {
+    } else {
       dug.disabled = false; dug.textContent = 'Gönder';
-      balon('bot', h.aktivasyon
+      balon('bot', postaHatasi.aktivasyon
         ? 'Destek e-postası ilk kez kuruluyor: site sahibinin adresine bir doğrulama postası gitti. Doğrulandıktan sonra gönderebileceksin; acilse ' + esc(AYAR.eposta) + ' adresine doğrudan yazabilirsin.'
-        : 'Gönderilemedi: ' + esc(h.message) + '. Doğrudan ' + esc(AYAR.eposta) + ' adresine yazabilirsin.');
+        : 'Gönderilemedi: ' + esc(postaHatasi.message) + '. Doğrudan ' + esc(AYAR.eposta) + ' adresine yazabilirsin.');
     }
   };
   $('#asistanForm').onsubmit = ev => {
