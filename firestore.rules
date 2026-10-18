@@ -547,7 +547,7 @@ service cloud.firestore {
 
     function dolapAlanlari() {
       return ['sahipId', 'sahipAd', 'sahipFoto', 'baslik', 'marka', 'kategori', 'beden',
-              'renk', 'aciklama', 'gunlukUcret', 'depozito', 'fotolar', 'aktif', 'olusturma', 'sozlesme', 'onay', 'redNeden'];
+              'renk', 'aciklama', 'gunlukUcret', 'depozito', 'fotolar', 'aktif', 'olusturma', 'sozlesme', 'onay', 'redNeden', 'oneCikanBitis'];
     }
     function esyaGecerli() {
       let d = request.resource.data;
@@ -565,6 +565,7 @@ service cloud.firestore {
         && d.sozlesme == 'v1'
         && d.onay in ['bekliyor', 'onaylandi', 'reddedildi']
         && d.redNeden is string && d.redNeden.size() <= 200
+        && (d.get('oneCikanBitis', null) == null || d.oneCikanBitis is timestamp)
         && d.sahipAd is string && d.sahipAd.size() <= 80
         && d.sahipFoto is string && d.sahipFoto.size() <= 600;
     }
@@ -580,11 +581,12 @@ service cloud.firestore {
       allow update: if girisli() && eski().sahipId == benim() && !kisitli() && esyaGecerli()
         && yeni().sahipId == eski().sahipId
         && yeni().olusturma == eski().olusturma
+        && !degisenler().hasAny(['oneCikanBitis'])
         && (degisenler().hasOnly(['aktif'])
             || (yeni().onay == 'bekliyor' && yeni().redNeden == ''));
       /* admin: onay / red / yayından kaldırma */
       allow update: if dolapAdmin() && esyaGecerli()
-        && degisenler().hasOnly(['onay', 'redNeden', 'aktif']);
+        && degisenler().hasOnly(['onay', 'redNeden', 'aktif', 'oneCikanBitis']);
       allow delete: if girisli() && (eski().sahipId == benim() || dolapAdmin());
     }
 
@@ -731,6 +733,40 @@ service cloud.firestore {
         && (yeni().uid == '' || (girisli() && yeni().uid == benim()))
         && yeni().zaman == request.time;
       allow read: if dolapAdmin();
+      allow delete: if tamYetkili();
+    }
+
+    /* Öne çıkarma (boost): sahip talep açar ve ödemeyi bildirir; admin ödemeyi onaylayınca
+       süre başlar (bitiş = şimdi + paket süresi, 5 dk tolerans). Paket süreleri sabit. */
+    function paketGecerli(d) {
+      return (d.paket == 'saatlik' && d.saat == 1) || (d.paket == 'gunluk' && d.saat == 24)
+          || (d.paket == 'haftalik' && d.saat == 168) || (d.paket == 'aylik' && d.saat == 720);
+    }
+    match /dolapBoostlar/{boost} {
+      allow read: if girisli() && (resource.data.sahipId == benim() || dolapAdmin());
+      allow create: if girisli() && !kisitli()
+        && yeni().keys().hasOnly(['esyaId', 'esyaBaslik', 'esyaFoto', 'sahipId', 'sahipAd', 'paket', 'saat', 'fiyat',
+                                  'durum', 'baslangic', 'bitis', 'olusturma', 'guncelleme'])
+        && yeni().sahipId == benim()
+        && get(/databases/$(database)/documents/dolapEsyalar/$(yeni().esyaId)).data.sahipId == benim()
+        && paketGecerli(yeni())
+        && yeni().fiyat is number && yeni().fiyat > 0 && yeni().fiyat <= 100000
+        && yeni().durum == 'odeme_bekliyor' && yeni().baslangic == null && yeni().bitis == null
+        && yeni().esyaBaslik is string && yeni().esyaBaslik.size() <= 80
+        && yeni().esyaFoto is string && yeni().esyaFoto.size() <= 600
+        && yeni().sahipAd is string && yeni().sahipAd.size() <= 80
+        && yeni().olusturma == request.time && yeni().guncelleme == request.time;
+      allow update: if girisli() && yeni().guncelleme == request.time && (
+        (eski().sahipId == benim() && eski().durum == 'odeme_bekliyor'
+          && yeni().durum in ['odeme_bildirildi', 'iptal'] && degisenler().hasOnly(['durum', 'guncelleme']))
+        || (dolapAdmin() && eski().durum == 'odeme_bildirildi'
+          && yeni().durum in ['odeme_bekliyor', 'reddedildi'] && degisenler().hasOnly(['durum', 'guncelleme']))
+        || (dolapAdmin() && eski().durum == 'odeme_bildirildi' && yeni().durum == 'aktif'
+          && degisenler().hasOnly(['durum', 'guncelleme', 'baslangic', 'bitis'])
+          && yeni().baslangic == request.time
+          && yeni().bitis > request.time + duration.value(eski().saat * 60 - 5, 'm')
+          && yeni().bitis < request.time + duration.value(eski().saat * 60 + 5, 'm'))
+      );
       allow delete: if tamYetkili();
     }
 

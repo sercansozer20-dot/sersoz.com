@@ -219,5 +219,24 @@ export function demoVeri() {
         m('kullanici', 'Ezgi Aksoy', 'Çok teşekkürler!', 75)], sonZaman: ts(75 * 36e5) }
   ];
 
-  return { kullanicilar, esyalar, yorumlar, kiralamalar, uyeler, roller, olaylar, sohbetler };
+  /* öne çıkarma örnekleri: üç parça şu an öne çıkan, biri ödeme onayı bekliyor, Elif'in biri ödeme bekliyor */
+  const boostlar = [];
+  const PK = { saatlik: [1, 10], gunluk: [24, 39], haftalik: [168, 149], aylik: [720, 399] };
+  const boost = (e, paket, durum, kalanSaat) => {
+    const [saat, fiyat] = PK[paket];
+    const b = { id: 'demo-oc-' + boostlar.length, esyaId: e.id, esyaBaslik: e.baslik, esyaFoto: e.fotolar[0], sahipId: e.sahipId, sahipAd: e.sahipAd,
+      paket, saat, fiyat, durum, baslangic: null, bitis: null, olusturma: ts(aralik(2, 40) * 36e5), guncelleme: ts(aralik(0, 30) * 36e5) };
+    if (durum === 'aktif') { b.baslangic = ts((saat - kalanSaat) * 36e5); b.bitis = ts(-kalanSaat * 36e5); e.oneCikanBitis = b.bitis; }
+    boostlar.push(b);
+  };
+  const onayli = esyalar.filter(e => e.onay === 'onaylandi' && e.aktif && e.sahipId !== 'demo-0');
+  boost(onayli[2], 'haftalik', 'aktif', 96);
+  boost(onayli[9], 'gunluk', 'aktif', 7);
+  boost(onayli[17], 'aylik', 'aktif', 500);
+  boost(onayli[24], 'gunluk', 'odeme_bildirildi');
+  boost(onayli[30], 'saatlik', 'odeme_bildirildi');
+  const elifOnayli = esyalar.find(e => e.sahipId === 'demo-0' && e.onay === 'onaylandi' && e.aktif);
+  if (elifOnayli) boost(elifOnayli, 'haftalik', 'odeme_bekliyor');
+
+  return { kullanicilar, esyalar, yorumlar, kiralamalar, uyeler, roller, olaylar, sohbetler, boostlar };
 }

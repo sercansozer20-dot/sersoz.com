@@ -51,7 +51,7 @@ const DEMO = new URLSearchParams(location.search).has('demo');
 /* Örnek veri veritabanında (demoVeri koleksiyonu) paketlenmiş belgelerde durur: bir ziyaret ≈ 8 okuma.
    Zamanlar { __ms } olarak saklanır, okununca toMillis() olan nesneye çevrilir.
    Veritabanında yoksa tarayıcıda üretilir (elif-demo.js). Tam yetkili panelden yükler/siler. */
-const DEMO_BELGELER = ['esyalar', 'kiralamalar', 'uyeler', 'roller', 'sohbetler', 'yorumlar'];
+const DEMO_BELGELER = ['esyalar', 'kiralamalar', 'uyeler', 'roller', 'sohbetler', 'yorumlar', 'boostlar'];
 function demoPaketle(x) {
   if (x && typeof x.toMillis === 'function') return { __ms: x.toMillis() };
   if (Array.isArray(x)) return x.map(demoPaketle);
@@ -82,6 +82,21 @@ async function demoYukle() {
 }
 const D = DEMO ? await demoYukle() : null;
 
+/* Gerçek sayfada örnek ilanlar: veritabanındaki örnek parçalar "Örnek" rozetiyle Keşfet'te
+   gerçek ilanların arkasında görünür, kiralanamaz, yorumları örnek olarak işaretlenir.
+   Tam yetkili panelden "Örnek veriyi veritabanından sil" deyince kaybolur. */
+async function ornekYukle() {
+  try {
+    const [e, y] = await Promise.all([getDoc(doc(db, 'demoVeri', 'esyalar')), getDoc(doc(db, 'demoVeri', 'yorumlar'))]);
+    if (!e.exists()) return null;
+    return {
+      esyalar: demoAc(e.data().veri).filter(x => x.onay === 'onaylandi' && x.aktif).map(x => ({ ...x, ornek: true, oneCikanBitis: null })),
+      yorumlar: y.exists() ? demoAc(y.data().veri) : {}
+    };
+  } catch (h) { return null; }
+}
+const ORNEK = DEMO ? null : await ornekYukle();
+
 /* tam yetkili: örnek veriyi veritabanına yükle / sil */
 async function demoVeritabaninaYukle() {
   const v = demoVeri();
@@ -106,7 +121,7 @@ function demoEngel() {
 /* Yazma katmanı: örnek modda bellekteki veriyi değiştirir (sayfa yenilenince sıfırlanır),
    normalde Firestore'a yazar. Sunucu zamanı örnek modda tarayıcı saatidir. */
 const SIMDI = () => (DEMO ? (t => ({ toMillis: () => t }))(Date.now()) : serverTimestamp());
-const demoDizi = kol => ({ dolapEsyalar: D.esyalar, dolapKiralamalar: D.kiralamalar, dolapSohbet: D.sohbetler, dolapRoller: D.roller, dolapUyeler: D.uyeler })[kol];
+const demoDizi = kol => ({ dolapEsyalar: D.esyalar, dolapKiralamalar: D.kiralamalar, dolapSohbet: D.sohbetler, dolapRoller: D.roller, dolapUyeler: D.uyeler, dolapBoostlar: (D.boostlar = D.boostlar || []) })[kol];
 const demoAnahtar = kol => (kol === 'dolapRoller' ? 'eposta' : kol === 'dolapUyeler' ? 'uid' : 'id');
 async function dbEkle(kol, veri) {
   if (!DEMO) return addDoc(collection(db, kol), veri);
@@ -136,13 +151,18 @@ async function dbSil(kol, id) {
 async function esyaListesi(alan, deger) {
   if (D) return D.esyalar.filter(e => e[alan] === deger).map(e => ({ ...e }));
   const snap = await getDocs(query(collection(db, 'dolapEsyalar'), where(alan, '==', deger)));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const l = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return ORNEK && alan === 'onay' && deger === 'onaylandi' ? l.concat(ORNEK.esyalar.map(x => ({ ...x }))) : l;
 }
 async function esyaGetir(id) {
   if (D) {
     const e = D.esyalar.find(x => x.id === id);
     if (!e) throw { message: 'Bu parça bulunamadı ya da kaldırıldı.' };
     return { ...e };
+  }
+  if (ORNEK && id.startsWith('demo-')) {
+    const o = ORNEK.esyalar.find(x => x.id === id);
+    if (o) return { ...o };
   }
   const s = await getDoc(doc(db, 'dolapEsyalar', id));
   if (!s.exists()) throw { message: 'Bu parça bulunamadı ya da kaldırıldı.' };
@@ -153,7 +173,7 @@ async function kiraListesi(alan, deger) {
   return (await getDocs(query(collection(db, 'dolapKiralamalar'), where(alan, '==', deger)))).docs.map(d => ({ id: d.id, ...d.data() }));
 }
 /* Yorumlar şimdilik yalnız örnek modda var; gerçek yorum yazma sonraki adım. */
-const yorumlar = id => (D && D.yorumlar[id]) || [];
+const yorumlar = id => (D && D.yorumlar[id]) || (ORNEK && ORNEK.yorumlar[id]) || [];
 function puanOzeti(id) {
   const y = yorumlar(id);
   if (!y.length) return null;
@@ -387,7 +407,9 @@ window.addEventListener('hashchange', () => { window.scrollTo(0, 0); sayfaCiz();
 function esyaKarti(e, kendi) {
   return '<a class="esya" href="#esya/' + esc(e.id) + '">' +
     '<span class="foto"><img src="' + esc(e.fotolar[0]) + '" alt="" loading="lazy">' +
-      '<span class="etiket' + (e.aktif ? '' : ' pasif-etiket') + '">' + (e.aktif ? esc(KATEGORI[e.kategori] || '') : 'Yayında değil') + '</span></span>' +
+      '<span class="etiket' + (e.aktif ? '' : ' pasif-etiket') + '">' + (e.aktif ? esc(KATEGORI[e.kategori] || '') : 'Yayında değil') + '</span>' +
+      (e.aktif && oneCikanMi(e) ? '<span class="etiket one-cikan">★ Öne çıkan</span>' : '') +
+      (e.ornek ? '<span class="etiket ornek-etiket">Örnek</span>' : '') + '</span>' +
     '<h3>' + esc(e.baslik) + '</h3>' +
     (puanOzeti(e.id) ? '<span class="puan">★ ' + puanOzeti(e.id).ort + ' <span>(' + puanOzeti(e.id).adet + ')</span></span>' : '') +
     '<span class="alt"><span>' + esc([e.marka, e.beden].filter(Boolean).join(' · ')) + '</span><span class="fiyat">' + tl(e.gunlukUcret) + ' / gün</span></span>' +
@@ -446,6 +468,7 @@ async function kesfet(istek) {
     const puan = e => { const p = puanOzeti(e.id); return p ? parseFloat(p.ort.replace(',', '.')) : 0; };
     l.sort({ yeni: (a, b) => zaman(b.olusturma) - zaman(a.olusturma), ucuz: (a, b) => a.gunlukUcret - b.gunlukUcret,
       pahali: (a, b) => b.gunlukUcret - a.gunlukUcret, puan: (a, b) => puan(b) - puan(a) }[kesfetS.sira]);
+    l = l.filter(oneCikanMi).concat(l.filter(e => !oneCikanMi(e) && !e.ornek), l.filter(e => !oneCikanMi(e) && e.ornek));   // öne çıkan > gerçek > örnek
     $('#izgara').innerHTML = l.length ? l.map(e => esyaKarti(e, kullanici && e.sahipId === kullanici.uid)).join('')
       : '<div class="bos"><h3>' + (esyalar.length ? 'Bu filtreye uyan parça yok' : 'Dolaplar henüz boş') + '</h3><p>' +
         (esyalar.length ? 'Filtreleri gevşetmeyi deneyin.' : 'İlk parçayı sen ekle, kiraya veren ilk kişi ol.') + '</p>' +
@@ -517,7 +540,7 @@ async function esyaSayfasi(id, istek) {
         '<p class="kucuk" style="margin-top:4px"><a href="elif-sozlesme.html" target="_blank" style="text-decoration:underline">Kiralama şartları</a> · geç iade ve teslim etmeme kuralları</p>' +
         (e.aciklama ? '<p class="aciklama">' + esc(e.aciklama) + '</p>' : '') +
         '<p class="sahip" style="margin-top:14px">' + (e.sahipFoto ? '<img src="' + esc(e.sahipFoto) + '" alt="" referrerpolicy="no-referrer">' : '') + esc(e.sahipAd) + '\'nin dolabından</p>' +
-        adminEsyaAraclari(e) +
+        (e.ornek ? '' : adminEsyaAraclari(e)) +
         '<div class="kutu" id="kiraKutu"></div>' +
       '</div>' +
     '</div>' +
@@ -542,6 +565,11 @@ async function esyaSayfasi(id, istek) {
   };
 
   const kutu = $('#kiraKutu');
+  if (e.ornek) {
+    kutu.innerHTML = '<h2>Örnek ilan</h2><p class="kucuk">Bu parça sitenin nasıl çalıştığını göstermek için konmuş örnek bir ilandır; kiralanamaz. ' +
+      'Gerçek ilanlarda "Örnek" rozeti bulunmaz. Kendi parçanı kiraya vermek için <a href="#dolabim" style="text-decoration:underline">Dolabım</a>\'a git.</p>';
+    return;
+  }
   if (kendi) {
     kutu.innerHTML = '<h2>Bu parça senin dolabında</h2><p class="kucuk" style="margin-bottom:12px">' +
       (e.onay === 'bekliyor' ? 'Ekip onayı bekliyor; onaylanınca Keşfet\'te görünür.' : e.onay === 'reddedildi' ? 'Reddedildi: ' + esc(e.redNeden) : e.aktif ? 'Keşfet\'te görünüyor.' : 'Şu an yayında değil.') + '</p>' +
@@ -615,7 +643,8 @@ async function esyaSayfasi(id, istek) {
 function yorumBolumu(id) {
   const y = yorumlar(id);
   const tarih = t => new Date(t.toMillis()).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' });
-  return '<section class="yorumlar" aria-labelledby="yorumBas"><h2 id="yorumBas">Yorumlar' +
+  const ornekMi = ORNEK && String(id).startsWith('demo-');
+  return '<section class="yorumlar" aria-labelledby="yorumBas"><h2 id="yorumBas">Yorumlar' + (ornekMi ? ' <span class="kucuk">(örnek)</span>' : '') +
     (y.length ? ' <span class="kucuk">(' + y.length + ')</span>' : '') + '</h2>' +
     (y.length ? y.map(x =>
       '<article class="yorum"><img src="' + esc(x.foto) + '" alt=""><div>' +
@@ -640,6 +669,11 @@ async function dolabim(istek) {
     return;
   }
   if (istek !== aktifIstek) return;
+  const ocHtml = await boostlarimHTML();
+  if (istek !== aktifIstek) return;
+  if (ocHtml) $('#liste').insertAdjacentHTML('beforebegin', '<div id="ocBolum">' + ocHtml + '</div>');
+  const ocB = $('#ocBolum');
+  if (ocB) ocB.onclick = ev => { const b = ev.target.closest('[data-oc]'); if (b) boostDurum(b.dataset.ocId, b.dataset.oc); };
   if (!l.length) {
     $('#liste').innerHTML = '<div class="bos"><h3>Dolabın boş</h3><p>Kiraya vermek istediğin ilk parçayı ekle.</p><button type="button" class="dug dug-vurgu" id="ilkEsya">+ Eşya ekle</button></div>';
     $('#ilkEsya').onclick = () => esyaFormu();
@@ -653,14 +687,18 @@ async function dolabim(istek) {
           : e.onay === 'reddedildi' ? '<span class="durum d-reddedildi">Reddedildi</span> <span class="kucuk">' + esc(e.redNeden) + '</span>'
           : e.aktif ? '<span class="durum d-onaylandi">Yayında</span>' : '<span class="durum">Yayında değil</span>') + '</p></div>' +
       '<div class="eylem">' +
+        (e.onay === 'onaylandi' && e.aktif && !oneCikanMi(e) ? '<button type="button" class="dug dug-kucuk dug-vurgu" data-onecikar="' + esc(e.id) + '">★ Öne çıkar</button>' : '') +
+        (oneCikanMi(e) ? '<span class="durum d-onaylandi">★ ' + kalanSure(zaman(e.oneCikanBitis)) + ' kaldı</span>' : '') +
         '<button type="button" class="dug dug-kucuk" data-duzenle="' + esc(e.id) + '">Düzenle</button>' +
         '<button type="button" class="dug dug-kucuk" data-yayin="' + esc(e.id) + '">' + (e.aktif ? 'Yayından kaldır' : 'Yayınla') + '</button>' +
         '<button type="button" class="dug dug-kucuk dug-tehlike" data-sil="' + esc(e.id) + '">Sil</button>' +
       '</div></div>').join('');
   $('#liste').onclick = async ev => {
     const b = ev.target.closest('button'); if (!b) return;
-    const e = l.find(x => x.id === (b.dataset.duzenle || b.dataset.yayin || b.dataset.sil));
+    if (b.dataset.oc) return boostDurum(b.dataset.ocId, b.dataset.oc);
+    const e = l.find(x => x.id === (b.dataset.duzenle || b.dataset.yayin || b.dataset.sil || b.dataset.onecikar));
     if (!e) return;
+    if (b.dataset.onecikar) return oneCikarFormu(e);
     
     try {
       if (b.dataset.duzenle) return esyaFormu(e);
@@ -903,6 +941,142 @@ function kiraSatiri(k, gorunum) {
     '<div class="eylem">' + eylem + '</div>' + gecikmeHTML(k) + ek + '</div>';
 }
 
+/* ---------------------------------------------------------------- ÖNE ÇIKARMA (boost)
+ * dolapBoostlar/{id}: { esyaId, esyaBaslik, esyaFoto, sahipId, sahipAd, paket, saat, fiyat,
+ *   durum: odeme_bekliyor → odeme_bildirildi → aktif | reddedildi | iptal, baslangic, bitis, olusturma, guncelleme }
+ * Admin ödemeyi onaylayınca süre başlar ve parçaya oneCikanBitis yazılır; Keşfet bunu en üste alır. */
+const PAKETLER = (AYAR.oneCikarma && AYAR.oneCikarma.length ? AYAR.oneCikarma : [
+  { paket: 'saatlik', ad: '1 saat', saat: 1, fiyat: 10 },
+  { paket: 'gunluk', ad: '1 gün', saat: 24, fiyat: 39 },
+  { paket: 'haftalik', ad: '1 hafta', saat: 168, fiyat: 149 },
+  { paket: 'aylik', ad: '1 ay', saat: 720, fiyat: 399 }
+]);
+const BOOST_DURUM = { odeme_bekliyor: 'Ödeme bekleniyor', odeme_bildirildi: 'Ödeme kontrol ediliyor', aktif: 'Öne çıkarıldı', reddedildi: 'Reddedildi', iptal: 'İptal edildi' };
+const oneCikanMi = e => !e.ornek && zaman(e.oneCikanBitis) > Date.now();
+function kalanSure(ms) {
+  const dk = Math.max(0, Math.round((ms - Date.now()) / 6e4));
+  if (dk >= 1440) return Math.round(dk / 1440) + ' gün';
+  if (dk >= 60) return Math.round(dk / 60) + ' saat';
+  return dk + ' dk';
+}
+const ocKod = id => 'OC-' + String(id).replace(/^demo-/, '').slice(0, 6).toUpperCase();
+async function boostListesi(alan, deger) {
+  if (D) return (D.boostlar || []).filter(b => !alan || b[alan] === deger).map(b => ({ ...b }));
+  const q = alan ? query(collection(db, 'dolapBoostlar'), where(alan, '==', deger)) : collection(db, 'dolapBoostlar');
+  return (await getDocs(q)).docs.map(d => ({ id: d.id, ...d.data() }));
+}
+function odemeBilgisiHTML(tutar, kod) {
+  const h = AYAR.havale || {};
+  return '<b>Ödeme: ' + tl(tutar) + '</b><br>' +
+    (h.iban ? 'Alıcı: ' + esc(h.hesapSahibi) + (h.banka ? ' · ' + esc(h.banka) : '') + '<br>IBAN: <span class="iban">' + esc(h.iban) + '</span><br>'
+      : 'Banka bilgileri için <a href="mailto:' + esc(AYAR.eposta) + '?subject=' + encodeURIComponent('Öne çıkarma ödemesi ' + kod) + '" style="text-decoration:underline">' + esc(AYAR.eposta) + '</a> adresine yazın.<br>') +
+    'Açıklamaya mutlaka <b>' + kod + '</b> yazın, ödeme geçince "Ödemeyi yaptım"a basın.';
+}
+
+/* Paket seçimi penceresi */
+function oneCikarFormu(e) {
+  if (rol === 'kisitli') { bildir('Hesabın kısıtlandı; öne çıkarma satın alamazsın.'); return; }
+  const p = $('#pencere');
+  p.innerHTML = '<div class="pencere-ic"><h2 id="pencereBas">★ Öne çıkar</h2>' +
+    '<p class="kucuk" style="margin-bottom:14px"><b>' + esc(e.baslik) + '</b> Keşfet\'te en üstte, "Öne çıkan" rozetiyle gösterilir. Süre, ödemen onaylandığı anda başlar.</p>' +
+    '<div class="paketler">' + PAKETLER.map((k, i) =>
+      '<label class="paket"><input type="radio" name="paket" value="' + i + '"' + (i === 1 ? ' checked' : '') + '><span class="paket-ad">' + esc(k.ad) + '</span>' +
+      '<span class="paket-fiyat">' + tl(k.fiyat) + '</span><span class="kucuk">' + (k.saat >= 24 ? tl(Math.round(k.fiyat / (k.saat / 24))) + ' / gün' : 'Kısa kampanya') + '</span></label>').join('') + '</div>' +
+    '<p class="hata" id="ocHata" role="alert"></p>' +
+    '<div class="pencere-alt"><button type="button" class="dug" id="ocVazgec">Vazgeç</button><button type="button" class="dug dug-vurgu" id="ocTamam">Devam et</button></div></div>';
+  p.hidden = false; document.body.style.overflow = 'hidden';
+  const kapat = () => { p.hidden = true; p.innerHTML = ''; document.body.style.overflow = ''; };
+  $('#ocVazgec').onclick = kapat;
+  p.onclick = ev => { if (ev.target === p) kapat(); };
+  $('#ocTamam').onclick = async () => {
+    const k = PAKETLER[+p.querySelector('input[name=paket]:checked').value];
+    const dug = $('#ocTamam'); dug.disabled = true;
+    try {
+      await dbEkle('dolapBoostlar', {
+        esyaId: e.id, esyaBaslik: e.baslik.slice(0, 80), esyaFoto: (e.fotolar[0] || '').slice(0, 600), sahipId: kullanici.uid,
+        sahipAd: (kullanici.displayName || '').slice(0, 80), paket: k.paket, saat: k.saat, fiyat: k.fiyat,
+        durum: 'odeme_bekliyor', baslangic: null, bitis: null, olusturma: SIMDI(), guncelleme: SIMDI()
+      });
+      kapat();
+      bildir('Talep oluşturuldu. Ödeme bilgileri Dolabım\'ın üstünde.');
+      sayfaCiz();
+    } catch (h) { $('#ocHata').textContent = hataMetni(h); dug.disabled = false; }
+  };
+}
+
+/* Dolabım'ın üstünde: öne çıkarma taleplerim */
+async function boostlarimHTML() {
+  let l;
+  try { l = (await boostListesi('sahipId', kullanici.uid)).filter(b => b.durum !== 'iptal' && !(b.durum === 'aktif' && zaman(b.bitis) < Date.now() - 864e5)); }
+  catch (e) { return ''; }
+  if (!l.length) return '';
+  l.sort((a, b) => zaman(b.guncelleme) - zaman(a.guncelleme));
+  return '<section class="kutu" style="margin:0 0 18px"><h2>★ Öne çıkarmalarım</h2><div class="liste">' + l.map(b => {
+    const aktif = b.durum === 'aktif' && zaman(b.bitis) > Date.now();
+    return '<div class="satir"><img class="k" src="' + esc(b.esyaFoto) + '" alt=""><div><h3>' + esc(b.esyaBaslik) + '</h3>' +
+      '<p class="kira-detay">' + esc((PAKETLER.find(k => k.paket === b.paket) || {}).ad || b.paket) + ' · <b>' + tl(b.fiyat) + '</b> · <span class="kucuk">' + ocKod(b.id) + '</span></p>' +
+      '<p class="kira-detay"><span class="durum ' + (aktif ? 'd-onaylandi' : b.durum === 'reddedildi' ? 'd-reddedildi' : b.durum === 'aktif' ? '' : 'd-beklemede') + '">' +
+        (aktif ? '★ Öne çıkan · ' + kalanSure(zaman(b.bitis)) + ' kaldı' : b.durum === 'aktif' ? 'Süresi doldu' : BOOST_DURUM[b.durum]) + '</span></p></div>' +
+      '<div class="eylem">' + (b.durum === 'odeme_bekliyor' ? '<button type="button" class="dug dug-kucuk dug-vurgu" data-oc="odeme_bildirildi" data-oc-id="' + esc(b.id) + '">Ödemeyi yaptım</button>' +
+        '<button type="button" class="dug dug-kucuk dug-tehlike" data-oc="iptal" data-oc-id="' + esc(b.id) + '">İptal</button>' : '') + '</div>' +
+      (b.durum === 'odeme_bekliyor' ? '<div class="odeme-kutu">' + odemeBilgisiHTML(b.fiyat, ocKod(b.id)) + '</div>' : '') +
+      (b.durum === 'odeme_bildirildi' ? '<div class="odeme-kutu">Ödemen kontrol ediliyor. Onaylandığı anda süre başlar.</div>' : '') +
+      '</div>';
+  }).join('') + '</div></section>';
+}
+async function boostDurum(id, y) {
+  try { await dbGuncelle('dolapBoostlar', id, { durum: y, guncelleme: SIMDI() }); bildir(BOOST_DURUM[y]); sayfaCiz(); }
+  catch (h) { bildir(hataMetni(h)); }
+}
+
+/* Panel: öne çıkarma ödemeleri ve aktif paketler */
+async function panelOneCikar(panel, istek) {
+  const l = await boostListesi();
+  if (istek !== aktifIstek) return;
+  const bekleyen = l.filter(b => b.durum === 'odeme_bildirildi').sort((a, b) => zaman(a.guncelleme) - zaman(b.guncelleme));
+  const aktif = l.filter(b => b.durum === 'aktif' && zaman(b.bitis) > Date.now()).sort((a, b) => zaman(a.bitis) - zaman(b.bitis));
+  const odemeYok = l.filter(b => b.durum === 'odeme_bekliyor');
+  const ciro = l.filter(b => b.durum === 'aktif').reduce((t, b) => t + (b.fiyat || 0), 0);
+  const satir = (b, eylem, alt) => '<div class="satir"><img class="k" src="' + esc(b.esyaFoto) + '" alt=""><div><h3><a href="#esya/' + esc(b.esyaId) + '">' + esc(b.esyaBaslik) + '</a></h3>' +
+    '<p class="kira-detay">' + esc(b.sahipAd) + ' · ' + esc((PAKETLER.find(k => k.paket === b.paket) || {}).ad || b.paket) + ' · <b>' + tl(b.fiyat) + '</b> · <span class="kucuk">' + ocKod(b.id) + '</span></p>' +
+    (alt ? '<p class="kira-detay">' + alt + '</p>' : '') + '</div><div class="eylem">' + eylem + '</div></div>';
+  panel.innerHTML =
+    '<div class="sayaclar">' + [['Ödeme onayı bekleyen', bekleyen.length], ['Şu an öne çıkan', aktif.length], ['Ödeme yapılmamış', odemeYok.length], ['Toplam gelir', tl(ciro)]]
+      .map(([a, s]) => '<div class="sayac"><b>' + s + '</b><span>' + a + '</span></div>').join('') + '</div>' +
+    '<section class="kutu"><h2>Ödeme onayı bekleyenler</h2>' + (bekleyen.length ? '<div class="liste">' + bekleyen.map(b => satir(b,
+      '<button type="button" class="dug dug-kucuk dug-vurgu" data-baslat="' + esc(b.id) + '">Ödeme geldi, başlat</button>' +
+      '<button type="button" class="dug dug-kucuk" data-odemeyok="' + esc(b.id) + '">Ödeme bulunamadı</button>' +
+      '<button type="button" class="dug dug-kucuk dug-tehlike" data-boostred="' + esc(b.id) + '">Reddet</button>')).join('') + '</div>'
+      : '<p class="kucuk">Bekleyen ödeme yok.</p>') + '</section>' +
+    '<section class="kutu"><h2>Şu an öne çıkan parçalar</h2>' + (aktif.length ? '<div class="liste">' + aktif.map(b => satir(b, '',
+      '<span class="durum d-onaylandi">★ ' + kalanSure(zaman(b.bitis)) + ' kaldı</span> <span class="kucuk">bitiş ' + tarihSaat(b.bitis) + '</span>')).join('') + '</div>'
+      : '<p class="kucuk">Şu an öne çıkarılmış parça yok.</p>') + '</section>' +
+    '<p class="kucuk" style="margin-top:12px">Paket fiyatları ayarlar.js → oneCikarma. Referans kodu (OC-…) havale açıklamasında olmalı.</p>';
+  panel.onclick = async ev => {
+    const b = ev.target.closest('[data-baslat],[data-odemeyok],[data-boostred]'); if (!b) return;
+    const k = l.find(x => x.id === (b.dataset.baslat || b.dataset.odemeyok || b.dataset.boostred));
+    try {
+      if (b.dataset.baslat) {
+        const bitisMs = Date.now() + k.saat * 36e5;
+        const bitis = DEMO ? { toMillis: () => bitisMs } : Timestamp.fromMillis(bitisMs);
+        if (DEMO) {
+          await dbGuncelle('dolapBoostlar', k.id, { durum: 'aktif', baslangic: SIMDI(), bitis, guncelleme: SIMDI() });
+          await dbGuncelle('dolapEsyalar', k.esyaId, { oneCikanBitis: bitis });
+        } else {
+          const t = writeBatch(db);
+          t.update(doc(db, 'dolapBoostlar', k.id), { durum: 'aktif', baslangic: serverTimestamp(), bitis, guncelleme: serverTimestamp() });
+          t.update(doc(db, 'dolapEsyalar', k.esyaId), { oneCikanBitis: bitis });
+          await t.commit();
+        }
+        bildir('Başlatıldı: ' + k.esyaBaslik + ' · ' + kalanSure(bitisMs));
+      }
+      if (b.dataset.odemeyok) await dbGuncelle('dolapBoostlar', k.id, { durum: 'odeme_bekliyor', guncelleme: SIMDI() });
+      if (b.dataset.boostred) { if (!confirm('Talep reddedilsin mi?')) return; await dbGuncelle('dolapBoostlar', k.id, { durum: 'reddedildi', guncelleme: SIMDI() }); }
+      sayfaCiz();
+    } catch (h) { bildir(hataMetni(h)); }
+  };
+}
+
 /* ---------------------------------------------------------------- YÖNETİM PANELİ (#yonetim/...) */
 const SAYFA_AD = { kesfet: 'Keşfet', esya: 'Parça sayfası', dolabim: 'Dolabım', kiralamalar: 'Kiralamalarım', hesabim: 'Hesabım', yonetim: 'Yönetim' };
 
@@ -912,17 +1086,18 @@ async function yonetim(sekme, ek, istek) {
     icerik.innerHTML = '<div class="bos"><h3>Bu sayfaya erişim yetkin yok</h3><p>Yönetim paneli yalnız adminlere açıktır.</p><a class="dug" href="#kesfet">Keşfet\'e dön</a></div>';
     return;
   }
-  const sekmeler = [['ozet', 'Özet'], ['onay', 'Onay bekleyenler'], ['gelen', 'Gelen kutusu'], ['kullanicilar', 'Kullanıcılar']]
+  const sekmeler = [['ozet', 'Özet'], ['onay', 'Onay bekleyenler'], ['onecikar', 'Öne çıkarma'], ['gelen', 'Gelen kutusu'], ['kullanicilar', 'Kullanıcılar']]
     .concat(tamMi() ? [['yoneticiler', 'Admin atama']] : []).concat([['odemeler', 'Ödemeler']]);
   icerik.innerHTML = '<div class="bas"><div><h1>Yönetim paneli</h1><p>' + ROL_AD[rol] + ' olarak giriş yaptın.</p></div></div>' +
     '<div class="alt-sekme">' + sekmeler.map(([k, ad]) =>
       '<a class="cip" href="#yonetim/' + k + '" aria-pressed="' + (sekme === k || (sekme === 'kisi' && k === 'kullanicilar')) + '">' + ad +
-      (k === 'onay' || k === 'gelen' ? ' <span class="sayi" id="sayi-' + k + '" hidden></span>' : '') + '</a>').join('') + '</div>' +
+      (k === 'onay' || k === 'gelen' || k === 'onecikar' ? ' <span class="sayi" id="sayi-' + k + '" hidden></span>' : '') + '</a>').join('') + '</div>' +
     '<div id="panel"><p class="yukleniyor">Yükleniyor…</p></div>';
   const panel = $('#panel');
   rozetSayilari();
   try {
     if (sekme === 'onay') await panelOnay(panel, istek);
+    else if (sekme === 'onecikar') await panelOneCikar(panel, istek);
     else if (sekme === 'gelen') await panelGelen(panel, ek, istek);
     else if (sekme === 'kullanicilar') await panelKullanicilar(panel, istek);
     else if (sekme === 'kisi' && ek) await panelKisi(panel, ek, istek);
@@ -935,10 +1110,11 @@ async function yonetim(sekme, ek, istek) {
 }
 async function rozetSayilari() {
   try {
-    const [bek, soh] = await Promise.all([esyaListesi('onay', 'bekliyor'), sohbetListesi()]);
+    const [bek, soh, oc] = await Promise.all([esyaListesi('onay', 'bekliyor'), sohbetListesi(), boostListesi('durum', 'odeme_bildirildi')]);
     const yaz = (id, n) => { const s = $('#sayi-' + id); if (s) { s.textContent = n; s.hidden = !n; } };
     yaz('onay', bek.length);
     yaz('gelen', soh.filter(x => !x.adminOkudu).length);
+    yaz('onecikar', oc.length);
   } catch (e) {}
 }
 

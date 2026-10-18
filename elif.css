@@ -307,3 +307,15 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 .ilet-form textarea { resize: vertical; }
 .ilet-form button { justify-self: start; }
 .asistan .mesaj:has(.ilet-form) { max-width: 100%; width: 100%; }
+
+/* öne çıkarma */
+.esya .one-cikan { left: auto; right: 10px; background: #2a1f1e; color: #ffd27a; }
+.paketler { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.paket { position: relative; display: grid; gap: 2px; border: 1.5px solid var(--cizgi); border-radius: 14px; padding: 14px; cursor: pointer; }
+.paket:has(input:checked) { border-color: var(--vurgu); background: var(--vurgu-acik); }
+.paket input { position: absolute; opacity: 0; pointer-events: none; }
+.paket-ad { font-weight: 700; }
+.paket-fiyat { font-family: var(--serif); font-size: 24px; font-weight: 600; }
+@media (max-width: 420px) { .paketler { grid-template-columns: 1fr; } }
+
+.esya .ornek-etiket { left: auto; right: 10px; background: rgba(42, 31, 30, .78); color: #fff; }

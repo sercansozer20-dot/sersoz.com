@@ -41,6 +41,15 @@ window.SERSOZ_AYAR = {
     'Hafta içi saat 15:00\'e kadar verilen siparişler aynı gün kargoda'
   ],
 
+  /* Elif'in Dolabı · öne çıkarma paketleri. Fiyatları değiştirebilirsiniz; "saat" değerlerini
+     değiştirmeyin (firestore.rules ile eşleşir: 1 / 24 / 168 / 720). */
+  oneCikarma: [
+    { paket: 'saatlik', ad: '1 saat', saat: 1, fiyat: 10 },
+    { paket: 'gunluk', ad: '1 gün', saat: 24, fiyat: 39 },
+    { paket: 'haftalik', ad: '1 hafta', saat: 168, fiyat: 149 },
+    { paket: 'aylik', ad: '1 ay (30 gün)', saat: 720, fiyat: 399 }
+  ],
+
   /* Kargo: fiziksel ürünlerde uygulanır. ucretsizEsik üstünde kargo bedava. */
   kargo: { ucret: 150, ucretsizEsik: 2000 }
 };
