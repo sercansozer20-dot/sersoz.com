@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018f';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261018g';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -1564,8 +1564,8 @@ function asistanKur() {
     } else {
       dug.disabled = false; dug.textContent = 'Gönder';
       balon('bot', postaHatasi.aktivasyon
-        ? 'Destek e-postası henüz etkinleştirilmemiş: yetkililere bir doğrulama postası gitti. Etkinleştirildikten sonra gönderebileceksin; acilse ' + esc(AYAR.eposta) + ' adresine doğrudan yazabilirsin.'
-        : 'Gönderilemedi: ' + esc(postaHatasi.message) + '. Doğrudan ' + esc(AYAR.eposta) + ' adresine yazabilirsin.');
+        ? 'Destek ekibi kanalı henüz hazır değil. Destek ekibi kanalı etkinleştirilince gönderebileceksin; lütfen biraz sonra tekrar dene.'
+        : 'Mesajın şu an destek ekibine iletilemedi; lütfen biraz sonra tekrar dene.');
     }
   };
   $('#asistanForm').onsubmit = ev => {
