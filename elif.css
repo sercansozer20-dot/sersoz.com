@@ -435,3 +435,4 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 .begeni-dug.uzun { position: static; box-shadow: none; border: 1px solid var(--cizgi); background: var(--kart); padding: 8px 14px; font-size: 14px; }
 .begeni-satir { margin-top: 14px; }
 #kgIadeYeni { margin-top: 8px; min-height: 64px; }
+.satir > .kazanc { grid-column: 1 / -1; margin-top: 0; }
