@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ürün — SERSOZ Mağaza</title>
+<meta name="description" content="SERSOZ Mağaza ürün sayfası.">
+<meta name="theme-color" content="#c2410c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2317140f'/%3E%3Ctext x='32' y='45' font-family='Consolas,monospace' font-size='36' font-weight='700' fill='%23f97316' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="magaza.css">
+<script>try{var t=localStorage.getItem('sersoz_tema');if(t==='koyu'||t==='acik')document.documentElement.setAttribute('data-tema',t)}catch(e){}</script>
+</head>
+<body data-sayfa="urunler">
+<a class="atla" href="#icerik">İçeriğe atla</a>
+<header id="ust"></header>
+
+<main class="kap" id="icerik">
+  <nav class="iz" aria-label="Konum"><a href="index.html">Mağaza</a> / <a href="index.html#urunler">Ürünler</a> / <span id="izAd"></span></nav>
+  <div id="urun"></div>
+  <section class="bolum" aria-labelledby="benzerBas" id="benzerBolum">
+    <div class="bolum-bas"><h2 id="benzerBas" style="font-size:26px">Bunlar da ilginizi çekebilir</h2></div>
+    <div class="izgara" id="benzer"></div>
+  </section>
+</main>
+
+<footer id="alt"></footer>
+
+<script src="ayarlar.js"></script>
+<script src="urunler.js"></script>
+<script src="magaza.js"></script>
+<script>
+(function () {
+  'use strict';
+  var M = window.Magaza, A = M.ayar;
+  var id = new URLSearchParams(location.search).get('id');
+  var u = M.bul(id);
+  var kap = document.getElementById('urun');
+
+  if (!u) {
+    document.title = 'Ürün bulunamadı — SERSOZ Mağaza';
+    document.getElementById('izAd').textContent = 'Bulunamadı';
+    kap.innerHTML = '<div class="sonuc"><h1>Ürün bulunamadı</h1><p class="kucuk" style="font-size:16px;margin-bottom:22px">Bu ürün kaldırılmış ya da bağlantı hatalı olabilir.</p><a class="dug dug-ana" href="index.html#urunler">Tüm ürünlere dön</a></div>';
+    document.getElementById('benzerBolum').hidden = true;
+    return;
+  }
+
+  document.title = u.ad + ' — SERSOZ Mağaza';
+  var md = document.querySelector('meta[name=description]');
+  md.setAttribute('content', u.kisa + ' Fiyat: ' + M.tl(u.fiyat) + '.');
+  document.getElementById('izAd').textContent = u.ad;
+
+  var tik = M.ikon.tik;
+  var odemeYazi = 'Havale/EFT' + (u.shopier ? ' veya kartla (Shopier güvenli ödeme)' : '') + ' ile ödeme';
+  var sor = A.whatsapp
+    ? '<a class="dug dug-cizgi" href="https://wa.me/' + M.esc(A.whatsapp) + '?text=' + encodeURIComponent(u.ad + ' hakkında bilgi almak istiyorum.') + '" rel="noopener">' + M.ikon.mesaj + 'WhatsApp ile sor</a>'
+    : '<a class="dug dug-cizgi" href="mailto:' + M.esc(A.eposta) + '?subject=' + encodeURIComponent('Soru: ' + u.ad) + '">' + M.ikon.mesaj + 'Soru sor</a>';
+
+  kap.innerHTML =
+    '<div class="urun-izgara">' +
+      '<div class="urun-gorsel">' + M.gorsel(u) + '</div>' +
+      '<div class="urun-bilgi">' +
+        '<span class="kart-tur">' + M.esc(M.tur[u.tur]) + (u.rozet ? ' · ' + M.esc(u.rozet) : '') + '</span>' +
+        '<h1>' + M.esc(u.ad) + '</h1>' +
+        '<p class="aciklama">' + M.esc(u.aciklama || u.kisa) + '</p>' +
+        '<div class="urun-fiyat">' + M.fiyatHTML(u) + '</div>' +
+        '<p class="kucuk">' + (A.kdvOrani ? 'KDV hariç' : 'Son fiyattır, ek ücret yoktur') + (u.tur === 'urun' && A.kargo ? ' · ' + M.tl(A.kargo.ucretsizEsik) + ' üzeri kargo ücretsiz' : '') + '</p>' +
+        '<div class="satin-al">' +
+          '<span class="adet adet-buyuk" role="group" aria-label="Adet"><button type="button" id="adetAz" aria-label="Azalt">−</button><span id="adetDeger">1</span><button type="button" id="adetArt" aria-label="Arttır">+</button></span>' +
+          '<button type="button" class="dug dug-ana dug-buyuk" data-ekle="' + M.esc(u.id) + '" data-adet-alan="adetDeger">Sepete ekle</button>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="dug dug-koyu" id="hemenAl">Hemen satın al</button>' + sor + '</div>' +
+        (u.ozellikler && u.ozellikler.length
+          ? '<ul class="ozellik-listesi">' + u.ozellikler.map(function (o) { return '<li>' + tik + '<span>' + M.esc(o) + '</span></li>'; }).join('') + '</ul>' : '') +
+        '<div class="bilgi-kutusu">' +
+          '<div>' + M.ikon.kamyon + '<span><strong>Teslimat</strong>' + M.esc(u.teslim || 'Sipariş sonrası e-postayla bilgilendirilirsiniz') + '</span></div>' +
+          '<div>' + M.ikon.kalkan + '<span><strong>Ödeme</strong>' + odemeYazi + '. Kart bilgileriniz bu siteye girilmez.</span></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  var adet = document.getElementById('adetDeger');
+  document.getElementById('adetAz').onclick = function () { adet.textContent = Math.max(1, +adet.textContent - 1); };
+  document.getElementById('adetArt').onclick = function () { adet.textContent = Math.min(99, +adet.textContent + 1); };
+  document.getElementById('hemenAl').onclick = function () {
+    M.sepet.ekle(u.id, +adet.textContent);
+    location.href = 'sepet.html';
+  };
+
+  var benzer = M.urunler.filter(function (x) { return x.id !== u.id; })
+    .sort(function (a, b) { return (b.tur === u.tur) - (a.tur === u.tur); }).slice(0, 3);
+  document.getElementById('benzer').innerHTML = benzer.map(M.kart).join('');
+})();
+</script>
+</body>
+</html>

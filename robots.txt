@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /old-version/
+Disallow: /sepet.html
+Disallow: /siparis.html

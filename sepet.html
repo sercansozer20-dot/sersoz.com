@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sepet ve Ödeme — SERSOZ Mağaza</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#c2410c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2317140f'/%3E%3Ctext x='32' y='45' font-family='Consolas,monospace' font-size='36' font-weight='700' fill='%23f97316' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="magaza.css">
+<script>try{var t=localStorage.getItem('sersoz_tema');if(t==='koyu'||t==='acik')document.documentElement.setAttribute('data-tema',t)}catch(e){}</script>
+</head>
+<body data-sayfa="sepet">
+<a class="atla" href="#icerik">İçeriğe atla</a>
+<header id="ust"></header>
+
+<main class="kap" id="icerik">
+  <nav class="iz" aria-label="Konum"><a href="index.html">Mağaza</a> / Sepet ve ödeme</nav>
+  <h1 style="font-size:clamp(28px,4vw,38px);font-weight:800;margin:14px 0 22px">Siparişi tamamla</h1>
+
+  <div id="bos" hidden class="panel" style="text-align:center;padding:48px 20px">
+    <h2 style="justify-content:center">Sepetiniz boş</h2>
+    <p class="kucuk" style="font-size:15px;margin-bottom:20px">Sipariş vermek için önce ürün ekleyin.</p>
+    <a class="dug dug-ana" href="index.html#urunler">Ürünlere göz at</a>
+  </div>
+
+  <form id="form" class="odeme-izgara" novalidate hidden>
+    <div>
+      <section class="panel" aria-labelledby="b1">
+        <h2 id="b1"><span class="no">1</span>İletişim bilgileri</h2>
+        <div class="form-izgara">
+          <div class="alan"><label for="ad">Ad soyad</label><input id="ad" name="ad" required autocomplete="name"></div>
+          <div class="alan"><label for="firma">Firma <span class="ist">(isteğe bağlı)</span></label><input id="firma" name="firma" autocomplete="organization"></div>
+          <div class="alan"><label for="eposta">E-posta</label><input id="eposta" name="eposta" type="email" required autocomplete="email" inputmode="email"></div>
+          <div class="alan"><label for="telefon">Telefon</label><input id="telefon" name="telefon" type="tel" required autocomplete="tel" inputmode="tel" placeholder="05xx xxx xx xx"></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="b2" id="adresPanel">
+        <h2 id="b2"><span class="no">2</span>Teslimat adresi</h2>
+        <div class="form-izgara">
+          <div class="alan tam"><label for="adres">Açık adres</label><textarea id="adres" name="adres" autocomplete="street-address"></textarea></div>
+          <div class="alan"><label for="ilce">İlçe</label><input id="ilce" name="ilce" autocomplete="address-level2"></div>
+          <div class="alan"><label for="il">İl</label><input id="il" name="il" autocomplete="address-level1"></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="b3">
+        <h2 id="b3"><span class="no" id="odemeNo">3</span>Ödeme yöntemi</h2>
+        <div class="secenekler">
+          <label class="secenek" id="kartSecenek">
+            <input type="radio" name="odeme" value="kart">
+            <strong>Kredi / banka kartı</strong>
+            <span id="kartAciklama">Shopier'in güvenli ödeme sayfasına yönlendirilirsiniz. Kart bilgileriniz bu siteye girilmez.</span>
+          </label>
+          <label class="secenek">
+            <input type="radio" name="odeme" value="havale" checked>
+            <strong>Havale / EFT</strong>
+            <span>Sipariş sonrası IBAN gösterilir. Açıklamaya sipariş numaranızı yazmanız yeterli.</span>
+          </label>
+        </div>
+        <div class="alan" style="margin-top:16px"><label for="not">Sipariş notu <span class="ist">(isteğe bağlı)</span></label><textarea id="not" name="not" placeholder="Fatura bilgisi, teslim tarihi tercihi vb."></textarea></div>
+      </section>
+    </div>
+
+    <aside class="panel ozet" aria-labelledby="ozetBas">
+      <h2 id="ozetBas">Sipariş özeti</h2>
+      <div id="ozetSatirlar"></div>
+      <div id="ozetToplam" style="display:grid;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--cizgi)"></div>
+      <label class="onay-kutu"><input type="checkbox" id="onay" required><span><a href="kosullar.html" target="_blank">Ön bilgilendirme formu ve mesafeli satış koşullarını</a> okudum, kabul ediyorum.</span></label>
+      <p class="hata-metin" id="hata" role="alert"></p>
+      <button type="submit" class="dug dug-ana dug-buyuk dug-tam" id="gonder">Siparişi onayla</button>
+      <p class="kucuk" style="text-align:center;margin-top:10px">Üyelik gerekmez · <button type="button" class="sil" data-sepet-ac>Sepeti düzenle</button></p>
+    </aside>
+  </form>
+</main>
+
+<footer id="alt"></footer>
+
+<script src="ayarlar.js"></script>
+<script src="urunler.js"></script>
+<script src="magaza.js"></script>
+<script>
+(function () {
+  'use strict';
+  var M = window.Magaza, A = M.ayar;
+  var form = document.getElementById('form');
+  var LS_FORM = 'sersoz_form_v1';   // müşteri bilgisi taslağı — tekrar yazmasın diye
+  var LS_SON = 'sersoz_son_siparis';
+
+  function $(id) { return document.getElementById(id); }
+
+  /* Kartla ödeme yalnız şu durumda açılır: sepette tek kalem var ve o ürünün
+     Shopier linki tanımlı. Shopier linki ürün başınadır; birden çok kalemi tek
+     ödemede toplamak sunucu tarafı ister (şirket/API gerektirir). */
+  function kartDurumu(st) {
+    var linkli = st.filter(function (l) { return l.u.shopier; });
+    if (!linkli.length) return { acik: false, neden: 'Kartla ödeme yakında. Şimdilik havale/EFT ile sipariş verebilirsiniz.' };
+    if (st.length > 1) return { acik: false, neden: 'Kartla ödeme tek ürünlük sepetlerde kullanılabilir. Birden fazla ürün için havale/EFT seçin veya ürünleri ayrı sipariş edin.' };
+    return { acik: true };
+  }
+
+  function ciz() {
+    var st = M.sepet.satirlar();
+    $('bos').hidden = st.length > 0;
+    form.hidden = st.length === 0;
+    if (!st.length) return;
+
+    var t = M.sepet.toplamlar();
+    $('ozetSatirlar').innerHTML = st.map(function (l) { return M.satirHTML(l, false); }).join('');
+    $('ozetToplam').innerHTML = M.toplamHTML(t);
+    $('gonder').textContent = 'Siparişi onayla · ' + M.tl(t.genel);
+
+    $('adresPanel').hidden = !t.fiziksel;
+    ['adres', 'ilce', 'il'].forEach(function (k) { $(k).required = t.fiziksel; });
+    $('odemeNo').textContent = t.fiziksel ? '3' : '2';
+
+    var kd = kartDurumu(st), kartInput = form.querySelector('input[value=kart]');
+    kartInput.disabled = !kd.acik;
+    $('kartAciklama').textContent = kd.acik
+      ? 'Shopier\'in güvenli ödeme sayfasına yönlendirilirsiniz. Kart bilgileriniz bu siteye girilmez.'
+      : kd.neden;
+    if (!kd.acik && kartInput.checked) form.querySelector('input[value=havale]').checked = true;
+  }
+
+  /* Taslak bilgileri geri yükle */
+  try {
+    var taslak = JSON.parse(localStorage.getItem(LS_FORM)) || {};
+    Object.keys(taslak).forEach(function (k) { if ($(k) && k !== 'not') $(k).value = taslak[k]; });
+  } catch (e) {}
+  form.addEventListener('input', function () {
+    var v = {};
+    ['ad', 'firma', 'eposta', 'telefon', 'adres', 'ilce', 'il'].forEach(function (k) { v[k] = $(k).value; });
+    try { localStorage.setItem(LS_FORM, JSON.stringify(v)); } catch (e) {}
+  });
+
+  function siparisNo() {
+    var d = new Date(), harf = 'ABCDEFGHJKLMNPRSTUVYZ23456789', r = '';
+    for (var i = 0; i < 4; i++) r += harf[Math.floor(Math.random() * harf.length)];
+    return 'S' + String(d.getFullYear()).slice(2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '-' + r;
+  }
+
+  function metinOzet(s) {
+    var L = [];
+    L.push('Siparis no : ' + s.no);
+    L.push('Tarih      : ' + new Date(s.tarih).toLocaleString('tr-TR'));
+    L.push('Odeme      : ' + (s.odeme === 'kart' ? 'Kart (Shopier)' : 'Havale/EFT'));
+    L.push('');
+    L.push('Musteri    : ' + s.musteri.ad + (s.musteri.firma ? ' / ' + s.musteri.firma : ''));
+    L.push('E-posta    : ' + s.musteri.eposta);
+    L.push('Telefon    : ' + s.musteri.telefon);
+    if (s.musteri.adres) L.push('Adres      : ' + s.musteri.adres);
+    L.push('');
+    s.satirlar.forEach(function (l) { L.push('- ' + l.ad + '  x' + l.adet + '  = ' + M.tl(l.tutar)); });
+    L.push('');
+    if (s.toplam.kargo) L.push('Kargo      : ' + M.tl(s.toplam.kargo));
+    if (s.toplam.kdv) L.push('KDV        : ' + M.tl(s.toplam.kdv));
+    L.push('TOPLAM     : ' + M.tl(s.toplam.genel));
+    if (s.not) { L.push(''); L.push('Not: ' + s.not); }
+    return L.join('\n');
+  }
+
+  function bildirimGonder(s) {
+    if (!A.web3formsKey) return Promise.resolve(false);
+    return fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        access_key: A.web3formsKey,
+        subject: 'Yeni sipariş ' + s.no + ' — ' + M.tl(s.toplam.genel),
+        from_name: 'SERSOZ Mağaza',
+        replyto: s.musteri.eposta,
+        siparis: metinOzet(s)
+      })
+    }).then(function (r) { return r.json(); })
+      .then(function (d) { return !!(d && d.success); })
+      .catch(function () { return false; });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var hata = $('hata');
+    hata.textContent = '';
+    if (!form.checkValidity()) {
+      var ilk = form.querySelector(':invalid');
+      hata.textContent = ilk && ilk.id === 'onay'
+        ? 'Devam etmek için satış koşullarını onaylayın.'
+        : 'Lütfen işaretli alanları doldurun.';
+      if (ilk) ilk.focus();
+      form.querySelectorAll(':invalid').forEach(function (el) { el.setAttribute('aria-invalid', 'true'); });
+      return;
+    }
+    var st = M.sepet.satirlar(), t = M.sepet.toplamlar();
+    var odeme = form.querySelector('input[name=odeme]:checked').value;
+    var s = {
+      no: siparisNo(),
+      tarih: Date.now(),
+      odeme: odeme,
+      musteri: {
+        ad: $('ad').value.trim(), firma: $('firma').value.trim(),
+        eposta: $('eposta').value.trim(), telefon: $('telefon').value.trim(),
+        adres: t.fiziksel ? [$('adres').value.trim(), $('ilce').value.trim(), $('il').value.trim()].join(', ') : ''
+      },
+      satirlar: st.map(function (l) { return { id: l.u.id, ad: l.u.ad, adet: l.adet, birim: l.u.fiyat, tutar: l.tutar }; }),
+      toplam: t,
+      not: $('not').value.trim(),
+      shopier: odeme === 'kart' ? st[0].u.shopier : ''
+    };
+
+    var dug = $('gonder');
+    dug.disabled = true; dug.textContent = 'Sipariş gönderiliyor…';
+
+    bildirimGonder(s).then(function (gitti) {
+      s.bildirildi = gitti;
+      s.metin = metinOzet(s);
+      try { localStorage.setItem(LS_SON, JSON.stringify(s)); } catch (er) {}
+      M.sepet.temizle();
+      if (odeme === 'kart' && s.shopier) location.href = s.shopier;
+      else location.href = 'siparis.html';
+    });
+  });
+
+  document.addEventListener('sepet:degisti', ciz);
+  ciz();
+})();
+</script>
+</body>
+</html>

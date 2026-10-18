@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Siparişiniz alındı — SERSOZ Mağaza</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#c2410c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2317140f'/%3E%3Ctext x='32' y='45' font-family='Consolas,monospace' font-size='36' font-weight='700' fill='%23f97316' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="magaza.css">
+<script>try{var t=localStorage.getItem('sersoz_tema');if(t==='koyu'||t==='acik')document.documentElement.setAttribute('data-tema',t)}catch(e){}</script>
+</head>
+<body data-sayfa="siparis">
+<header id="ust"></header>
+<main class="kap" id="icerik"><div class="sonuc" id="sonuc"></div></main>
+<footer id="alt"></footer>
+
+<script src="ayarlar.js"></script>
+<script src="urunler.js"></script>
+<script src="magaza.js"></script>
+<script>
+(function () {
+  'use strict';
+  var M = window.Magaza, A = M.ayar, esc = M.esc;
+  var kap = document.getElementById('sonuc');
+  var s = null;
+  try { s = JSON.parse(localStorage.getItem('sersoz_son_siparis')); } catch (e) {}
+
+  if (!s) {
+    kap.innerHTML = '<h1>Görüntülenecek sipariş yok</h1><p class="kucuk" style="font-size:16px;margin-bottom:22px">Sipariş verdiyseniz onay e-postanızı kontrol edin.</p><a class="dug dug-ana" href="index.html">Mağazaya dön</a>';
+    return;
+  }
+
+  var h = A.havale || {};
+  function satir(etiket, deger, kopya) {
+    return '<div class="iban-satir"><div><small>' + etiket + '</small><b>' + esc(deger) + '</b></div>' +
+      (kopya ? '<button type="button" class="dug dug-cizgi kopyala" data-kopya="' + esc(deger) + '">Kopyala</button>' : '') + '</div>';
+  }
+
+  var html =
+    '<div class="sonuc-ikon">' + M.ikon.tik + '</div>' +
+    '<h1>Siparişiniz alındı</h1>' +
+    '<p style="color:var(--soluk);font-size:17px">Teşekkürler ' + esc(s.musteri.ad.split(' ')[0]) + '. Sipariş numaranız <span class="siparis-no">' + esc(s.no) + '</span>. ' +
+    'Bilgilendirme <strong>' + esc(s.musteri.eposta) + '</strong> adresine gönderilecek.</p>';
+
+  /* Bildirim gitmediyse (Web3Forms anahtarı yok/başarısız) müşteriden e-postayı göndermesini iste. */
+  if (!s.bildirildi) {
+    var mailto = 'mailto:' + A.eposta + '?subject=' + encodeURIComponent('Sipariş ' + s.no) + '&body=' + encodeURIComponent(s.metin);
+    html += '<div class="panel" style="margin-top:24px;border-color:var(--vurgu)"><h2 style="margin-bottom:8px">Son adım: siparişi iletin</h2>' +
+      '<p class="kucuk" style="font-size:15px;margin-bottom:14px">Siparişinizin bize ulaşması için aşağıdaki düğmeyle hazır e-postayı gönderin. Açılmazsa sipariş numaranızla <a href="mailto:' + esc(A.eposta) + '">' + esc(A.eposta) + '</a> adresine yazın.</p>' +
+      '<a class="dug dug-ana dug-tam" href="' + esc(mailto) + '">Sipariş e-postasını gönder</a></div>';
+  }
+
+  if (s.odeme === 'havale') {
+    html += '<div class="panel" style="margin-top:18px"><h2>Havale / EFT bilgileri</h2>';
+    if (h.iban) {
+      html += '<div class="iban-kutu">' +
+        satir('Alıcı', h.hesapSahibi, true) +
+        satir('IBAN', h.iban, true) +
+        (h.banka ? satir('Banka', h.banka, false) : '') +
+        satir('Tutar', M.tl(s.toplam.genel), false) +
+        satir('Açıklama (mutlaka yazın)', s.no, true) +
+        '</div>' +
+        '<p class="uyari" style="margin-top:14px">Açıklamaya sipariş numarasını yazmayı unutmayın. Ödeme hesaba geçtiğinde siparişiniz işleme alınır.</p>';
+    } else {
+      html += '<p class="uyari">Banka hesap bilgileri ' + esc(s.musteri.eposta) + ' adresine kısa süre içinde gönderilecek. Tutar: <strong>' + M.tl(s.toplam.genel) + '</strong></p>';
+    }
+    html += '</div>';
+  }
+
+  html += '<div class="panel" style="margin-top:18px"><h2>Sipariş özeti</h2>' +
+    s.satirlar.map(function (l) {
+      var u = M.bul(l.id) || { id: l.id, ad: l.ad, tur: 'dijital', fiyat: l.birim };
+      return M.satirHTML({ u: u, adet: l.adet, tutar: l.tutar }, false);
+    }).join('') +
+    '<div style="display:grid;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--cizgi)">' + M.toplamHTML(s.toplam) + '</div></div>' +
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:24px"><a class="dug dug-koyu" href="index.html">Alışverişe devam et</a>' +
+    '<button type="button" class="dug dug-cizgi" onclick="print()">Yazdır</button></div>';
+
+  kap.innerHTML = html;
+
+  kap.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-kopya]'); if (!b) return;
+    var v = b.getAttribute('data-kopya');
+    (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function () {
+      b.textContent = 'Kopyalandı ✓'; setTimeout(function () { b.textContent = 'Kopyala'; }, 1400);
+    }, function () { M.bildir('Kopyalanamadı, elle seçip kopyalayın.'); });
+  });
+})();
+</script>
+</body>
+</html>
