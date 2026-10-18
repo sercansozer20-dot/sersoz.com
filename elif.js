@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019q';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019r';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -499,6 +499,8 @@ async function bildirimleriTopla() {
     const son = (x.mesajlar || [])[x.mesajlar.length - 1];
     if (son && son.kimden === 'admin') ekle(x.sonZaman, '💬', 'Destek ekibi yanıtladı: ' + String(son.metin).slice(0, 90), 'sohbet');
   });
+  const sn = sepetListe().length;
+  if (sn) { let t = 0; try { t = +localStorage.getItem(LS_SEPET + '_t') || 0; } catch (h) {} if (t && Date.now() - t > 6 * 36e5) ekle(t + 6 * 36e5, '🛒', 'Sepetinde ' + sn + ' parça bekliyor. Tarihleri kaçırmadan sırayla kiralayabilirsin.', '#sepet'); }
   sq.filter(x => x.durum === 'bekliyor').forEach(x => ekle(x.olusturma, '❓', 'Yeni soru ("' + x.esyaBaslik + '"): ' + String(x.soru).slice(0, 90), '#esya/' + x.esyaId + '/sorular'));
   sc.filter(x => x.durum === 'cevaplandi').forEach(x => ekle(x.cevapZaman, '💬', 'Sorun cevaplandı ("' + x.esyaBaslik + '"): ' + String(x.cevap).slice(0, 90), '#esya/' + x.esyaId + '/sorular'));
   if (adminMi()) {
@@ -628,6 +630,7 @@ function sayfaCiz() {
     if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
   const istek = ++aktifIstek;
+  document.title = (s && s !== 'kesfet' && SAYFA_AD[s] ? SAYFA_AD[s] + ' · ' : '') + 'Elif\'in Dolabı | Kıyafet kirala, dolabını kiraya ver';
   icerik.onclick = icerik.oninput = icerik.onchange = null;   // önceki sayfanın dinleyicileri
   if (s !== 'esya') olay('sayfa', { sayfa: s || 'kesfet' });
   if (s === 'hesabim') return hesabim(p || '', istek);
@@ -923,7 +926,7 @@ async function begeniDegistir(el) {
 /* ---------------------------------------------------------------- sepet (bu tarayıcıda saklanır) */
 const LS_SEPET = 'elif_sepet';
 function sepetListe() { try { return JSON.parse(localStorage.getItem(LS_SEPET) || '[]'); } catch (h) { return []; } }
-function sepetKaydet(l) { try { localStorage.setItem(LS_SEPET, JSON.stringify(l)); } catch (h) {} sepetSayac(); }
+function sepetKaydet(l) { try { localStorage.setItem(LS_SEPET, JSON.stringify(l)); localStorage.setItem(LS_SEPET + '_t', String(Date.now())); } catch (h) {} sepetSayac(); }
 function sepette(id) { return sepetListe().includes(id); }
 function sepetCikar(id) { sepetKaydet(sepetListe().filter(x => x !== id)); }
 function sepetSayac() { const n = sepetListe().length, el = document.getElementById('sepetSay'); if (el) el.textContent = n ? n : ''; }
@@ -1004,13 +1007,57 @@ async function sepetSayfasi(istek) {
   };
 }
 
+/* ---------------------------------------------------------------- satış yardımcıları
+ * Vesile (ne için?) ilan metninden çıkarılır; son bakılanlar bu tarayıcıda tutulur; tüm sayılar gerçektir. */
+const VESILE = [
+  ['dugun', '💍 Düğün & davet', /abiye|gece elb|davet|düğün|dugun|saten|payet|tül|kokteyl|clutch|stiletto|topuklu|kadife/],
+  ['nisan', '💐 Nişan & kına', /nişan|nisan|kına|kina|bindallı|bindalli/],
+  ['mezuniyet', '🎓 Mezuniyet & balo', /mezuniyet|balo/],
+  ['is', '💼 İş & toplantı', /blazer|takım|tüvit|tuvit|trençkot|trenckot|kumaş pantolon|ofis|gömlek elbise|ceket/],
+  ['tatil', '🏖 Tatil & yaz', /plaj|tatil|hasır|hasir|keten|bikini|mayo|şapka|sapka|sandalet|yazlık|yazlik|elbise yaz/],
+  ['gunluk', '☕ Günlük', /günlük|gunluk|kot|jean|tişört|tisort|sweat|spor|sneaker|hırka|hirka|kazak|babet/]
+];
+function vesileleri(e) {
+  const t = [e.baslik, e.aciklama, e.marka, KATEGORI[e.kategori]].join(' ').toLocaleLowerCase('tr');
+  return VESILE.filter(v => v[2].test(t)).map(v => v[0]);
+}
+const SON_BAKILAN = 'elif_son_bakilan';
+function sonBakilanlar() { try { return JSON.parse(localStorage.getItem(SON_BAKILAN) || '[]'); } catch (h) { return []; } }
+function sonBakilanEkle(id) { try { localStorage.setItem(SON_BAKILAN, JSON.stringify([id].concat(sonBakilanlar().filter(x => x !== id)).slice(0, 20))); } catch (h) {} }
+function rafHTML(baslik, l, ek) {
+  if (l.length < 2) return '';
+  return '<section class="raf"><div class="raf-bas"><h2>' + baslik + '</h2>' + (ek || '') + '</div><div class="raf-ic">' +
+    l.slice(0, 12).map(e => esyaKarti(e, kullanici && e.sahipId === kullanici.uid)).join('') + '</div></section>';
+}
+const NASIL_HTML = '<section class="nasil" aria-label="Nasıl çalışır"><ol>' +
+  '<li><b>Beğen, tarih seç</b><span>İstek göndermek ücretsiz; eşya sahibi onaylar.</span></li>' +
+  '<li><b>Güvenle öde</b><span>Paran, sen parçayı teslim alana kadar eşya sahibine geçmez.</span></li>' +
+  '<li><b>Kapına gelsin</b><span>Kargo takip numarasıyla gelir, teslim alınca onaylarsın.</span></li>' +
+  '<li><b>Kullan, iade et</b><span>Parça sağlam dönünce depozito iade edilir.</span></li></ol></section>';
+const GUVENCE_HTML = '<ul class="guvence"><li>🔒 Paran, parçayı teslim alana kadar eşya sahibine geçmez.</li>' +
+  '<li>↩︎ Depozito, parça sağlam dönünce iade edilir.</li><li>📄 Sözleşmeli kiralama; sorun olursa ekip devrede.</li></ul>';
+let esyaOnbellek = null;
+async function yayindakiEsyalar(taze) {
+  if (taze || !esyaOnbellek || Date.now() - esyaOnbellek.t > 60000) esyaOnbellek = { t: Date.now(), l: (await esyaListesi('onay', 'onaylandi')).filter(e => e.aktif) };
+  return esyaOnbellek.l;
+}
+/* Gerçek kiralanma sayısı (tamamlanmış kiralamalar) */
+async function kiralanmaSayisi(e) {
+  if (D) return D.kiralamalar.filter(k => k.esyaId === e.id && k.durum === 'iade_edildi').length;
+  if (e.ornek) {
+    if (!ornekKira) { const s2 = await getDoc(doc(db, 'demoVeri', 'kiralamalar')); ornekKira = s2.exists() ? demoAc(s2.data().veri) : []; }
+    return ornekKira.filter(k => k.esyaId === e.id && k.durum === 'iade_edildi').length;
+  }
+  return (await getDocs(query(collection(db, 'dolapPuanlar'), where('esyaId', '==', e.id)))).size;
+}
+
 /* ---------------------------------------------------------------- eşya kartı */
 function esyaKarti(e, kendi) {
   return '<a class="esya" href="#esya/' + esc(e.id) + '">' +
     '<span class="foto"><img src="' + esc(e.fotolar[0]) + '" alt="" loading="lazy">' + (e.aktif ? begeniDugme(e, false) : '') +
       '<span class="etiket' + (e.aktif ? '' : ' pasif-etiket') + '">' + (e.aktif ? esc(KATEGORI[e.kategori] || '') : 'Yayında değil') + '</span>' +
       (e.aktif && oneCikanMi(e) ? '<span class="etiket one-cikan">★ Öne çıkan</span>' : '') +
-      (e.ornek ? '<span class="etiket ornek-etiket">Örnek</span>' : '') + '</span>' +
+      (e.ornek ? '<span class="etiket ornek-etiket">Örnek</span>' : (!oneCikanMi(e) && zaman(e.olusturma) > Date.now() - 7 * 864e5 ? '<span class="etiket yeni-etiket">Yeni</span>' : '')) + '</span>' +
     '<h3>' + esc(e.baslik) + '</h3>' +
     (puanOzeti(e.id) ? '<span class="puan">★ ' + puanOzeti(e.id).ort + ' <span>(' + puanOzeti(e.id).adet + ')</span></span>' : '') +
     '<span class="alt"><span>' + esc([e.marka, e.beden].filter(Boolean).join(' · ')) + '</span><span class="fiyat">' + tl(e.gunlukUcret) + ' / gün</span></span>' +
@@ -1023,19 +1070,24 @@ function esyaKarti(e, kendi) {
 
 /* ---------------------------------------------------------------- KEŞFET */
 /* Süzgeç durumu: kayıtlı filtreler de bu şekildedir { ad, kategori, ara, beden, maxFiyat } */
-const kesfetS = { kategori: 'hepsi', ara: '', beden: '', maxFiyat: 0, sira: 'yeni' };
+const kesfetS = { kategori: 'hepsi', ara: '', beden: '', maxFiyat: 0, sira: 'yeni', vesile: '' };
 let aramaSayac;
 async function kesfet(istek) {
-  icerik.innerHTML = afisHTML() + '<div class="bas"><div><h1>Keşfet</h1><p>Herkesin dolabından kiralanabilir parçalar.</p></div>' +
+  const sepetN = sepetListe().length;
+  icerik.innerHTML = afisHTML() + NASIL_HTML +
+    (sepetN ? '<a class="sepet-hatir" href="#sepet">🛒 Sepetinde ' + sepetN + ' parça bekliyor · <b>Sırayla kirala →</b></a>' : '') +
+    '<div class="bas"><div><h1>Keşfet</h1><p>Herkesin dolabından kiralanabilir parçalar. Bir kez giy, dolabını doldurma.</p></div>' +
     '<a class="dug dug-vurgu" href="#dolabim">+ Dolabına eşya ekle</a></div>' +
+    '<div class="vesile-sec" id="vesileSec"></div>' +
     '<div class="kayitli-filtre" id="kayitliFiltre"></div>' +
     '<div class="suzgec" id="suzgec"></div>' +
     '<div class="suzgec suzgec-2" id="suzgec2"></div>' +
+    '<div id="raflar"></div><h2 class="izgara-bas" id="izgaraBas" hidden>Tüm parçalar</h2>' +
     '<div class="izgara" id="izgara"><p class="yukleniyor" style="grid-column:1/-1">Yükleniyor…</p></div>';
   afisBaslat();
   let esyalar;
   try {
-    esyalar = (await esyaListesi('onay', 'onaylandi')).filter(e => e.aktif);
+    esyalar = await yayindakiEsyalar(true);
   } catch (e) {
     if (istek !== aktifIstek) return;
     $('#izgara').innerHTML = '<div class="bos"><h3>Liste yüklenemedi</h3><p>' + esc(hataMetni(e)) + '</p></div>';
@@ -1051,6 +1103,8 @@ async function kesfet(istek) {
       : '';
   };
   const suzgecCiz = () => {
+    $('#vesileSec').innerHTML = '<span class="kucuk">Ne için arıyorsun?</span>' + VESILE.map(([k, ad]) =>
+      '<button type="button" class="cip vesile" data-v="' + k + '" aria-pressed="' + (k === kesfetS.vesile) + '">' + ad + '</button>').join('');
     $('#suzgec').innerHTML = [['hepsi', 'Tümü']].concat(Object.entries(KATEGORI)).map(([k, ad]) =>
       '<button type="button" class="cip" data-k="' + k + '" aria-pressed="' + (k === kesfetS.kategori) + '">' + ad + '</button>').join('') +
       '<input class="ara" id="ara" type="search" placeholder="Marka, renk, parça ara…" value="' + esc(kesfetS.ara) + '" aria-label="Ara">';
@@ -1059,7 +1113,7 @@ async function kesfet(istek) {
         bedenler.map(b => '<option' + (b === kesfetS.beden ? ' selected' : '') + '>' + esc(b) + '</option>').join('') + '</select></label>' +
       '<label class="mini-alan">En çok <input id="sMax" type="number" min="0" step="10" inputmode="numeric" placeholder="TL/gün" value="' + (kesfetS.maxFiyat || '') + '"></label>' +
       '<label class="mini-alan">Sırala <select id="sSira">' +
-        [['yeni', 'En yeni'], ['ucuz', 'Fiyat: artan'], ['pahali', 'Fiyat: azalan'], ['puan', 'En yüksek puan']].map(([k, ad]) =>
+        [['yeni', 'En yeni'], ['begeni', 'En çok beğenilen'], ['ucuz', 'Fiyat: artan'], ['pahali', 'Fiyat: azalan'], ['puan', 'En yüksek puan']].map(([k, ad]) =>
           '<option value="' + k + '"' + (k === kesfetS.sira ? ' selected' : '') + '>' + ad + '</option>').join('') + '</select></label>' +
       (kullanici ? '<button type="button" class="dug dug-kucuk" id="filtreKaydet">☆ Bu filtreyi kaydet</button>' : '') +
       '<button type="button" class="bag-dug" id="filtreTemizle">Temizle</button>';
@@ -1067,12 +1121,21 @@ async function kesfet(istek) {
   const ciz = () => {
     const q = kesfetS.ara.toLocaleLowerCase('tr-TR');
     let l = esyalar.filter(e => (kesfetS.kategori === 'hepsi' || e.kategori === kesfetS.kategori) &&
+      (!kesfetS.vesile || vesileleri(e).includes(kesfetS.vesile)) &&
       (!kesfetS.beden || e.beden === kesfetS.beden) &&
       (!kesfetS.maxFiyat || e.gunlukUcret <= kesfetS.maxFiyat) &&
       (!q || [e.baslik, e.marka, e.renk, e.beden].join(' ').toLocaleLowerCase('tr-TR').includes(q)));
     const puan = e => { const p = puanOzeti(e.id); return p ? parseFloat(p.ort.replace(',', '.')) : 0; };
     l.sort({ yeni: (a, b) => zaman(b.olusturma) - zaman(a.olusturma), ucuz: (a, b) => a.gunlukUcret - b.gunlukUcret,
-      pahali: (a, b) => b.gunlukUcret - a.gunlukUcret, puan: (a, b) => puan(b) - puan(a) }[kesfetS.sira]);
+      pahali: (a, b) => b.gunlukUcret - a.gunlukUcret, puan: (a, b) => puan(b) - puan(a), begeni: (a, b) => begeniSayisi(b) - begeniSayisi(a) }[kesfetS.sira] || (() => 0));
+    const filtresiz = kesfetS.kategori === 'hepsi' && !kesfetS.vesile && !q && !kesfetS.beden && !kesfetS.maxFiyat;
+    const kart = id => esyalar.find(e => e.id === id);
+    $('#raflar').innerHTML = filtresiz ? [
+      rafHTML('Son baktıkların', sonBakilanlar().map(kart).filter(Boolean)),
+      rafHTML('★ Öne çıkanlar', esyalar.filter(oneCikanMi)),
+      rafHTML('En çok beğenilenler', esyalar.slice().sort((a, b) => begeniSayisi(b) - begeniSayisi(a))),
+      rafHTML('Yeni gelenler', esyalar.slice().sort((a, b) => (zaman(b.olusturma) || 0) - (zaman(a.olusturma) || 0)))].join('') : '';
+    $('#izgaraBas').hidden = !filtresiz || !$('#raflar').innerHTML;
     l = l.filter(oneCikanMi).concat(l.filter(e => !oneCikanMi(e) && !e.ornek), l.filter(e => !oneCikanMi(e) && e.ornek));   // öne çıkan > gerçek > örnek
     $('#izgara').innerHTML = l.length ? l.map(e => esyaKarti(e, kullanici && e.sahipId === kullanici.uid)).join('')
       : '<div class="bos"><h3>' + (esyalar.length ? 'Bu filtreye uyan parça yok' : 'Dolaplar henüz boş') + '</h3><p>' +
@@ -1084,9 +1147,11 @@ async function kesfet(istek) {
   icerik.onclick = async ev => {
     const k = ev.target.closest('#suzgec [data-k]');
     if (k) { kesfetS.kategori = k.dataset.k; hepsi(); return; }
+    const vs = ev.target.closest('[data-v]');
+    if (vs) { kesfetS.vesile = kesfetS.vesile === vs.dataset.v ? '' : vs.dataset.v; hepsi(); return; }
     const f = ev.target.closest('[data-fi]');
     if (f) { const s = uye.filtreler[+f.dataset.fi]; Object.assign(kesfetS, { kategori: s.kategori || 'hepsi', ara: s.ara || '', beden: s.beden || '', maxFiyat: s.maxFiyat || 0 }); hepsi(); return; }
-    if (ev.target.closest('#filtreTemizle')) { Object.assign(kesfetS, { kategori: 'hepsi', ara: '', beden: '', maxFiyat: 0, sira: 'yeni' }); hepsi(); return; }
+    if (ev.target.closest('#filtreTemizle')) { Object.assign(kesfetS, { kategori: 'hepsi', vesile: '', ara: '', beden: '', maxFiyat: 0, sira: 'yeni' }); hepsi(); return; }
     if (ev.target.closest('#filtreKaydet')) {
       const l = uye.filtreler || [];
       if (l.length >= 20) { bildir('En fazla 20 filtre kaydedebilirsin. Hesabım\'dan eskileri sil.'); return; }
@@ -1143,20 +1208,45 @@ async function esyaSayfasi(id, istek) {
         '<h1>' + esc(e.baslik) + '</h1>' +
         '<p class="marka-beden">' + esc([e.marka, e.beden && 'Beden ' + e.beden, e.renk].filter(Boolean).join(' · ')) + '</p>' +
         (puanOzeti(e.id) ? '<p class="puan" style="margin-top:6px">★ ' + puanOzeti(e.id).ort + ' <span>· ' + puanOzeti(e.id).adet + ' yorum</span></p>' : '') +
+        '<p class="sosyal" id="sosyalKanit"></p>' +
         '<p class="ucret">' + tl(e.gunlukUcret) + ' <small>/ gün</small></p>' +
+        '<p class="kucuk">3 günlük kiralama ' + tl(3 * e.gunlukUcret) + ' · ' + vesileleri(e).map(v => VESILE.find(x => x[0] === v)[1]).join(' · ') + '</p>' +
         (e.depozito ? '<p class="kucuk">+ ' + tl(e.depozito) + ' depozito (iade edilir)</p>' : '') +
         '<p class="kucuk" style="margin-top:4px"><a href="elif-sozlesme.html" target="_blank" style="text-decoration:underline">Kiralama şartları</a> · geç iade ve teslim etmeme kuralları</p>' +
         (e.aciklama ? '<p class="aciklama">' + esc(e.aciklama) + '</p>' : '') +
         '<a class="sahip sahip-link" href="#profil/' + esc(e.sahipId) + '" style="margin-top:14px">' + (e.sahipFoto ? '<img src="' + esc(e.sahipFoto) + '" alt="" referrerpolicy="no-referrer">' : '') + esc(iyelik(e.sahipAd)) + ' dolabından <span data-seviye="' + esc(e.sahipId) + '"></span></a>' +
         (e.ornek ? (adminMi() && !D ? '<div class="kutu" style="margin-top:14px"><b>Yönetim</b><p class="kucuk" style="margin:4px 0 10px">Bu bir örnek ilan. Kaldırırsan Keşfet\'te ve her yerde görünmez.</p>' +
           '<button type="button" class="dug dug-kucuk dug-tehlike" id="ornekKaldir">Örnek ilanı kaldır</button></div>' : '') : adminEsyaAraclari(e)) +
-        (e.aktif ? '<div class="begeni-satir">' + begeniDugme(e, true) + '</div>' : '') +
+        (e.aktif ? '<div class="begeni-satir">' + begeniDugme(e, true) +
+          '<span class="paylas"><a class="dug dug-kucuk" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(e.baslik + ' · Elif\'in Dolabı\'nda günlük ' + tl(e.gunlukUcret) + ' ' + location.origin + location.pathname + '#esya/' + e.id) + '">WhatsApp\'ta paylaş</a>' +
+          '<button type="button" class="dug dug-kucuk" id="linkKopya">Bağlantıyı kopyala</button></span></div>' : '') +
         (kendi || !e.aktif ? '' : '<span class="dug sepet-dug-uzun' + (sepette(e.id) ? ' secili' : '') + '" data-sepet="' + esc(e.id) + '" data-uzun="1">' + (sepette(e.id) ? '✓ Sepette' : '🛒 Sepete ekle') + '</span>') +
-        '<div class="kutu" id="kiraKutu"></div>' +
+        '<div class="kutu" id="kiraKutu"></div>' + (e.aktif && !kendi ? GUVENCE_HTML : '') +
       '</div>' +
     '</div>' +
+    (e.aktif && !kendi ? '<div class="yapiskan-kirala"><span><b>' + tl(e.gunlukUcret) + '</b> / gün</span><a class="dug dug-vurgu" href="#esya/' + esc(e.id) + '/kirala">Kirala</a></div>' : '') +
     yorumBolumu(e.id) +
-    '<section class="sorular" id="sorular" aria-labelledby="soruBas"><h2 id="soruBas">Satıcıya sor</h2><div id="soruIc"><p class="yukleniyor">Yükleniyor…</p></div></section>';
+    '<section class="sorular" id="sorular" aria-labelledby="soruBas"><h2 id="soruBas">Satıcıya sor</h2><div id="soruIc"><p class="yukleniyor">Yükleniyor…</p></div></section>' +
+    '<div id="benzerler"></div>';
+  document.title = e.baslik + ' kirala · ' + tl(e.gunlukUcret) + '/gün · Elif\'in Dolabı';
+  sonBakilanEkle(e.id);
+  const lk = $('#linkKopya');
+  if (lk) lk.onclick = () => {
+    const u = location.origin + location.pathname + '#esya/' + e.id;
+    if (navigator.share) navigator.share({ title: e.baslik, text: e.baslik + ' · Elif\'in Dolabı', url: u }).catch(() => {});
+    else if (navigator.clipboard) navigator.clipboard.writeText(u).then(() => bildir('Bağlantı kopyalandı.'), () => prompt('Bağlantı:', u));
+    else prompt('Bağlantı:', u);
+  };
+  kiralanmaSayisi(e).then(n => {
+    const el = $('#sosyalKanit'); if (!el || istek !== aktifIstek) return;
+    const b = begeniSayisi(e);
+    el.innerHTML = [b ? '♥ ' + b + ' kişi beğendi' : '', n ? '✓ ' + n + ' kez sorunsuz kiralandı' : ''].filter(Boolean).join(' · ');
+  }).catch(() => {});
+  yayindakiEsyalar().then(l => {
+    if (istek !== aktifIstek || !$('#benzerler')) return;
+    const b = l.filter(x => x.id !== e.id && x.kategori === e.kategori).sort((a, c) => Math.abs(a.gunlukUcret - e.gunlukUcret) - Math.abs(c.gunlukUcret - e.gunlukUcret));
+    $('#benzerler').innerHTML = rafHTML('Benzer parçalar', b) + rafHTML('Son baktıkların', sonBakilanlar().filter(x => x !== e.id).map(id => l.find(y => y.id === id)).filter(Boolean));
+  }).catch(() => {});
 
   icerik.querySelector('.kucukler')?.addEventListener('click', ev => {
     const b = ev.target.closest('[data-f]'); if (!b) return;
