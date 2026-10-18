@@ -170,3 +170,11 @@ main { padding: 28px 0 60px; }
 /* örnek mod şeridi */
 .demo-serit { background: #2a1f1e; color: #fff; text-align: center; font-size: 13px; padding: 7px 12px; }
 .demo-serit a { text-decoration: underline; margin-left: 6px; }
+
+/* sözleşme onayı ve gecikme */
+.sartlar { margin: 0; padding-left: 18px; font-size: 13px; }
+.sartlar li { margin-bottom: 4px; }
+.onay-kutu { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; margin-top: 12px; }
+.onay-kutu input { width: 17px; height: 17px; margin-top: 2px; flex: none; accent-color: var(--vurgu); }
+.onay-kutu a { text-decoration: underline; }
+.gecikme { grid-column: 1 / -1; background: #fbe9e7; border: 1px solid #f2c9c4; color: #7a1d14; border-radius: 12px; padding: 10px 14px; font-size: 13.5px; }

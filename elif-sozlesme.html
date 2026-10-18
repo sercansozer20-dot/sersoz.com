@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kiralama Sözleşmesi | Elif'in Dolabı</title>
+<meta name="description" content="Elif'in Dolabı kiralayan ve kiraya veren arasındaki kiralama şartları: teslim, gecikme, teslim etmeme, hasar, depozito ve iptal.">
+<meta name="theme-color" content="#faf7f4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="elif.css">
+<style>
+  .sozlesme { max-width: 760px; margin: 0 auto; padding: 36px 20px 60px; }
+  .sozlesme h1 { font-family: var(--serif); font-weight: 600; font-size: clamp(28px, 4vw, 38px); }
+  .sozlesme .surum { color: var(--ikinci); font-size: 13px; margin: 6px 0 24px; }
+  .sozlesme h2 { font-size: 18px; margin: 28px 0 8px; }
+  .sozlesme p, .sozlesme li { color: #4b3f3d; margin-bottom: 8px; }
+  .sozlesme ol, .sozlesme ul { padding-left: 20px; }
+  .ozet-tablo { width: 100%; border-collapse: collapse; margin: 8px 0 4px; font-size: 14px; }
+  .ozet-tablo th, .ozet-tablo td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--cizgi); vertical-align: top; }
+  .ozet-tablo th { width: 34%; background: var(--vurgu-acik); font-weight: 600; }
+</style>
+</head>
+<body>
+<header class="ust"><div class="kap"><a class="marka" href="elif.html">Elif'in <b>Dolabı</b></a><span class="hesap"><a class="dug dug-kucuk" href="elif.html">← Dolaba dön</a></span></div></header>
+
+<!-- TASLAK METİN: yayından önce bir hukukçuya okutulması önerilir.
+     Maddeler değişirse SURUM'u artırın (elif.js içindeki SOZLESME_SURUM ve
+     firestore.rules içindeki 'v1' ile birlikte); yeni kiralamalar yeni sürümü kabul eder. -->
+<main class="sozlesme">
+  <h1>Kiralama Sözleşmesi</h1>
+  <p class="surum">Sürüm v1 · Kiracı her kiralama isteğinde, kiraya veren her eşya ilanında ve onayında bu metni kabul eder.</p>
+
+  <h2>Özet</h2>
+  <table class="ozet-tablo">
+    <tr><th>Geç teslim</th><td>Her geciken gün için günlük kira bedelinin <b>1,5 katı</b> gecikme bedeli depozitodan düşülür.</td></tr>
+    <tr><th>3 gün gecikme</th><td>İşletmeci kiracıya ulaşır, kiraya veren bilgilendirilir.</td></tr>
+    <tr><th>7 gün gecikme / teslim etmeme</th><td>Eşya teslim edilmemiş sayılır. Depozitonun tamamı kiraya verene ödenir; zarar depozitoyu aşarsa kiracı farktan sorumludur.</td></tr>
+    <tr><th>Hasar, leke, kayıp parça</th><td>Onarım ya da temizlik bedeli depozitodan düşülür; eşya kullanılamaz hale gelirse depozitonun tamamı.</td></tr>
+    <tr><th>İptal</th><td>Kiralama başlangıcına 48 saat kalana kadar ücretsiz; sonrasında kira bedelinin %50'si.</td></tr>
+    <tr><th>Depozito iadesi</th><td>Kiraya veren iadeyi onayladıktan sonra en geç 3 iş günü içinde.</td></tr>
+  </table>
+
+  <h2>1. Taraflar ve platformun rolü</h2>
+  <p>Bu sözleşme, eşyayı kiraya veren üye ("Kiraya veren") ile eşyayı kiralayan üye ("Kiracı") arasında kurulur. Elif'in Dolabı (sersoz.com, işletmeci: Sercan Sözer) tarafları buluşturan ve kira bedeli ile depozitoyu iade süreci tamamlanana kadar emanet olarak tutan aracıdır; eşyanın sahibi değildir.</p>
+
+  <h2>2. Ödeme ve depozito</h2>
+  <ol>
+    <li>Kiracı, kiraya veren isteği onayladıktan sonra kira bedeli ile depozitonun toplamını işletmeciye öder. Ödeme onaylanmadan eşya teslim edilmez.</li>
+    <li>Kira bedeli, eşya iade edilip kiraya veren iadeyi onayladıktan sonra kiraya verene aktarılır.</li>
+    <li>Depozito, bu sözleşmedeki kesintiler yapıldıktan sonra kalan tutarıyla kiracıya iade edilir.</li>
+    <li>Kiraya veren, depozitoyu eşyanın gerçek değerine yakın belirlemelidir; düşük belirlenen depozito, kayıpta kiraya verenin tazminatını sınırlayabilir.</li>
+  </ol>
+
+  <h2>3. Kiraya verenin yükümlülükleri</h2>
+  <ol>
+    <li>Eşyayı ilandaki fotoğraf ve açıklamaya uygun, temiz ve kullanıma hazır halde, kararlaştırılan tarihte teslim etmek.</li>
+    <li>Eşyadaki bilinen kusurları (leke, söküğü, eksik düğme vb.) ilanda açıkça belirtmek.</li>
+    <li>Eşya ilana uygun değilse kiracı teslim almayı reddedebilir; bu durumda ödenen tutarın tamamı kiracıya iade edilir.</li>
+    <li>Kira süresi sonunda iade edilen eşyayı en geç 24 saat içinde kontrol edip iadeyi onaylamak ya da hasarı fotoğraflı bildirmek.</li>
+  </ol>
+
+  <h2>4. Kiracının yükümlülükleri</h2>
+  <ol>
+    <li>Eşyayı özenle, olağan şekilde kullanmak; üzerinde değişiklik (kesme, boyama, tadilat) yapmamak.</li>
+    <li>Eşyayı yıkamamak ya da kendi başına temizlemeye çalışmamak; temizlik kiraya verene aittir ve kira bedeline dahildir.</li>
+    <li>Eşyayı üçüncü kişilere kiralamamak, ödünç vermemek.</li>
+    <li>Eşyayı kiralamada belirtilen iade gününde, en geç saat 20:00'ye kadar, teslim aldığı halde iade etmek.</li>
+  </ol>
+
+  <h2>5. Geç teslim</h2>
+  <ol>
+    <li>İade günü geçtiği her takvim günü için günlük kira bedelinin 1,5 katı gecikme bedeli uygulanır ve depozitodan düşülür.</li>
+    <li>Gecikme 3 günü bulduğunda işletmeci kiracıya ulaşır ve kiraya veren bilgilendirilir.</li>
+  </ol>
+
+  <h2>6. Teslim etmeme ve kayıp</h2>
+  <ol>
+    <li>İade günü üzerinden 7 gün geçtiği halde eşya iade edilmemişse eşya teslim edilmemiş (kayıp) sayılır.</li>
+    <li>Bu durumda depozitonun tamamı kiraya verene ödenir. Kiraya verenin zararı depozitoyu aşarsa kiracı aradaki farktan sorumludur.</li>
+    <li>Taraflar anlaşamazsa kiraya veren genel hükümlere göre yasal yollara başvurabilir; işletmeci elindeki ödeme ve yazışma kayıtlarını yetkili mercilere sunabilir.</li>
+  </ol>
+
+  <h2>7. Hasar</h2>
+  <ol>
+    <li>Olağan kullanımı aşan leke, yırtık, söküğü, koku ya da eksik parça kiracının sorumluluğundadır.</li>
+    <li>Onarım veya profesyonel temizlik bedeli, kiraya verenin belge ya da fotoğrafla bildirmesi üzerine depozitodan düşülür.</li>
+    <li>Eşya kullanılamaz hale gelmişse depozitonun tamamı kiraya verene ödenir.</li>
+    <li>Taraflara teslim ve iade anında eşyanın fotoğrafını çekmeleri önerilir; anlaşmazlıkta bu fotoğraflar esas alınır.</li>
+  </ol>
+
+  <h2>8. İptal</h2>
+  <ol>
+    <li>Kiracı, kiralama başlangıcına 48 saat kalana kadar ücretsiz iptal edebilir; sonrasında kira bedelinin %50'si kiraya verene ödenir, kalan tutar ve depozito iade edilir.</li>
+    <li>Kiraya veren onayladığı kiralamayı iptal ederse ödenen tutarın tamamı kiracıya iade edilir.</li>
+  </ol>
+
+  <h2>9. Kişisel veriler</h2>
+  <p>Tarafların telefon ve e-posta bilgisi yalnız ödeme onaylandıktan sonra ve yalnız karşı tarafa gösterilir; teslim ve iade dışında kullanılamaz.</p>
+
+  <h2>10. Uyuşmazlık</h2>
+  <p>Taraflar sorunları önce kendi aralarında ve işletmecinin aracılığıyla çözmeye çalışır. Çözülemeyen uyuşmazlıklarda Türkiye Cumhuriyeti hukuku uygulanır.</p>
+</main>
+</body>
+</html>

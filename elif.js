@@ -32,6 +32,15 @@ const storage = getStorage(app);
 const YONETICI = 'sercansozer20@gmail.com';
 const AYAR = window.SERSOZ_AYAR || {};
 const LS_ILETISIM = 'elif_iletisim';
+/* Sözleşme metni elif-sozlesme.html; madde değişirse sürümü artırın (firestore.rules'taki 'v1' ile birlikte). */
+const SOZLESME_SURUM = 'v1';
+const GECIKME_KAT = 1.5;        // geç iadede günlük kiranın katı
+const KAYIP_GUN = 7;            // bu kadar gün geçerse teslim edilmemiş sayılır
+const SARTLAR_OZET = '<ul class="sartlar">' +
+  '<li><b>Geç iade:</b> her gün için günlük kiranın 1,5 katı depozitodan düşülür.</li>' +
+  '<li><b>İade gününden 7 gün geçerse</b> eşya teslim edilmemiş sayılır; depozitonun tamamı kiraya verene ödenir, zarar daha büyükse fark kiracıdan istenir.</li>' +
+  '<li><b>Hasar ve leke</b> bedeli depozitodan düşülür.</li>' +
+  '<li><b>İptal:</b> başlangıca 48 saatten az kala kira bedelinin %50\'si ödenir.</li></ul>';
 
 /* ?demo=1 → tarayıcıda üretilen örnek veriyle çalışır, veritabanına yazmaz (elif-demo.js) */
 const DEMO = new URLSearchParams(location.search).has('demo');
@@ -228,6 +237,7 @@ async function esyaSayfasi(id, istek) {
         (puanOzeti(e.id) ? '<p class="puan" style="margin-top:6px">★ ' + puanOzeti(e.id).ort + ' <span>· ' + puanOzeti(e.id).adet + ' yorum</span></p>' : '') +
         '<p class="ucret">' + tl(e.gunlukUcret) + ' <small>/ gün</small></p>' +
         (e.depozito ? '<p class="kucuk">+ ' + tl(e.depozito) + ' depozito (iade edilir)</p>' : '') +
+        '<p class="kucuk" style="margin-top:4px"><a href="elif-sozlesme.html" target="_blank" style="text-decoration:underline">Kiralama şartları</a> · geç iade ve teslim etmeme kuralları</p>' +
         (e.aciklama ? '<p class="aciklama">' + esc(e.aciklama) + '</p>' : '') +
         '<p class="sahip" style="margin-top:14px">' + (e.sahipFoto ? '<img src="' + esc(e.sahipFoto) + '" alt="" referrerpolicy="no-referrer">' : '') + esc(e.sahipAd) + '\'nin dolabından</p>' +
         '<div class="kutu" id="kiraKutu"></div>' +
@@ -263,6 +273,8 @@ async function esyaSayfasi(id, istek) {
       '<div class="alan tam"><label for="kNot">Not <span class="kucuk">(isteğe bağlı)</span></label><textarea id="kNot" maxlength="500" placeholder="Örn. düğün için, teslim yeri tercihi…"></textarea></div>' +
     '</div>' +
     '<div id="kOzet" style="margin-top:12px"></div>' +
+    '<div class="uyari" style="margin-top:14px">' + SARTLAR_OZET + '</div>' +
+    '<label class="onay-kutu"><input type="checkbox" id="kSozlesme"><span><a href="elif-sozlesme.html" target="_blank">Kiralama sözleşmesini</a> okudum; geç iade, teslim etmeme ve hasar maddelerini kabul ediyorum.</span></label>' +
     '<p class="hata" id="kHata" role="alert"></p>' +
     '<button type="button" class="dug dug-vurgu dug-tam" id="kGonder">İstek gönder</button>' +
     '<p class="kucuk" style="margin-top:10px">Sahibi onaylayınca ödeme bilgileri Kiralamalarım\'da görünür. Telefonun yalnız kiralama kesinleşince karşı tarafa açılır.</p>';
@@ -287,6 +299,7 @@ async function esyaSayfasi(id, istek) {
     if (!(gun >= 1)) { hata.textContent = 'Başlangıç ve iade tarihini seçin (iade, başlangıçtan sonra olmalı).'; return; }
     if (gun > 60) { hata.textContent = 'En fazla 60 günlük kiralama yapılabilir.'; return; }
     if (tel.replace(/\D/g, '').length < 10) { hata.textContent = 'Geçerli bir telefon numarası yazın.'; return; }
+    if (!$('#kSozlesme').checked) { hata.textContent = 'Devam etmek için kiralama sözleşmesini kabul edin.'; return; }
     localStorage.setItem(LS_ILETISIM, tel);
     const dug = $('#kGonder'); dug.disabled = true; dug.textContent = 'Gönderiliyor…';
     try {
@@ -296,7 +309,7 @@ async function esyaSayfasi(id, istek) {
         kiraciIletisim: (tel + ' · ' + (kullanici.email || '')).slice(0, 200), sahipIletisim: '',
         baslangic: $('#kBas').value, bitis: $('#kBit').value, gun,
         gunlukUcret: e.gunlukUcret, kira: gun * e.gunlukUcret, depozito: e.depozito, toplam: gun * e.gunlukUcret + e.depozito,
-        not: $('#kNot').value.trim().slice(0, 500), durum: 'beklemede',
+        not: $('#kNot').value.trim().slice(0, 500), durum: 'beklemede', sozlesme: SOZLESME_SURUM,
         olusturma: serverTimestamp(), guncelleme: serverTimestamp()
       });
       bildir('İsteğin gönderildi. Sahibi onaylayınca haber Kiralamalarım\'da.');
@@ -403,8 +416,10 @@ function esyaFormu(e) {
       '<div class="alan"><label for="fRenk">Renk</label><input id="fRenk" maxlength="30" value="' + esc(e?.renk) + '"></div>' +
       '<div class="alan"><label for="fUcret">Günlük kira (TL)</label><input id="fUcret" type="number" min="1" step="1" inputmode="numeric" value="' + esc(e?.gunlukUcret) + '"></div>' +
       '<div class="alan"><label for="fDepozito">Depozito (TL)</label><input id="fDepozito" type="number" min="0" step="1" inputmode="numeric" value="' + esc(e?.depozito ?? 0) + '"></div>' +
+      '<p class="kucuk tam">Depozitoyu eşyanın gerçek değerine yakın belirleyin; eşya iade edilmezse alabileceğiniz tutar depozitodur.</p>' +
       '<div class="alan tam"><label for="fAciklama">Açıklama</label><textarea id="fAciklama" maxlength="1000" placeholder="Kumaş, kalıp, kaç kez giyildi, temizlik notu…">' + esc(e?.aciklama) + '</textarea></div>' +
     '</div>' +
+    '<label class="onay-kutu"><input type="checkbox" id="fSozlesme"' + (e?.sozlesme === SOZLESME_SURUM ? ' checked' : '') + '><span><a href="elif-sozlesme.html" target="_blank">Kiralama sözleşmesindeki</a> kiraya veren yükümlülüklerini kabul ediyorum: eşyayı ilana uygun, temiz ve zamanında teslim ederim; bilinen kusurları açıkça yazdım.</span></label>' +
     '<p class="hata" id="fHata" role="alert"></p>' +
     '<div class="pencere-alt"><button type="button" class="dug" id="fVazgec">Vazgeç</button><button type="button" class="dug dug-vurgu" id="fKaydet">' + (e ? 'Kaydet' : 'Dolabıma ekle') + '</button></div>' +
     '</div>';
@@ -440,6 +455,7 @@ function esyaFormu(e) {
     if (v('fBaslik').length < 2) { hata.textContent = 'Başlık yazın.'; return; }
     if (!(ucret >= 1)) { hata.textContent = 'Günlük kira bedeli girin.'; return; }
     if (depozito < 0) { hata.textContent = 'Depozito eksi olamaz.'; return; }
+    if (!$('#fSozlesme').checked) { hata.textContent = 'Eşya eklemek için kiraya veren şartlarını kabul edin.'; return; }
     const dug = $('#fKaydet'); dug.disabled = true;
     try {
       const urller = [];
@@ -455,7 +471,7 @@ function esyaFormu(e) {
       dug.textContent = 'Kaydediliyor…';
       const veri = {
         baslik: v('fBaslik'), kategori: v('fKat'), marka: v('fMarka'), beden: v('fBeden'), renk: v('fRenk'),
-        aciklama: v('fAciklama'), gunlukUcret: ucret, depozito, fotolar: urller,
+        aciklama: v('fAciklama'), gunlukUcret: ucret, depozito, fotolar: urller, sozlesme: SOZLESME_SURUM,
         sahipAd: (kullanici.displayName || 'Kullanıcı').slice(0, 80), sahipFoto: (kullanici.photoURL || '').slice(0, 600)
       };
       if (e) await updateDoc(doc(db, 'dolapEsyalar', e.id), veri);
@@ -505,16 +521,54 @@ async function kiralamalar(gorunum, istek) {
     const y = b.dataset.gecis;
     const veri = { durum: y, guncelleme: serverTimestamp() };
     if (y === 'onaylandi' && gorunum === 'sahip') {
-      const tel = prompt('Kiralama kesinleşince kiracıya gösterilecek telefon numaran:', localStorage.getItem(LS_ILETISIM) || '');
-      if (!tel || tel.replace(/\D/g, '').length < 10) { if (tel !== null) bildir('Geçerli bir telefon numarası gerekli.'); return; }
-      localStorage.setItem(LS_ILETISIM, tel.trim());
-      veri.sahipIletisim = (tel.trim() + ' · ' + (kullanici.email || '')).slice(0, 200);
+      const tel = await onayPenceresi(k);
+      if (!tel) return;
+      veri.sahipIletisim = (tel + ' · ' + (kullanici.email || '')).slice(0, 200);
+      veri.sahipSozlesme = SOZLESME_SURUM;
     }
     if (['iptal', 'reddedildi'].includes(y) && !confirm(y === 'iptal' ? 'İstek iptal edilsin mi?' : 'İstek reddedilsin mi?')) return;
     b.disabled = true;
     try { await updateDoc(doc(db, 'dolapKiralamalar', k.id), veri); bildir('Güncellendi: ' + DURUM[y]); sayfaCiz(); }
     catch (h) { bildir(hataMetni(h)); b.disabled = false; }
   };
+}
+
+/* Sahibin onayı: telefon + kiraya veren şartlarının kabulü. Telefonu ya da null döndürür. */
+function onayPenceresi(k) {
+  return new Promise(son => {
+    const p = $('#pencere');
+    p.innerHTML = '<div class="pencere-ic"><h2 id="pencereBas">İsteği onayla</h2>' +
+      '<p class="kucuk" style="margin-bottom:12px">' + esc(k.esyaBaslik) + ' · ' + tarihYaz(k.baslangic) + ' → ' + tarihYaz(k.bitis) + ' · ' + esc(k.kiraciAd) + '</p>' +
+      '<div class="alan"><label for="oTel">Telefonun <span class="kucuk">(ödeme onaylanınca kiracıya gösterilir)</span></label>' +
+      '<input id="oTel" type="tel" autocomplete="tel" value="' + esc(localStorage.getItem(LS_ILETISIM) || '') + '"></div>' +
+      '<div class="uyari" style="margin-top:14px">' + SARTLAR_OZET + '</div>' +
+      '<label class="onay-kutu"><input type="checkbox" id="oSozlesme"><span><a href="elif-sozlesme.html" target="_blank">Kiralama sözleşmesini</a> kabul ediyorum; eşyayı ilana uygun, temiz ve ' + tarihYaz(k.baslangic) + ' tarihinde teslim edeceğim.</span></label>' +
+      '<p class="hata" id="oHata" role="alert"></p>' +
+      '<div class="pencere-alt"><button type="button" class="dug" id="oVazgec">Vazgeç</button><button type="button" class="dug dug-vurgu" id="oTamam">Onayla</button></div></div>';
+    p.hidden = false; document.body.style.overflow = 'hidden';
+    const bitir = deger => { p.hidden = true; p.innerHTML = ''; document.body.style.overflow = ''; son(deger); };
+    $('#oVazgec').onclick = () => bitir(null);
+    p.onclick = ev => { if (ev.target === p) bitir(null); };
+    $('#oTamam').onclick = () => {
+      const tel = $('#oTel').value.trim();
+      if (tel.replace(/\D/g, '').length < 10) { $('#oHata').textContent = 'Geçerli bir telefon numarası yazın.'; return; }
+      if (!$('#oSozlesme').checked) { $('#oHata').textContent = 'Onaylamak için sözleşmeyi kabul edin.'; return; }
+      localStorage.setItem(LS_ILETISIM, tel);
+      bitir(tel);
+    };
+  });
+}
+
+/* İade günü geçmiş ve hâlâ kiracıdaki eşya için gecikme bilgisi */
+function gecikmeHTML(k) {
+  if (k.durum !== 'teslim_edildi' || bugun() <= k.bitis) return '';
+  const gun = gunFarki(k.bitis, bugun());
+  const bedel = Math.round(gun * k.gunlukUcret * GECIKME_KAT);
+  return '<div class="gecikme">' + (gun >= KAYIP_GUN
+    ? '<b>İade ' + gun + ' gün gecikti: eşya teslim edilmemiş sayılır.</b> Depozitonun tamamı (' + tl(k.depozito) + ') kiraya verene ödenir; zarar daha büyükse fark kiracıdan istenir. İşletmeci iki tarafla iletişime geçer.'
+    : '<b>İade ' + gun + ' gün gecikti.</b> Gecikme bedeli şu ana kadar ' + tl(bedel) + ' (günlük kiranın 1,5 katı), depozitodan düşülür.' +
+      (gun >= 3 ? ' İşletmeci kiracıya ulaşacak.' : '') + ' ' + (KAYIP_GUN - gun) + ' gün içinde iade edilmezse eşya teslim edilmemiş sayılır.') +
+    '</div>';
 }
 
 function kiraSatiri(k, gorunum) {
@@ -551,7 +605,7 @@ function kiraSatiri(k, gorunum) {
       '<p class="kira-detay">' + tarihYaz(k.baslangic) + ' → ' + tarihYaz(k.bitis) + ' · ' + k.gun + ' gün · <b>' + tl(k.toplam) + '</b></p>' +
       (gorunum === 'sahip' && k.not ? '<p class="kira-detay">Not: ' + esc(k.not) + '</p>' : '') +
       '<p class="kira-detay"><span class="durum d-' + esc(d) + '">' + esc(DURUM[d] || d) + '</span> <span class="kucuk">' + refKod(k.id) + '</span></p></div>' +
-    '<div class="eylem">' + eylem + '</div>' + ek + '</div>';
+    '<div class="eylem">' + eylem + '</div>' + gecikmeHTML(k) + ek + '</div>';
 }
 
 /* ---------------------------------------------------------------- başlat */

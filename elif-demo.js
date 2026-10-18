@@ -134,9 +134,9 @@ export function demoVeri() {
   const elif = kullanicilar[0];
   const baskalarininki = esyalar.filter(e => e.sahipId !== elif.uid);
   const elifinki = esyalar.filter(e => e.sahipId === elif.uid);
-  [['beklemede', 6, 2], ['onaylandi', 9, 3], ['odeme_bildirildi', 4, 1], ['odendi', 2, 2], ['teslim_edildi', -1, 3], ['iade_edildi', -20, 2], ['reddedildi', 12, 2]]
+  [['beklemede', 6, 2], ['onaylandi', 9, 3], ['odeme_bildirildi', 4, 1], ['odendi', 2, 2], ['teslim_edildi', -6, 2], ['iade_edildi', -20, 2], ['reddedildi', 12, 2]]
     .forEach(([d, b, g], i) => kira(baskalarininki[i * 5], elif, d, b, g));
-  [['beklemede', 5, 2, 3], ['beklemede', 14, 1, 7], ['odendi', 3, 3, 9], ['teslim_edildi', -2, 4, 12], ['iade_edildi', -30, 2, 15], ['iptal', 8, 1, 4]]
+  [['beklemede', 5, 2, 3], ['beklemede', 14, 1, 7], ['odendi', 3, 3, 9], ['teslim_edildi', -12, 3, 12], ['iade_edildi', -30, 2, 15], ['iptal', 8, 1, 4]]
     .forEach(([d, b, g, ki]) => kira(elifinki[ki % elifinki.length], kullanicilar[ki], d, b, g));
 
   return { kullanicilar, esyalar, yorumlar, kiralamalar };

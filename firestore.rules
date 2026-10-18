@@ -532,7 +532,7 @@ service cloud.firestore {
        ===================================================================== */
     function dolapAlanlari() {
       return ['sahipId', 'sahipAd', 'sahipFoto', 'baslik', 'marka', 'kategori', 'beden',
-              'renk', 'aciklama', 'gunlukUcret', 'depozito', 'fotolar', 'aktif', 'olusturma'];
+              'renk', 'aciklama', 'gunlukUcret', 'depozito', 'fotolar', 'aktif', 'olusturma', 'sozlesme'];
     }
     function esyaGecerli() {
       let d = request.resource.data;
@@ -547,6 +547,7 @@ service cloud.firestore {
         && d.depozito is number && d.depozito >= 0 && d.depozito <= 1000000
         && d.fotolar is list && d.fotolar.size() >= 1 && d.fotolar.size() <= 4
         && d.aktif is bool
+        && d.sozlesme == 'v1'
         && d.sahipAd is string && d.sahipAd.size() <= 80
         && d.sahipFoto is string && d.sahipFoto.size() <= 600;
     }
@@ -572,7 +573,8 @@ service cloud.firestore {
       let kiraci = resource.data.kiraciId == benim();
       return request.resource.data.guncelleme == request.time && (
         (sahip && e == 'beklemede' && y == 'onaylandi'
-          && degisenler().hasOnly(['durum', 'guncelleme', 'sahipIletisim'])
+          && degisenler().hasOnly(['durum', 'guncelleme', 'sahipIletisim', 'sahipSozlesme'])
+          && request.resource.data.sahipSozlesme == 'v1'
           && request.resource.data.sahipIletisim is string
           && request.resource.data.sahipIletisim.size() >= 5
           && request.resource.data.sahipIletisim.size() <= 200)
@@ -593,7 +595,8 @@ service cloud.firestore {
       allow create: if girisli()
         && yeni().keys().hasOnly(['esyaId', 'esyaBaslik', 'esyaFoto', 'sahipId', 'kiraciId',
              'kiraciAd', 'kiraciIletisim', 'sahipIletisim', 'baslangic', 'bitis', 'gun',
-             'gunlukUcret', 'kira', 'depozito', 'toplam', 'not', 'durum', 'olusturma', 'guncelleme'])
+             'gunlukUcret', 'kira', 'depozito', 'toplam', 'not', 'durum', 'olusturma', 'guncelleme', 'sozlesme'])
+        && yeni().sozlesme == 'v1'
         && yeni().kiraciId == benim()
         && yeni().sahipId != benim()
         && yeni().durum == 'beklemede'
