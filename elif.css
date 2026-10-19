@@ -639,3 +639,26 @@ a.sayac:hover { border-color: var(--vurgu); }
 .sikayet-dug { color: var(--ikinci); font-size: 12.5px; margin-left: 6px; }
 .sikayet-dug:hover { color: var(--kirmizi); }
 .gelir-satir.soluk { opacity: .55; }
+
+/* Jeton ve Satıcı Pro */
+.cuzdan { margin: 0 0 18px; }
+.cuzdan-ust { display: flex; gap: 12px; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; }
+.cuzdan h2 b { font-family: var(--serif); color: var(--vurgu-koyu); }
+.cuzdan-pro { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--cizgi); }
+.pro-rozet { display: inline-block; padding: 1px 7px; border-radius: 999px; background: #2a1f1e; color: #f3d38a; font-size: 11px; font-weight: 700; letter-spacing: .06em; vertical-align: middle; }
+.jeton-paketler { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+.jeton-paket { display: grid; gap: 4px; padding: 14px 10px; border: 1px solid var(--cizgi); border-radius: 14px; background: #fff; font: inherit; cursor: pointer; text-align: center; }
+.jeton-paket span { color: var(--vurgu-koyu); font-weight: 600; }
+.jeton-paket:disabled { opacity: .5; cursor: default; }
+.pro-kutu { border: 1px solid var(--cizgi); border-radius: 16px; padding: 14px 16px; margin: 6px 0 10px; background: #fffaf3; }
+.pro-kutu h3 { font-size: 16px; margin-bottom: 6px; }
+.pro-kutu ul { padding-left: 18px; margin: 0 0 10px; }
+.abonelik-not { margin: 10px 0 6px; }
+.jeton-tablo { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
+.jeton-tablo td { padding: 7px 6px; border-bottom: 1px solid var(--cizgi); vertical-align: top; }
+.jeton-tablo td:first-child { white-space: nowrap; color: var(--ikinci); }
+.jeton-tablo .arti { color: #2f7a45; font-weight: 600; text-align: right; }
+.jeton-tablo .eksi { color: #a23b2c; font-weight: 600; text-align: right; }
+.jeton-form { display: grid; grid-template-columns: 2fr 1fr 2fr auto; gap: 8px; margin-top: 10px; }
+.jeton-form input { min-width: 0; padding: 9px 11px; border: 1px solid var(--cizgi); border-radius: 10px; font: inherit; }
+@media (max-width: 640px) { .jeton-paketler { grid-template-columns: 1fr; } .jeton-form { grid-template-columns: 1fr; } }

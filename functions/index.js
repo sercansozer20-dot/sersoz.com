@@ -8,6 +8,7 @@
  *   urunOnayaDustu : ürün "onay bekliyor"a düştü  → panelden atanmış adminler (yoksa tam yetkili)
  *   soruGeldi      : soru-cevaptan yeni kullanıcı mesajı → panelden atanmış adminler (yoksa tam yetkili)
  *   yanitGeldi     : admin yanıtladı → soruyu soran (e-posta bildirimi açıksa)
+ *   appleSatinAlma, appleBildirim, jetonlaOneCikar, jetonYonetim: jeton.js
  *
  * Kurulum: functions/BENIOKU.md
  */
@@ -70,3 +71,7 @@ exports.soruGeldi = onDocumentWritten({ document: 'dolapSohbet/{id}', region: BO
         'Siteye git', SITE));
   }
 });
+
+/* Jeton ve Satıcı Pro (App Store uygulama içi satın alma): jeton.js */
+const jeton = require('./jeton');
+for (const ad of ['appleSatinAlma', 'appleBildirim', 'jetonlaOneCikar', 'jetonYonetim']) exports[ad] = jeton[ad];

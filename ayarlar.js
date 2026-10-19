@@ -70,6 +70,18 @@ window.SERSOZ_AYAR = {
     { paket: 'aylik', ad: '1 ay (30 gün)', saat: 720, fiyat: 399 }
   ],
 
+  /* Elif'in Dolabı · jeton ve Satıcı Pro (iPhone'da App Store uygulama içi satın alma, sitede havale).
+     acik: false iken hiçbir yerde görünmez; sunucu fonksiyonları (functions/jeton.js) yüklenip
+     App Store ürünleri hazır olunca true yapın. Öne çıkarma bedeli jeton olarak yukarıdaki
+     oneCikarma fiyatıdır (1 jeton = 1 TL) ve functions/jeton.js → PAKET ile aynı olmalı.
+     Ürün kimlikleri App Store Connect'tekilerle aynı. */
+  jeton: {
+    acik: false,
+    paketler: ['com.sersoz.elifdolabi.jeton50', 'com.sersoz.elifdolabi.jeton150', 'com.sersoz.elifdolabi.jeton450'],
+    pro: 'com.sersoz.elifdolabi.pro.aylik',
+    proHediye: 150
+  },
+
   /* Kargo: fiziksel ürünlerde uygulanır. ucretsizEsik üstünde kargo bedava. */
   kargo: { ucret: 150, ucretsizEsik: 2000 }
 };

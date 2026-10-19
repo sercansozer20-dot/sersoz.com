@@ -1,7 +1,7 @@
 {
   "name": "sersoz-functions",
   "private": true,
-  "description": "Elif'in Dolabı e-posta bildirimleri",
+  "description": "Elif'in Dolabı e-posta bildirimleri, jeton ve Satıcı Pro",
   "main": "index.js",
   "engines": { "node": "20" },
   "dependencies": {

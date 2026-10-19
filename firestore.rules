@@ -1113,6 +1113,29 @@ service cloud.firestore {
       allow delete: if tamYetkili();
     }
 
+    /* Jeton ve Satıcı Pro: bakiyeyi, işlem geçmişini ve Pro süresini YALNIZ sunucu
+       (functions/jeton.js, Admin SDK) yazar; Apple satın alımı orada doğrulanır.
+       dolapJetonlar/{uid}: { bakiye, proBitis } · dolapJetonIslem: hareket defteri
+       dolapPro/{uid}: { bitis } herkese açık (Pro rozeti) · dolapApple*: yalnız sunucu */
+    match /dolapJetonlar/{kimlik} {
+      allow read: if girisli() && (kimlik == benim() || dolapAdmin());
+      allow write: if false;
+    }
+    match /dolapJetonIslem/{islem} {
+      allow read: if girisli() && (resource.data.uid == benim() || dolapAdmin());
+      allow write: if false;
+    }
+    match /dolapPro/{kimlik} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /dolapAppleIslem/{islem} {
+      allow read, write: if false;
+    }
+    match /dolapAppleAbonelik/{islem} {
+      allow read, write: if false;
+    }
+
     /* Destek postası alıcıları: tarayıcı herkese açık hedeflere gönderir; hangi hedefin
        kime ait olduğu yalnız adminlere açık. Yazmayı adminler yapar. */
     match /ayarlarGenel/destek {

@@ -14,11 +14,12 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, signOut, onAuthStateChanged, deleteUser }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where, serverTimestamp, Timestamp, onSnapshot, writeBatch, increment }
+import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where, serverTimestamp, Timestamp, onSnapshot, writeBatch, increment, orderBy, limit }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261020d';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261021a';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -834,7 +835,7 @@ async function profilEsyalari(uid) {
 }
 async function profilSayfasi(uid, istek) {
   icerik.innerHTML = '<p class="yukleniyor">Yükleniyor…</p>';
-  const [pr, esyalar, sad] = await Promise.all([profilGetir(uid).catch(() => null), profilEsyalari(uid).catch(() => []), sadakatGetir(uid).catch(() => null)]);
+  const [pr, esyalar, sad, pro] = await Promise.all([profilGetir(uid).catch(() => null), profilEsyalari(uid).catch(() => []), sadakatGetir(uid).catch(() => null), proMu(uid)]);
   if (istek !== aktifIstek) return;
   const p = pr || (esyalar[0] ? { ad: esyalar[0].sahipAd, foto: esyalar[0].sahipFoto, ornek: !!esyalar[0].ornek } : null);
   if (!p) { icerik.innerHTML = '<div class="bos"><h3>Profil bulunamadı</h3><a class="dug" href="#kesfet">Keşfet\'e dön</a></div>'; return; }
@@ -849,7 +850,7 @@ async function profilSayfasi(uid, istek) {
       (p.foto ? '<img class="avatar profil-foto" src="' + esc(p.foto) + '" alt="" referrerpolicy="no-referrer">' : '<span class="avatar profil-foto bos-foto">' + esc((p.ad || '?')[0]) + '</span>') +
       '<div><h1>' + esc(p.ad || 'Üye') + '</h1>' +
         '<p class="kucuk">' + [p.sehir && esc(p.sehir), katilma && katilma + '\'den beri üye'].filter(Boolean).join(' · ') + '</p>' +
-        '<div class="profil-rozet">' + (sad ? seviyeRozet(sad) : '') + (p.ornek ? '<span class="etiket ornek-etiket" style="position:static">Örnek profil</span>' : '') + '</div>' +
+        '<div class="profil-rozet">' + (pro ? PRO_ROZET : '') + (sad ? seviyeRozet(sad) : '') + (p.ornek ? '<span class="etiket ornek-etiket" style="position:static">Örnek profil</span>' : '') + '</div>' +
         (kendisi ? '<a class="dug dug-kucuk" href="#hesabim/profil" style="margin-top:10px">Profilimi düzenle</a>' : '') +
         (!p.ornek && !D ? '<div class="takip"><button type="button" class="dug dug-kucuk" id="takipDug"' + (kendisi ? ' hidden' : '') + '>+ Takip et</button> <span class="kucuk" id="takipSay"></span>' +
           (!kendisi && kullanici ? ' <button type="button" class="dug-metin" data-engelle="' + esc(uid) + '">' + (engelliMi(uid) ? 'Engeli kaldır' : 'Engelle') + '</button>' + sikayetDugme('profil', uid, uid) : '') +
@@ -952,7 +953,7 @@ function siralamaKur() {
 
 /* ---------------------------------------------------------------- kampanya afişleri (ayarlar.js → kampanyalar) */
 function afisHTML() {
-  const l = (AYAR.kampanyalar || []).filter(k => k && k.baslik && !(NATIVE && /öne çıkar/i.test(k.ust || '')));
+  const l = (AYAR.kampanyalar || []).filter(k => k && k.baslik && !(NATIVE && !IAP && /öne çıkar/i.test(k.ust || '')));
   if (!l.length) return '';
   return '<section class="afis" id="afis" aria-roledescription="carousel" aria-label="Kampanyalar"><div class="afis-ray">' +
     l.map((k, i) => '<a class="afis-kart" href="' + esc(k.link || '#kesfet') + '" style="--afis-renk:' + esc(k.renk || '#2a1f1e') + '"' + (i ? ' aria-hidden="true" tabindex="-1"' : '') + '>' +
@@ -1857,11 +1858,16 @@ async function dolabim(istek) {
     return;
   }
   if (istek !== aktifIstek) return;
-  const ocHtml = NATIVE ? '' : await boostlarimHTML();   // iOS uygulamasında dijital paket satışı yok (App Store 3.1.1)
+  // iOS'ta dijital paket yalnız uygulama içi satın almayla (jeton) satılır; eklentisiz eski sürümde gizli (App Store 3.1.1)
+  const ocGoster = !NATIVE || IAP;
+  const [czHtml, ocHtml] = await Promise.all([JETON_ACIK && ocGoster ? cuzdanHTML() : '', ocGoster ? boostlarimHTML() : '']);
   if (istek !== aktifIstek) return;
-  if (ocHtml) $('#liste').insertAdjacentHTML('beforebegin', '<div id="ocBolum">' + ocHtml + '</div>');
+  if (czHtml || ocHtml) $('#liste').insertAdjacentHTML('beforebegin', '<div id="ocBolum">' + czHtml + ocHtml + '</div>');
   const ocB = $('#ocBolum');
-  if (ocB) ocB.onclick = ev => { const b = ev.target.closest('[data-oc]'); if (b) boostDurum(b.dataset.ocId, b.dataset.oc); };
+  if (ocB) ocB.onclick = ev => {
+    const b = ev.target.closest('[data-oc]'); if (b) return boostDurum(b.dataset.ocId, b.dataset.oc);
+    const j = ev.target.closest('[data-jeton]'); if (j) cuzdanEylem(j.dataset.jeton);
+  };
   if (!l.length) {
     $('#liste').innerHTML = '<div class="bos"><h3>Dolabın boş</h3><p>Kiraya vermek istediğin ilk parçayı ekle.</p><button type="button" class="dug dug-vurgu" id="ilkEsya">+ Eşya ekle</button></div>';
     $('#ilkEsya').onclick = () => esyaFormu();
@@ -1875,7 +1881,7 @@ async function dolabim(istek) {
           : e.onay === 'reddedildi' ? '<span class="durum d-reddedildi">Reddedildi</span> <span class="kucuk">' + esc(e.redNeden) + '</span>'
           : e.aktif ? '<span class="durum d-onaylandi">Yayında</span>' : '<span class="durum">Yayında değil</span>') + '</p></div>' +
       '<div class="eylem">' +
-        (!NATIVE && e.onay === 'onaylandi' && e.aktif && !oneCikanMi(e) ? '<button type="button" class="dug dug-kucuk dug-vurgu" data-onecikar="' + esc(e.id) + '">★ Öne çıkar</button>' : '') +
+        ((!NATIVE || IAP) && e.onay === 'onaylandi' && e.aktif && (JETON_ACIK || !oneCikanMi(e)) ? '<button type="button" class="dug dug-kucuk dug-vurgu" data-onecikar="' + esc(e.id) + '">★ ' + (oneCikanMi(e) ? 'Süre ekle' : 'Öne çıkar') + '</button>' : '') +
         (oneCikanMi(e) ? '<span class="durum d-onaylandi">★ ' + kalanSure(zaman(e.oneCikanBitis)) + ' kaldı</span>' : '') +
         '<button type="button" class="dug dug-kucuk" data-duzenle="' + esc(e.id) + '">Düzenle</button>' +
         '<button type="button" class="dug dug-kucuk" data-yayin="' + esc(e.id) + '">' + (e.aktif ? 'Yayından kaldır' : 'Yayınla') + '</button>' +
@@ -2604,9 +2610,14 @@ function odemeBilgisiHTML(tutar, kod) {
     'Açıklamaya mutlaka <b>' + kod + '</b> yazın, ödeme geçince "Ödemeyi yaptım"a basın.';
 }
 
-/* Paket seçimi penceresi */
+/* Paket seçimi penceresi: jeton açıksa önce jetonla, sitede havale de seçilebilir */
 function oneCikarFormu(e) {
   if (rol === 'kisitli') { bildir('Hesabın kısıtlandı; öne çıkarma satın alamazsın.'); return; }
+  if (JETON_ACIK) return jetonlaOneCikarFormu(e);
+  oneCikarHavaleFormu(e);
+}
+function oneCikarHavaleFormu(e) {
+  if (NATIVE) return;   // iOS'ta dijital hizmet havaleyle satılmaz (App Store 3.1.1)
   const p = $('#pencere');
   p.innerHTML = '<div class="pencere-ic"><h2 id="pencereBas">★ Öne çıkar</h2>' +
     '<p class="kucuk" style="margin-bottom:14px"><b>' + esc(e.baslik) + '</b> Keşfet\'te en üstte, "Öne çıkan" rozetiyle gösterilir. Süre, ödemen onaylandığı anda başlar.</p>' +
@@ -2638,14 +2649,14 @@ function oneCikarFormu(e) {
 /* Dolabım'ın üstünde: öne çıkarma taleplerim */
 async function boostlarimHTML() {
   let l;
-  try { l = (await boostListesi('sahipId', kullanici.uid)).filter(b => b.durum !== 'iptal' && !(b.durum === 'aktif' && zaman(b.bitis) < Date.now() - 864e5)); }
+  try { l = (await boostListesi('sahipId', kullanici.uid)).filter(b => b.durum !== 'iptal' && !(b.durum === 'aktif' && zaman(b.bitis) < Date.now() - 864e5) && (!NATIVE || b.odeme === 'jeton')); }
   catch (e) { return ''; }
   if (!l.length) return '';
   l.sort((a, b) => zaman(b.guncelleme) - zaman(a.guncelleme));
   return '<section class="kutu" style="margin:0 0 18px"><h2>★ Öne çıkarmalarım</h2><div class="liste">' + l.map(b => {
     const aktif = b.durum === 'aktif' && zaman(b.bitis) > Date.now();
     return '<div class="satir"><img class="k" src="' + esc(b.esyaFoto) + '" alt=""><div><h3>' + esc(b.esyaBaslik) + '</h3>' +
-      '<p class="kira-detay">' + esc((PAKETLER.find(k => k.paket === b.paket) || {}).ad || b.paket) + ' · <b>' + tl(b.fiyat) + '</b> · <span class="kucuk">' + ocKod(b.id) + '</span></p>' +
+      '<p class="kira-detay">' + esc((PAKETLER.find(k => k.paket === b.paket) || {}).ad || b.paket) + ' · <b>' + ocBedel(b) + '</b> · <span class="kucuk">' + ocKod(b.id) + '</span></p>' +
       '<p class="kira-detay"><span class="durum ' + (aktif ? 'd-onaylandi' : b.durum === 'reddedildi' ? 'd-reddedildi' : b.durum === 'aktif' ? '' : 'd-beklemede') + '">' +
         (aktif ? '★ Öne çıkan · ' + kalanSure(zaman(b.bitis)) + ' kaldı' : b.durum === 'aktif' ? 'Süresi doldu' : BOOST_DURUM[b.durum]) + '</span></p></div>' +
       '<div class="eylem">' + (b.durum === 'odeme_bekliyor' ? '<button type="button" class="dug dug-kucuk dug-vurgu" data-oc="odeme_bildirildi" data-oc-id="' + esc(b.id) + '">Ödemeyi yaptım</button>' +
@@ -2660,6 +2671,257 @@ async function boostDurum(id, y) {
   catch (h) { bildir(hataMetni(h)); }
 }
 
+/* ---------------------------------------------------------------- JETON VE SATICI PRO
+ * Jeton yalnız öne çıkarmaya harcanır (dijital hizmet); kiralama ödemesine kullanılamaz, paraya çevrilmez.
+ * iPhone uygulamasında App Store uygulama içi satın almayla alınır: yerel "Jeton" eklentisi (StoreKit 2)
+ * satın alır, Apple'ın imzalı kaydını sunucu (functions/jeton.js → appleSatinAlma) doğrulayıp yükler.
+ * Sitede havaleyle alınır, yönetim panelden yükler. Satıcı Pro yalnız App Store aboneliği.
+ * Bakiye dolapJetonlar/{uid}, hareketler dolapJetonIslem; ikisini de yalnız sunucu yazar.
+ * ayarlar.js → jeton.acik false iken hiçbir yerde görünmez. */
+const JETON = AYAR.jeton || {};
+const JETON_ACIK = !!JETON.acik;
+const iapEklenti = () => window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Jeton;
+const IAP = JETON_ACIK && NATIVE && !!iapEklenti();   // eklentisi olmayan eski uygulama sürümünde false
+const PRO_HEDIYE = JETON.proHediye || 150;
+const jetonBedeli = k => k.fiyat;   // 1 jeton = 1 TL; functions/jeton.js → PAKET ile aynı
+const ocBedel = b => b.odeme === 'jeton' ? b.fiyat + ' jeton' : tl(b.fiyat);
+const APPLE_EULA = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
+const fonksiyonlar = getFunctions(app, 'europe-west1');
+const cagir = (ad, veri) => httpsCallable(fonksiyonlar, ad)(veri).then(r => r.data);
+const tarihGun = ms => new Date(ms).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+let cuzdan = null;   // { bakiye, proBitis (ms) }
+
+async function cuzdanGetir(taze) {
+  if (!kullanici) return null;
+  if (cuzdan && !taze) return cuzdan;
+  if (D) return (cuzdan = cuzdan || { bakiye: 120, proBitis: 0 });
+  const s = await getDoc(doc(db, 'dolapJetonlar', kullanici.uid));
+  const v = s.exists() ? s.data() : {};
+  return (cuzdan = { bakiye: v.bakiye || 0, proBitis: zaman(v.proBitis) || 0 });
+}
+const proAktif = () => !!(cuzdan && cuzdan.proBitis > Date.now());
+async function proMu(uid) {
+  if (!JETON_ACIK || D || !uid) return false;
+  try { const s = await getDoc(doc(db, 'dolapPro', uid)); return s.exists() && zaman(s.data().bitis) > Date.now(); }
+  catch (e) { return false; }
+}
+const PRO_ROZET = '<span class="pro-rozet" title="Satıcı Pro">PRO</span>';
+
+/* Satın alımı Firebase hesabına bağlayan kimlik (StoreKit appAccountToken); functions/jeton.js → hesapKodu ile aynı. */
+async function hesapKodu(uid) {
+  const b = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('elif-dolabi:' + uid)));
+  const h = Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+  return [h.slice(0, 8), h.slice(8, 12), '4' + h.slice(13, 16), ((parseInt(h[16], 16) & 3) | 8).toString(16) + h.slice(17, 20), h.slice(20, 32)].join('-');
+}
+
+/* Dolabım'ın üstünde: bakiye, Pro durumu, geçmiş */
+async function cuzdanHTML() {
+  let c; try { c = await cuzdanGetir(true); } catch (e) { return ''; }
+  if (!c) return '';
+  const fiyatlar = PAKETLER.map(k => k.ad + ' ' + jetonBedeli(k)).join(', ');
+  return '<section class="kutu cuzdan"><div class="cuzdan-ust"><div><h2>🪙 Jetonların: <b id="jetonBakiye">' + c.bakiye + '</b></h2>' +
+      '<p class="kucuk">Jetonla ilanını Keşfet\'in en üstüne taşırsın (' + esc(fiyatlar) + ' jeton).</p>' +
+      (proAktif() ? '<p class="kucuk">' + PRO_ROZET + ' Satıcı Pro · ' + tarihGun(c.proBitis) + ' tarihine kadar</p>' : '') + '</div>' +
+    '<div class="eylem">' + (IAP ? '<button type="button" class="dug dug-kucuk dug-vurgu" data-jeton="magaza">Jeton al</button>'
+        : '<button type="button" class="dug dug-kucuk dug-vurgu" data-jeton="havale">Jeton yükle</button>') +
+      '<button type="button" class="dug dug-kucuk" data-jeton="gecmis">Geçmiş</button></div></div>' +
+    (!proAktif() ? '<p class="kucuk cuzdan-pro">' + PRO_ROZET + ' <b>Satıcı Pro</b>: her ay ' + PRO_HEDIYE + ' jeton, Pro rozeti, ilanların onayda öne alınır. ' +
+      (IAP ? '<button type="button" class="dug-metin" data-jeton="magaza">İncele</button>' : 'iPhone uygulamasından alınır.') + '</p>' : '') +
+    '<div id="jetonGecmis" hidden></div></section>';
+}
+function cuzdanEylem(ne) {
+  if (ne === 'magaza') return jetonMagazasi();
+  if (ne === 'havale') return jetonHavale();
+  if (ne === 'gecmis') return jetonGecmisi($('#jetonGecmis'));
+}
+async function jetonGecmisi(el) {
+  if (!el) return;
+  if (!el.hidden) { el.hidden = true; return; }
+  el.hidden = false; el.innerHTML = '<p class="yukleniyor">Yükleniyor…</p>';
+  try {
+    const l = D ? [] : (await getDocs(query(collection(db, 'dolapJetonIslem'), where('uid', '==', kullanici.uid)))).docs.map(d => d.data());
+    l.sort((a, b) => zaman(b.zaman) - zaman(a.zaman));
+    el.innerHTML = l.length ? '<table class="jeton-tablo">' + l.slice(0, 50).map(x => '<tr><td>' + tarihSaat(x.zaman) + '</td><td>' + esc(x.aciklama) + '</td>' +
+      '<td class="' + (x.miktar > 0 ? 'arti' : 'eksi') + '">' + (x.miktar > 0 ? '+' : '') + x.miktar + '</td></tr>').join('') + '</table>'
+      : '<p class="kucuk">Henüz jeton hareketi yok.</p>';
+  } catch (h) { el.innerHTML = '<p class="hata">' + esc(hataMetni(h)) + '</p>'; }
+}
+function pencereAc(ic) {
+  const p = $('#pencere');
+  p.innerHTML = '<div class="pencere-ic">' + ic + '</div>';
+  p.hidden = false; document.body.style.overflow = 'hidden';
+  const kapat = () => { p.hidden = true; p.innerHTML = ''; document.body.style.overflow = ''; };
+  p.onclick = ev => { if (ev.target === p) kapat(); };
+  return { p, kapat, ic: el => (p.querySelector('.pencere-ic').innerHTML = el) };
+}
+
+/* Sitede jeton: havale, yönetim yükler */
+function jetonHavale() {
+  if (NATIVE) return;
+  const h = AYAR.havale || {};
+  const { kapat } = pencereAc('<h2 id="pencereBas">🪙 Jeton yükle</h2>' +
+    '<p class="kucuk" style="margin-bottom:10px">1 jeton = 1 TL. İstediğin kadar jeton için o tutarı havale et; ekip ödemeyi görünce jetonlarını yükler ve Geçmiş\'te görünür.</p>' +
+    '<div class="odeme-kutu">' + (h.iban ? 'Alıcı: ' + esc(h.hesapSahibi) + (h.banka ? ' · ' + esc(h.banka) : '') + '<br>IBAN: <span class="iban">' + esc(h.iban) + '</span><br>'
+      : 'Banka bilgileri için <a href="mailto:' + esc(AYAR.eposta) + '?subject=' + encodeURIComponent('Jeton yükleme') + '" style="text-decoration:underline">' + esc(AYAR.eposta) + '</a> adresine yazın.<br>') +
+      'Açıklamaya <b>"Jeton"</b> ve hesabının e-postasını yaz: <b>' + esc(kullanici.email || '') + '</b></div>' +
+    '<p class="kucuk" style="margin-top:10px">iPhone uygulamasında jeton App Store\'dan anında alınır.</p>' +
+    '<div class="pencere-alt"><button type="button" class="dug" id="jhKapat">Tamam</button></div>');
+  $('#jhKapat').onclick = kapat;
+}
+
+/* iPhone: App Store'dan jeton paketleri ve Satıcı Pro */
+async function jetonMagazasi() {
+  if (!IAP) return;
+  if (!kullanici) { bildir('Önce giriş yap.'); return; }
+  const { p, kapat, ic } = pencereAc('<h2 id="pencereBas">🪙 Jeton ve Satıcı Pro</h2><p class="yukleniyor">App Store fiyatları alınıyor…</p>');
+  let urunler;
+  try { urunler = (await iapEklenti().urunler({ kimlikler: [...(JETON.paketler || []), JETON.pro].filter(Boolean) })).urunler || []; }
+  catch (h) {
+    ic('<h2 id="pencereBas">🪙 Jeton</h2><p class="hata">' + esc(h.message || String(h)) + '</p><div class="pencere-alt"><button type="button" class="dug" id="jmKapat">Kapat</button></div>');
+    $('#jmKapat').onclick = kapat; return;
+  }
+  await cuzdanGetir(true).catch(() => {});
+  const paketler = (JETON.paketler || []).map(k => urunler.find(u => u.kimlik === k)).filter(Boolean);
+  const pro = urunler.find(u => u.kimlik === JETON.pro);
+  ic('<h2 id="pencereBas">🪙 Jeton ve Satıcı Pro</h2>' +
+    '<p class="kucuk">Jetonların: <b>' + (cuzdan ? cuzdan.bakiye : 0) + '</b>. Jetonla ilanını Keşfet\'in en üstüne taşırsın. Jeton kiralama ödemesinde kullanılamaz ve paraya çevrilmez.</p>' +
+    (paketler.length ? '<div class="jeton-paketler">' + paketler.map(u =>
+      '<button type="button" class="jeton-paket" data-al="' + esc(u.kimlik) + '"><b>' + esc(u.ad) + '</b><span>' + esc(u.fiyat) + '</span></button>').join('') + '</div>'
+      : '<p class="kucuk">Jeton paketleri şu an alınamıyor.</p>') +
+    (pro ? '<div class="pro-kutu"><h3>' + PRO_ROZET + ' ' + esc(pro.ad) + ' · ' + esc(pro.fiyat) + ' / ' + esc(pro.donemBirim || 'ay') + '</h3>' +
+      '<ul><li>Her ay ' + PRO_HEDIYE + ' jeton</li><li>Profilinde Pro rozeti</li><li>Yeni ve düzenlenen ilanların onay sırasında öne alınır</li></ul>' +
+      (proAktif() ? '<p class="kucuk">Aboneliğin ' + tarihGun(cuzdan.proBitis) + ' tarihine kadar geçerli.</p><button type="button" class="dug dug-kucuk" id="jmYonet">Aboneliği yönet</button>'
+        : '<button type="button" class="dug dug-vurgu dug-tam" data-al="' + esc(pro.kimlik) + '">Satıcı Pro\'ya geç</button>') +
+      '<p class="kucuk abonelik-not">Ödeme, satın almayı onayladığında Apple hesabından alınır. Abonelik her ay kendiliğinden yenilenir; dönem bitmeden en az 24 saat önce iptal edilmezse yeni dönemin ücreti Apple hesabından alınır. Aboneliğini App Store ayarlarından istediğin zaman yönetebilir ve iptal edebilirsin.</p>' +
+      '<p class="kucuk"><a href="' + APPLE_EULA + '" target="_blank" rel="noopener">Kullanım Koşulları (EULA)</a> · <a href="elif-gizlilik.html">Gizlilik Politikası</a> · <a href="elif-sozlesme.html#jeton">Jeton ve Pro koşulları</a></p></div>' : '') +
+    '<p class="hata" id="jmHata" role="alert"></p>' +
+    '<div class="pencere-alt"><button type="button" class="dug" id="jmGeri">Satın alımları geri yükle</button><button type="button" class="dug" id="jmKapat">Kapat</button></div>');
+  $('#jmKapat').onclick = kapat;
+  if ($('#jmYonet')) $('#jmYonet').onclick = () => iapEklenti().aboneligiYonet().catch(h => bildir(h.message || String(h)));
+  const kilit = d => p.querySelectorAll('[data-al],#jmGeri').forEach(x => { x.disabled = d; });
+  $('#jmGeri').onclick = async () => {
+    kilit(true); $('#jmHata').textContent = '';
+    try {
+      const r = await iapEklenti().geriYukle();
+      for (const x of r.islemler || []) await islemiGonder(x, true);
+      kapat(); bildir('Satın alımların App Store ile eşitlendi.'); sayfaCiz();
+    } catch (h) { $('#jmHata').textContent = h.message || String(h); kilit(false); }
+  };
+  p.querySelectorAll('[data-al]').forEach(b => { b.onclick = async () => {
+    if (D) { $('#jmHata').textContent = 'Örnek modda satın alma yapılmaz.'; return; }
+    kilit(true); $('#jmHata').textContent = '';
+    try {
+      const r = await iapEklenti().satinAl({ kimlik: b.dataset.al, hesap: await hesapKodu(kullanici.uid) });
+      if (r.durum === 'tamam') { await islemiGonder(r); kapat(); sayfaCiz(); return; }
+      if (r.durum === 'bekliyor') $('#jmHata').textContent = 'Satın alma onay bekliyor (ör. aile onayı). Onaylanınca jetonların kendiliğinden yüklenir.';
+    } catch (h) { $('#jmHata').textContent = h.message || String(h); }
+    kilit(false);
+  }; });
+}
+
+/* Apple işlemini sunucuya gönderir; sunucu yükleyince işlem kapatılır. Kapanmayan işlem bir sonraki açılışta yeniden gelir. */
+const gonderilen = new Set();
+async function islemiGonder(x, sessiz) {
+  if (!x || !x.jws || !kullanici || gonderilen.has(x.islem)) return null;
+  gonderilen.add(x.islem);
+  try {
+    const s = await cagir('appleSatinAlma', { jws: x.jws });
+    await iapEklenti().bitir({ islem: x.islem }).catch(() => {});
+    cuzdan = { bakiye: s.bakiye, proBitis: s.proBitis || 0 };
+    const b = $('#jetonBakiye'); if (b) b.textContent = s.bakiye;
+    if (s.miktar) bildir('+' + s.miktar + ' jeton yüklendi. Bakiyen: ' + s.bakiye);
+    return s;
+  } catch (h) {
+    gonderilen.delete(x.islem);
+    const m = (h && h.message) || '';
+    if (/iade edilmiş/.test(m)) { await iapEklenti().bitir({ islem: x.islem }).catch(() => {}); return null; }
+    if (/başka bir hesaba/.test(m)) return null;   // o hesapla girilince işlenir
+    if (!sessiz) throw new Error(m || 'Jeton yüklenemedi; uygulamayı yeniden açınca tekrar denenir.');
+    return null;
+  }
+}
+let iapDinleniyor = false;
+async function iapBaslat() {
+  if (!IAP || !kullanici) return;
+  if (!iapDinleniyor) {
+    iapDinleniyor = true;
+    iapEklenti().addListener('islem', x => { islemiGonder(x, false).catch(h => bildir(h.message)); });
+  }
+  try { const r = await iapEklenti().bekleyenler(); for (const x of r.islemler || []) await islemiGonder(x, true); } catch (e) {}
+}
+
+/* Jetonla öne çıkarma (süren öne çıkarmanın üstüne eklenir) */
+async function jetonlaOneCikarFormu(e) {
+  await cuzdanGetir(true).catch(() => {});
+  const bakiye = cuzdan ? cuzdan.bakiye : 0;
+  const havale = !NATIVE && !oneCikanMi(e);
+  const { p, kapat } = pencereAc('<h2 id="pencereBas">★ ' + (oneCikanMi(e) ? 'Süre ekle' : 'Öne çıkar') + '</h2>' +
+    '<p class="kucuk" style="margin-bottom:6px"><b>' + esc(e.baslik) + '</b> Keşfet\'te en üstte, "Öne çıkan" rozetiyle gösterilir. ' +
+      (oneCikanMi(e) ? 'Seçtiğin süre kalan ' + kalanSure(zaman(e.oneCikanBitis)) + '\'in üstüne eklenir.' : 'Süre hemen başlar.') + '</p>' +
+    '<p class="kucuk" style="margin-bottom:14px">Jetonların: <b>' + bakiye + '</b></p>' +
+    '<div class="paketler">' + PAKETLER.map((k, i) =>
+      '<label class="paket"><input type="radio" name="paket" value="' + i + '"' + (i === 1 ? ' checked' : '') + '><span class="paket-ad">' + esc(k.ad) + '</span>' +
+      '<span class="paket-fiyat">' + jetonBedeli(k) + ' jeton</span><span class="kucuk">' + (havale ? 'ya da ' + tl(k.fiyat) + ' havale' : '') + '</span></label>').join('') + '</div>' +
+    '<p class="hata" id="ocHata" role="alert"></p>' +
+    '<div class="pencere-alt"><button type="button" class="dug" id="ocVazgec">Vazgeç</button>' +
+      (havale ? '<button type="button" class="dug" id="ocHavale">Havaleyle öde</button>' : '') +
+      '<button type="button" class="dug dug-vurgu" id="ocJeton">Jetonla öde</button></div>');
+  $('#ocVazgec').onclick = kapat;
+  if ($('#ocHavale')) $('#ocHavale').onclick = () => { kapat(); oneCikarHavaleFormu(e); };
+  $('#ocJeton').onclick = async () => {
+    const k = PAKETLER[+p.querySelector('input[name=paket]:checked').value];
+    if (bakiye < jetonBedeli(k)) {
+      if (IAP) { kapat(); return jetonMagazasi(); }
+      $('#ocHata').textContent = 'Yeterli jetonun yok (' + jetonBedeli(k) + ' gerekli). Dolabım\'dan "Jeton yükle" ya da havaleyle öde.';
+      return;
+    }
+    if (D) { $('#ocHata').textContent = 'Örnek modda jeton harcanmaz.'; return; }
+    const dug = $('#ocJeton'); dug.disabled = true;
+    try {
+      const r = await cagir('jetonlaOneCikar', { esyaId: e.id, paket: k.paket });
+      cuzdan = Object.assign(cuzdan || {}, { bakiye: r.bakiye });
+      kapat();
+      bildir('★ Öne çıkarıldı · ' + kalanSure(r.bitis) + ' · kalan jeton: ' + r.bakiye);
+      sayfaCiz();
+    } catch (h) { $('#ocHata').textContent = (h && h.message) || 'Olmadı, tekrar dene.'; dug.disabled = false; }
+  };
+}
+
+/* Panel: jeton hareketleri ve elle yükleme */
+async function panelJetonlar(panel, istek) {
+  const l = D ? [] : (await getDocs(query(collection(db, 'dolapJetonIslem'), orderBy('zaman', 'desc'), limit(150)))).docs.map(d => ({ id: d.id, ...d.data() }));
+  if (istek !== aktifIstek) return;
+  const ay = Date.now() - 30 * 864e5, son = l.filter(x => zaman(x.zaman) > ay);
+  const top = f => son.filter(f).reduce((t, x) => t + Math.abs(x.miktar), 0);
+  panel.innerHTML =
+    '<div class="sayaclar">' + [['App Store\'dan yüklenen (30 gün)', top(x => x.kaynak === 'apple' && x.miktar > 0)], ['Elle yüklenen (30 gün)', top(x => x.kaynak === 'yonetim' && x.miktar > 0)],
+      ['Öne çıkarmaya harcanan (30 gün)', top(x => x.tur === 'harcama')], ['Pro yenilemesi (30 gün)', son.filter(x => x.tur === 'pro').length]]
+      .map(([a, s]) => '<div class="sayac"><b>' + s + '</b><span>' + a + '</span></div>').join('') + '</div>' +
+    '<section class="kutu"><h2>Elle jeton yükle ya da düş</h2>' +
+      '<p class="kucuk">Havaleyle jeton alana (açıklamada e-postası yazar) yükle; iade ya da düzeltme için eksi gir. Her işlem deftere, kimin yaptığıyla yazılır.</p>' +
+      '<form id="jetonForm" class="jeton-form"><input name="kimlik" placeholder="E-posta ya da kullanıcı kimliği" required>' +
+        '<input name="miktar" type="number" step="1" placeholder="Miktar (düşmek için eksi)" required>' +
+        '<input name="aciklama" placeholder="Açıklama (ör. havale 20 Ekim)" required minlength="3" maxlength="200">' +
+        '<button type="submit" class="dug dug-vurgu">Uygula</button></form><p class="hata" id="jfHata" role="alert"></p></section>' +
+    '<section class="kutu"><h2>Son hareketler</h2>' + (l.length ? '<table class="jeton-tablo">' + l.map(x => '<tr><td>' + tarihSaat(x.zaman) + '</td>' +
+      '<td><a href="#yonetim/kisi/' + esc(x.uid) + '">' + esc(String(x.uid).slice(0, 8)) + '</a></td><td>' + esc(x.aciklama) +
+      (x.yapan ? ' <span class="kucuk">· ' + esc(x.yapan) + '</span>' : '') + (x.ortam === 'Sandbox' ? ' <span class="kucuk">· test</span>' : '') + '</td>' +
+      '<td class="' + (x.miktar > 0 ? 'arti' : 'eksi') + '">' + (x.miktar > 0 ? '+' : '') + x.miktar + '</td></tr>').join('') + '</table>'
+      : '<p class="kucuk">Henüz jeton hareketi yok.</p>') + '</section>';
+  $('#jetonForm').onsubmit = async ev => {
+    ev.preventDefault();
+    const f = ev.target, miktar = parseInt(f.miktar.value, 10);
+    $('#jfHata').textContent = '';
+    if (D) { $('#jfHata').textContent = 'Örnek modda jeton işlemi yapılmaz.'; return; }
+    if (!confirm((miktar > 0 ? miktar + ' jeton yüklensin' : -miktar + ' jeton düşülsün') + ' mi? (' + f.kimlik.value.trim() + ')')) return;
+    f.querySelector('button').disabled = true;
+    try {
+      const r = await cagir('jetonYonetim', { kimlik: f.kimlik.value.trim(), miktar, aciklama: f.aciklama.value });
+      bildir('Yeni bakiye: ' + r.bakiye); sayfaCiz();
+    } catch (h) { $('#jfHata').textContent = (h && h.message) || 'Olmadı.'; f.querySelector('button').disabled = false; }
+  };
+}
+
 /* Panel: öne çıkarma ödemeleri ve aktif paketler */
 async function panelOneCikar(panel, istek) {
   const l = await boostListesi();
@@ -2667,12 +2929,12 @@ async function panelOneCikar(panel, istek) {
   const bekleyen = l.filter(b => b.durum === 'odeme_bildirildi').sort((a, b) => zaman(a.guncelleme) - zaman(b.guncelleme));
   const aktif = l.filter(b => b.durum === 'aktif' && zaman(b.bitis) > Date.now()).sort((a, b) => zaman(a.bitis) - zaman(b.bitis));
   const odemeYok = l.filter(b => b.durum === 'odeme_bekliyor');
-  const ciro = l.filter(b => b.durum === 'aktif').reduce((t, b) => t + (b.fiyat || 0), 0);
+  const ciro = l.filter(b => b.durum === 'aktif' && b.odeme !== 'jeton').reduce((t, b) => t + (b.fiyat || 0), 0);   // jetonlu olanın geliri jeton satışında
   const satir = (b, eylem, alt) => '<div class="satir"><img class="k" src="' + esc(b.esyaFoto) + '" alt=""><div><h3><a href="#esya/' + esc(b.esyaId) + '">' + esc(b.esyaBaslik) + '</a></h3>' +
-    '<p class="kira-detay">' + esc(b.sahipAd) + ' · ' + esc((PAKETLER.find(k => k.paket === b.paket) || {}).ad || b.paket) + ' · <b>' + tl(b.fiyat) + '</b> · <span class="kucuk">' + ocKod(b.id) + '</span></p>' +
+    '<p class="kira-detay">' + esc(b.sahipAd) + ' · ' + esc((PAKETLER.find(k => k.paket === b.paket) || {}).ad || b.paket) + ' · <b>' + ocBedel(b) + '</b> · <span class="kucuk">' + ocKod(b.id) + '</span></p>' +
     (alt ? '<p class="kira-detay">' + alt + '</p>' : '') + '</div><div class="eylem">' + eylem + '</div></div>';
   panel.innerHTML =
-    '<div class="sayaclar">' + [['Ödeme onayı bekleyen', bekleyen.length], ['Şu an öne çıkan', aktif.length], ['Ödeme yapılmamış', odemeYok.length], ['Toplam gelir', tl(ciro)]]
+    '<div class="sayaclar">' + [['Ödeme onayı bekleyen', bekleyen.length], ['Şu an öne çıkan', aktif.length], ['Ödeme yapılmamış', odemeYok.length], ['Havale geliri', tl(ciro)]]
       .map(([a, s]) => '<div class="sayac"><b>' + s + '</b><span>' + a + '</span></div>').join('') + '</div>' +
     '<section class="kutu"><h2>Ödeme onayı bekleyenler</h2>' + (bekleyen.length ? '<div class="liste">' + bekleyen.map(b => satir(b,
       '<button type="button" class="dug dug-kucuk dug-vurgu" data-baslat="' + esc(b.id) + '">Ödeme geldi, başlat</button>' +
@@ -3155,7 +3417,7 @@ async function yonetim(sekme, ek, istek) {
     icerik.innerHTML = '<div class="bos"><h3>Bu sayfaya erişim yetkin yok</h3><p>Yönetim paneli yalnız adminlere açıktır.</p><a class="dug" href="#kesfet">Keşfet\'e dön</a></div>';
     return;
   }
-  const sekmeler = [['ozet', 'Özet'], ['siparisler', 'Siparişler'], ['sikayetler', 'Şikâyetler'], ['onay', 'Onay bekleyenler'], ['onecikar', 'Öne çıkarma'], ['gelen', 'Gelen kutusu'], ['kullanicilar', 'Kullanıcılar']]
+  const sekmeler = [['ozet', 'Özet'], ['siparisler', 'Siparişler'], ['sikayetler', 'Şikâyetler'], ['onay', 'Onay bekleyenler'], ['onecikar', 'Öne çıkarma']].concat(JETON_ACIK ? [['jetonlar', 'Jetonlar']] : []).concat([['gelen', 'Gelen kutusu'], ['kullanicilar', 'Kullanıcılar']])
     .concat(tamMi() ? [['yoneticiler', 'Admin atama']] : []).concat([['odemeler', 'Ödeme onayları'], ['gelir', 'Gelir ve ödemeler']]);
   icerik.innerHTML = '<div class="bas"><div><h1>Yönetim paneli</h1><p>' + ROL_AD[rol] + ' olarak giriş yaptın.</p></div></div>' +
     '<div class="alt-sekme">' + sekmeler.map(([k, ad]) =>
@@ -3167,6 +3429,7 @@ async function yonetim(sekme, ek, istek) {
   try {
     if (sekme === 'onay') await panelOnay(panel, istek);
     else if (sekme === 'onecikar') await panelOneCikar(panel, istek);
+    else if (sekme === 'jetonlar' && JETON_ACIK) await panelJetonlar(panel, istek);
     else if (sekme === 'gelen') await panelGelen(panel, ek, istek);
     else if (sekme === 'kullanicilar') await panelKullanicilar(panel, istek);
     else if (sekme === 'kisi' && ek) await panelKisi(panel, ek, istek);
@@ -3300,12 +3563,15 @@ function olayTablosu(l, kisiGoster) {
 
 async function panelOnay(panel, istek) {
   const l = (await esyaListesi('onay', 'bekliyor')).sort((a, b) => zaman(a.olusturma) - zaman(b.olusturma));
+  const pro = new Set();   // Satıcı Pro: ilanları onay sırasında öne alınır
+  if (JETON_ACIK) await Promise.all([...new Set(l.map(e => e.sahipId))].map(async u => { if (await proMu(u)) pro.add(u); }));
+  l.sort((a, b) => pro.has(b.sahipId) - pro.has(a.sahipId));
   if (istek !== aktifIstek) return;
   if (!l.length) { panel.innerHTML = '<div class="bos"><h3>Onay bekleyen ürün yok</h3><p>Yeni eklenen ya da düzenlenen ürünler buraya düşer.</p></div>'; return; }
   panel.innerHTML = '<div class="liste">' + l.map(e => '<div class="satir"><img class="k" src="' + esc(e.fotolar[0]) + '" alt="">' +
     '<div><h3><a href="#esya/' + esc(e.id) + '">' + esc(e.baslik) + '</a></h3>' +
       '<p class="kira-detay">' + esc([KATEGORI[e.kategori], e.marka, e.beden].filter(Boolean).join(' · ')) + ' · <b>' + tl(e.gunlukUcret) + '/gün</b> · depozito ' + tl(e.depozito) + '</p>' +
-      '<p class="kira-detay">' + esc(e.sahipAd) + (e.aciklama ? ' · ' + esc(e.aciklama.slice(0, 140)) : '') + '</p></div>' +
+      '<p class="kira-detay">' + (pro.has(e.sahipId) ? PRO_ROZET + ' ' : '') + esc(e.sahipAd) + (e.aciklama ? ' · ' + esc(e.aciklama.slice(0, 140)) : '') + '</p></div>' +
     '<div class="eylem"><button type="button" class="dug dug-kucuk dug-vurgu" data-onay="' + esc(e.id) + '">Onayla</button>' +
       '<button type="button" class="dug dug-kucuk dug-tehlike" data-red="' + esc(e.id) + '">Reddet</button></div></div>').join('') + '</div>';
   panel.onclick = async ev => {
@@ -3885,7 +4151,7 @@ function adminEsyaAraclari(e) {
 /* Girişte: rolü (tam / admin / kısıtlı / üye) belirle, üye kaydını oluştur ya da güncelle. */
 async function oturumHazirla(u) {
   const ilkKez = !kullanici && !!u;
-  kullanici = u; rol = u ? 'uye' : 'misafir'; rolNeden = ''; uye = null;
+  kullanici = u; rol = u ? 'uye' : 'misafir'; rolNeden = ''; uye = null; cuzdan = null;
   if (u) {
     if (u.email === TAM_YETKILI && u.emailVerified) rol = 'tam';
     else {
@@ -3904,7 +4170,7 @@ async function oturumHazirla(u) {
     setDoc(doc(db, 'dolapProfiller', u.uid), { ad: temel.ad, foto: temel.foto, katilma: (uye && uye.ilkGiris && uye.ilkGiris.toMillis) ? uye.ilkGiris : SIMDI() }, { merge: true }).catch(() => {});
     if (ilkKez) olay('giris', { sayfa: yol()[0] || 'kesfet' });
   }
-  hesapCiz(); sayfaCiz(); sohbetIzle(); begenileriYukle();
+  hesapCiz(); sayfaCiz(); sohbetIzle(); begenileriYukle(); iapBaslat();
 }
 
 asistanKur();
