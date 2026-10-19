@@ -12,13 +12,13 @@
  * Roller: tam yetkili (TAM_YETKILI) admin atar; admin onaylar/kısıtlar; kısıtlı yalnız gezer.
  */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, signOut, onAuthStateChanged, deleteUser }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where, serverTimestamp, Timestamp, onSnapshot, writeBatch, increment }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019z';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261020a';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -228,7 +228,7 @@ function demoEngel() {
 /* Yazma katmanı: örnek modda bellekteki veriyi değiştirir (sayfa yenilenince sıfırlanır),
    normalde Firestore'a yazar. Sunucu zamanı örnek modda tarayıcı saatidir. */
 const SIMDI = () => (DEMO ? (t => ({ toMillis: () => t }))(Date.now()) : serverTimestamp());
-const demoDizi = kol => ({ dolapEsyalar: D.esyalar, dolapKiralamalar: D.kiralamalar, dolapSohbet: D.sohbetler, dolapRoller: D.roller, dolapUyeler: D.uyeler, dolapBoostlar: (D.boostlar = D.boostlar || []), dolapBorclar: (D.borclar = D.borclar || []), dolapKasa: (D.kasa = D.kasa || []), dolapSorular: (D.sorular = D.sorular || []), dolapKiraNot: (D.kiraNot = D.kiraNot || []), dolapTalepler: (D.talepler = D.talepler || []) })[kol];
+const demoDizi = kol => ({ dolapEsyalar: D.esyalar, dolapKiralamalar: D.kiralamalar, dolapSohbet: D.sohbetler, dolapRoller: D.roller, dolapUyeler: D.uyeler, dolapBoostlar: (D.boostlar = D.boostlar || []), dolapBorclar: (D.borclar = D.borclar || []), dolapKasa: (D.kasa = D.kasa || []), dolapSorular: (D.sorular = D.sorular || []), dolapKiraNot: (D.kiraNot = D.kiraNot || []), dolapTalepler: (D.talepler = D.talepler || []), dolapSikayetler: (D.sikayetler = D.sikayetler || []) })[kol];
 const demoAnahtar = kol => (kol === 'dolapRoller' ? 'eposta' : kol === 'dolapUyeler' ? 'uid' : 'id');
 async function dbEkle(kol, veri) {
   if (!DEMO) return addDoc(collection(db, kol), veri);
@@ -480,6 +480,29 @@ async function girisYap() {
     const m = hataMetni(e); if (m) bildir(m);
   }
 }
+/* Hesabı tamamen sil: ilanlar ve fotoğrafları, profil, üyelik, takip, beğeni, talepler; en son Firebase giriş hesabı.
+   Kiralama/ödeme/puan kayıtları yasal saklama gereği kalır. */
+async function hesabiTamamenSil() {
+  const uid = kullanici.uid;
+  const sorgu = async (kol, alan) => (await getDocs(query(collection(db, kol), where(alan, '==', uid)))).docs.map(x => ({ id: x.id, ...x.data() }));
+  for (const e of await esyaListesi('sahipId', uid).catch(() => [])) {
+    for (const f of e.fotoBelge || []) await dbSil('dolapFotolar', f).catch(() => {});
+    await dbSil('dolapEsyalar', e.id).catch(() => {});
+  }
+  for (const b of await sorgu('dolapBegeniler', 'uid').catch(() => [])) {
+    const bt = writeBatch(db);
+    bt.delete(doc(db, 'dolapBegeniler', b.id)); bt.update(doc(db, 'dolapEsyalar', b.esyaId), { begeni: increment(-1) });
+    await bt.commit().catch(() => deleteDoc(doc(db, 'dolapBegeniler', b.id)).catch(() => {}));
+  }
+  for (const t of await sorgu('dolapTakip', 'uid').catch(() => [])) await deleteDoc(doc(db, 'dolapTakip', t.id)).catch(() => {});
+  for (const t of await sorgu('dolapTalepler', 'uid').catch(() => [])) await deleteDoc(doc(db, 'dolapTalepler', t.id)).catch(() => {});
+  await deleteDoc(doc(db, 'dolapProfiller', uid)).catch(() => {});
+  await deleteDoc(doc(db, 'dolapUyeler', uid)).catch(() => {});
+  uye = null;
+  try { localStorage.removeItem(LS_SEPET); localStorage.removeItem(SON_BAKILAN); localStorage.removeItem(LS_TARIH); } catch (h) {}
+  try { if (NATIVE && yerelAuth()) await yerelAuth().signOut(); } catch (h) {}
+  await deleteUser(auth.currentUser);
+}
 async function cikisYap() {
   try { if (NATIVE && yerelAuth()) await yerelAuth().signOut(); } catch (h) {}
   return signOut(auth);
@@ -568,6 +591,7 @@ async function bildirimleriTopla() {
   sc.filter(x => x.durum === 'cevaplandi').forEach(x => ekle(x.cevapZaman, '💬', 'Sorun cevaplandı ("' + x.esyaBaslik + '"): ' + String(x.cevap).slice(0, 90), '#esya/' + x.esyaId + '/sorular'));
   if (adminMi()) {
     const [bek, od, gel] = await Promise.all([esyaListesi('onay', 'bekliyor').catch(() => []), kiraListesi('durum', 'odeme_bildirildi').catch(() => []), sohbetListesi().catch(() => [])]);
+    (await sikayetListesi().catch(() => [])).filter(x => x.durum === 'acik').forEach(x => ekle(x.olusturma, '⚑', (SIKAYET_TUR[x.tur] || '') + ' şikâyeti: ' + x.neden.slice(0, 80), '#yonetim/sikayetler'));
     bek.forEach(e => ekle(e.olusturma, '🛂', 'Onay bekleyen parça: "' + e.baslik + '" · ' + e.sahipAd, '#yonetim/onay'));
     od.forEach(k => ekle(k.guncelleme, '💳', 'Ödeme bildirildi: ' + refKod(k.id) + ' · ' + tl(k.toplam) + ' · ' + k.kiraciAd, '#yonetim/odemeler'));
     gel.filter(x => !x.adminOkudu).forEach(x => ekle(x.sonZaman, '💬', 'Yeni mesaj · ' + x.ad + ': ' + String(x.mesajlar[x.mesajlar.length - 1].metin).slice(0, 80), '#yonetim/gelen/' + x.id));
@@ -827,14 +851,17 @@ async function profilSayfasi(uid, istek) {
         '<p class="kucuk">' + [p.sehir && esc(p.sehir), katilma && katilma + '\'den beri üye'].filter(Boolean).join(' · ') + '</p>' +
         '<div class="profil-rozet">' + (sad ? seviyeRozet(sad) : '') + (p.ornek ? '<span class="etiket ornek-etiket" style="position:static">Örnek profil</span>' : '') + '</div>' +
         (kendisi ? '<a class="dug dug-kucuk" href="#hesabim/profil" style="margin-top:10px">Profilimi düzenle</a>' : '') +
-        (!p.ornek && !D ? '<div class="takip"><button type="button" class="dug dug-kucuk" id="takipDug"' + (kendisi ? ' hidden' : '') + '>+ Takip et</button> <span class="kucuk" id="takipSay"></span></div>' : '') + '</div></div>' +
+        (!p.ornek && !D ? '<div class="takip"><button type="button" class="dug dug-kucuk" id="takipDug"' + (kendisi ? ' hidden' : '') + '>+ Takip et</button> <span class="kucuk" id="takipSay"></span>' +
+          (!kendisi && kullanici ? ' <button type="button" class="dug-metin" data-engelle="' + esc(uid) + '">' + (engelliMi(uid) ? 'Engeli kaldır' : 'Engelle') + '</button>' + sikayetDugme('profil', uid, uid) : '') +
+          '</div>' : '') + '</div></div>' +
+    (engelliMi(uid) ? '<p class="uyari" style="margin-bottom:14px">Bu kullanıcıyı engelledin; parçaları, soruları ve yorumları sana gösterilmiyor.</p>' : '') +
     (p.hakkimda ? '<p class="profil-hakkimda">' + esc(p.hakkimda) + '</p>' +
       (adminMi() && !p.ornek && !kendisi ? '<button type="button" class="dug dug-kucuk dug-tehlike" id="hakkimdaKaldir">Hakkında yazısını kaldır</button>' : '') : '') +
     '<div class="sayaclar">' + sayac('Sadakat puanı', sad ? sad.puan : '–') + sayac('Seviye', sad ? esc(sad.seviye) : '–') +
       sayac('Tamamlanan kiralama', sad ? sad.satir.length : '–') + sayac('İlan', esyalar.length) + (ort ? sayac('Ort. yorum puanı (' + yAdet + ')', '★ ' + ort) : '') + '</div>' +
     (sad ? '<section class="kutu"><h2>Sadakat</h2>' + sadakatHTML(sad, false, kendisi || adminMi()) + '</section>' : '') +
     '<h2 class="profil-alt-bas">' + (kendisi ? 'Dolabın' : esc(iyelik(p.ad || 'Üye')) + ' dolabı') + '</h2>' +
-    (esyalar.length ? '<div class="izgara">' + esyalar.map(e => esyaKarti(e, kendisi)).join('') + '</div>' : '<p class="kucuk">Yayında parça yok.</p>');
+    (engelliMi(uid) ? '' : esyalar.length ? '<div class="izgara">' + esyalar.map(e => esyaKarti(e, kendisi)).join('') + '</div>' : '<p class="kucuk">Yayında parça yok.</p>');
   const td = $('#takipDug');
   if (td) {
     const ciz = () => takipBilgi(uid).then(b => {
@@ -925,7 +952,7 @@ function siralamaKur() {
 
 /* ---------------------------------------------------------------- kampanya afişleri (ayarlar.js → kampanyalar) */
 function afisHTML() {
-  const l = (AYAR.kampanyalar || []).filter(k => k && k.baslik);
+  const l = (AYAR.kampanyalar || []).filter(k => k && k.baslik && !(NATIVE && /öne çıkar/i.test(k.ust || '')));
   if (!l.length) return '';
   return '<section class="afis" id="afis" aria-roledescription="carousel" aria-label="Kampanyalar"><div class="afis-ray">' +
     l.map((k, i) => '<a class="afis-kart" href="' + esc(k.link || '#kesfet') + '" style="--afis-renk:' + esc(k.renk || '#2a1f1e') + '"' + (i ? ' aria-hidden="true" tabindex="-1"' : '') + '>' +
@@ -1256,6 +1283,7 @@ async function kesfet(istek) {
   const ciz = () => {
     const q = kesfetS.ara.toLocaleLowerCase('tr-TR');
     let l = esyalar.filter(e => (kesfetS.kategori === 'hepsi' || e.kategori === kesfetS.kategori) &&
+      !engelliMi(e.sahipId) &&
       (!kesfetS.vesile || vesileleri(e).includes(kesfetS.vesile)) &&
       (!(kesfetS.tb && kesfetS.ts) || !doluAraliklar(e).some(x => x.b <= kesfetS.ts && kesfetS.tb <= x.s)) &&
       (!kesfetS.beden || e.beden === kesfetS.beden) &&
@@ -1364,7 +1392,7 @@ async function esyaSayfasi(id, istek) {
           '<button type="button" class="dug dug-kucuk dug-tehlike" id="ornekKaldir">Örnek ilanı kaldır</button></div>' : '') : adminEsyaAraclari(e)) +
         (e.aktif ? '<div class="begeni-satir">' + begeniDugme(e, true) +
           '<span class="paylas"><a class="dug dug-kucuk" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(e.baslik + ' · Elif\'in Dolabı\'nda günlük ' + tl(e.gunlukUcret) + ' ' + location.origin + location.pathname + '#esya/' + e.id) + '">WhatsApp\'ta paylaş</a>' +
-          '<button type="button" class="dug dug-kucuk" id="linkKopya">Bağlantıyı kopyala</button></span></div>' : '') +
+          '<button type="button" class="dug dug-kucuk" id="linkKopya">Bağlantıyı kopyala</button></span>' + (e.ornek ? '' : sikayetDugme('esya', e.id, e.sahipId)) + '</div>' : '') +
         (kendi || !e.aktif ? '' : '<span class="dug sepet-dug-uzun' + (sepette(e.id) ? ' secili' : '') + '" data-sepet="' + esc(e.id) + '" data-uzun="1">' + (sepette(e.id) ? '✓ Sepette' : '🛒 Sepete ekle') + '</span>') +
         '<div class="kutu" id="kiraKutu"></div>' + (e.aktif && !kendi ? GUVENCE_HTML : '') +
       '</div>' +
@@ -1598,6 +1626,53 @@ function icerikSorunu(metin) {
 }
 const DENETIM_NOT = ' İletişim bilgileri ödeme onaylanınca site üzerinden açılır.';
 
+/* ---------------------------------------------------------------- şikâyet ve engelleme (App Store 1.2)
+ * Şikâyetler dolapSikayetler'e yazılır, Yönetim → Şikâyetler'de 24 saat içinde incelenir.
+ * Engellenenler kişinin kendi üyelik kaydında (dolapUyeler.engellenenler) tutulur; içerikleri ona gösterilmez. */
+const engelliMi = uid => !!(uid && uye && (uye.engellenenler || []).includes(uid));
+const SIKAYET_TUR = { esya: 'Parça', soru: 'Soru', yorum: 'Yorum', profil: 'Profil' };
+const sikayetDugme = (tur, id, kisi, esyaId) => kullanici && kisi !== kullanici.uid
+  ? '<button type="button" class="dug-metin sikayet-dug" data-sikayet="' + tur + '" data-id="' + esc(id) + '" data-kisi="' + esc(kisi || '') + '" data-esya="' + esc(esyaId || '') + '">⚑ Şikâyet et</button>' : '';
+function sikayetPenceresi(tur) {
+  return new Promise(son => {
+    const p = $('#pencere');
+    const nedenler = ['Uygunsuz ya da müstehcen içerik', 'Hakaret, taciz ya da nefret söylemi', 'Dolandırıcılık ya da sahte ilan', 'İletişim bilgisi / site dışına yönlendirme', 'Diğer'];
+    p.innerHTML = '<div class="pencere-ic"><h2 id="pencereBas">' + SIKAYET_TUR[tur] + ' şikâyeti</h2>' +
+      '<div class="iade-secim">' + nedenler.map((n, i) => '<label><input type="radio" name="sNeden" value="' + esc(n) + '"' + (i ? '' : ' checked') + '><span>' + esc(n) + '</span></label>').join('') + '</div>' +
+      '<textarea id="sAcik" maxlength="300" placeholder="İstersen kısaca açıkla" style="width:100%;min-height:64px;margin-top:10px;padding:10px 12px;border:1px solid var(--cizgi);border-radius:12px;font:inherit"></textarea>' +
+      '<p class="kucuk" style="margin-top:8px">Şikâyetin ekibe iletilir, 24 saat içinde incelenir. Kişiyi ayrıca profilinden engelleyebilirsin.</p>' +
+      '<div class="pencere-alt"><button type="button" class="dug" id="sVazgec">Vazgeç</button><button type="button" class="dug dug-tehlike" id="sTamam">Gönder</button></div></div>';
+    p.hidden = false; document.body.style.overflow = 'hidden';
+    const bitir = v => { p.hidden = true; p.innerHTML = ''; document.body.style.overflow = ''; son(v); };
+    $('#sVazgec').onclick = () => bitir(null);
+    p.onclick = ev => { if (ev.target === p) bitir(null); };
+    $('#sTamam').onclick = () => bitir(($('input[name="sNeden"]:checked').value + ($('#sAcik').value.trim() ? ' — ' + $('#sAcik').value.trim() : '')).slice(0, 300));
+  });
+}
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-sikayet]');
+  if (b) {
+    ev.preventDefault(); ev.stopPropagation();
+    if (!kullanici) { girisYap(); return; }
+    const neden = await sikayetPenceresi(b.dataset.sikayet); if (!neden) return;
+    try {
+      await dbEkle('dolapSikayetler', { tur: b.dataset.sikayet, hedefId: b.dataset.id, hedefKisi: b.dataset.kisi || '', esyaId: b.dataset.esya || '',
+        neden, uid: kullanici.uid, ad: kisaAd(kullanici.displayName).slice(0, 40), durum: 'acik', olusturma: SIMDI() });
+      bildir('Teşekkürler; şikâyetin ekibe iletildi.');
+    } catch (h) { bildir(hataMetni(h)); }
+    return;
+  }
+  const e = ev.target.closest('[data-engelle]');
+  if (e) {
+    ev.preventDefault();
+    if (!kullanici) { girisYap(); return; }
+    const uid = e.dataset.engelle, l = (uye && uye.engellenenler) || [], vardi = l.includes(uid);
+    if (!vardi && !confirm('Bu kullanıcıyı engellemek istiyor musun? Parçaları, soruları ve yorumları sana gösterilmez.')) return;
+    try { await uyeKaydet({ engellenenler: vardi ? l.filter(x => x !== uid) : l.concat(uid).slice(-500) }); bildir(vardi ? 'Engel kaldırıldı.' : 'Kullanıcı engellendi.'); sayfaCiz(); }
+    catch (h) { bildir(hataMetni(h)); }
+  }
+}, true);
+
 /* ---------------------------------------------------------------- satıcıya sor (dolapSorular, herkese açık) */
 async function soruListesi(alan, deger) {
   if (D) return (D.sorular || []).filter(x => x[alan] === deger).map(x => ({ ...x }));
@@ -1611,6 +1686,7 @@ async function sorulariCiz(e, istek) {
   const ic = $('#soruIc');
   if (istek !== aktifIstek || !ic) return;
   const sahibi = kullanici && kullanici.uid === e.sahipId;
+  l = l.filter(x => !engelliMi(x.soranId));
   l.sort((a, b) => (zaman(b.olusturma) || Date.now()) - (zaman(a.olusturma) || Date.now()));
   const form = e.ornek ? '<p class="kucuk">Bu bir örnek ilan; satıcıya soru sorulamaz. Gerçek ilanlarda sorunu buradan sorabilirsin.</p>'
     : sahibi ? '<p class="kucuk">Bu senin parçan. Gelen soruları aşağıdan cevaplayabilirsin; cevabın herkese görünür.</p>'
@@ -1626,6 +1702,7 @@ async function sorulariCiz(e, istek) {
           '<button type="button" class="dug dug-kucuk dug-vurgu" data-cevapla="' + esc(x.id) + '">Cevapla</button></div>'
       : '<p class="kucuk soru-c">Satıcının cevabı bekleniyor.</p>') +
     ((kullanici && x.soranId === kullanici.uid && !x.cevap) || adminMi() ? '<button type="button" class="dug-metin" data-soru-sil="' + esc(x.id) + '">Sil</button>' : '') +
+    sikayetDugme('soru', x.id, x.soranId, e.id) +
     '</article>').join('') + '</div>' : (e.ornek ? '' : '<p class="kucuk" style="margin-top:10px">Henüz soru yok. İlk soran sen ol.</p>'));
   const g = $('#soruGiris'); if (g) g.onclick = girisYap;
   const gd = $('#soruGonderDug');
@@ -1673,12 +1750,14 @@ async function gercekYorumlariYukle(e, istek) {
   try { l = await yorumListesi('esyaId', e.id); } catch (h) { return; }
   const kap = $('#gercekYorumlar');
   if (istek !== aktifIstek || !kap || !l.length) return;
+  l = l.filter(x => !engelliMi(x.uid));
+  if (!l.length) return;
   l.sort((a, b) => (zaman(b.tarih) || 0) - (zaman(a.tarih) || 0));
   const yy = $('#yorumYok'); if (yy) yy.remove();
   kap.innerHTML = l.map(x => '<article class="yorum">' + (x.foto ? '<img src="' + esc(x.foto) + '" alt="" referrerpolicy="no-referrer">' : '<span class="avatar harf">' + esc((x.ad || '?')[0]) + '</span>') + '<div>' +
     '<p class="yorum-bas"><b>' + esc(x.ad) + '</b> <span class="yildiz" aria-label="' + x.puan + ' yıldız">' + yildiz(x.puan) + '</span> ' +
     '<span class="kucuk">' + (zaman(x.tarih) ? new Date(zaman(x.tarih)).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : '') + ' · <span class="arti">✓ kiraladı</span></span>' +
-    (adminMi() ? ' <button type="button" class="dug-metin" data-yorum-sil="' + esc(x.id) + '" data-puan="' + x.puan + '">Sil</button>' : '') + '</p>' +
+    ' ' + sikayetDugme('yorum', x.id, x.uid, e.id) + (adminMi() ? ' <button type="button" class="dug-metin" data-yorum-sil="' + esc(x.id) + '" data-puan="' + x.puan + '">Sil</button>' : '') + '</p>' +
     '<p>' + esc(x.metin) + '</p></div></article>').join('');
   kap.onclick = async ev => {
     const b = ev.target.closest('[data-yorum-sil]'); if (!b || !confirm('Yorum silinsin mi?')) return;
@@ -1778,7 +1857,7 @@ async function dolabim(istek) {
     return;
   }
   if (istek !== aktifIstek) return;
-  const ocHtml = await boostlarimHTML();
+  const ocHtml = NATIVE ? '' : await boostlarimHTML();   // iOS uygulamasında dijital paket satışı yok (App Store 3.1.1)
   if (istek !== aktifIstek) return;
   if (ocHtml) $('#liste').insertAdjacentHTML('beforebegin', '<div id="ocBolum">' + ocHtml + '</div>');
   const ocB = $('#ocBolum');
@@ -1796,7 +1875,7 @@ async function dolabim(istek) {
           : e.onay === 'reddedildi' ? '<span class="durum d-reddedildi">Reddedildi</span> <span class="kucuk">' + esc(e.redNeden) + '</span>'
           : e.aktif ? '<span class="durum d-onaylandi">Yayında</span>' : '<span class="durum">Yayında değil</span>') + '</p></div>' +
       '<div class="eylem">' +
-        (e.onay === 'onaylandi' && e.aktif && !oneCikanMi(e) ? '<button type="button" class="dug dug-kucuk dug-vurgu" data-onecikar="' + esc(e.id) + '">★ Öne çıkar</button>' : '') +
+        (!NATIVE && e.onay === 'onaylandi' && e.aktif && !oneCikanMi(e) ? '<button type="button" class="dug dug-kucuk dug-vurgu" data-onecikar="' + esc(e.id) + '">★ Öne çıkar</button>' : '') +
         (oneCikanMi(e) ? '<span class="durum d-onaylandi">★ ' + kalanSure(zaman(e.oneCikanBitis)) + ' kaldı</span>' : '') +
         '<button type="button" class="dug dug-kucuk" data-duzenle="' + esc(e.id) + '">Düzenle</button>' +
         '<button type="button" class="dug dug-kucuk" data-yayin="' + esc(e.id) + '">' + (e.aktif ? 'Yayından kaldır' : 'Yayınla') + '</button>' +
@@ -2829,6 +2908,29 @@ async function panelSiparis(panel, id, istek) {
   };
 }
 
+async function sikayetListesi() {
+  if (D) return (D.sikayetler || []).map(x => ({ ...x }));
+  return (await getDocs(collection(db, 'dolapSikayetler'))).docs.map(x => ({ id: x.id, ...x.data() }));
+}
+async function panelSikayetler(panel, istek) {
+  const l = (await sikayetListesi()).sort((a, b) => (a.durum === 'acik' ? 0 : 1) - (b.durum === 'acik' ? 0 : 1) || (zaman(b.olusturma) || 0) - (zaman(a.olusturma) || 0));
+  if (istek !== aktifIstek) return;
+  const link = x => x.tur === 'esya' ? '#esya/' + x.hedefId : x.tur === 'profil' ? '#profil/' + x.hedefId : '#esya/' + x.esyaId + (x.tur === 'soru' ? '/sorular' : '');
+  panel.innerHTML = '<section class="kutu"><h2>Şikâyetler</h2><p class="kucuk" style="margin-bottom:10px">Apple, kullanıcı içeriği olan uygulamalarda şikâyetlerin 24 saat içinde ele alınmasını bekler. ' +
+      'İçeriği kaldırmak için ilgili sayfaya git (parçayı kaldır, soruyu/yorumu sil); kişiyi kısıtlamak için kişi kaydını aç.</p>' +
+    (l.length ? l.map(x => '<div class="gelir-satir' + (x.durum === 'acik' ? '' : ' soluk') + '">' +
+      '<div><b>' + (SIKAYET_TUR[x.tur] || x.tur) + '</b><span class="kucuk">' + esc(x.neden) + '</span></div>' +
+      '<div><a href="' + esc(link(x)) + '">İçeriği aç</a>' + (x.hedefKisi ? '<br><a href="#yonetim/kisi/' + esc(x.hedefKisi) + '">Kişi kaydı</a>' : '') + '</div>' +
+      '<div><span class="kucuk">' + esc(x.ad || '') + ' · ' + onceYaz(zaman(x.olusturma) || Date.now()) + '</span></div>' +
+      '<div>' + (x.durum === 'acik' ? '<button type="button" class="dug dug-kucuk dug-vurgu" data-sikayet-kapat="' + esc(x.id) + '">Çözüldü</button>' : '<span class="kucuk arti">✓ çözüldü</span>') + '</div></div>').join('')
+      : '<p class="kucuk">Şikâyet yok.</p>') + '</section>';
+  panel.onclick = async ev => {
+    const b = ev.target.closest('[data-sikayet-kapat]'); if (!b) return;
+    try { await dbGuncelle('dolapSikayetler', b.dataset.sikayetKapat, { durum: 'cozuldu', kapanis: SIMDI(), kapatan: kullanici.email }); bildir('Kapatıldı.'); sayfaCiz(); }
+    catch (h) { bildir(hataMetni(h)); }
+  };
+}
+
 async function panelOdemeler(panel, istek) {
   const [bildirilen, odemeBekleyen] = await Promise.all([kiraListesi('durum', 'odeme_bildirildi'), kiraListesi('durum', 'onaylandi')]);
   if (istek !== aktifIstek) return;
@@ -3053,12 +3155,12 @@ async function yonetim(sekme, ek, istek) {
     icerik.innerHTML = '<div class="bos"><h3>Bu sayfaya erişim yetkin yok</h3><p>Yönetim paneli yalnız adminlere açıktır.</p><a class="dug" href="#kesfet">Keşfet\'e dön</a></div>';
     return;
   }
-  const sekmeler = [['ozet', 'Özet'], ['siparisler', 'Siparişler'], ['onay', 'Onay bekleyenler'], ['onecikar', 'Öne çıkarma'], ['gelen', 'Gelen kutusu'], ['kullanicilar', 'Kullanıcılar']]
+  const sekmeler = [['ozet', 'Özet'], ['siparisler', 'Siparişler'], ['sikayetler', 'Şikâyetler'], ['onay', 'Onay bekleyenler'], ['onecikar', 'Öne çıkarma'], ['gelen', 'Gelen kutusu'], ['kullanicilar', 'Kullanıcılar']]
     .concat(tamMi() ? [['yoneticiler', 'Admin atama']] : []).concat([['odemeler', 'Ödeme onayları'], ['gelir', 'Gelir ve ödemeler']]);
   icerik.innerHTML = '<div class="bas"><div><h1>Yönetim paneli</h1><p>' + ROL_AD[rol] + ' olarak giriş yaptın.</p></div></div>' +
     '<div class="alt-sekme">' + sekmeler.map(([k, ad]) =>
       '<a class="cip" href="#yonetim/' + k + '" aria-pressed="' + (sekme === k || (sekme === 'kisi' && k === 'kullanicilar') || (sekme === 'siparis' && k === 'siparisler')) + '">' + ad +
-      (k === 'onay' || k === 'gelen' || k === 'onecikar' || k === 'odemeler' ? ' <span class="sayi" id="sayi-' + k + '" hidden></span>' : '') + '</a>').join('') + '</div>' +
+      (k === 'onay' || k === 'gelen' || k === 'onecikar' || k === 'odemeler' || k === 'sikayetler' ? ' <span class="sayi" id="sayi-' + k + '" hidden></span>' : '') + '</a>').join('') + '</div>' +
     '<div id="panel"><p class="yukleniyor">Yükleniyor…</p></div>';
   const panel = $('#panel');
   rozetSayilari();
@@ -3071,6 +3173,7 @@ async function yonetim(sekme, ek, istek) {
     else if (sekme === 'yoneticiler' && tamMi()) await panelYoneticiler(panel, istek);
     else if (sekme === 'gelir') await panelGelir(panel, istek);
     else if (sekme === 'siparisler') await panelSiparisler(panel, istek);
+    else if (sekme === 'sikayetler') await panelSikayetler(panel, istek);
     else if (sekme === 'siparis' && ek) await panelSiparis(panel, ek, istek);
     else if (sekme === 'odemeler') await panelOdemeler(panel, istek);
     else await panelOzet(panel, istek);
@@ -3083,6 +3186,7 @@ async function rozetSayilari() {
     const [bek, soh, oc, od] = await Promise.all([esyaListesi('onay', 'bekliyor'), sohbetListesi(), boostListesi('durum', 'odeme_bildirildi'), kiraListesi('durum', 'odeme_bildirildi')]);
     const yaz = (id, n) => { const s = $('#sayi-' + id); if (s) { s.textContent = n; s.hidden = !n; } };
     yaz('odemeler', od.length);
+    sikayetListesi().then(x => yaz('sikayetler', x.filter(y => y.durum === 'acik').length)).catch(() => {});
     yaz('onay', bek.length);
     yaz('gelen', soh.filter(x => !x.adminOkudu).length);
     yaz('onecikar', oc.length);
@@ -3676,8 +3780,9 @@ async function hesabim(bolum, istek) {
       '<button type="button" class="dug dug-ana" id="tercihKaydet" style="margin-top:12px">Kaydet</button></section>' +
     /* hesap */
     '<section class="kutu" id="b-hesap"><h2>Hesap</h2><div class="eylem" style="justify-content:flex-start">' +
-      '<button type="button" class="dug" id="hCikis">Çıkış yap</button><button type="button" class="dug dug-tehlike" id="hSil">Üyelik kaydımı sil</button></div>' +
-      '<p class="kucuk" style="margin-top:10px">Üyelik kaydını silmek telefon, adres ve filtrelerini siler. İlanların ve kiralama kayıtların için "Soru sor"dan bize yazabilirsin.</p></section>' +
+      '<button type="button" class="dug" id="hCikis">Çıkış yap</button><button type="button" class="dug dug-tehlike" id="hSil">Hesabımı sil</button></div>' +
+      '<p class="kucuk" style="margin-top:10px">Hesabını silmek; ilanlarını ve fotoğraflarını, profilini, telefon, adres ve filtrelerini, takip, beğeni ve taleplerini kalıcı olarak siler ve giriş hesabını kapatır. ' +
+      'Kiralama, ödeme ve puan kayıtları yasal saklama yükümlülüğü nedeniyle saklanır; kişisel iletişim bilgilerin bu kayıtlardan istenirse ayrıca silinir ("Soru sor").</p></section>' +
     '</div></div>';
   if (bolum) { const h = $('#b-' + bolum); if (h) h.scrollIntoView({ block: 'start' }); }
   sadakatGetir(kullanici.uid).then(x => { if (istek === aktifIstek && $('#sadakatIc')) $('#sadakatIc').innerHTML = sadakatHTML(x, true); })
@@ -3718,8 +3823,15 @@ async function hesabim(bolum, istek) {
   $('#hCikis').onclick = () => { if (!demoEngel()) cikisYap(); };
   $('#hSil').onclick = async () => {
     if (demoEngel()) return;
-    if (!confirm('Üyelik kaydın (telefon, adresler, filtreler) silinsin mi?')) return;
-    try { await dbSil('dolapUyeler', kullanici.uid); uye = null; bildir('Üyelik kaydın silindi.'); cikisYap(); } catch (h) { bildir(hataMetni(h)); }
+    const onay = prompt('Hesabın ve ilanların kalıcı olarak silinecek. Bu işlem geri alınamaz.\nOnaylamak için SİL yaz:', '');
+    if (onay === null) return;
+    if (onay.trim().toLocaleUpperCase('tr') !== 'SİL') { bildir('Onay yazısı eşleşmedi; hesap silinmedi.'); return; }
+    const dug = $('#hSil'); dug.disabled = true; dug.textContent = 'Siliniyor…';
+    try { await hesabiTamamenSil(); bildir('Hesabın silindi. Hoşça kal.'); location.hash = '#kesfet'; }
+    catch (h) {
+      dug.disabled = false; dug.textContent = 'Hesabımı sil';
+      bildir(h && h.code === 'auth/requires-recent-login' ? 'Güvenlik için çıkış yapıp yeniden giriş yap, sonra tekrar dene.' : hataMetni(h));
+    }
   };
   const adresBtn = $('#adresEkle');
   if (adresBtn) adresBtn.onclick = () => adresFormu(-1);

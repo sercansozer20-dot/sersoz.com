@@ -930,6 +930,23 @@ service cloud.firestore {
       allow delete: if girisli() && resource.data.uid == benim();
     }
 
+    /* Şikâyetler (App Store 1.2): giriş yapan yazar, yalnız yönetim okur ve kapatır. */
+    match /dolapSikayetler/{sikayet} {
+      allow read: if dolapAdmin();
+      allow create: if girisli()
+        && yeni().keys().hasOnly(['tur', 'hedefId', 'hedefKisi', 'esyaId', 'neden', 'uid', 'ad', 'durum', 'olusturma'])
+        && yeni().uid == benim() && yeni().durum == 'acik' && yeni().olusturma == request.time
+        && yeni().tur in ['esya', 'soru', 'yorum', 'profil']
+        && yeni().hedefId is string && yeni().hedefId.size() <= 128
+        && yeni().hedefKisi is string && yeni().hedefKisi.size() <= 128
+        && yeni().esyaId is string && yeni().esyaId.size() <= 128
+        && yeni().neden is string && yeni().neden.size() >= 3 && yeni().neden.size() <= 300
+        && yeni().ad is string && yeni().ad.size() <= 40;
+      allow update: if dolapAdmin() && degisenler().hasOnly(['durum', 'kapanis', 'kapatan'])
+        && yeni().durum == 'cozuldu' && yeni().kapanis == request.time && yeni().kapatan == request.auth.token.email;
+      allow delete: if tamYetkili();
+    }
+
     match /dolapFotolar/{foto} {
       allow read: if true;
       allow create: if girisli() && !kisitli()
@@ -979,7 +996,8 @@ service cloud.firestore {
       allow read: if girisli() && (kimlik == benim() || dolapAdmin());
       allow create, update: if girisli() && kimlik == benim()
         && yeni().keys().hasOnly(['uid', 'ad', 'eposta', 'foto', 'telefon', 'adresler', 'filtreler',
-                                  'bildirimEposta', 'istatistikIzni', 'ilkGiris', 'sonGiris', 'iban', 'ibanAd', 'bildirimOkuma'])
+                                  'bildirimEposta', 'istatistikIzni', 'ilkGiris', 'sonGiris', 'iban', 'ibanAd', 'bildirimOkuma', 'engellenenler'])
+        && yeni().get('engellenenler', []) is list && yeni().get('engellenenler', []).size() <= 500
         && (yeni().get('bildirimOkuma', 0) is int)
         && yeni().get('iban', '') is string && yeni().get('iban', '').size() <= 34
         && yeni().get('ibanAd', '') is string && yeni().get('ibanAd', '').size() <= 80

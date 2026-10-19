@@ -634,3 +634,8 @@ a.sayac:hover { border-color: var(--vurgu); }
 .giris-apple { background: #000; color: #fff; border-color: #000; }
 .giris-google { background: #fff; color: #1f1f1f; border: 1px solid #dadce0; }
 .giris-google .g-ikon { width: 20px; height: 20px; }
+
+/* şikâyet / engelleme */
+.sikayet-dug { color: var(--ikinci); font-size: 12.5px; margin-left: 6px; }
+.sikayet-dug:hover { color: var(--kirmizi); }
+.gelir-satir.soluk { opacity: .55; }
