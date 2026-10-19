@@ -12,13 +12,13 @@
  * Roller: tam yetkili (TAM_YETKILI) admin atar; admin onaylar/kısıtlar; kısıtlı yalnız gezer.
  */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, signOut, onAuthStateChanged }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where, serverTimestamp, Timestamp, onSnapshot, writeBatch, increment }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019y';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261019z';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -443,9 +443,46 @@ function hataMetni(e) {
 }
 
 /* ---------------------------------------------------------------- oturum */
+/* Uygulama içinde (iOS · Capacitor) Google'ın web penceresi çalışmaz: giriş yerel pencereyle yapılır, kimlik bilgisi
+   Firebase JS SDK'ya verilir. Apple, Google ile girişin yanında "Apple ile giriş"i şart koşar (App Store 4.8). */
+const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const yerelAuth = () => window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseAuthentication;
+async function yerelGiris(saglayici) {
+  const fa = yerelAuth();
+  if (!fa) throw new Error("Uygulamanın yeni sürümü gerekiyor; TestFlight ya da App Store'dan güncelle.");
+  if (saglayici === 'apple') {
+    const r = await fa.signInWithApple({ skipNativeAuth: true });
+    await signInWithCredential(auth, new OAuthProvider('apple.com').credential({ idToken: r.credential.idToken, rawNonce: r.credential.nonce }));
+  } else {
+    const r = await fa.signInWithGoogle({ skipNativeAuth: true });
+    await signInWithCredential(auth, GoogleAuthProvider.credential(r.credential.idToken, r.credential.accessToken));
+  }
+}
+function girisPenceresi() {
+  return new Promise(son => {
+    const p = $('#pencere');
+    p.innerHTML = '<div class="pencere-ic giris-pencere"><h2 id="pencereBas">Giriş yap</h2>' +
+      '<p class="kucuk" style="margin-bottom:16px">Kiralamak, dolabına parça eklemek ve favorilerini her cihazda görmek için.</p>' +
+      '<button type="button" class="dug giris-apple" data-s="apple"> Apple ile devam et</button>' +
+      '<button type="button" class="dug giris-google" data-s="google">' + G_IKON + 'Google ile devam et</button>' +
+      '<button type="button" class="dug-metin" data-s="" style="margin-top:12px">Vazgeç</button></div>';
+    p.hidden = false; document.body.style.overflow = 'hidden';
+    const bitir = v => { p.hidden = true; p.innerHTML = ''; document.body.style.overflow = ''; son(v); };
+    p.onclick = ev => { if (ev.target === p) { bitir(null); return; } const b = ev.target.closest('[data-s]'); if (b) bitir(b.dataset.s || null); };
+  });
+}
 async function girisYap() {
-  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
-  catch (e) { const m = hataMetni(e); if (m) bildir(m); }
+  try {
+    if (NATIVE) { const s = await girisPenceresi(); if (s) await yerelGiris(s); return; }
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (e) {
+    if (/cancel|iptal|1001/i.test(String((e && (e.message || e.code)) || ''))) return;   // kullanıcı vazgeçti
+    const m = hataMetni(e); if (m) bildir(m);
+  }
+}
+async function cikisYap() {
+  try { if (NATIVE && yerelAuth()) await yerelAuth().signOut(); } catch (h) {}
+  return signOut(auth);
 }
 const G_IKON = '<svg class="g-ikon" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
 
@@ -627,7 +664,7 @@ function hesapCiz() {
   bildirimYenile(true);
   mesajIzle();
   m.onclick = () => { m.hidden = true; d.setAttribute('aria-expanded', 'false'); };
-  $('#cikisDug').onclick = () => { if (!demoEngel()) signOut(auth); };
+  $('#cikisDug').onclick = () => { if (!demoEngel()) cikisYap(); };
 }
 document.addEventListener('click', ev => {
   const m = $('#hesapMenu');
@@ -3678,11 +3715,11 @@ async function hesabim(bolum, istek) {
     try { localStorage.setItem(LS_IZIN, $('#tIzin').checked ? 'evet' : 'hayir'); } catch (e) {}
     kaydet({ istatistikIzni: $('#tIzin').checked, bildirimEposta: $('#tEposta').checked }, 'Tercihler kaydedildi.');
   };
-  $('#hCikis').onclick = () => { if (!demoEngel()) signOut(auth); };
+  $('#hCikis').onclick = () => { if (!demoEngel()) cikisYap(); };
   $('#hSil').onclick = async () => {
     if (demoEngel()) return;
     if (!confirm('Üyelik kaydın (telefon, adresler, filtreler) silinsin mi?')) return;
-    try { await dbSil('dolapUyeler', kullanici.uid); uye = null; bildir('Üyelik kaydın silindi.'); signOut(auth); } catch (h) { bildir(hataMetni(h)); }
+    try { await dbSil('dolapUyeler', kullanici.uid); uye = null; bildir('Üyelik kaydın silindi.'); cikisYap(); } catch (h) { bildir(hataMetni(h)); }
   };
   const adresBtn = $('#adresEkle');
   if (adresBtn) adresBtn.onclick = () => adresFormu(-1);
@@ -3746,7 +3783,7 @@ async function oturumHazirla(u) {
       } catch (e) {}
     }
     try { uye = await uyeGetir(u.uid); } catch (e) {}
-    const temel = { ad: (u.displayName || '').slice(0, 80), foto: (u.photoURL || '').slice(0, 600), sonGiris: SIMDI() };
+    const temel = { ad: (u.displayName || (u.email || '').split('@')[0] || '').slice(0, 80), foto: (u.photoURL || '').slice(0, 600), sonGiris: SIMDI() };
     if (!uye) {
       uye = { telefon: '', adresler: [], filtreler: [], bildirimEposta: true, istatistikIzni: izinVar() };
       Object.assign(temel, uye, { ilkGiris: SIMDI() });
