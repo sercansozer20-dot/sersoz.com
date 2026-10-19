@@ -595,10 +595,10 @@ section[id^="b-"] { scroll-margin-top: 84px; }
 .olculer { margin-top: 4px; }
 .kazanc-hesap { margin-bottom: 16px; }
 .kazanc-hesap summary { cursor: pointer; }
-.kh-izgara { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+.kh-izgara { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
 .kh-izgara label { display: grid; gap: 4px; font-size: 13px; color: var(--ikinci); }
-.kh-izgara input { padding: 8px 10px; border: 1px solid var(--cizgi); border-radius: 10px; font: inherit; }
-@media (max-width: 640px) { .kh-izgara { grid-template-columns: 1fr 1fr; } }
+.kh-izgara input { width: 100%; min-width: 0; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--cizgi); border-radius: 10px; font: inherit; }
+@media (max-width: 640px) { .kh-izgara { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 .kh-sonuc { font-size: 17px; margin: 12px 0 4px; }
 .kh-sonuc b { font-family: var(--serif); font-size: 24px; color: var(--vurgu-koyu); }
 
