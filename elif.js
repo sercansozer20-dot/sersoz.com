@@ -18,7 +18,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261020a';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261020c';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -390,7 +390,7 @@ function izinSeridi() {
   if (v) return;
   document.body.insertAdjacentHTML('beforeend',
     '<div class="izin-serit" id="izinSerit" role="dialog" aria-label="Gezinti kaydı izni"><p><b>Gezinti kaydı.</b> Hangi sayfalara ve parçalara baktığınızı, siteyi ve önerileri geliştirmek için kaydetmemize izin veriyor musunuz? ' +
-    'Kararınızı Hesabım\'dan istediğiniz zaman değiştirebilirsiniz. <a href="kosullar.html#gizlilik">Ayrıntılar</a></p>' +
+    'Kararınızı Hesabım\'dan istediğiniz zaman değiştirebilirsiniz. <a href="elif-gizlilik.html">Ayrıntılar</a></p>' +
     '<div><button type="button" class="dug dug-kucuk" data-izin="hayir">İzin verme</button><button type="button" class="dug dug-kucuk dug-ana" data-izin="evet">İzin ver</button></div></div>');
   $('#izinSerit').onclick = ev => {
     const b = ev.target.closest('[data-izin]'); if (!b) return;
@@ -632,7 +632,7 @@ function hesapCiz() {
   if (ys) ys.hidden = !adminMi();
   if (!kullanici) {
     h.innerHTML = '<a class="can-dug fav-dug" href="#favoriler" aria-label="Favorilerim" title="Favorilerim">' + KALP + '</a>' +
-      '<button type="button" class="dug" id="girisDug">' + G_IKON + 'Google ile giriş</button>';
+      '<button type="button" class="dug" id="girisDug">' + (NATIVE ? 'Giriş yap' : G_IKON + 'Google ile giriş') + '</button>';
     $('#girisDug').onclick = girisYap; mesajIzle();
     return;
   }
@@ -704,7 +704,7 @@ document.addEventListener('keydown', ev => {
 });
 function girisCagrisi(baslik, metin) {
   icerik.innerHTML = '<div class="giris-cagri"><h2>' + esc(baslik) + '</h2><p>' + esc(metin) + '</p>' +
-    '<button type="button" class="dug dug-ana" id="cagriGiris">' + G_IKON + 'Google ile giriş yap</button></div>';
+    '<button type="button" class="dug dug-ana" id="cagriGiris">' + (NATIVE ? 'Giriş yap' : G_IKON + 'Google ile giriş yap') + '</button></div>';
   $('#cagriGiris').onclick = girisYap;
 }
 
@@ -1466,8 +1466,8 @@ async function esyaSayfasi(id, istek) {
   if (!ornekForm && (!e.aktif || e.onay !== 'onaylandi')) { kutu.innerHTML = '<h2>Şu an kiralanamıyor</h2><p class="kucuk">' + (e.onay === 'bekliyor' ? 'Bu parça ekip onayı bekliyor.' : 'Bu parça yayında değil.') + '</p>'; return; }
   if (!ornekForm && (rol === 'kisitli')) { kutu.innerHTML = '<h2>Kiralama yapamıyorsun</h2><p class="kucuk">Hesabın kısıtlandı' + (rolNeden ? ': ' + esc(rolNeden) : '') + '. Yardım için sağ alttaki "Soru sor"u kullan.</p>'; return; }
   if (!ornekForm && (!kullanici)) {
-    kutu.innerHTML = '<h2>Kiralamak için giriş yap</h2><p class="kucuk" style="margin-bottom:12px">Google hesabınla saniyeler içinde giriş yapabilirsin.</p>' +
-      '<button type="button" class="dug dug-ana dug-tam" id="kiraGiris">' + G_IKON + 'Google ile giriş yap</button>';
+    kutu.innerHTML = '<h2>Kiralamak için giriş yap</h2><p class="kucuk" style="margin-bottom:12px">' + (NATIVE ? 'Apple ya da Google' : 'Google') + ' hesabınla saniyeler içinde giriş yapabilirsin.</p>' +
+      '<button type="button" class="dug dug-ana dug-tam" id="kiraGiris">' + (NATIVE ? 'Giriş yap' : G_IKON + 'Google ile giriş yap') + '</button>';
     $('#kiraGiris').onclick = girisYap;
     return;
   }
@@ -1816,7 +1816,7 @@ function yorumBolumu(id) {
 
 /* ---------------------------------------------------------------- DOLABIM */
 async function dolabim(istek) {
-  if (!kullanici) return girisCagrisi('Dolabın seni bekliyor', 'Google hesabınla giriş yap, kiraya vermek istediğin parçaları ekle.');
+  if (!kullanici) return girisCagrisi('Dolabın seni bekliyor', (NATIVE ? 'Apple ya da Google' : 'Google') + ' hesabınla giriş yap, kiraya vermek istediğin parçaları ekle.');
   icerik.innerHTML = '<div class="bas"><div><h1>Dolabım</h1><p>Kiraya verdiğin parçalar.</p></div>' +
     '<button type="button" class="dug dug-vurgu" id="yeniEsya">+ Eşya ekle</button></div>' +
     '<details class="kutu kazanc-hesap"><summary><b>💰 Dolabın sana ne kazandırır?</b> <span class="kucuk">hesapla</span></summary><div class="kh-izgara">' +
@@ -3914,7 +3914,7 @@ if (DEMO) {
   kullanici = { ...DEMO_KULLANICI, photoURL: D.kullanicilar[0].foto };
   rol = 'tam';
   uye = D.uyeler[0];
-  document.body.insertAdjacentHTML('afterbegin',
+  if (!/[?&]ekran=1/.test(location.search)) document.body.insertAdjacentHTML('afterbegin',   // ekran=1: mağaza görüntüsü çekimi
     '<div class="demo-serit">Örnek veri (' + D.kaynak + '): 20 sahte kullanıcı, parçalar, kiralamalar ve gezinti kayıtları. Seni tam yetkili gösteriyor; değişiklikler kaydedilmez. <a href="elif.html">Gerçek siteye dön</a></div>');
   hesapCiz(); sayfaCiz();
 } else {
