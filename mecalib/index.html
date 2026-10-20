@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f1720">
+<meta name="description" content="Makine mühendisliği dersleri, konuları ve ekipmanları için cep kütüphanesi.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MecaLib">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>MecaLib</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: phone app shell (max 520px). Progress dashboard first, library second; fixed bottom tab bar, detail as full sheet. Dark-first, steel navy with machine-orange. */
+:root{
+  --bg:#0f1720; --surface:#18232e; --surface2:#213040; --ink:#eef2f6; --muted:#8fa1b3; --line:#2a3a4b;
+  --accent:#ff7a3d; --accent-ink:#1b0c04; --teal:#3cc6b5; --amber:#ffc845; --sky:#6aa8ff; --ok:#3ccf7a;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --bg:#eef2f6; --surface:#ffffff; --surface2:#e4eaf0; --ink:#15212c; --muted:#5c6c7b; --line:#d3dce4;
+  --accent:#e0560f; --accent-ink:#ffffff; --teal:#0f9b8b; --amber:#c98a00; --sky:#2f6fd6; --ok:#1f9d55; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#eef2f6; --surface:#ffffff; --surface2:#e4eaf0; --ink:#15212c; --muted:#5c6c7b; --line:#d3dce4;
+  --accent:#e0560f; --accent-ink:#ffffff; --teal:#0f9b8b; --amber:#c98a00; --sky:#2f6fd6; --ok:#1f9d55; color-scheme:light}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.app{max-width:520px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px calc(96px + env(safe-area-inset-bottom,0px))}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:.01em;margin:0;line-height:1.05;text-wrap:balance}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.top .hi{font-size:14px;color:var(--muted)}
+.top h1{font-size:30px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:700;font-size:15px;white-space:nowrap}
+.chip .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%,transparent)}
+.stack{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border-radius:20px;padding:18px}
+.label{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+/* hero */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;background:linear-gradient(140deg,var(--surface) 0%,var(--surface2) 100%)}
+.ring{width:118px;height:118px;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .v{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ring .v b{font-family:var(--f-display);font-size:36px;line-height:1}
+.ring .v span{font-size:11px;color:var(--muted);display:block}
+.hero h2{font-size:26px;margin:4px 0 6px}
+.hero p{margin:0;color:var(--muted);font-size:14.5px}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tile{background:var(--surface);border-radius:18px;padding:14px 12px;min-width:0}
+.tile b{display:block;font-family:var(--f-display);font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile span{font-size:12.5px;color:var(--muted)}
+.tile.t1 b{color:var(--accent)} .tile.t2 b{color:var(--teal)} .tile.t3 b{color:var(--amber)}
+.daily{border:1.5px solid color-mix(in srgb,var(--accent) 55%,transparent)}
+.daily h3{font-size:24px;margin:6px 0 4px}
+.daily p{margin:0 0 12px;color:var(--muted);font-size:14.5px}
+.btn{font:700 15px var(--f-body);background:var(--accent);color:var(--accent-ink);border:0;border-radius:14px;padding:12px 18px;cursor:pointer;width:100%}
+.btn.ghost{background:var(--surface2);color:var(--ink)}
+.btn.done{background:color-mix(in srgb,var(--ok) 22%,var(--surface));color:var(--ok)}
+.row2{display:flex;gap:10px}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;margin:6px 2px 0}
+.sec-h h3{font-size:21px}
+.sec-h button{background:none;border:0;color:var(--accent);font:600 14px var(--f-body);cursor:pointer}
+.prog{display:flex;flex-direction:column;gap:12px}
+.prog-item{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;cursor:pointer}
+.prog-item .n{font-weight:600}
+.prog-item .p{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.bar{grid-column:1/-1;height:8px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--teal)}
+.nextbadge{display:flex;gap:14px;align-items:center}
+.nextbadge .b{flex:none}
+/* badges */
+.badges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.badge{background:var(--surface);border-radius:18px;padding:14px 8px 12px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.badge .m{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-size:22px;font-weight:700;color:var(--accent-ink)}
+.badge.off .m{background:var(--surface2)!important;color:var(--muted)}
+.badge .t{font-weight:700;font-size:13.5px;line-height:1.2}
+.badge .d{font-size:11.5px;color:var(--muted);line-height:1.3}
+.badge .pb{width:80%;height:5px;border-radius:9px;background:var(--surface2);overflow:hidden}
+.badge .pb i{display:block;height:100%;background:var(--accent)}
+.badge.off .t{color:var(--muted)}
+/* library */
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:14px;padding:0 14px;border:1px solid var(--line)}
+.search input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:inherit;padding:12px 0;outline:none}
+.search:focus-within{border-color:var(--accent)}
+.seg{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.seg button{flex:none;font:600 14px var(--f-body);background:var(--surface);color:var(--muted);border:0;border-radius:999px;padding:8px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--surface);border-radius:16px;padding:12px;cursor:pointer;border:0;color:inherit;font:inherit;text-align:left;width:100%}
+.ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;font-weight:500;color:var(--accent-ink)}
+.ic.dersler{background:var(--sky)} .ic.konular{background:var(--teal)} .ic.ekipmanlar{background:var(--accent)}
+.item .n{font-weight:700;line-height:1.2}
+.item .s{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.check{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:14px;color:transparent}
+.check.on{background:var(--ok);border-color:var(--ok);color:var(--accent-ink)}
+.empty{text-align:center;color:var(--muted);padding:28px 12px;background:var(--surface);border-radius:16px}
+/* detail */
+.dhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.iconbtn{background:var(--surface);border:0;color:var(--ink);width:42px;height:42px;border-radius:12px;font-size:20px;cursor:pointer}
+.iconbtn[aria-pressed="true"]{color:var(--amber)}
+.dtitle .k{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.dtitle h2{font-size:34px;margin:4px 0 6px}
+.dtitle p{margin:0;color:var(--muted)}
+.card h4{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 0 8px;font-weight:600}
+.card ul{margin:0;padding-left:20px}.card li{margin-bottom:4px}
+.card p{margin:0}
+.formula{font-family:var(--f-mono);background:var(--surface2);border-radius:12px;padding:10px 12px;margin-bottom:8px;overflow-x:auto;font-size:14px}
+.formula small{display:block;color:var(--muted);font-family:var(--f-body);font-size:13px;margin-top:2px}
+.spec{width:100%;border-collapse:collapse;font-size:14px}
+.spec td{border-top:1px solid var(--line);padding:8px 0;vertical-align:top}
+.spec tr:first-child td{border-top:0}
+.spec td:first-child{color:var(--muted);width:44%;padding-right:10px}
+.links{display:flex;flex-wrap:wrap;gap:6px}
+.links button{font:600 13px var(--f-body);background:var(--surface2);color:var(--ink);border:0;border-radius:999px;padding:6px 12px;cursor:pointer}
+.diagram{display:block;width:100%;max-width:320px;height:auto;margin:0 auto}
+.diagram *{stroke:var(--ink)}
+/* quiz */
+.q{font-weight:700;font-size:18px;margin:6px 0 14px;line-height:1.35}
+.opts{display:grid;gap:8px}
+.opts button{text-align:left;font:inherit;background:var(--surface2);color:var(--ink);border:2px solid transparent;border-radius:14px;padding:12px 14px;cursor:pointer}
+.opts button.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 18%,var(--surface))}
+.opts button.no{border-color:#ff5d5d;background:color-mix(in srgb,#ff5d5d 16%,var(--surface))}
+.qbar{height:6px;border-radius:9px;background:var(--surface2);overflow:hidden;margin-top:8px}
+.qbar i{display:block;height:100%;background:var(--accent)}
+.exp{font-size:14px;color:var(--muted);margin:12px 0}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.field label{font-size:13px;color:var(--muted)}
+.field input,.field select{font:inherit;background:var(--surface2);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0;width:100%}
+.result{font-family:var(--f-mono);font-size:19px;padding:12px;border-radius:12px;background:color-mix(in srgb,var(--teal) 16%,var(--surface));overflow-x:auto}
+/* tab bar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line);
+  padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.tabbar .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.tabbar button{background:none;border:0;color:var(--muted);font:600 11.5px var(--f-body);display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer}
+.tabbar svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button[aria-current="page"]{color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);font-weight:700;padding:10px 18px;border-radius:999px;z-index:7;max-width:calc(100% - 32px);text-align:center;font-size:14px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pop{animation:pop .35s ease-out}
+@keyframes pop{0%{transform:scale(.96)}60%{transform:scale(1.02)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){.pop{animation:none}}
+</style>
+
+</head>
+<body>
+<div class="app" id="app"></div>
+<nav class="tabbar" aria-label="Ana menü"><div class="in" id="tabbar"></div></nav>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const DATA = {
+dersler: [
+ {id:"statik",kod:"MAK 201",ad:"Statik",ozet:"Dengedeki cisimlere etkiyen kuvvet ve momentlerin incelenmesi.",yariyil:"2. yarıyıl",tags:["Kuvvet","Moment","Kafes"],
+  konular:["Kuvvet vektörleri ve bileşke","Moment ve kuvvet çifti","Serbest cisim diyagramı","Kafes sistemler (düğüm ve kesim yöntemi)","Ağırlık merkezi ve atalet momenti","Sürtünme"],
+  formuller:[["ΣF = 0 ,  ΣM = 0","Denge şartları (düzlemde 3 denklem)"],["M = F · d","Moment = kuvvet × dik uzaklık"]],
+  bagli:["mukavemet","dinamik","denge"]},
+ {id:"dinamik",kod:"MAK 202",ad:"Dinamik",ozet:"Hareket eden cisimlerin kinematiği ve kinetiği.",yariyil:"3. yarıyıl",tags:["Kinematik","Kinetik","Enerji"],
+  konular:["Parçacık kinematiği","Newton'un ikinci yasası","İş ve enerji yöntemi","İmpuls ve momentum","Rijit cisim dönmesi","Titreşime giriş"],
+  formuller:[["F = m · a","Newton'un 2. yasası"],["T₁ + U₁₋₂ = T₂","İş-enerji prensibi"],["ω = 2π n / 60","Devir (d/dk) → açısal hız (rad/s)"]],
+  bagli:["statik","titresim"]},
+ {id:"mukavemet",kod:"MAK 203",ad:"Mukavemet",ozet:"Yük altındaki elemanlarda oluşan gerilme ve şekil değiştirmeler.",yariyil:"3. yarıyıl",tags:["Gerilme","Eğilme","Burulma"],
+  konular:["Normal ve kayma gerilmesi","Hooke yasası ve elastisite modülü","Eksenel yükleme","Burulma","Kirişlerde eğilme","Mohr çemberi","Burkulma"],
+  formuller:[["σ = F / A","Normal gerilme"],["σ = M · y / I","Eğilme gerilmesi"],["τ = T · r / J","Burulma kayma gerilmesi"],["P_cr = π² E I / (K L)²","Euler burkulma yükü"]],
+  bagli:["statik","malzeme","gerilme","makine-el"]},
+ {id:"termo",kod:"MAK 211",ad:"Termodinamik",ozet:"Enerji, ısı, iş ve bunların dönüşümünü yöneten yasalar.",yariyil:"3. yarıyıl",tags:["Enerji","Entropi","Çevrim"],
+  konular:["Sistem, hal ve özellikler","Termodinamiğin 1. yasası","Saf maddeler ve buhar tabloları","2. yasa ve entropi","Carnot, Rankine, Otto, Brayton çevrimleri","Soğutma çevrimleri"],
+  formuller:[["Q − W = ΔU","Kapalı sistem için 1. yasa"],["η_Carnot = 1 − T_L / T_H","Carnot verimi (sıcaklıklar K)"],["P V = m R T","İdeal gaz denklemi"]],
+  bagli:["isi","akiskan","carnot","pompa","kompresor","turbin"]},
+ {id:"akiskan",kod:"MAK 212",ad:"Akışkanlar Mekaniği",ozet:"Durgun ve hareketli akışkanların davranışı.",yariyil:"4. yarıyıl",tags:["Basınç","Akış","Bernoulli"],
+  konular:["Akışkan özellikleri ve viskozite","Hidrostatik","Süreklilik denklemi","Bernoulli denklemi","Reynolds sayısı, laminer ve türbülanslı akış","Borularda basınç kayıpları"],
+  formuller:[["P + ½ρV² + ρgz = sabit","Bernoulli denklemi"],["Re = ρ V D / μ","Reynolds sayısı (boru: <2300 laminer)"],["Q = A · V","Debi"]],
+  bagli:["termo","bernoulli","pompa","vana"]},
+ {id:"isi",kod:"MAK 311",ad:"Isı Transferi",ozet:"İletim, taşınım ve ışınımla ısı aktarımı.",yariyil:"5. yarıyıl",tags:["İletim","Taşınım","Işınım"],
+  konular:["Fourier yasası","Isıl direnç devreleri","Kanatçıklar","Zorlanmış ve doğal taşınım","Işınım","Isı değiştiricileri (LMTD, ε-NTU)"],
+  formuller:[["q = −k A dT/dx","Fourier iletim yasası"],["q = h A (T_s − T_∞)","Newton soğuma yasası"],["q = ε σ A T⁴","Stefan-Boltzmann"]],
+  bagli:["termo","esanjor"]},
+ {id:"malzeme",kod:"MAK 105",ad:"Malzeme Bilimi",ozet:"Mühendislik malzemelerinin yapısı, özellikleri ve seçimi.",yariyil:"1. yarıyıl",tags:["Çelik","Isıl işlem","Faz"],
+  konular:["Atom ve kristal yapı","Kusurlar ve difüzyon","Çekme deneyi","Fe-C faz diyagramı","Isıl işlemler (sertleştirme, menevişleme)","Polimer, seramik ve kompozitler"],
+  formuller:[["E = σ / ε","Elastisite modülü"],["HB ≈ 3.45 · σ_ç (MPa) ⁻¹","Brinell sertliğinden çekme dayanımı tahmini (çelik): σ_ç ≈ 3.45·HB"]],
+  bagli:["mukavemet","celik"]},
+ {id:"makine-el",kod:"MAK 321",ad:"Makine Elemanları",ozet:"Mil, dişli, rulman, cıvata gibi elemanların tasarımı ve seçimi.",yariyil:"5–6. yarıyıl",tags:["Tasarım","Yorulma","Seçim"],
+  konular:["Emniyet katsayısı","Yorulma ve Goodman diyagramı","Cıvata ve kaynak bağlantıları","Mil tasarımı","Rulman seçimi ve ömür hesabı","Dişli çarklar","Kayış-kasnak ve zincir"],
+  formuller:[["n = σ_akma / σ_işletme","Emniyet katsayısı"],["L₁₀ = (C / P)³ · 10⁶ dev","Bilyalı rulman ömrü (makaralı: üs 10/3)"],["i = z₂ / z₁ = n₁ / n₂","Dişli çevrim oranı"]],
+  bagli:["mukavemet","rulman","disli","kaplin","kayis","civata"]},
+ {id:"titresim",kod:"MAK 401",ad:"Mekanik Titreşimler",ozet:"Serbest ve zorlanmış titreşimler, sönüm ve rezonans.",yariyil:"7. yarıyıl",tags:["Rezonans","Sönüm","Frekans"],
+  konular:["Tek serbestlik dereceli sistemler","Sönümlü titreşim","Zorlanmış titreşim ve rezonans","Çok serbestlik dereceli sistemler","Titreşim yalıtımı"],
+  formuller:[["ω_n = √(k / m)","Doğal frekans (rad/s)"],["ζ = c / (2√(k m))","Sönüm oranı"]],
+  bagli:["dinamik","rulman"]}
+],
+konular: [
+ {id:"bernoulli",kod:"KNU 01",ad:"Bernoulli Denklemi",ozet:"Sürtünmesiz, sıkıştırılamaz akışta enerjinin korunumu.",ders:"akiskan",tags:["Akışkan","Enerji"],
+  aciklama:"Bir akım çizgisi boyunca basınç, kinetik ve potansiyel enerjinin toplamı sabittir. Venturi metre, pitot tüpü ve uçak kanadı taşıması bu prensiple açıklanır.",
+  formuller:[["P₁ + ½ρV₁² + ρgz₁ = P₂ + ½ρV₂² + ρgz₂","Kayıpsız hal"]],
+  ornek:"Su (ρ=1000 kg/m³) 2 m/s'den 6 m/s'ye hızlanırsa, aynı yükseklikte basınç düşüşü ½·1000·(36−4) = 16 kPa olur.",bagli:["akiskan","pompa","vana"]},
+ {id:"gerilme",kod:"KNU 02",ad:"Gerilme ve Şekil Değiştirme",ozet:"Malzemenin iç kuvvetlere tepkisi ve Hooke yasası.",ders:"mukavemet",tags:["Mukavemet","Malzeme"],
+  aciklama:"Gerilme birim alana düşen iç kuvvettir (MPa = N/mm²). Elastik bölgede gerilme şekil değiştirmeyle doğru orantılıdır. Akma noktasından sonra kalıcı deformasyon başlar.",
+  formuller:[["σ = E · ε","Hooke yasası"],["ε = ΔL / L₀","Birim uzama"]],
+  ornek:"Kesiti 100 mm² olan çelik çubuk 20 kN ile çekilirse σ = 20000/100 = 200 MPa olur. S235 çeliği için akma 235 MPa'dır, emniyet katsayısı 1.18.",bagli:["mukavemet","malzeme","celik"]},
+ {id:"carnot",kod:"KNU 03",ad:"Carnot Çevrimi",ozet:"İki ısıl kaynak arasında çalışabilecek en verimli ideal çevrim.",ders:"termo",tags:["Termodinamik","Verim"],
+  aciklama:"İki izotermal ve iki adyabatik (izentropik) hal değişiminden oluşur. Gerçek makinelerin verimi her zaman Carnot veriminin altındadır.",
+  formuller:[["η = 1 − T_L / T_H","Sıcaklıklar Kelvin cinsinden"]],
+  ornek:"T_H = 800 K ve T_L = 300 K için en yüksek teorik verim 1 − 300/800 = %62.5'tir.",bagli:["termo","turbin"]},
+ {id:"denge",kod:"KNU 04",ad:"Serbest Cisim Diyagramı",ozet:"Statik ve dinamik problemlerin ilk ve en önemli adımı.",ders:"statik",tags:["Statik","Yöntem"],
+  aciklama:"Cisim çevresinden ayrılır, üzerine etkiyen tüm dış kuvvetler, mesnet tepkileri ve momentler çizilir. Ardından denge denklemleri yazılır.",
+  formuller:[["ΣFx = 0, ΣFy = 0, ΣM = 0","Düzlemsel denge"]],
+  ornek:"4 m'lik basit kirişin ortasına 10 kN yük gelirse, simetriden her mesnet 5 kN taşır.",bagli:["statik","mukavemet"]},
+ {id:"celik",kod:"KNU 05",ad:"Çelik Türleri ve Gösterimi",ozet:"Yapı, ıslah ve paslanmaz çeliklerin sınıflandırılması.",ders:"malzeme",tags:["Malzeme","Standart"],
+  aciklama:"EN 10025 yapı çelikleri akma dayanımıyla adlandırılır (S235, S355). Islah çelikleri karbon oranıyla gösterilir (C45, 42CrMo4). Paslanmaz çelikler AISI 304, 316 gibi kodlarla bilinir.",
+  formuller:[["S355 → R_e ≥ 355 MPa","Yapı çeliği gösterimi"]],
+  ornek:"Mil imalatında sık kullanılan C45, ıslah edildiğinde yaklaşık 490 MPa akma dayanımına ulaşır.",bagli:["malzeme","gerilme"]},
+ {id:"civata",kod:"KNU 06",ad:"Cıvata Kalite Sınıfları",ozet:"8.8, 10.9 gibi gösterimlerin anlamı ve ön yükleme.",ders:"makine-el",tags:["Bağlantı","Standart"],
+  aciklama:"ISO 898-1'e göre ilk sayı çekme dayanımının 1/100'ü, ikinci sayı akma/çekme oranının 10 katıdır. 8.8 cıvatada σ_ç = 800 MPa, σ_a = 640 MPa.",
+  formuller:[["σ_a = (a·100) · (b/10)","a.b sınıfı için akma dayanımı"],["F_ön ≈ 0.75 · A_s · σ_a","Tavsiye edilen ön yük"]],
+  ornek:"M10 (A_s = 58 mm²) 8.8 cıvata için ön yük ≈ 0.75·58·640 ≈ 27.8 kN.",bagli:["makine-el","mukavemet"]}
+],
+ekipmanlar: [
+ {id:"rulman",kod:"EKP 01",ad:"Rulman",ozet:"Dönen mili yataklayıp sürtünmeyi azaltan makine elemanı.",tur:"Yataklama",tags:["Yataklama","Dönme"],
+  calisma:"İç ve dış bilezik arasında yuvarlanan bilyalar veya makaralar kayma sürtünmesini yuvarlanma sürtünmesine çevirir.",
+  tipler:["Sabit bilyalı (6000 serisi)","Eğik bilyalı","Silindirik makaralı","Konik makaralı","Oynak makaralı","İğneli"],
+  kullanim:["Elektrik motorları","Redüktörler","Taşıt tekerlek göbekleri","Pompalar"],
+  spec:[["Dinamik yük sayısı","C (kN)"],["Ömür","L₁₀ (milyon devir)"],["Gösterim örneği","6205: iç çap 25 mm"],["Arıza belirtisi","Ses, titreşim, ısınma"]],
+  bagli:["makine-el","titresim"],sekil:"rulman"},
+ {id:"disli",kod:"EKP 02",ad:"Dişli Çark",ozet:"Güç ve hareketi diş kavraması ile ileten eleman.",tur:"Güç aktarımı",tags:["Güç aktarımı","Redüksiyon"],
+  calisma:"Karşılıklı dişler kavrayarak dönme hareketini belirli bir çevrim oranıyla aktarır. Modül (m) diş büyüklüğünü belirler.",
+  tipler:["Düz dişli","Helisel dişli","Konik dişli","Sonsuz vida","Kremayer","Planet dişli"],
+  kullanim:["Şanzıman","Redüktör","Takım tezgâhları","Rüzgâr türbini"],
+  spec:[["Modül","m = d / z (mm)"],["Kavrama açısı","20° (standart)"],["Çevrim oranı","i = z₂ / z₁"],["Verim","%95–99 (düz/helisel)"]],
+  bagli:["makine-el","kaplin"],sekil:"disli"},
+ {id:"pompa",kod:"EKP 03",ad:"Santrifüj Pompa",ozet:"Sıvıya çark yardımıyla enerji vererek basınç ve debi sağlar.",tur:"Akışkan makinesi",tags:["Akışkan","Hidrolik"],
+  calisma:"Dönen çark sıvıyı merkezden dışa doğru savurur. Kinetik enerji salyangoz gövdede basınca dönüşür.",
+  tipler:["Santrifüj","Dişli pompa","Pistonlu","Diyafram","Vidalı"],
+  kullanim:["Su temini","Soğutma devreleri","Kimya tesisleri","Yangın sistemleri"],
+  spec:[["Debi","Q (m³/h)"],["Basma yüksekliği","H (m)"],["Hidrolik güç","P = ρ g Q H"],["Kritik kavram","NPSH, kavitasyon"]],
+  bagli:["akiskan","bernoulli","vana"],sekil:"pompa"},
+ {id:"kompresor",kod:"EKP 04",ad:"Kompresör",ozet:"Gazın basıncını artıran makine.",tur:"Akışkan makinesi",tags:["Gaz","Basınçlı hava"],
+  calisma:"Hacimsel tiplerde gaz kapalı bir hacimde sıkıştırılır. Dinamik tiplerde hız kazandırılıp difüzörde basınca çevrilir.",
+  tipler:["Pistonlu","Vidalı","Paletli","Santrifüj","Eksenel"],
+  kullanim:["Basınçlı hava hatları","Soğutma çevrimi","Gaz türbini girişi"],
+  spec:[["Basınç oranı","r = P₂ / P₁"],["Kapasite","m³/dk (serbest hava)"],["Tipik atölye basıncı","7–10 bar"]],
+  bagli:["termo","turbin"],sekil:null},
+ {id:"turbin",kod:"EKP 05",ad:"Türbin",ozet:"Akışkanın enerjisini mil gücüne dönüştürür.",tur:"Akışkan makinesi",tags:["Enerji","Güç üretimi"],
+  calisma:"Buhar, gaz, su veya rüzgâr kanatlara çarparak ya da kanatlar arasında genişleyerek rotoru döndürür.",
+  tipler:["Buhar türbini","Gaz türbini","Pelton / Francis / Kaplan (su)","Rüzgâr türbini"],
+  kullanim:["Termik santraller","Uçak motorları","Hidroelektrik santraller"],
+  spec:[["Çevrim","Rankine (buhar), Brayton (gaz)"],["İzentropik verim","%80–92"]],
+  bagli:["termo","carnot"],sekil:null},
+ {id:"vana",kod:"EKP 06",ad:"Vana",ozet:"Akışkanın akışını açan, kapatan veya ayarlayan eleman.",tur:"Akış kontrolü",tags:["Akış kontrolü","Tesisat"],
+  calisma:"Gövde içindeki kapama elemanı (küre, disk, sürgü) akış kesitini değiştirir.",
+  tipler:["Küresel","Kelebek","Sürgülü","Glob","Çek valf","Emniyet ventili"],
+  kullanim:["Su ve doğalgaz hatları","Proses tesisleri","Hidrolik sistemler"],
+  spec:[["Akış katsayısı","Kv (m³/h, 1 bar ΔP)"],["Nominal basınç","PN16, PN40..."],["Nominal çap","DN50, DN100..."]],
+  bagli:["akiskan","pompa"],sekil:null},
+ {id:"kaplin",kod:"EKP 07",ad:"Kaplin",ozet:"İki mili birbirine bağlayıp tork ileten eleman.",tur:"Güç aktarımı",tags:["Güç aktarımı","Mil"],
+  calisma:"Mil uçlarını bağlar. Esnek tipler eksen kaçıklığını ve darbeleri tolere eder.",
+  tipler:["Rijit (flanşlı)","Elastik (kauçuk elemanlı)","Dişli kaplin","Lamelli","Kardan"],
+  kullanim:["Motor-pompa bağlantısı","Redüktör çıkışları"],
+  spec:[["Nominal tork","T (N·m)"],["Tolere edilen kaçıklık","Açısal, radyal, eksenel"]],
+  bagli:["makine-el","disli"],sekil:null},
+ {id:"kayis",kod:"EKP 08",ad:"Kayış-Kasnak",ozet:"Uzak miller arasında sürtünmeyle güç aktarımı.",tur:"Güç aktarımı",tags:["Güç aktarımı"],
+  calisma:"Gergin kayış ile kasnak arasındaki sürtünme torku iletir. Triger kayışında dişler kaymayı önler.",
+  tipler:["V kayış","Düz kayış","Triger (dişli) kayış","Poly-V"],
+  kullanim:["Motor yardımcı aksamları","Fan ve kompresör tahriki","Konveyörler"],
+  spec:[["Çevrim oranı","i = d₂ / d₁"],["Gerdirme oranı","F₁ / F₂ = e^(μθ)"]],
+  bagli:["makine-el"],sekil:null},
+ {id:"esanjor",kod:"EKP 09",ad:"Isı Eşanjörü",ozet:"İki akışkan arasında karışmadan ısı aktarır.",tur:"Isıl ekipman",tags:["Isı","Tesisat"],
+  calisma:"Sıcak ve soğuk akışkan bir duvarla ayrılır. Isı duvar boyunca iletim ve iki yüzeyde taşınımla geçer.",
+  tipler:["Plakalı","Gövde-boru","Kanatlı borulu (radyatör)","Çift borulu"],
+  kullanim:["Kombi ve kalorifer","Araç radyatörü","Soğutma kuleleri","Proses ısıtma"],
+  spec:[["Isı yükü","Q = U A ΔT_lm"],["Akış düzeni","Paralel, ters, çapraz"]],
+  bagli:["isi","termo"],sekil:null},
+ {id:"silindir",kod:"EKP 10",ad:"Hidrolik Silindir",ozet:"Hidrolik basıncı doğrusal kuvvete çevirir.",tur:"Akışkan gücü",tags:["Hidrolik","Kuvvet"],
+  calisma:"Basınçlı yağ piston yüzeyine etki eder, piston kolu itilir veya çekilir.",
+  tipler:["Tek etkili","Çift etkili","Teleskopik"],
+  kullanim:["İş makineleri","Presler","Kaldırma platformları"],
+  spec:[["Kuvvet","F = P · A"],["Hız","v = Q / A"],["Tipik basınç","160–250 bar"]],
+  bagli:["akiskan","pompa"],sekil:null}
+],
+quiz: [
+ {s:"Reynolds sayısı 1500 olan boru akışı hangi rejimdedir?",o:["Laminer","Türbülanslı","Geçiş","Sesüstü"],d:0,a:"Borularda Re < 2300 laminer kabul edilir."},
+ {s:"8.8 kalite cıvatanın akma dayanımı yaklaşık kaçtır?",o:["800 MPa","640 MPa","880 MPa","400 MPa"],d:1,a:"800 × 0.8 = 640 MPa."},
+ {s:"6205 rulmanın iç çapı kaç mm'dir?",o:["20","25","52","62"],d:1,a:"04 ve üzeri kodlarda iç çap = son iki hane × 5 → 05 × 5 = 25 mm."},
+ {s:"T_H = 600 K, T_L = 300 K arasındaki Carnot verimi nedir?",o:["%25","%33","%50","%100"],d:2,a:"1 − 300/600 = 0.5."},
+ {s:"Kirişte eğilme gerilmesi hangi ifadeyle bulunur?",o:["σ = F/A","σ = M·y/I","τ = T·r/J","σ = E·ε"],d:1,a:"Eğilme gerilmesi tarafsız eksenden uzaklıkla doğrusal artar."},
+ {s:"Dişli çarkta modül neyi ifade eder?",o:["Diş sayısı","Taksimat dairesi çapı / diş sayısı","Kavrama açısı","Devir sayısı"],d:1,a:"m = d / z, mm cinsinden."},
+ {s:"Santrifüj pompada kavitasyonu önlemek için hangisi yeterli olmalıdır?",o:["Verim","NPSH","Kv","Modül"],d:1,a:"Mevcut NPSH, pompanın gerekli NPSH değerinden büyük olmalıdır."}
+]};
+
+
+const ALL=[...DATA.dersler.map(x=>({...x,_t:"dersler"})),...DATA.konular.map(x=>({...x,_t:"konular"})),...DATA.ekipmanlar.map(x=>({...x,_t:"ekipmanlar"}))];
+const byId=Object.fromEntries(ALL.map(x=>[x.id,x]));
+const LABEL={dersler:"Ders",konular:"Konu",ekipmanlar:"Ekipman"};
+const ICO={dersler:"DRS",konular:"KNU",ekipmanlar:"EKP"};
+const today=()=>new Date().toISOString().slice(0,10);
+
+/* kullanıcı ilerlemesi (bu cihazda saklanır) */
+let P={learned:[],favs:[],xp:0,days:[],best:0,badges:[]};
+try{Object.assign(P,JSON.parse(localStorage.getItem("mecalib-p")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("mecalib-p",JSON.stringify(P))}catch(e){}};
+if(!P.days.includes(today())){P.days.push(today());save()}
+function streak(){let n=0,d=new Date();for(;;){const k=d.toISOString().slice(0,10);if(P.days.includes(k)){n++;d.setDate(d.getDate()-1)}else break}return n}
+
+const BADGES=[
+ {id:"ilk",ad:"İlk Adım",d:"1 kayıt öğren",c:"var(--teal)",m:"1",v:()=>P.learned.length,h:1},
+ {id:"merakli",ad:"Meraklı",d:"5 kayıt öğren",c:"var(--sky)",m:"5",v:()=>P.learned.length,h:5},
+ {id:"cirak",ad:"Çırak",d:"15 kayıt öğren",c:"var(--amber)",m:"15",v:()=>P.learned.length,h:15},
+ {id:"ders",ad:"Müfredat",d:"Tüm dersleri öğren",c:"var(--sky)",m:"DRS",v:()=>DATA.dersler.filter(x=>P.learned.includes(x.id)).length,h:DATA.dersler.length},
+ {id:"ekip",ad:"Saha Ustası",d:"Tüm ekipmanları öğren",c:"var(--accent)",m:"EKP",v:()=>DATA.ekipmanlar.filter(x=>P.learned.includes(x.id)).length,h:DATA.ekipmanlar.length},
+ {id:"konu",ad:"Formül Avcısı",d:"Tüm konuları öğren",c:"var(--teal)",m:"KNU",v:()=>DATA.konular.filter(x=>P.learned.includes(x.id)).length,h:DATA.konular.length},
+ {id:"seri3",ad:"Isınma",d:"3 gün üst üste gir",c:"var(--amber)",m:"3G",v:streak,h:3},
+ {id:"seri7",ad:"Tam Devir",d:"7 gün üst üste gir",c:"var(--accent)",m:"7G",v:streak,h:7},
+ {id:"test",ad:"Tam Puan",d:"Testi hatasız bitir",c:"var(--ok)",m:"%",v:()=>P.best,h:DATA.quiz.length},
+ {id:"xp",ad:"100 XP",d:"100 deneyim puanı topla",c:"var(--sky)",m:"XP",v:()=>P.xp,h:100}
+];
+function checkBadges(){
+  BADGES.forEach(b=>{if(!P.badges.includes(b.id)&&b.v()>=b.h){P.badges.push(b.id);save();toast("Yeni rozet: "+b.ad)}});
+}
+let tt;function toast(m){const t=document.getElementById("toast");t.textContent=m;t.hidden=false;t.classList.remove("pop");void t.offsetWidth;t.classList.add("pop");clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
+
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const norm=s=>s.toLocaleLowerCase("tr").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ı/g,"i");
+const app=document.getElementById("app");
+let S={tab:"pano",seg:"dersler",q:"",detail:null};
+
+const TABS=[["pano","Pano",'<path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/>'],
+ ["kesfet","Keşfet",'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>'],
+ ["test","Test",'<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>'],
+ ["rozet","Rozetler",'<circle cx="12" cy="9" r="6"/><path d="M8.5 14l-1.5 7 5-3 5 3-1.5-7"/>']];
+function renderTabs(){document.getElementById("tabbar").innerHTML=TABS.map(([k,l,i])=>`<button data-tab="${k}" ${S.tab===k&&!S.detail?'aria-current="page"':""}><svg viewBox="0 0 24 24">${i}</svg>${l}</button>`).join("")}
+
+function ring(pct,size=118,stroke=11,color="var(--accent)"){const r=(size-stroke)/2,c=2*Math.PI*r;
+  return `<svg viewBox="0 0 ${size} ${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="${stroke}"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c*(1-pct)}"/></svg>`}
+
+function level(){return Math.floor(P.xp/50)+1}
+function renderPano(){
+  const n=P.learned.length,T=ALL.length,pct=n/T;
+  const daily=ALL[Math.floor(Date.now()/864e5)%ALL.length];
+  const dd=P.learned.includes(daily.id);
+  const msg=n===0?"İlk kaydını öğrenerek başla. Her kayıt 10 XP kazandırır.":pct<.5?"İyi gidiyorsun, her gün bir kart yeter.":pct<1?"Kütüphanenin yarısından fazlası tamam.":"Tüm kütüphaneyi bitirdin.";
+  const courses=DATA.dersler.map(d=>{const ids=[d.id,...DATA.konular.filter(k=>k.ders===d.id).map(k=>k.id),...(d.bagli||[]).filter(i=>byId[i]?._t==="ekipmanlar")];const u=[...new Set(ids)];const l=u.filter(i=>P.learned.includes(i)).length;return {d,l,t:u.length}}).sort((a,b)=>b.l/b.t-a.l/a.t).slice(0,4);
+  const next=BADGES.filter(b=>!P.badges.includes(b.id)).sort((a,b)=>b.v()/b.h-a.v()/a.h)[0];
+  app.innerHTML=`<div class="top"><div><div class="hi">Merhaba mühendis</div><h1>MecaLib</h1></div><span class="chip"><span class="dot"></span>${streak()} gün seri</span></div>
+  <div class="stack">
+   <div class="card hero"><div class="ring">${ring(pct)}<div class="v"><div><b>${n}</b><span>/ ${T} kayıt</span></div></div></div>
+    <div><div class="label">Öğrenme ilerlemesi</div><h2>%${Math.round(pct*100)} tamamlandı</h2><p>${msg}</p></div></div>
+   <div class="tiles"><div class="tile t1"><b>${P.xp}</b><span>XP · Seviye ${level()}</span></div><div class="tile t2"><b>${P.badges.length}</b><span>/ ${BADGES.length} rozet</span></div><div class="tile t3"><b>${P.best}/${DATA.quiz.length}</b><span>en iyi test</span></div></div>
+   <div class="card daily"><div class="label">Günün kartı · ${LABEL[daily._t]}</div><h3>${esc(daily.ad)}</h3><p>${esc(daily.ozet)}</p>
+    <div class="row2"><button class="btn ghost" data-open="${daily.id}">İncele</button><button class="btn ${dd?"done":""}" data-learn="${daily.id}">${dd?"Öğrenildi ✓":"Öğrendim +10 XP"}</button></div></div>
+   ${next?`<div class="card nextbadge"><div class="b">${badgeMedal(next,true)}</div><div style="min-width:0;flex:1"><div class="label">Sıradaki rozet</div><div style="font-weight:700;font-size:17px">${next.ad}</div><div style="color:var(--muted);font-size:14px">${next.d} · ${Math.min(next.v(),next.h)}/${next.h}</div><div class="bar" style="margin-top:8px"><i style="width:${Math.min(100,next.v()/next.h*100)}%;background:var(--accent)"></i></div></div></div>`:""}
+   <div class="sec-h"><h3>Ders ilerlemen</h3><button data-tab="kesfet">Tümü</button></div>
+   <div class="card prog">${courses.map(c=>`<div class="prog-item" data-open="${c.d.id}"><span class="n">${esc(c.d.ad)}</span><span class="p">${c.l}/${c.t}</span><div class="bar"><i style="width:${c.l/c.t*100}%"></i></div></div>`).join("")}</div>
+  </div>`;
+}
+function badgeMedal(b,force){const on=P.badges.includes(b.id);return `<div class="badge ${on||force?"":"off"}" style="background:none;padding:0"><div class="m" style="background:${b.c}">${b.m}</div></div>`}
+function renderRozet(){
+  app.innerHTML=`<div class="top"><div><div class="hi">${P.badges.length} / ${BADGES.length} kazanıldı</div><h1>Rozetler</h1></div><span class="chip">Seviye ${level()}</span></div>
+  <div class="badges">${BADGES.map(b=>{const on=P.badges.includes(b.id),v=Math.min(b.v(),b.h);return `<div class="badge ${on?"":"off"}"><div class="m" style="background:${b.c}">${b.m}</div><div class="t">${b.ad}</div><div class="d">${b.d}</div>${on?"":`<div class="pb"><i style="width:${v/b.h*100}%"></i></div>`}</div>`}).join("")}</div>`;
+}
+function item(x){const on=P.learned.includes(x.id);
+  const sub=x._t==="dersler"?x.kod+" · "+x.yariyil:x._t==="konular"?(byId[x.ders]?.ad||""):x.tur;
+  return `<button class="item" data-open="${x.id}"><span class="ic ${x._t}">${ICO[x._t]}</span><span style="min-width:0"><span class="n">${esc(x.ad)}${P.favs.includes(x.id)?' <span style="color:var(--amber)">★</span>':""}</span><span class="s" style="display:block">${esc(sub)} · ${esc(x.ozet)}</span></span><span class="check ${on?"on":""}" aria-label="${on?"Öğrenildi":"Öğrenilmedi"}">✓</span></button>`}
+function renderKesfet(){
+  const SEG=[["dersler","Dersler"],["konular","Konular"],["ekipmanlar","Ekipmanlar"],["kayit","Kaydedilenler"]];
+  let items;
+  if(S.q){const n=norm(S.q);items=ALL.filter(x=>norm([x.ad,x.ozet,x.tags.join(" "),(x.konular||[]).join(" "),(x.tipler||[]).join(" "),x.aciklama||"",x.calisma||""].join(" ")).includes(n))}
+  else items=S.seg==="kayit"?ALL.filter(x=>P.favs.includes(x.id)):ALL.filter(x=>x._t===S.seg);
+  app.innerHTML=`<div class="top"><div><div class="hi">${ALL.length} kayıt</div><h1>Keşfet</h1></div></div>
+  <div class="stack"><label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q" type="search" placeholder="Rulman, Bernoulli, gerilme..." value="${esc(S.q)}" autocomplete="off"></label>
+  ${S.q?"":`<div class="seg">${SEG.map(([k,l])=>`<button data-seg="${k}" aria-pressed="${S.seg===k}">${l}</button>`).join("")}</div>`}
+  <div class="list" id="list">${items.length?items.map(item).join(""):`<div class="empty">${S.q?"Bu aramayla eşleşen kayıt yok. “dişli” ya da “gerilme” dene.":"Henüz kaydettiğin bir şey yok. Bir kaydı açıp ☆ simgesine dokun."}</div>`}</div></div>`;
+}
+const SEKIL={
+ rulman:`<svg class="diagram" viewBox="0 0 220 160" aria-label="Rulman kesiti"><circle cx="110" cy="80" r="70" fill="none" stroke-width="3"/><circle cx="110" cy="80" r="56" fill="none" stroke-width="1.5"/><circle cx="110" cy="80" r="34" fill="none" stroke-width="1.5"/><circle cx="110" cy="80" r="22" fill="none" stroke-width="3"/>${Array.from({length:10},(_,i)=>{const a=i*Math.PI/5;return `<circle cx="${110+45*Math.cos(a)}" cy="${80+45*Math.sin(a)}" r="9" fill="var(--accent)" stroke-width="1"/>`}).join("")}</svg>`,
+ disli:`<svg class="diagram" viewBox="0 0 220 160" aria-label="Dişli kavraması">${(()=>{const g=(cx,cy,r,z,off)=>{let d="";for(let i=0;i<z*2;i++){const a=off+i*Math.PI/z,rr=i%2?r:r+8;d+=(i?"L":"M")+(cx+rr*Math.cos(a)).toFixed(1)+" "+(cy+rr*Math.sin(a)).toFixed(1)+" ";}return `<path d="${d}Z" fill="var(--surface2)" stroke-width="1.5"/><circle cx="${cx}" cy="${cy}" r="6" fill="var(--accent)" stroke-width="1"/>`};return g(72,80,46,14,0)+g(160,80,30,9,Math.PI/9)})()}</svg>`,
+ pompa:`<svg class="diagram" viewBox="0 0 220 160" aria-label="Santrifüj pompa şeması"><path d="M110 20 A60 60 0 1 1 50 80 L50 30 L110 20Z" fill="none" stroke-width="3"/><rect x="150" y="10" width="40" height="22" fill="var(--surface2)" stroke-width="1.5"/><circle cx="110" cy="80" r="10" fill="var(--accent)" stroke-width="1"/>${Array.from({length:6},(_,i)=>{const a=i*Math.PI/3;return `<path d="M${110+10*Math.cos(a)} ${80+10*Math.sin(a)} Q${110+30*Math.cos(a+.5)} ${80+30*Math.sin(a+.5)} ${110+42*Math.cos(a+.9)} ${80+42*Math.sin(a+.9)}" fill="none" stroke-width="2"/>`}).join("")}</svg>`
+};
+function renderDetail(x){
+  const on=P.learned.includes(x.id),fav=P.favs.includes(x.id);
+  const f=(x.formuller||[]).map(([e,a])=>`<div class="formula">${esc(e)}<small>${esc(a)}</small></div>`).join("");
+  const links=(x.bagli||[]).filter(id=>byId[id]).map(id=>`<button data-open="${id}">${esc(byId[id].ad)}</button>`).join("");
+  let body="";
+  if(x._t==="dersler")body=`<div class="card"><h4>Konu başlıkları</h4><ul>${x.konular.map(k=>`<li>${esc(k)}</li>`).join("")}</ul></div><div class="card"><h4>Anahtar formüller</h4>${f}</div>`;
+  else if(x._t==="konular")body=`<div class="card"><h4>Açıklama</h4><p>${esc(x.aciklama)}</p></div><div class="card"><h4>Formül</h4>${f}</div><div class="card"><h4>Çözümlü örnek</h4><p>${esc(x.ornek)}</p></div>`;
+  else body=(x.sekil?`<div class="card">${SEKIL[x.sekil]}</div>`:"")+`<div class="card"><h4>Çalışma prensibi</h4><p>${esc(x.calisma)}</p></div><div class="card"><h4>Tipleri</h4><ul>${x.tipler.map(k=>`<li>${esc(k)}</li>`).join("")}</ul></div><div class="card"><h4>Teknik değerler</h4><table class="spec">${x.spec.map(([a,b])=>`<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join("")}</table></div><div class="card"><h4>Kullanım alanları</h4><ul>${x.kullanim.map(k=>`<li>${esc(k)}</li>`).join("")}</ul></div>`;
+  app.innerHTML=`<div class="dhead"><button class="iconbtn" data-back aria-label="Geri">←</button><button class="iconbtn" data-fav="${x.id}" aria-pressed="${fav}" aria-label="Kaydet">${fav?"★":"☆"}</button></div>
+  <div class="stack"><div class="dtitle"><div class="k">${LABEL[x._t].toLocaleUpperCase("tr")} · ${x.kod}</div><h2>${esc(x.ad)}</h2><p>${esc(x.ozet)}</p></div>
+  ${body}${links?`<div class="card"><h4>İlgili kayıtlar</h4><div class="links">${links}</div></div>`:""}
+  <button class="btn ${on?"done":""}" data-learn="${x.id}">${on?"Öğrenildi ✓":"Öğrendim +10 XP"}</button></div>`;
+  window.scrollTo({top:0});
+}
+let qi=0,score=0,answered=false;
+const CALC={
+ gerilme:{in:[["F","Kuvvet F (N)",20000],["A","Kesit alanı A (mm²)",100]],f:v=>`σ = ${(v.F/v.A).toFixed(1)} MPa`},
+ rulman:{in:[["C","Dinamik yük sayısı C (kN)",14],["P","Eşdeğer yük P (kN)",2],["n","Devir n (d/dk)",1500]],f:v=>{const L=Math.pow(v.C/v.P,3);return `L₁₀ = ${L.toFixed(0)} milyon devir ≈ ${(L*1e6/(60*v.n)).toFixed(0)} saat`}},
+ guc:{in:[["T","Tork T (N·m)",50],["n","Devir n (d/dk)",1450]],f:v=>`P = ${(v.T*2*Math.PI*v.n/60/1000).toFixed(2)} kW`},
+ re:{in:[["V","Hız V (m/s)",1.5],["D","Çap D (m)",0.05],["nu","Kinematik viskozite ν (m²/s)",1e-6]],f:v=>{const r=v.V*v.D/v.nu;return `Re = ${r.toFixed(0)} · ${r<2300?"laminer":r<4000?"geçiş":"türbülanslı"}`}}
+};
+function renderTest(){
+  app.innerHTML=`<div class="top"><div><div class="hi">Doğru cevap başına +5 XP</div><h1>Test</h1></div><span class="chip">En iyi ${P.best}/${DATA.quiz.length}</span></div>
+  <div class="stack"><div class="card" id="quiz"></div>
+  <div class="sec-h"><h3>Hızlı hesaplar</h3></div>
+  <div class="card"><div class="field"><label for="calc">Hesap</label><select id="calc"><option value="gerilme">Normal gerilme σ = F / A</option><option value="rulman">Rulman ömrü L₁₀ = (C/P)³</option><option value="guc">Mil gücü P = T · ω</option><option value="re">Reynolds sayısı</option></select></div><div id="calcIn"></div><div class="result" id="calcOut"></div></div></div>`;
+  renderQuiz();renderCalc();
+}
+function renderQuiz(){
+  const el=document.getElementById("quiz");if(!el)return;const N=DATA.quiz.length;
+  if(qi>=N){el.innerHTML=`<div class="label">Sonuç</div><h2 style="font-size:30px;margin:6px 0">${score}/${N} doğru</h2><p class="exp">${score===N?"Hatasız! Tam Puan rozetini kazandın.":"Yanlışları ilgili kayıtlardan tekrar edip yeniden dene."}</p><button class="btn" data-restart>Yeniden başla</button>`;return}
+  const q=DATA.quiz[qi];answered=false;
+  el.innerHTML=`<div class="label">Soru ${qi+1} / ${N} · ${score} doğru</div><div class="qbar"><i style="width:${qi/N*100}%"></i></div><p class="q">${esc(q.s)}</p>
+  <div class="opts">${q.o.map((o,i)=>`<button data-ans="${i}">${esc(o)}</button>`).join("")}</div><p class="exp" id="qexp" hidden></p><button class="btn" id="qnext" hidden>Sonraki soru</button>`;
+}
+function renderCalc(){const sel=document.getElementById("calc");if(!sel)return;const c=CALC[sel.value];
+  document.getElementById("calcIn").innerHTML=c.in.map(([k,l,d])=>`<div class="field"><label for="c_${k}">${l}</label><input id="c_${k}" type="number" inputmode="decimal" step="any" value="${d}" data-k="${k}"></div>`).join("");calc()}
+function calc(){const c=CALC[document.getElementById("calc").value],v={};let ok=true;
+  document.querySelectorAll("#calcIn input").forEach(i=>{v[i.dataset.k]=parseFloat(i.value);if(!(v[i.dataset.k]>0))ok=false});
+  document.getElementById("calcOut").textContent=ok?c.f(v):"Tüm değerleri sıfırdan büyük gir."}
+
+function render(){renderTabs();if(S.detail)return renderDetail(byId[S.detail]);({pano:renderPano,kesfet:renderKesfet,test:renderTest,rozet:renderRozet})[S.tab]()}
+
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-tab],[data-open],[data-learn],[data-fav],[data-seg],[data-back],[data-ans],#qnext,[data-restart]");if(!t)return;
+  if(t.dataset.tab){S.tab=t.dataset.tab;S.detail=null;window.scrollTo({top:0});return render()}
+  if(t.dataset.open){S.detail=t.dataset.open;return render()}
+  if(t.dataset.learn){const id=t.dataset.learn;if(!P.learned.includes(id)){P.learned.push(id);P.xp+=10;save();toast("+10 XP · "+byId[id].ad);checkBadges()}return render()}
+  if(t.dataset.fav){const id=t.dataset.fav;P.favs=P.favs.includes(id)?P.favs.filter(i=>i!==id):[...P.favs,id];save();return render()}
+  if(t.dataset.seg){S.seg=t.dataset.seg;return render()}
+  if(t.hasAttribute("data-back")){S.detail=null;return render()}
+  if(t.dataset.ans!==undefined&&!answered){answered=true;const q=DATA.quiz[qi],i=+t.dataset.ans;
+    document.querySelectorAll("[data-ans]").forEach(b=>{if(+b.dataset.ans===q.d)b.classList.add("ok");else if(b===t)b.classList.add("no")});
+    if(i===q.d){score++;P.xp+=5;save();toast("Doğru! +5 XP")}
+    const ex=document.getElementById("qexp");ex.textContent=q.a;ex.hidden=false;const nb=document.getElementById("qnext");nb.hidden=false;
+    if(qi===DATA.quiz.length-1){nb.textContent="Sonucu gör"}checkBadges();return}
+  if(t.id==="qnext"){qi++;if(qi>=DATA.quiz.length&&score>P.best){P.best=score;save();checkBadges()}return renderQuiz()}
+  if(t.hasAttribute("data-restart")){qi=0;score=0;return renderQuiz()}
+});
+document.addEventListener("input",e=>{
+  if(e.target.id==="q"){S.q=e.target.value.trim();const pos=e.target.selectionStart;render();const i=document.getElementById("q");i.focus();i.setSelectionRange(pos,pos)}
+  if(e.target.closest("#calcIn"))calc();
+});
+document.addEventListener("change",e=>{if(e.target.id==="calc")renderCalc()});
+checkBadges();render();
+</script>
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js"))}</script>
+</body>
+</html>
