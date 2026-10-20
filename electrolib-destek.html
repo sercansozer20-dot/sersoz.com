@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Destek | ElectroLib</title>
+<meta name="description" content="ElectroLib destek ve sık sorulan sorular.">
+<meta name="theme-color" content="#5b4bf5">
+<style>
+  :root { --ana: #5b4bf5; --metin: #141b2d; --ikinci: #6b7489; --zemin: #f3f5fa; --kart: #fff; --cizgi: #e3e7f0; }
+  @media (prefers-color-scheme: dark) { :root { --ana: #8b7fff; --metin: #eef1f8; --ikinci: #98a0b5; --zemin: #0e1220; --kart: #181d2e; --cizgi: #272e44; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--zemin); color: var(--metin); font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--ana); }
+  .ust { display: flex; justify-content: space-between; align-items: center; max-width: 760px; margin: 0 auto; padding: 20px 16px; }
+  .marka { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; color: var(--metin); text-decoration: none; }
+  .marka span { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(150deg, #8b7fff, #5b4bf5 55%, #3a2bc4); display: grid; place-items: center; }
+  .marka svg { width: 24px; height: 24px; }
+  .geri { font-size: 14px; color: var(--ikinci); text-decoration: none; }
+  main { max-width: 760px; margin: 0 auto; padding: 8px 16px 48px; }
+  h1 { font-size: 32px; letter-spacing: -.02em; margin: 8px 0 4px; }
+  h2 { font-size: 18px; margin: 28px 0 6px; }
+  .surum { color: var(--ikinci); margin-top: 0; }
+  details { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 14px; padding: 14px 16px; margin: 10px 0; }
+  summary { font-weight: 600; cursor: pointer; }
+  footer { text-align: center; color: var(--ikinci); font-size: 13px; padding: 20px 16px 32px; }
+</style>
+</head>
+<body>
+<header class="ust">
+  <a class="marka" href="electrolib/"><span><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 32h10l4-9 6 18 6-18 6 18 4-9h12" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>ElectroLib</a>
+  <a class="geri" href="index.html">← SERSOZ</a>
+</header>
+
+<main>
+  <h1>Destek</h1>
+  <p class="surum">Bir sorun mu var, ya da yeni bir ders veya komponent mi istiyorsun? <a href="mailto:sercansozer20@gmail.com?subject=ElectroLib">sercansozer20@gmail.com</a> adresine yaz.</p>
+
+  <h2>Sık sorulan sorular</h2>
+  <details>
+    <summary>Nasıl XP kazanırım ve seviye atlarım?</summary>
+    <p>Ders bitirmek +50, her doğru cevap +10, bir komponenti incelemek +10, bir hesaplayıcıyı ilk kez kullanmak +15 XP verir. Her 150 XP'de bir seviye atlarsın.</p>
+  </details>
+  <details>
+    <summary>Serim neden sıfırlandı?</summary>
+    <p>Seri, uygulamayı üst üste her gün açtığında artar. Bir gün atlanınca 1'den başlar. En iyi serin rozetlerde saklı kalır.</p>
+  </details>
+  <details>
+    <summary>Testi tekrar çözebilir miyim?</summary>
+    <p>Evet. En yüksek puanın saklanır; tekrar çözmek puanını düşürmez.</p>
+  </details>
+  <details>
+    <summary>İlerlemem başka telefona taşınır mı?</summary>
+    <p>Şimdilik hayır. İlerleme yalnız cihazında saklanır ve uygulamayı silince silinir.</p>
+  </details>
+  <details>
+    <summary>Hesaplayıcı sonuçlarına güvenebilir miyim?</summary>
+    <p>Hesaplayıcılar standart formülleri kullanır (Ohm Kanunu, gerilim bölücü, E12 direnç serisi). Yine de yüksek gerilimli ya da şebeke devrelerinde bir uzmana danış.</p>
+  </details>
+</main>
+
+<footer>© <span id="yil"></span> Sercan Sözer · <a href="electrolib-gizlilik.html">Gizlilik</a></footer>
+<script>document.getElementById('yil').textContent = new Date().getFullYear();</script>
+</body>
+</html>
