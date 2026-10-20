@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gizlilik Politikası | ElectroLib</title>
+<meta name="description" content="ElectroLib kişisel veri toplamaz: ders ilerlemesi yalnız cihazda kalır.">
+<meta name="theme-color" content="#5b4bf5">
+<style>
+  :root { --ana: #5b4bf5; --metin: #141b2d; --ikinci: #6b7489; --zemin: #f3f5fa; --kart: #fff; --cizgi: #e3e7f0; }
+  @media (prefers-color-scheme: dark) { :root { --ana: #8b7fff; --metin: #eef1f8; --ikinci: #98a0b5; --zemin: #0e1220; --kart: #181d2e; --cizgi: #272e44; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--zemin); color: var(--metin); font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--ana); }
+  .ust { display: flex; justify-content: space-between; align-items: center; max-width: 760px; margin: 0 auto; padding: 20px 16px; }
+  .marka { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; color: var(--metin); text-decoration: none; }
+  .marka span { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(150deg, #8b7fff, #5b4bf5 55%, #3a2bc4); display: grid; place-items: center; }
+  .marka svg { width: 24px; height: 24px; }
+  .geri { font-size: 14px; color: var(--ikinci); text-decoration: none; }
+  main { max-width: 760px; margin: 0 auto; padding: 8px 16px 48px; }
+  h1 { font-size: 32px; letter-spacing: -.02em; margin: 8px 0 4px; }
+  h2 { font-size: 18px; margin: 28px 0 6px; }
+  .surum { color: var(--ikinci); margin-top: 0; }
+  details { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 14px; padding: 14px 16px; margin: 10px 0; }
+  summary { font-weight: 600; cursor: pointer; }
+  footer { text-align: center; color: var(--ikinci); font-size: 13px; padding: 20px 16px 32px; }
+</style>
+</head>
+<body>
+<header class="ust">
+  <a class="marka" href="electrolib/"><span><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 32h10l4-9 6 18 6-18 6 18 4-9h12" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>ElectroLib</a>
+  <a class="geri" href="index.html">← SERSOZ</a>
+</header>
+
+<!-- TASLAK METİN: yayından önce bir hukukçuya okutulması önerilir. -->
+<main>
+  <h1>Gizlilik Politikası</h1>
+  <p class="surum">Yürürlük: 20 Ekim 2026 · ElectroLib iOS, Android ve web (sersoz.com/electrolib) sürümleri için geçerlidir.</p>
+
+  <h2>1. Kısaca</h2>
+  <p>ElectroLib hiçbir kişisel veri toplamaz ve hiçbir sunucuya veri göndermez. Hesap yoktur; ad, e-posta, konum ya da reklam kimliği istenmez. Uygulamada reklam ve izleme (tracking) yoktur.</p>
+
+  <h2>2. Ders ilerlemen</h2>
+  <p>Tamamladığın dersler, test puanların, incelediğin komponentler, günlük serin ve rozetlerin yalnız cihazında saklanır. Uygulamayı sildiğinde (web sürümünde tarayıcı verilerini temizlediğinde) bu bilgiler de silinir. Bize ulaşmazlar.</p>
+
+  <h2>3. İzinler</h2>
+  <p>ElectroLib kamera, mikrofon, konum, rehber ya da fotoğraf izni istemez.</p>
+
+  <h2>4. Çocuklar</h2>
+  <p>ElectroLib her yaştan öğrenciye uygundur ve hiçbir yaşta kişisel veri toplamaz.</p>
+
+  <h2>5. Değişiklikler</h2>
+  <p>İleride hesap, eşitleme ya da veri gönderen bir özellik eklenirse bu politika güncellenir ve o özellik kullanılmadan önce uygulamada açık onayın istenir.</p>
+
+  <h2>6. İletişim</h2>
+  <p>ElectroLib, Sercan Sözer tarafından bireysel olarak geliştirilir. Sorular için: <a href="mailto:sercansozer20@gmail.com">sercansozer20@gmail.com</a></p>
+</main>
+
+<footer>© <span id="yil"></span> Sercan Sözer · <a href="electrolib-destek.html">Destek</a></footer>
+<script>document.getElementById('yil').textContent = new Date().getFullYear();</script>
+</body>
+</html>
