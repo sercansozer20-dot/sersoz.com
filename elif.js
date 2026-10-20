@@ -19,7 +19,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261021a';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261021b';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -2726,7 +2726,7 @@ async function cuzdanHTML() {
         : '<button type="button" class="dug dug-kucuk dug-vurgu" data-jeton="havale">Jeton yükle</button>') +
       '<button type="button" class="dug dug-kucuk" data-jeton="gecmis">Geçmiş</button></div></div>' +
     (!proAktif() ? '<p class="kucuk cuzdan-pro">' + PRO_ROZET + ' <b>Satıcı Pro</b>: her ay ' + PRO_HEDIYE + ' jeton, Pro rozeti, ilanların onayda öne alınır. ' +
-      (IAP ? '<button type="button" class="dug-metin" data-jeton="magaza">İncele</button>' : 'iPhone uygulamasından alınır.') + '</p>' : '') +
+      (IAP ? '<button type="button" class="dug-metin" data-jeton="magaza">İncele</button>' : JETON.iosSatista ? 'iPhone uygulamasından alınır.' : 'Yakında iPhone uygulamasında.') + '</p>' : '') +
     '<div id="jetonGecmis" hidden></div></section>';
 }
 function cuzdanEylem(ne) {
@@ -2764,7 +2764,7 @@ function jetonHavale() {
     '<div class="odeme-kutu">' + (h.iban ? 'Alıcı: ' + esc(h.hesapSahibi) + (h.banka ? ' · ' + esc(h.banka) : '') + '<br>IBAN: <span class="iban">' + esc(h.iban) + '</span><br>'
       : 'Banka bilgileri için <a href="mailto:' + esc(AYAR.eposta) + '?subject=' + encodeURIComponent('Jeton yükleme') + '" style="text-decoration:underline">' + esc(AYAR.eposta) + '</a> adresine yazın.<br>') +
       'Açıklamaya <b>"Jeton"</b> ve hesabının e-postasını yaz: <b>' + esc(kullanici.email || '') + '</b></div>' +
-    '<p class="kucuk" style="margin-top:10px">iPhone uygulamasında jeton App Store\'dan anında alınır.</p>' +
+    (JETON.iosSatista ? '<p class="kucuk" style="margin-top:10px">iPhone uygulamasında jeton App Store\'dan anında alınır.</p>' : '') +
     '<div class="pencere-alt"><button type="button" class="dug" id="jhKapat">Tamam</button></div>');
   $('#jhKapat').onclick = kapat;
 }

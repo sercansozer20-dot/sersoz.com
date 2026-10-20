@@ -76,7 +76,8 @@ window.SERSOZ_AYAR = {
      oneCikarma fiyatıdır (1 jeton = 1 TL) ve functions/jeton.js → PAKET ile aynı olmalı.
      Ürün kimlikleri App Store Connect'tekilerle aynı. */
   jeton: {
-    acik: false,
+    acik: true,
+    iosSatista: false,   // jetonlu iPhone sürümü (1.1) App Store'da yayına girince true
     paketler: ['com.sersoz.elifdolabi.jeton50', 'com.sersoz.elifdolabi.jeton150', 'com.sersoz.elifdolabi.jeton450'],
     pro: 'com.sersoz.elifdolabi.pro.aylik',
     proHediye: 150
