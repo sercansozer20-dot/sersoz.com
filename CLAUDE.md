@@ -15,6 +15,7 @@ Statik site, GitHub Pages (CNAME sersoz.com). **`main`'e push = canlı yayın**;
 | `functions/` | Firebase Cloud Functions (Node 22, europe-west1): `jeton.js` (App Store satın alma doğrulama, jeton, Satıcı Pro), `index.js` (e-posta bildirimleri) |
 | `elif-gizlilik.html`, `elif-destek.html`, `elif-sozlesme.html` | App Store'un baktığı gizlilik, destek ve sözleşme sayfaları |
 | `visioncap.html`, `visioncap.css`, `visioncap-gizlilik.html`, `visioncap-destek.html` | **VisionCap** (iOS, ayrı proje): tanıtım, App Store gizlilik ve destek sayfaları. Uygulama veri toplamaz; gizlilik metni buna göre |
+| `electrolib/` | **ElectroLib** web sürümü (Expo derleme çıktısı, elle düzenlenmez). Kaynak ayrı: `Desktop\Projects\ElectroLib`; orada `npm run build:web` → `dist/` içeriğini buraya kopyala. `_expo/` klasörü için kökte `.nojekyll` gerekir |
 | `mecalib/`, `mecalib.css`, `mecalib-gizlilik.html`, `mecalib-destek.html` | **MecaLib**: makine mühendisliği öğrenme uygulaması (PWA, tek dosya `mecalib/index.html`, veri cihazda) ile App Store gizlilik ve destek sayfaları. Uygulama değişince `mecalib/sw.js` içindeki `CACHE` adını artır |
 | `magaza*.`, `urun*`, `kategori.html`, `index.html`, `projeler.html` | SERSOZ mağaza ve tanıtım sayfaları |
 
