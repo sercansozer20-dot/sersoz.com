@@ -1,5 +1,7 @@
-// VisionCap web sürümü: dersler (GLSL), ilerleme, pano ve ders ekranı. iOS uygulamasındaki
-// app/src/dersler/dersler.ts ile aynı dersler; shader'lar SkSL'den WebGL'e çevrildi.
+// VisionCap uygulaması: dersler (GLSL), ilerleme, kartlar, ekranlar ve Pro aboneliği.
+// iOS kabuğu (visioncap-ios) bu sayfayı açar; yerel eklenti yoksa ilgili özellik gizlenir.
+
+import { BILGI_KARTLARI, MAKALE_KARTLARI } from './visioncap-kartlar.js?v=20261021a';
 
 const ORTAK = `precision mediump float;
 uniform sampler2D u_img;
@@ -137,17 +139,125 @@ void main() {
 }`,
     parametreler: [{ anahtar: 'hassasiyet', ad: 'Hassasiyet', min: 0.5, max: 8, adim: 0.1, varsayilan: 2 }],
   },
+  {
+    id: 'negatif',
+    baslik: 'Negatif ve renk nicemleme',
+    anlatim: 'Negatif, her değeri tersine çevirir: siyah beyaz, kırmızı camgöbeği olur. Nicemleme ise sürekli tonları birkaç basamağa indirir. Basamak azaldıkça yumuşak geçişler yerini düz renk bantlarına bırakır; buna posterleştirme denir.',
+    formul: 'negatif = 1 − giriş;  nicem = ⌊giriş·n⌋ / (n − 1)',
+    ipucu: 'Basamak sayısını 3’e indir ve gökyüzüne ya da bir duvara bak: yumuşak geçiş bantlara bölünür.',
+    glsl: `uniform float seviye;
+uniform float negatif;
+void main() {
+  vec3 c = t(vec2(0.0));
+  if (negatif > 0.5) c = 1.0 - c;
+  if (seviye < 15.5) c = floor(c * seviye) / (seviye - 1.0);
+  gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
+}`,
+    parametreler: [
+      { anahtar: 'seviye', ad: 'Basamak (n)', min: 2, max: 16, adim: 1, varsayilan: 16, ondalik: 0 },
+      { anahtar: 'negatif', ad: 'Negatif', min: 0, max: 1, adim: 1, varsayilan: 0, etiketler: ['Kapalı', 'Açık'] },
+    ],
+  },
+  {
+    id: 'hsv',
+    baslik: 'Renk tonu ve doygunluk (HSV)',
+    anlatim: 'HSV rengi üç parçaya ayırır: ton (H, renk çemberindeki açı), doygunluk (S, rengin canlılığı) ve değer (V, parlaklık). Tonu kaydırmak tüm renkleri çember üzerinde döndürür; doygunluğu sıfırlamak görüntüyü griye çevirir.',
+    formul: 'H: 0–360°,  S: 0–1,  V = max(R, G, B)',
+    ipucu: 'Görünümü “Ton”a al ve farklı renkte nesneler göster: aynı renkteki nesneler aynı griyle görünür.',
+    glsl: `uniform float ton;
+uniform float doygunluk;
+uniform float gorunum;
+vec3 hsv(vec3 c) {
+  vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+  float d = q.x - min(q.w, q.y);
+  return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + 1e-6)), d / (q.x + 1e-6), q.x);
+}
+vec3 rgb(vec3 c) {
+  vec3 p = abs(fract(c.xxx + vec3(1.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0);
+  return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
+}
+void main() {
+  vec3 h = hsv(t(vec2(0.0)));
+  h.x = fract(h.x + ton / 360.0);
+  h.y = clamp(h.y * doygunluk, 0.0, 1.0);
+  vec3 o = gorunum < 0.5 ? rgb(h) : (gorunum < 1.5 ? vec3(h.x) : vec3(h.y));
+  gl_FragColor = vec4(o, 1.0);
+}`,
+    parametreler: [
+      { anahtar: 'ton', ad: 'Ton kaydırma (°)', min: 0, max: 360, adim: 1, varsayilan: 0, ondalik: 0 },
+      { anahtar: 'doygunluk', ad: 'Doygunluk çarpanı', min: 0, max: 2, adim: 0.05, varsayilan: 1 },
+      { anahtar: 'gorunum', ad: 'Görünüm', min: 0, max: 2, adim: 1, varsayilan: 0, etiketler: ['Renk', 'Ton (H)', 'Doygunluk (S)'] },
+    ],
+  },
+  {
+    id: 'morfoloji',
+    baslik: 'Aşındırma ve genişletme',
+    anlatim: 'Morfolojik işlemler ikili (siyah-beyaz) görüntüde şekillerle çalışır. Aşındırma bir pikseli, penceredeki tüm komşuları beyazsa beyaz bırakır; nesneler incelir, küçük lekeler kaybolur. Genişletme tek bir beyaz komşu yeterse beyaz yapar; nesneler kalınlaşır, delikler kapanır.',
+    formul: 'aşındırma = min(pencere),  genişletme = max(pencere)',
+    ipucu: 'Bir yazıya bak: aşındırmada harfler incelip kopar, genişletmede birbirine yapışır.',
+    glsl: `uniform float islem;
+uniform float boyut;
+uniform float esik;
+float b(vec2 o) { return gri(t(o)) > esik ? 1.0 : 0.0; }
+void main() {
+  float en_az = 1.0, en_cok = 0.0;
+  for (int i = -3; i <= 3; i++) {
+    for (int j = -3; j <= 3; j++) {
+      float v = b(vec2(float(i), float(j)) * boyut);
+      en_az = min(en_az, v);
+      en_cok = max(en_cok, v);
+    }
+  }
+  float o = islem < 0.5 ? b(vec2(0.0)) : (islem < 1.5 ? en_az : en_cok);
+  gl_FragColor = vec4(vec3(o), 1.0);
+}`,
+    parametreler: [
+      { anahtar: 'islem', ad: 'İşlem', min: 0, max: 2, adim: 1, varsayilan: 1, etiketler: ['Yalnız eşik', 'Aşındırma', 'Genişletme'] },
+      { anahtar: 'boyut', ad: 'Pencere boyutu', min: 0.3, max: 3, adim: 0.1, varsayilan: 1 },
+      { anahtar: 'esik', ad: 'Eşik', min: 0, max: 1, adim: 0.01, varsayilan: 0.5 },
+    ],
+  },
+  {
+    id: 'uyarlamali',
+    baslik: 'Uyarlamalı eşikleme',
+    anlatim: 'Tek bir eşik, ışığı eşit olmayan sahnelerde başarısız olur: gölgede her şey siyah, ışıkta her şey beyaz kalır. Uyarlamalı eşikleme her pikseli kendi çevresinin ortalamasıyla karşılaştırır, böylece gölgeli bir sayfada da yazı okunur.',
+    formul: 'çıkış = gri > ortalama(pencere) − C ise 1, değilse 0',
+    ipucu: 'Sayfanın yarısına elinle gölge düşür ve iki yöntemi karşılaştır.',
+    glsl: `uniform float yontem;
+uniform float pencere;
+uniform float sabit;
+void main() {
+  float m = 0.0;
+  for (int i = -4; i <= 4; i++) {
+    for (int j = -4; j <= 4; j++) {
+      m += gri(t(vec2(float(i), float(j)) * pencere));
+    }
+  }
+  m /= 81.0;
+  float esik = yontem < 0.5 ? 0.5 : m - sabit;
+  gl_FragColor = vec4(vec3(gri(t(vec2(0.0))) > esik ? 1.0 : 0.0), 1.0);
+}`,
+    parametreler: [
+      { anahtar: 'yontem', ad: 'Yöntem', min: 0, max: 1, adim: 1, varsayilan: 1, etiketler: ['Sabit eşik (0.5)', 'Uyarlamalı'] },
+      { anahtar: 'pencere', ad: 'Pencere boyutu', min: 0.5, max: 6, adim: 0.1, varsayilan: 2 },
+      { anahtar: 'sabit', ad: 'Sabit (C)', min: -0.1, max: 0.2, adim: 0.005, varsayilan: 0.03 },
+    ],
+  },
 ];
 
 const ORIJINAL = `void main() { gl_FragColor = vec4(t(vec2(0.0)), 1.0); }`;
 
-// ---------- İlerleme (uygulamadaki ilerleme.ts ile aynı kurallar; yalnız bu tarayıcıda) ----------
+// ---------- İlerleme (yalnız bu cihazda, localStorage) ----------
 
 const ANAHTAR = 'visioncap.web.ilerleme.v1';
 export const XP_DENEME = 5;
 export const XP_DERS = 50;
+export const XP_KART = 2;
 export const XP_SEVIYE = 100;
 const SIRALI_KILIT = true;
+const BOS = { tamamlanan: [], denemeler: 0, xp: 0, gunler: [], kartlar: [], makaleler: [], sure: 0, gunlukXp: {}, akis: [], kartGun: { gun: '', sayi: 0 } };
 
 function bugun(tarih = new Date()) {
   const a = String(tarih.getMonth() + 1).padStart(2, '0');
@@ -158,9 +268,9 @@ function bugun(tarih = new Date()) {
 function yukle() {
   try {
     const m = localStorage.getItem(ANAHTAR);
-    if (m) return { tamamlanan: [], denemeler: 0, xp: 0, gunler: [], ...JSON.parse(m) };
+    if (m) return { ...BOS, ...JSON.parse(m) };
   } catch {}
-  return { tamamlanan: [], denemeler: 0, xp: 0, gunler: [] };
+  return { ...BOS };
 }
 
 function kaydet(i) {
@@ -169,12 +279,7 @@ function kaydet(i) {
 
 let ilerleme = yukle();
 
-function guncelle(f) {
-  ilerleme = f({ ...ilerleme });
-  const gun = bugun();
-  if (!ilerleme.gunler.includes(gun)) ilerleme.gunler = [...ilerleme.gunler, gun];
-  kaydet(ilerleme);
-}
+const seviye = (xp) => Math.floor(xp / XP_SEVIYE) + 1;
 
 function seri(gunler) {
   const kume = new Set(gunler);
@@ -185,33 +290,123 @@ function seri(gunler) {
   return n;
 }
 
+function enUzunSeri(gunler) {
+  const sayilar = [...new Set(gunler)].map((g) => Date.UTC(+g.slice(0, 4), +g.slice(5, 7) - 1, +g.slice(8, 10)) / 864e5).sort((a, b) => a - b);
+  let en = 0, n = 0;
+  sayilar.forEach((s, i) => { n = i > 0 && s - sayilar[i - 1] === 1 ? n + 1 : 1; en = Math.max(en, n); });
+  return en;
+}
+
 function rozetler(i) {
   const s = seri(i.gunler);
   const t = i.tamamlanan.length;
   return [
     { ad: 'İlk adım', aciklama: 'İlk dersi bitir', kazanildi: t >= 1 },
     { ad: 'Isınma', aciklama: '3 ders bitir', kazanildi: t >= 3 },
+    { ad: 'Yarı yol', aciklama: '6 ders bitir', kazanildi: t >= 6 },
     { ad: 'Piksel ustası', aciklama: 'Tüm dersleri bitir', kazanildi: t >= DERSLER.length },
     { ad: 'Meraklı', aciklama: '25 kare işle', kazanildi: i.denemeler >= 25 },
+    { ad: 'Kart avcısı', aciklama: '10 bilgi kartı topla', kazanildi: i.kartlar.length >= 10 },
+    { ad: 'Kitap kurdu', aciklama: '5 makale kartı oku', kazanildi: i.makaleler.length >= 5 },
     { ad: '3 gün', aciklama: '3 günlük seri', kazanildi: s >= 3 },
     { ad: '1 hafta', aciklama: '7 günlük seri', kazanildi: s >= 7 },
     { ad: '1 ay', aciklama: '30 günlük seri', kazanildi: s >= 30 },
   ];
 }
 
+// İlerlemeyi değiştirir; seviye atlama ve yeni rozetleri günlük akışa yazar.
+function guncelle(f, olaylar = [], { sessiz = false } = {}) {
+  const once = ilerleme;
+  ilerleme = f({ ...ilerleme });
+  const gun = bugun();
+  if (!ilerleme.gunler.includes(gun)) ilerleme.gunler = [...ilerleme.gunler, gun];
+  const kazanilan = ilerleme.xp - once.xp;
+  if (kazanilan > 0) ilerleme.gunlukXp = { ...ilerleme.gunlukXp, [gun]: (ilerleme.gunlukXp[gun] || 0) + kazanilan };
+  const yeniSeviye = seviye(ilerleme.xp) > seviye(once.xp) ? seviye(ilerleme.xp) : 0;
+  const r0 = rozetler(once);
+  const yeniRozetler = rozetler(ilerleme).filter((r, k) => r.kazanildi && !r0[k].kazanildi).map((r) => r.ad);
+  const hepsi = [...olaylar];
+  if (yeniSeviye) hepsi.push({ ik: '⭐', m: `Yeni seviye: ${yeniSeviye}` });
+  yeniRozetler.forEach((ad) => hepsi.push({ ik: '🏅', m: `Rozet açıldı: ${ad}` }));
+  if (hepsi.length) ilerleme.akis = [...hepsi.reverse().map((o) => ({ z: Date.now(), ...o })), ...ilerleme.akis].slice(0, 40);
+  kaydet(ilerleme);
+  if (!sessiz) {
+    if (yeniSeviye) bildirim(`Yeni seviye: ${yeniSeviye}`);
+    yeniRozetler.forEach((ad) => bildirim(`Rozet açıldı: ${ad}`));
+  }
+  return { yeniSeviye, yeniRozetler };
+}
+
 // ---------- Uygulama içi (iOS kabuğu) ----------
 
 const NATIVE = !!window.Capacitor?.isNativePlatform?.();
-const Bildirim = window.Capacitor?.Plugins?.LocalNotifications; // eski kabukta yoksa hatırlatma kartı gizlenir
+const eklenti = (ad) => window.Capacitor?.Plugins?.[ad];
+const Bildirim = eklenti('LocalNotifications'); // eski kabukta yoksa bildirim kartı gizlenir
+const Abonelik = eklenti('Abonelik'); // 1.1 kabuğu; yoksa (web, 1.0) Pro yoktur ve her şey açıktır
 const HATIRLATMA = 'visioncap.hatirlatma';
 if (NATIVE) document.documentElement.classList.add('native');
 
-function hatirlatmaAcik() {
+// ---------- VisionCap Pro (App Store aboneliği) ----------
+
+const URUNLER = ['com.sersoz.visioncap.pro.haftalik', 'com.sersoz.visioncap.pro.aylik', 'com.sersoz.visioncap.pro.yillik'];
+const PRO_ANAHTAR = 'visioncap.pro';
+const UCRETSIZ_DERS = 6;
+const UCRETSIZ_KART = 3; // günde
+const UCRETSIZ_MAKALE = 4;
+let pro = (() => { try { return !!Abonelik && localStorage.getItem(PRO_ANAHTAR) === '1'; } catch { return false; } })();
+let proBilgi = null;
+const proGerekli = () => !!Abonelik && !pro;
+
+function proAyarla(d) {
+  proBilgi = d || null;
+  const yeni = !!d?.aktif;
+  try { localStorage.setItem(PRO_ANAHTAR, yeni ? '1' : '0'); } catch {}
+  if (yeni !== pro) {
+    pro = yeni;
+    if (!aktifDers) yonlendir();
+  }
+}
+
+async function proYenile() {
+  if (!Abonelik) return;
+  try { proAyarla(await Abonelik.durum()); } catch {}
+}
+
+const dersKilidi = (indeks) => {
+  if (SIRALI_KILIT && indeks > 0 && !ilerleme.tamamlanan.includes(DERSLER[indeks - 1].id)) return 'sira';
+  if (proGerekli() && indeks >= UCRETSIZ_DERS) return 'pro';
+  return '';
+};
+const makaleKilitli = (indeks) => proGerekli() && indeks >= UCRETSIZ_MAKALE;
+
+// ---------- Bildirimler ----------
+
+function bildirimAcik() {
   try { return localStorage.getItem(HATIRLATMA) === '1'; } catch { return false; }
 }
 
-async function hatirlatmaDegistir() {
-  const ac = !hatirlatmaAcik();
+// Önümüzdeki 7 gün için öğlen "günün makale kartı" bildirimleri (kimlik 101–107).
+async function gunlukKartlariKur() {
+  if (!Bildirim) return;
+  try {
+    await Bildirim.cancel({ notifications: [101, 102, 103, 104, 105, 106, 107].map((id) => ({ id })) });
+    if (!bildirimAcik()) return;
+    const acik = MAKALE_KARTLARI.filter((_, k) => !makaleKilitli(k));
+    const okunmamis = acik.filter((m) => !ilerleme.makaleler.includes(m.id));
+    const sira = [...okunmamis, ...acik.filter((m) => ilerleme.makaleler.includes(m.id))];
+    const notlar = [];
+    for (let k = 0; k < 7; k++) {
+      const m = sira[k % sira.length];
+      const at = new Date(); at.setDate(at.getDate() + k); at.setHours(12, 30, 0, 0);
+      if (at <= new Date()) continue;
+      notlar.push({ id: 101 + k, title: 'Günün makale kartı', body: `${m.yil} · ${m.baslik}`, extra: { kart: m.id }, schedule: { at, allowWhileIdle: true } });
+    }
+    if (notlar.length) await Bildirim.schedule({ notifications: notlar });
+  } catch {}
+}
+
+async function bildirimDegistir() {
+  const ac = !bildirimAcik();
   try {
     if (ac) {
       const izin = await Bildirim.requestPermissions();
@@ -225,59 +420,383 @@ async function hatirlatmaDegistir() {
     }
     localStorage.setItem(HATIRLATMA, ac ? '1' : '0');
   } catch {}
-  pano();
+  await gunlukKartlariKur();
+  yonlendir();
 }
+
+async function tebrikBildirimi(baslik, govde) {
+  if (!Bildirim || !bildirimAcik()) return;
+  try { await Bildirim.schedule({ notifications: [{ id: 200, title: baslik, body: govde, schedule: { at: new Date(Date.now() + 1500) } }] }); } catch {}
+}
+
+Bildirim?.addListener?.('localNotificationActionPerformed', (e) => {
+  const k = e?.notification?.extra?.kart;
+  if (k) { location.hash = '#kartlar'; setTimeout(() => kartAc(k), 80); }
+});
+
+// ---------- Ortak arayüz parçaları ----------
+
+const kok = document.getElementById('uygulama');
+const sekmeler = document.querySelector('.sekmeler');
+const kacis = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+let aktifDers = null;
+
+function bildirim(metin) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.setAttribute('role', 'status');
+  el.textContent = metin;
+  document.body.append(el);
+  setTimeout(() => el.classList.add('git'), 2600);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// Alttan açılan kart katmanı. Arka plana ya da [data-kapat] öğesine dokununca kapanır.
+function katman(icerik, { kapaninca } = {}) {
+  document.querySelector('.katman')?.remove();
+  const el = document.createElement('div');
+  el.className = 'katman';
+  el.innerHTML = `<div class="katman-kart" role="dialog" aria-modal="true">${icerik}</div>`;
+  const kapat = () => { el.remove(); kapaninca?.(); };
+  el.addEventListener('click', (e) => { if (e.target === el || e.target.closest('[data-kapat]')) kapat(); });
+  document.body.append(el);
+  el.querySelector('button, a')?.focus({ preventScroll: true });
+  return el;
+}
+
+function sureYaz(sn) {
+  const dk = Math.floor(sn / 60);
+  return dk >= 60 ? `${Math.floor(dk / 60)} sa ${dk % 60} dk` : `${dk} dk`;
+}
+
+function zamanYaz(z) {
+  const dk = Math.round((Date.now() - z) / 6e4);
+  if (dk < 1) return 'az önce';
+  if (dk < 60) return `${dk} dk önce`;
+  if (dk < 1440) return `${Math.floor(dk / 60)} sa önce`;
+  return `${Math.floor(dk / 1440)} gün önce`;
+}
+
+const akisListesi = (liste) => liste.length
+  ? `<ul class="akis">${liste.map((o) => `<li><i>${o.ik}</i><span>${kacis(o.m)}</span><small>${zamanYaz(o.z)}</small></li>`).join('')}</ul>`
+  : '<p class="bos">Ders bitirdikçe, kart topladıkça gelişmelerin burada görünür.</p>';
+
+const proBandi = () => proGerekli()
+  ? `<a class="kart pro-bant" href="#pro"><em>VISIONCAP PRO</em><strong>Tüm dersler, sınırsız kart</strong><small>${DERSLER.length - UCRETSIZ_DERS} ders daha, tüm makale kartları ve yeni dersler. 3 gün ücretsiz dene.</small></a>`
+  : '';
+
+// ---------- Salla, öğren ----------
+
+function kalanKart() {
+  if (!proGerekli()) return Infinity;
+  const k = ilerleme.kartGun;
+  return Math.max(0, UCRETSIZ_KART - (k.gun === bugun() ? k.sayi : 0));
+}
+
+function kartCek() {
+  if (kalanKart() <= 0) {
+    katman(`<em class="etiket">SALLA, ÖĞREN</em><h2>Bugünkü kartların bitti</h2>
+      <p>Ücretsiz sürümde günde ${UCRETSIZ_KART} kart çekebilirsin. Yarın yeni kartlar seni bekliyor.</p>
+      <a class="dugme" href="#pro" data-kapat>Pro ile sınırsız kart</a>
+      <button class="dugme ikincil" data-kapat>Kapat</button>`);
+    return;
+  }
+  const gorulmemis = BILGI_KARTLARI.filter((k) => !ilerleme.kartlar.includes(k.id));
+  const havuz = gorulmemis.length ? gorulmemis : BILGI_KARTLARI;
+  const k = havuz[Math.floor(Math.random() * havuz.length)];
+  const yeni = !ilerleme.kartlar.includes(k.id);
+  const gun = bugun();
+  guncelle((i) => ({
+    ...i,
+    kartGun: { gun, sayi: (i.kartGun.gun === gun ? i.kartGun.sayi : 0) + 1 },
+    kartlar: yeni ? [...i.kartlar, k.id] : i.kartlar,
+    xp: i.xp + (yeni ? XP_KART : 0),
+  }), yeni ? [{ ik: '🃏', m: `Yeni kart: ${k.baslik}` }] : []);
+  kartAc(k.id, { cekildi: true, yeni });
+}
+
+function ilgiliDers(id) {
+  const k = DERSLER.findIndex((d) => d.id === id);
+  if (k < 0) return '';
+  const kilit = dersKilidi(k);
+  return kilit === 'sira' ? '' : `<a class="ilgili" href="#${kilit === 'pro' ? 'pro' : id}" data-kapat>Bu derste dene: ${kacis(DERSLER[k].baslik)} ›</a>`;
+}
+
+function kartAc(id, { cekildi = false, yeni = false } = {}) {
+  const bilgi = BILGI_KARTLARI.find((k) => k.id === id);
+  const yenile = () => { if (!aktifDers) yonlendir(); };
+  if (bilgi) {
+    const kalan = kalanKart();
+    katman(`<em class="etiket">${kacis(bilgi.tur.toLocaleUpperCase('tr'))}${yeni ? ' · YENİ KART' : ''}</em>
+      <h2>${kacis(bilgi.baslik)}</h2>
+      <p>${kacis(bilgi.metin)}</p>
+      ${bilgi.ders ? ilgiliDers(bilgi.ders) : ''}
+      ${yeni ? `<p class="kazanc">+${XP_KART} XP</p>` : ''}
+      ${cekildi && kalan !== Infinity ? `<p class="kucuk">Bugün kalan ücretsiz kart: ${kalan}</p>` : ''}
+      <button class="dugme" data-is="bir-daha">Bir kart daha çek</button>
+      <button class="dugme ikincil" data-kapat>Kapat</button>`, { kapaninca: yenile })
+      .querySelector('[data-is="bir-daha"]').addEventListener('click', kartCek);
+    return;
+  }
+  const indeks = MAKALE_KARTLARI.findIndex((m) => m.id === id);
+  if (indeks < 0) return;
+  if (makaleKilitli(indeks)) { location.hash = '#pro'; return; }
+  const m = MAKALE_KARTLARI[indeks];
+  const ilk = !ilerleme.makaleler.includes(m.id);
+  if (ilk) guncelle((i) => ({ ...i, makaleler: [...i.makaleler, m.id], xp: i.xp + XP_KART }), [{ ik: '📄', m: `Makale okundu: ${m.yazar.split(',')[0]}, ${m.yil}` }]);
+  katman(`<em class="etiket">MAKALE ÖZETİ · ${m.yil}</em>
+    <h2 class="makale-baslik">${kacis(m.baslik)}</h2>
+    <p class="yazar">${kacis(m.yazar)}</p>
+    <p>${kacis(m.ozet)}</p>
+    <div class="onem"><em>NEDEN ÖNEMLİ</em><p>${kacis(m.onem)}</p></div>
+    ${m.ders ? ilgiliDers(m.ders) : ''}
+    ${ilk ? `<p class="kazanc">+${XP_KART} XP</p>` : ''}
+    <button class="dugme ikincil" data-kapat>Kapat</button>`, { kapaninca: yenile });
+}
+
+let sonSalla = 0;
+function salla() {
+  if (aktifDers || document.hidden || document.querySelector('.katman')) return;
+  const simdi = Date.now();
+  if (simdi - sonSalla < 1500) return;
+  sonSalla = simdi;
+  kartCek();
+}
+// iOS kabuğu (1.1+) sallamayı ivmeölçerden algılar ve bu olayı gönderir.
+addEventListener('visioncapSalla', salla);
+// Tarayıcı yedeği: izin istemeyen cihazlarda (Android) ivme ile. iOS Safari'de düğme kullanılır.
+if (!NATIVE && 'DeviceMotionEvent' in window && typeof DeviceMotionEvent.requestPermission !== 'function') {
+  addEventListener('devicemotion', (e) => {
+    const a = e.accelerationIncludingGravity;
+    if (a && Math.hypot(a.x || 0, a.y || 0, a.z || 0) > 25) salla();
+  });
+}
+
+const sallaKarti = () => {
+  const kalan = kalanKart();
+  return `<button class="kart salla" data-is="kart-cek">
+    <em>SALLA, ÖĞREN</em>
+    <strong>${NATIVE ? 'Telefonu salla ya da dokun' : 'Dokun, bir bilgi kartı çek'}</strong>
+    <small>${ilerleme.kartlar.length}/${BILGI_KARTLARI.length} kart toplandı${kalan !== Infinity ? ` · bugün ${kalan} ücretsiz kart kaldı` : ''}</small>
+  </button>`;
+};
 
 // ---------- Ekranlar ----------
 
-const kok = document.getElementById('uygulama');
-const kacis = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-
-function pano() {
-  durdur();
+function bugunEkrani() {
   const s = seri(ilerleme.gunler);
-  const sv = Math.floor(ilerleme.xp / XP_SEVIYE) + 1;
+  const sv = seviye(ilerleme.xp);
   const kalan = ilerleme.xp % XP_SEVIYE;
-  const siradaki = DERSLER.find((d) => !ilerleme.tamamlanan.includes(d.id)) ?? DERSLER[0];
+  const sirakiIndeks = DERSLER.findIndex((d) => !ilerleme.tamamlanan.includes(d.id));
+  const siradaki = DERSLER[sirakiIndeks] ?? DERSLER[0];
+  const gorevKilit = sirakiIndeks >= 0 && dersKilidi(sirakiIndeks) === 'pro';
   kok.innerHTML = `
+    ${pro ? '<p class="pro-rozet">PRO</p>' : ''}
     <section class="seri-kart"><span>${s}</span><small>günlük seri</small></section>
     <div class="uclu">
-      <div class="kart"><strong>${ilerleme.tamamlanan.length}/${DERSLER.length}</strong><small>Ders</small></div>
-      <div class="kart"><strong>${ilerleme.denemeler}</strong><small>Deneme</small></div>
-      <div class="kart"><strong>${sv}</strong><small>Seviye</small></div>
+      <a class="kart" href="#dersler"><strong>${ilerleme.tamamlanan.length}/${DERSLER.length}</strong><small>Ders</small></a>
+      <a class="kart" href="#kartlar"><strong>${ilerleme.kartlar.length}</strong><small>Kart</small></a>
+      <a class="kart" href="#gelisim"><strong>${sv}</strong><small>Seviye</small></a>
     </div>
     <div class="kart">
       <strong>Seviye ${sv} · ${ilerleme.xp} XP</strong>
       <div class="cubuk"><i style="width:${(kalan / XP_SEVIYE) * 100}%"></i></div>
       <small>Sonraki seviyeye ${XP_SEVIYE - kalan} XP</small>
     </div>
-    <a class="kart gorev" href="#${siradaki.id}">
-      <em>GÜNÜN GÖREVİ</em><strong>${kacis(siradaki.baslik)}</strong><small>${kacis(siradaki.ipucu)}</small>
+    <a class="kart gorev" href="#${gorevKilit ? 'pro' : siradaki.id}">
+      <em>GÜNÜN GÖREVİ</em><strong>${kacis(siradaki.baslik)}</strong>
+      <small>${gorevKilit ? 'Bu ders VisionCap Pro’da. Açmak için dokun.' : kacis(siradaki.ipucu)}</small>
     </a>
-    ${Bildirim ? `<button class="kart hatirlatma" data-is="hatirlatma">
-      <strong>Günlük hatırlatma ${hatirlatmaAcik() ? 'açık' : 'kapalı'}</strong>
-      <small>${hatirlatmaAcik() ? 'Her akşam 20:00’de serini hatırlatırım. Kapatmak için dokun.' : 'Her akşam 20:00’de serini hatırlatmamı istersen dokun.'}</small>
+    ${sallaKarti()}
+    ${proBandi()}
+    ${Bildirim ? `<button class="kart hatirlatma" data-is="bildirim">
+      <strong>Bildirimler ${bildirimAcik() ? 'açık' : 'kapalı'}</strong>
+      <small>${bildirimAcik()
+        ? 'Akşam 20:00’de seri hatırlatması, öğlen günün makale kartı ve ders tebrikleri. Kapatmak için dokun.'
+        : 'Seri hatırlatması, günün makale kartı ve ders tebrikleri için dokun.'}</small>
     </button>` : ''}
+    <h2>Son gelişmeler</h2>
+    ${akisListesi(ilerleme.akis.slice(0, 4))}
+    ${ilerleme.akis.length > 4 ? '<a class="tumu" href="#gelisim">Tüm gelişmeler ›</a>' : ''}`;
+  kok.querySelector('[data-is="bildirim"]')?.addEventListener('click', bildirimDegistir);
+}
+
+function derslerEkrani() {
+  kok.innerHTML = `
+    <h1>Dersler</h1>
+    <p class="alt-metin">${ilerleme.tamamlanan.length}/${DERSLER.length} ders bitti. Her ders canlı kamerayla bir yöntem öğretir.</p>
+    <div class="yol">${DERSLER.map((d, i) => {
+      const bitti = ilerleme.tamamlanan.includes(d.id);
+      const kilit = dersKilidi(i);
+      const alt = kilit === 'sira' ? 'Önceki dersi bitirince açılır' : kilit === 'pro' ? 'VisionCap Pro' : d.formul;
+      const ic = `<i>${bitti ? '✓' : i + 1}</i><span><strong>${kacis(d.baslik)}</strong><small>${kacis(alt)}</small></span>${kilit === 'pro' ? '<b class="pro-cip">PRO</b>' : ''}`;
+      if (kilit === 'sira') return `<div class="adim kilitli" aria-disabled="true">${ic}</div>`;
+      return `<a class="adim${bitti ? ' bitti' : ''}${kilit ? ' pro-kilit' : ''}" href="#${kilit ? 'pro' : d.id}">${ic}</a>`;
+    }).join('')}
+    </div>
+    ${proBandi()}`;
+}
+
+function kartlarEkrani() {
+  kok.innerHTML = `
+    <h1>Kartlar</h1>
+    ${sallaKarti()}
+    <h2>Bilgi kartları <small>${ilerleme.kartlar.length}/${BILGI_KARTLARI.length}</small></h2>
+    <div class="kart-izgara">${[...BILGI_KARTLARI].sort((a, b) => ilerleme.kartlar.includes(b.id) - ilerleme.kartlar.includes(a.id)).map((k) => ilerleme.kartlar.includes(k.id)
+      ? `<button class="mini" data-kart="${k.id}"><em>${kacis(k.tur)}</em><strong>${kacis(k.baslik)}</strong></button>`
+      : '<div class="mini kapali" aria-label="Henüz çekilmedi"><strong>?</strong></div>').join('')}
+    </div>
+    <h2>Makale kartları <small>${ilerleme.makaleler.length}/${MAKALE_KARTLARI.length}</small></h2>
+    <p class="alt-metin">Görüntü işlemenin dönüm noktası olan çalışmaların kısa özetleri.</p>
+    <div class="yol">${MAKALE_KARTLARI.map((m, k) => {
+      const kilit = makaleKilitli(k);
+      const okundu = ilerleme.makaleler.includes(m.id);
+      return `<button class="adim makale${okundu ? ' bitti' : ''}" data-kart="${m.id}">
+        <i>${okundu ? '✓' : m.yil.toString().slice(2)}</i>
+        <span><strong>${kacis(m.baslik)}</strong><small>${kacis(m.yazar)} · ${m.yil}</small></span>
+        ${kilit ? '<b class="pro-cip">PRO</b>' : ''}
+      </button>`;
+    }).join('')}
+    </div>`;
+  kok.querySelectorAll('[data-kart]').forEach((b) => b.addEventListener('click', () => kartAc(b.dataset.kart)));
+}
+
+function gelisimEkrani() {
+  const gunler = [...Array(7)].map((_, k) => { const g = new Date(); g.setDate(g.getDate() - 6 + k); return g; });
+  const xpler = gunler.map((g) => ilerleme.gunlukXp[bugun(g)] || 0);
+  const tepe = Math.max(50, ...xpler);
+  const sv = seviye(ilerleme.xp);
+  kok.innerHTML = `
+    <h1>Gelişim</h1>
+    <div class="sayaclar">
+      <div class="kart"><strong>${ilerleme.kartlar.length}</strong><small>Öğrenilen kart</small></div>
+      <div class="kart"><strong>${ilerleme.makaleler.length}</strong><small>Okunan makale</small></div>
+      <div class="kart"><strong>${sureYaz(ilerleme.sure)}</strong><small>Çalışma süresi</small></div>
+      <div class="kart"><strong>${ilerleme.denemeler}</strong><small>İşlenen kare</small></div>
+      <div class="kart"><strong>${ilerleme.tamamlanan.length}/${DERSLER.length}</strong><small>Biten ders</small></div>
+      <div class="kart"><strong>${enUzunSeri(ilerleme.gunler)} gün</strong><small>En uzun seri</small></div>
+    </div>
+    <div class="kart">
+      <strong>Seviye ${sv} · ${ilerleme.xp} XP</strong>
+      <div class="cubuk"><i style="width:${((ilerleme.xp % XP_SEVIYE) / XP_SEVIYE) * 100}%"></i></div>
+    </div>
+    <div class="kart">
+      <strong>Son 7 gün</strong>
+      <div class="grafik" role="img" aria-label="Son 7 günde kazanılan XP">${xpler.map((x, k) => `
+        <div><span style="height:${Math.round((x / tepe) * 100)}%"></span><small>${gunler[k].toLocaleDateString('tr', { weekday: 'short' })}</small></div>`).join('')}
+      </div>
+      <small>Bu hafta ${xpler.reduce((a, b) => a + b, 0)} XP kazandın.</small>
+    </div>
     <h2>Rozetler</h2>
     <div class="rozetler">${rozetler(ilerleme).map((r) => `
       <div class="rozet${r.kazanildi ? '' : ' kilitli'}"><strong>${r.ad}</strong><small>${r.aciklama}</small></div>`).join('')}
     </div>
-    <h2>Ders yolu</h2>
-    <div class="yol">${DERSLER.map((d, i) => {
-      const bitti = ilerleme.tamamlanan.includes(d.id);
-      const acik = !SIRALI_KILIT || i === 0 || ilerleme.tamamlanan.includes(DERSLER[i - 1].id);
-      const ic = `<i>${bitti ? '✓' : i + 1}</i><span><strong>${kacis(d.baslik)}</strong><small>${acik ? kacis(d.formul) : 'Önceki dersi bitirince açılır'}</small></span>`;
-      return acik
-        ? `<a class="adim${bitti ? ' bitti' : ''}" href="#${d.id}">${ic}</a>`
-        : `<div class="adim kilitli" aria-disabled="true">${ic}</div>`;
-    }).join('')}
-    </div>`;
-  kok.querySelector('[data-is="hatirlatma"]')?.addEventListener('click', hatirlatmaDegistir);
+    <h2>Günlük akış</h2>
+    ${akisListesi(ilerleme.akis)}`;
+}
+
+function proEkrani() {
+  if (!Abonelik) {
+    kok.innerHTML = `<h1>VisionCap Pro</h1>
+      <p class="alt-metin">Bu sürümde tüm dersler ve kartlar açık. Pro aboneliği iPhone uygulamasında sunulur.</p>
+      <a class="dugme" href="#">Bugün’e dön</a>`;
+    return;
+  }
+  const bitis = proBilgi?.bitis ? new Date(proBilgi.bitis).toLocaleDateString('tr', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  kok.innerHTML = `
+    <a class="geri-ic" href="#">‹ Bugün</a>
+    <section class="pro-ust">
+      <em>VISIONCAP PRO</em>
+      <h1>${pro ? 'Pro aktif ✓' : 'Görüntü işlemenin tamamı'}</h1>
+      ${pro && bitis ? `<p class="alt-metin">Abonelik ${proBilgi?.yenilenecek === false ? 'bitiş' : 'yenileme'} tarihi: ${bitis}</p>` : ''}
+    </section>
+    <ul class="artilar">
+      <li><b>${DERSLER.length} dersin hepsi</b><span>HSV, morfoloji, uyarlamalı eşik ve sonra gelecek yeni dersler</span></li>
+      <li><b>Sınırsız bilgi kartı</b><span>Ücretsizde günde ${UCRETSIZ_KART} kart</span></li>
+      <li><b>Tüm makale kartları</b><span>${MAKALE_KARTLARI.length} dönüm noktası çalışmanın özeti</span></li>
+    </ul>
+    ${pro ? '' : '<div class="planlar"><p class="kucuk">Planlar yükleniyor…</p></div>'}
+    <button class="dugme ikincil" data-is="geri-yukle">Satın alımları geri yükle</button>
+    ${pro ? '<button class="dugme ikincil" data-is="yonet">Aboneliği yönet</button>' : ''}
+    <p class="yasal">Ödeme, satın almayı onayladığında Apple Kimliği hesabından alınır. Abonelik, dönem bitmeden en az 24 saat önce iptal edilmezse aynı süre ve ücretle kendiliğinden yenilenir. Aboneliği App Store hesap ayarlarından yönetebilir ve iptal edebilirsin. Ücretsiz deneme süresinde abone olursan denemenin kalan kısmı geçersiz olur.</p>
+    <p class="yasal"><a href="visioncap-gizlilik.html">Gizlilik Politikası</a> · <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/">Kullanım Koşulları (EULA)</a></p>`;
+
+  kok.querySelector('[data-is="geri-yukle"]').addEventListener('click', async (e) => {
+    e.target.disabled = true;
+    try {
+      const d = await Abonelik.geriYukle();
+      proAyarla(d);
+      if (!d?.aktif) bildirim('Bu Apple Kimliği’nde etkin abonelik bulunamadı.');
+      else bildirim('Pro aboneliğin geri yüklendi.');
+    } catch { bildirim('App Store’a ulaşılamadı. Biraz sonra tekrar dene.'); }
+    e.target.disabled = false;
+    if (location.hash === '#pro') proEkrani();
+  });
+  kok.querySelector('[data-is="yonet"]')?.addEventListener('click', () => Abonelik.aboneligiYonet().catch(() => {}));
+  if (!pro) planlariYukle(kok.querySelector('.planlar'));
+}
+
+async function planlariYukle(kutu) {
+  let urunler = [];
+  try { urunler = (await Abonelik.urunler({ kimlikler: URUNLER })).urunler || []; } catch {}
+  if (!kutu.isConnected) return;
+  if (!urunler.length) {
+    kutu.innerHTML = '<p class="kucuk">Planlar şu an yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.</p><button class="dugme ikincil" data-is="tekrar">Tekrar dene</button>';
+    kutu.querySelector('[data-is="tekrar"]').addEventListener('click', () => { kutu.innerHTML = '<p class="kucuk">Planlar yükleniyor…</p>'; planlariYukle(kutu); });
+    return;
+  }
+  urunler.sort((a, b) => URUNLER.indexOf(a.kimlik) - URUNLER.indexOf(b.kimlik));
+  const etiket = { hafta: 'Haftalık', ay: 'Aylık', yıl: 'Yıllık' };
+  kutu.innerHTML = urunler.map((u) => `
+    <button class="plan${u.donem === 'yıl' ? ' one-cikan' : ''}" data-urun="${kacis(u.kimlik)}">
+      ${u.donem === 'yıl' ? '<em>EN AVANTAJLI</em>' : ''}
+      <strong>${etiket[u.donem] ?? kacis(u.ad)}</strong>
+      <span>${kacis(u.fiyat)} / ${kacis(u.donem)}</span>
+      ${u.deneme && u.denemeUygun ? `<small>${kacis(u.deneme)} ücretsiz, sonra ${kacis(u.fiyat)} / ${kacis(u.donem)}</small>` : ''}
+    </button>`).join('');
+  kutu.querySelectorAll('[data-urun]').forEach((b) => b.addEventListener('click', async () => {
+    kutu.querySelectorAll('button').forEach((x) => { x.disabled = true; });
+    try {
+      const s = await Abonelik.satinAl({ kimlik: b.dataset.urun });
+      if (s.durum === 'tamam') {
+        guncelle((i) => i, [{ ik: '💎', m: 'VisionCap Pro aktif' }], { sessiz: true });
+        proAyarla(s);
+        katman(`<div class="konfeti" aria-hidden="true">${'<i></i>'.repeat(18)}</div>
+          <em class="etiket">VISIONCAP PRO</em><h2>Hoş geldin!</h2>
+          <p>Tüm dersler, sınırsız kart ve bütün makale kartları artık açık.</p>
+          <a class="dugme" href="#dersler" data-kapat>Derslere git</a>`);
+        return;
+      }
+      if (s.durum === 'bekliyor') bildirim('Satın alma onay bekliyor. Onaylanınca Pro kendiliğinden açılır.');
+    } catch { bildirim('Satın alma tamamlanamadı. Tekrar deneyebilirsin.'); }
+    kutu.querySelectorAll('button').forEach((x) => { x.disabled = false; });
+  }));
+}
+
+// Ders bitince açılan tebrik kartı (ve bildirimler açıksa tebrik bildirimi).
+function tebrik(d, { yeniSeviye, yeniRozetler }) {
+  const indeks = DERSLER.indexOf(d);
+  const sonrakiIndeks = DERSLER.findIndex((x, k) => k > indeks && !ilerleme.tamamlanan.includes(x.id));
+  const sonraki = DERSLER[sonrakiIndeks];
+  const sonrakiKilit = sonraki ? dersKilidi(sonrakiIndeks) : '';
+  const hepsiBitti = ilerleme.tamamlanan.length === DERSLER.length;
+  katman(`<div class="konfeti" aria-hidden="true">${'<i></i>'.repeat(18)}</div>
+    <p class="tebrik-ik" aria-hidden="true">✓</p>
+    <h2>Tebrikler!</h2>
+    <p><b>${kacis(d.baslik)}</b> dersini bitirdin.</p>
+    <p class="kazanc">+${XP_DERS} XP</p>
+    ${yeniSeviye ? `<p class="olay">⭐ Yeni seviye: ${yeniSeviye}</p>` : ''}
+    ${yeniRozetler.map((r) => `<p class="olay">🏅 Rozet açıldı: ${kacis(r)}</p>`).join('')}
+    <div class="cubuk"><i style="width:${(ilerleme.tamamlanan.length / DERSLER.length) * 100}%"></i></div>
+    <p class="kucuk">${ilerleme.tamamlanan.length}/${DERSLER.length} ders tamam${hepsiBitti ? '. Hepsini bitirdin!' : ''}</p>
+    ${sonraki ? `<a class="dugme" href="#${sonrakiKilit === 'pro' ? 'pro' : sonraki.id}" data-kapat>${sonrakiKilit === 'pro' ? 'Pro ile devam et' : `Sıradaki: ${kacis(sonraki.baslik)}`}</a>` : ''}
+    <a class="dugme ikincil" href="#" data-kapat>Bugün’e dön</a>`, { kapaninca: () => { if (location.hash === `#${d.id}`) location.hash = ''; } });
+  tebrikBildirimi('Tebrikler! 🎉', `${d.baslik} dersini bitirdin, +${XP_DERS} XP.${yeniSeviye ? ` Yeni seviye: ${yeniSeviye}.` : ''}${yeniRozetler.length ? ` Rozet: ${yeniRozetler.join(', ')}.` : ''}`);
 }
 
 // ---------- WebGL ----------
 
-let gl, video, akis, dokum, cerceve, kaynakW = 1, kaynakH = 1, dondurulmus = false, ornekKaynak = null;
+let sureSayaci, gl, video, akis, dokum, cerceve, kaynakW = 1, kaynakH = 1, dondurulmus = false, ornekKaynak = null;
 
 function derle(tur, kod) {
   const s = gl.createShader(tur);
@@ -337,20 +856,23 @@ async function kameraAc(durumEl) {
 function durdur() {
   cancelAnimationFrame(cerceve);
   akis?.getTracks().forEach((t) => t.stop());
-  akis = null; video = null; gl = null; dondurulmus = false;
+  clearInterval(sureSayaci);
+  akis = null; video = null; gl = null; dondurulmus = false; aktifDers = null;
 }
+
 
 async function ders(d) {
   durdur();
   const indeks = DERSLER.indexOf(d);
-  const acik = !SIRALI_KILIT || indeks === 0 || ilerleme.tamamlanan.includes(DERSLER[indeks - 1].id);
-  if (!acik) { location.hash = ''; return; }
+  const kilit = dersKilidi(indeks);
+  if (kilit) { location.hash = kilit === 'pro' ? '#pro' : ''; return; }
+  aktifDers = d;
   const degerler = Object.fromEntries(d.parametreler.map((p) => [p.anahtar, p.varsayilan]));
   let oynandi = false;
   const bitti = () => ilerleme.tamamlanan.includes(d.id);
 
   kok.innerHTML = `
-    <a class="geri-ic" href="#">‹ Pano</a>
+    <a class="geri-ic" href="#dersler">‹ Dersler</a>
     <h1>${kacis(d.baslik)}</h1>
     <p class="anlatim">${kacis(d.anlatim)}</p>
     <div class="formul">${kacis(d.formul)}</div>
@@ -371,9 +893,14 @@ async function ders(d) {
   const kareDugme = kok.querySelector('[data-is="kare"]');
   const bitirDugme = kok.querySelector('[data-is="bitir"]');
 
+  // Çalışma süresi: ders ekranı görünürken 15 saniyede bir sayılır
+  sureSayaci = setInterval(() => {
+    if (!document.hidden && aktifDers === d) guncelle((i) => ({ ...i, sure: i.sure + 15 }));
+  }, 15000);
+
   const ciktiYaz = () => d.parametreler.forEach((p) => {
     const v = degerler[p.anahtar];
-    kok.querySelector(`[data-out="${p.anahtar}"]`).textContent = p.etiketler ? p.etiketler[Math.round(v)] : v.toFixed(2);
+    kok.querySelector(`[data-out="${p.anahtar}"]`).textContent = p.etiketler ? p.etiketler[Math.round(v)] : v.toFixed(p.ondalik ?? 2);
   });
   const bitirGuncelle = () => {
     if (bitti()) { bitirDugme.textContent = '✓ Bu dersi bitirdin'; bitirDugme.disabled = true; bitirDugme.classList.add('tamam'); return; }
@@ -388,8 +915,11 @@ async function ders(d) {
     ciktiYaz();
   }));
   bitirDugme.addEventListener('click', () => {
-    guncelle((i) => i.tamamlanan.includes(d.id) ? i : { ...i, tamamlanan: [...i.tamamlanan, d.id], xp: i.xp + XP_DERS });
-    location.hash = '';
+    if (bitti()) return;
+    const sonuc = guncelle((i) => ({ ...i, tamamlanan: [...i.tamamlanan, d.id], xp: i.xp + XP_DERS }),
+      [{ ik: '✅', m: `Ders bitti: ${d.baslik}` }], { sessiz: true });
+    bitirGuncelle();
+    tebrik(d, sonuc);
   });
 
   gl = tuval.getContext('webgl', { preserveDrawingBuffer: true });
@@ -417,6 +947,7 @@ async function ders(d) {
     kaynak = ornekKaynak;
     durumEl.textContent = 'Kamera açılamadı; örnek görüntüyle devam ediyorsun.';
   }
+  if (aktifDers !== d || !gl) return; // beklerken ekrandan çıkıldı
   const kamerali = kaynak === video;
   kareDugme.addEventListener('click', () => {
     dondurulmus = !dondurulmus;
@@ -458,14 +989,32 @@ async function ders(d) {
   ciz();
 }
 
+const EKRANLAR = { '': bugunEkrani, dersler: derslerEkrani, kartlar: kartlarEkrani, gelisim: gelisimEkrani, pro: proEkrani };
+
 function yonlendir() {
   const id = location.hash.slice(1);
   const d = DERSLER.find((x) => x.id === id);
-  if (d) ders(d); else pano();
+  document.querySelector('.katman')?.remove();
+  if (d) {
+    sekmeler.hidden = true;
+    ders(d);
+  } else {
+    durdur();
+    const ad = id in EKRANLAR ? id : '';
+    sekmeler.hidden = ad === 'pro';
+    sekmeler.querySelectorAll('a').forEach((a) => a.classList.toggle('secili', a.getAttribute('href') === `#${ad}`));
+    EKRANLAR[ad]();
+  }
   scrollTo(0, 0);
 }
 
 addEventListener('hashchange', yonlendir);
-// Sekme gizlenince kamerayı kapat, geri gelince dersi yeniden kur
-document.addEventListener('visibilitychange', () => { if (document.hidden) durdur(); else yonlendir(); });
+// Sekme gizlenince kamerayı kapat, derse geri gelince yeniden kur
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) durdur();
+  else if (DERSLER.some((x) => `#${x.id}` === location.hash)) yonlendir();
+});
 yonlendir();
+proYenile();
+Abonelik?.addListener?.('degisti', proAyarla);
+gunlukKartlariKur();
