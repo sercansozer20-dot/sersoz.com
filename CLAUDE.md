@@ -2,6 +2,11 @@
 
 Kullanıcı Türkçe konuşur; arayüz ve belgeler Türkçe. Yanıtlar kısa olsun. Bu depo **herkese açık**: gizli anahtar, şifre, IBAN gibi bilgi yazma.
 
+> ⚠ **Depoyu gizli (private) yapma.** Ücretsiz GitHub planında gizli depoda Pages kapanır, sersoz.com 404 verir; App Store'daki
+> uygulamalar (Elif'in Dolabı, VisionCap, MecaLib, ElectroLib…) ve gizlilik/destek adresleri de çöker. 21 Ekim 2026'da oldu;
+> geri açmak için depo herkese açık yapılıp Pages yeniden kuruldu (kaynak `main` /, alan adı sersoz.com, HTTPS zorunlu).
+> Gizli bir şey gerekiyorsa ayrı, gizli bir depoya koy.
+
 ## Ne var
 
 Statik site, GitHub Pages (CNAME sersoz.com). **`main`'e push = canlı yayın**; kullanıcı istemeden push etme.
