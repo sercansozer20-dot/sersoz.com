@@ -19,7 +19,7 @@ import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, ge
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261021b';
+import { demoVeri, DEMO_KULLANICI } from './elif-demo.js?v=20261021c';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBKmrw-nVmuFM7V4HGG0wosdxsVWV1dJ48',
@@ -447,6 +447,7 @@ function hataMetni(e) {
 /* Uygulama içinde (iOS · Capacitor) Google'ın web penceresi çalışmaz: giriş yerel pencereyle yapılır, kimlik bilgisi
    Firebase JS SDK'ya verilir. Apple, Google ile girişin yanında "Apple ile giriş"i şart koşar (App Store 4.8). */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const SURUM = new URL(import.meta.url).searchParams.get('v') || 'yerel';   // elif.html'deki ?v= değeri
 const yerelAuth = () => window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseAuthentication;
 async function yerelGiris(saglayici) {
   const fa = yerelAuth();
@@ -484,6 +485,9 @@ async function girisYap() {
 /* Hesabı tamamen sil: ilanlar ve fotoğrafları, profil, üyelik, takip, beğeni, talepler; en son Firebase giriş hesabı.
    Kiralama/ödeme/puan kayıtları yasal saklama gereği kalır. */
 async function hesabiTamamenSil() {
+  // Firebase hesabı yalnız yakın zamanda giriş yapılmışsa siler; eski girişte veriler silinip hesap kalmasın diye önce bakılır
+  const son = Date.parse((auth.currentUser && auth.currentUser.metadata.lastSignInTime) || 0);
+  if (Date.now() - son > 4 * 6e4) { const h = new Error('Yeniden giriş gerekli'); h.code = 'auth/requires-recent-login'; throw h; }
   const uid = kullanici.uid;
   const sorgu = async (kol, alan) => (await getDocs(query(collection(db, kol), where(alan, '==', uid)))).docs.map(x => ({ id: x.id, ...x.data() }));
   for (const e of await esyaListesi('sahipId', uid).catch(() => [])) {
@@ -499,6 +503,7 @@ async function hesabiTamamenSil() {
   for (const t of await sorgu('dolapTalepler', 'uid').catch(() => [])) await deleteDoc(doc(db, 'dolapTalepler', t.id)).catch(() => {});
   await deleteDoc(doc(db, 'dolapProfiller', uid)).catch(() => {});
   await deleteDoc(doc(db, 'dolapUyeler', uid)).catch(() => {});
+  if (JETON_ACIK) await cagir('jetonHesapSil', {}).catch(() => {});   // bakiye ve Pro kaydı sunucuda; hareket defteri yasal kayıt olarak kalır
   uye = null;
   try { localStorage.removeItem(LS_SEPET); localStorage.removeItem(SON_BAKILAN); localStorage.removeItem(LS_TARIH); } catch (h) {}
   try { if (NATIVE && yerelAuth()) await yerelAuth().signOut(); } catch (h) {}
@@ -655,6 +660,7 @@ function hesapCiz() {
       '<a role="menuitem" href="#hesabim">Hesabım ve ayarlar</a>' +
       '<a role="menuitem" href="#profil/' + esc(kullanici.uid) + '">Profilim</a>' +
       '<a role="menuitem" href="#favoriler">♡ Favorilerim</a>' +
+      (JETON_ACIK && (!NATIVE || IAP) ? '<a role="menuitem" href="#dolabim/jeton">🪙 Jetonlarım</a>' : '') +
       '<a role="menuitem" href="#hesabim/puan">★ Sadakat puanım</a>' +
       '<a role="menuitem" href="#hesabim/adresler">Kayıtlı adreslerim</a>' +
       '<a role="menuitem" href="#hesabim/kartlar">Kayıtlı kartlarım</a>' +
@@ -1863,6 +1869,7 @@ async function dolabim(istek) {
   const [czHtml, ocHtml] = await Promise.all([JETON_ACIK && ocGoster ? cuzdanHTML() : '', ocGoster ? boostlarimHTML() : '']);
   if (istek !== aktifIstek) return;
   if (czHtml || ocHtml) $('#liste').insertAdjacentHTML('beforebegin', '<div id="ocBolum">' + czHtml + ocHtml + '</div>');
+  if (yol()[1] === 'jeton' && $('.cuzdan')) $('.cuzdan').scrollIntoView({ block: 'start' });   // hesap menüsü → Jetonlarım
   const ocB = $('#ocBolum');
   if (ocB) ocB.onclick = ev => {
     const b = ev.target.closest('[data-oc]'); if (b) return boostDurum(b.dataset.ocId, b.dataset.oc);
@@ -4048,7 +4055,10 @@ async function hesabim(bolum, istek) {
     '<section class="kutu" id="b-hesap"><h2>Hesap</h2><div class="eylem" style="justify-content:flex-start">' +
       '<button type="button" class="dug" id="hCikis">Çıkış yap</button><button type="button" class="dug dug-tehlike" id="hSil">Hesabımı sil</button></div>' +
       '<p class="kucuk" style="margin-top:10px">Hesabını silmek; ilanlarını ve fotoğraflarını, profilini, telefon, adres ve filtrelerini, takip, beğeni ve taleplerini kalıcı olarak siler ve giriş hesabını kapatır. ' +
-      'Kiralama, ödeme ve puan kayıtları yasal saklama yükümlülüğü nedeniyle saklanır; kişisel iletişim bilgilerin bu kayıtlardan istenirse ayrıca silinir ("Soru sor").</p></section>' +
+      (JETON_ACIK ? 'Harcanmamış jetonların ve Satıcı Pro hakların da sona erer. ' : '') +
+      'Kiralama, ödeme ve puan kayıtları yasal saklama yükümlülüğü nedeniyle saklanır; kişisel iletişim bilgilerin bu kayıtlardan istenirse ayrıca silinir ("Soru sor").</p>' +
+      (JETON_ACIK && (IAP || proAktif()) ? '<p class="kucuk uyari" style="margin-top:8px">Satıcı Pro aboneliğin varsa hesabı silmeden önce iPhone\'da <b>Ayarlar → Apple hesabın → Abonelikler</b>\'den iptal et; hesap silmek App Store aboneliğini kendiliğinden iptal etmez.</p>' : '') +
+      '<p class="kucuk surum-satir">Sürüm ' + esc(SURUM) + ' · ' + (NATIVE ? 'iPhone uygulaması · satın alma eklentisi ' + (iapEklenti() ? 'var' : 'yok') : 'web') + '</p></section>' +
     '</div></div>';
   if (bolum) { const h = $('#b-' + bolum); if (h) h.scrollIntoView({ block: 'start' }); }
   sadakatGetir(kullanici.uid).then(x => { if (istek === aktifIstek && $('#sadakatIc')) $('#sadakatIc').innerHTML = sadakatHTML(x, true); })
@@ -4089,7 +4099,7 @@ async function hesabim(bolum, istek) {
   $('#hCikis').onclick = () => { if (!demoEngel()) cikisYap(); };
   $('#hSil').onclick = async () => {
     if (demoEngel()) return;
-    const onay = prompt('Hesabın ve ilanların kalıcı olarak silinecek. Bu işlem geri alınamaz.\nOnaylamak için SİL yaz:', '');
+    const onay = prompt('Hesabın ve ilanların kalıcı olarak silinecek' + (JETON_ACIK ? ', jetonların ve Pro hakların sona erecek' : '') + '. Bu işlem geri alınamaz.\nOnaylamak için SİL yaz:', '');
     if (onay === null) return;
     if (onay.trim().toLocaleUpperCase('tr') !== 'SİL') { bildir('Onay yazısı eşleşmedi; hesap silinmedi.'); return; }
     const dug = $('#hSil'); dug.disabled = true; dug.textContent = 'Siliniyor…';
@@ -4172,6 +4182,24 @@ async function oturumHazirla(u) {
   }
   hesapCiz(); sayfaCiz(); sohbetIzle(); begenileriYukle(); iapBaslat();
 }
+
+/* Yeni sürüm denetimi: sekme ya da iPhone uygulaması yeniden öne gelince elif.html'deki sürüm farklıysa sayfa yenilenir.
+   Uygulama arka planda günlerce açık kalabildiği için güncellemeler kullanıcıya böylece ulaşır.
+   Açık pencere ya da yazılan bir alan varken yenilemez; bir sonraki öne gelişte yeniden dener. */
+let surumDenetim = 0;
+async function surumDenetle() {
+  if (document.visibilityState !== 'visible' || Date.now() - surumDenetim < 5 * 6e4) return;
+  surumDenetim = Date.now();
+  try {
+    const t = await (await fetch('elif.html?surum=' + Date.now(), { cache: 'no-store' })).text();
+    const yeni = (t.match(/elif\.js\?v=([\w.-]+)/) || [])[1];
+    if (!yeni || yeni === SURUM) return;
+    const p = $('#pencere'), odak = document.activeElement;
+    if ((p && !p.hidden) || (odak && /^(INPUT|TEXTAREA|SELECT)$/.test(odak.tagName))) { surumDenetim = 0; return; }
+    location.reload();
+  } catch (e) {}
+}
+document.addEventListener('visibilitychange', surumDenetle);
 
 asistanKur();
 siralamaKur();

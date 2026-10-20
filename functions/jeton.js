@@ -9,6 +9,7 @@
  *   appleBildirim   (https)    App Store Server Notifications V2 (URL App Store Connect'e girilir)
  *   jetonlaOneCikar (callable) { esyaId, paket }       → bakiyeden düşer, parçayı öne çıkarır
  *   jetonYonetim    (callable) { kimlik, miktar, aciklama } → admin elle yükler / düşer (havale, iade, hediye)
+ *   jetonHesapSil   (callable)                      → hesap silinirken bakiye ve Pro kaydını siler
  *
  * Jeton yalnız dijital hizmete (öne çıkarma) harcanır; kiralama ödemesine kullanılamaz (App Store 3.1.1 / 3.1.3(e)).
  */
@@ -241,6 +242,21 @@ exports.jetonYonetim = onCall({ region: BOLGE }, async req => {
       aciklama: aciklama.trim(), yapan: req.auth.token.email });
     return { uid, bakiye };
   });
+});
+
+/* Hesap silinirken (elif.js → hesabiTamamenSil) bakiye ve Pro kaydı silinir; hareket defteri yasal kayıt olarak kalır.
+   App Store aboneliğini Apple yönetir; kullanıcı onu App Store'dan iptal eder. */
+exports.jetonHesapSil = onCall({ region: BOLGE }, async req => {
+  if (!req.auth) throw hata('unauthenticated', 'Önce giriş yap.');
+  const uid = req.auth.uid;
+  await db().runTransaction(async tx => {
+    const ref = db().doc('dolapJetonlar/' + uid);
+    const c = (await tx.get(ref)).data();
+    if (c && c.bakiye) defter(tx, { uid, tur: 'hesap_silindi', miktar: -c.bakiye, bakiyeSonra: 0, kaynak: 'hesap', aciklama: 'Hesap silindi, kalan jeton sona erdi' });
+    tx.delete(ref);
+    tx.delete(db().doc('dolapPro/' + uid));
+  });
+  return { tamam: true };
 });
 
 exports._test = { jwsCoz, hesapKodu };

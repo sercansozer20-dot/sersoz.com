@@ -662,3 +662,4 @@ a.sayac:hover { border-color: var(--vurgu); }
 .jeton-form { display: grid; grid-template-columns: 2fr 1fr 2fr auto; gap: 8px; margin-top: 10px; }
 .jeton-form input { min-width: 0; padding: 9px 11px; border: 1px solid var(--cizgi); border-radius: 10px; font: inherit; }
 @media (max-width: 640px) { .jeton-paketler { grid-template-columns: 1fr; } .jeton-form { grid-template-columns: 1fr; } }
+.surum-satir { margin-top: 10px; opacity: .7; }

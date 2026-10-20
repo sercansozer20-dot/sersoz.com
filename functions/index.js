@@ -74,4 +74,4 @@ exports.soruGeldi = onDocumentWritten({ document: 'dolapSohbet/{id}', region: BO
 
 /* Jeton ve Satıcı Pro (App Store uygulama içi satın alma): jeton.js */
 const jeton = require('./jeton');
-for (const ad of ['appleSatinAlma', 'appleBildirim', 'jetonlaOneCikar', 'jetonYonetim']) exports[ad] = jeton[ad];
+for (const ad of ['appleSatinAlma', 'appleBildirim', 'jetonlaOneCikar', 'jetonYonetim', 'jetonHesapSil']) exports[ad] = jeton[ad];
