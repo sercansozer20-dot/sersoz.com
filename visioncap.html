@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>VisionCap | Görüntü işlemeyi kameranla öğren</title>
-<meta name="description" content="VisionCap: telefon kamerasıyla görüntü işlemeyi uygulayarak öğreten iOS uygulaması. Günlük seri, puan ve rozetlerle 8 ders.">
+<meta name="description" content="VisionCap: telefon kamerasıyla görüntü işlemeyi uygulayarak öğreten iOS uygulaması. Günlük seri, puan, rozet, bilgi kartları ve makale özetleriyle 12 ders.">
 <meta name="theme-color" content="#0b0f14">
 <link rel="canonical" href="https://sersoz.com/visioncap.html">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0f14'/%3E%3Ccircle cx='32' cy='32' r='20' fill='none' stroke='%23f0f6fc' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%233fb950'/%3E%3C/svg%3E">
@@ -86,7 +86,7 @@
         <a class="dene" href="visioncap-ders.html">Tarayıcıda dene</a>
         <span class="durum">Yakında App Store'da</span>
       </div>
-      <p class="not">Ücretsiz, hesap gerektirmez. Kamera görüntüsü cihazından çıkmaz.</p>
+      <p class="not">İlk 6 ders ücretsiz, hesap gerektirmez. Kamera görüntüsü cihazından çıkmaz.</p>
     </div>
 
     <div class="telefon" role="img" aria-label="VisionCap ana ekranı: günlük seri, ders sayısı, seviye, günün görevi ve ders yolu">
@@ -94,7 +94,7 @@
         <b>VisionCap</b>
         <div class="seri"><span>7</span><small>günlük seri</small></div>
         <div class="uclu">
-          <div><strong>3/8</strong><small>Ders</small></div>
+          <div><strong>3/12</strong><small>Ders</small></div>
           <div><strong>24</strong><small>Deneme</small></div>
           <div><strong>3</strong><small>Seviye</small></div>
         </div>
@@ -114,12 +114,13 @@
   <div class="ozellikler">
     <div class="ozellik"><div class="sayi" style="color: var(--turuncu)">🔥</div><h3>Günlük seri</h3><p>Her gün bir ders ya da bir deneme yap, serini büyüt.</p></div>
     <div class="ozellik"><div class="sayi" style="color: var(--yesil)">XP</div><h3>Puan ve seviye</h3><p>Her işlediğin kare 5, her bitirdiğin ders 50 puan.</p></div>
-    <div class="ozellik"><div class="sayi" style="color: var(--mavi)">7</div><h3>Rozet</h3><p>İlk dersten 30 günlük seriye kadar kazanılacak rozetler.</p></div>
-    <div class="ozellik"><div class="sayi">8</div><h3>Ders</h3><p>Kısa anlatım, formül, ayarlanabilir filtre ve "şunu dene" ipucu.</p></div>
+    <div class="ozellik"><div class="sayi" style="color: var(--mavi)">10</div><h3>Rozet</h3><p>İlk dersten 30 günlük seriye kadar kazanılacak rozetler.</p></div>
+    <div class="ozellik"><div class="sayi">12</div><h3>Ders</h3><p>Kısa anlatım, formül, ayarlanabilir filtre ve "şunu dene" ipucu.</p></div>
+    <div class="ozellik"><div class="sayi" style="color: var(--turuncu)">48</div><h3>Kart</h3><p>Telefonu salla, bir bilgi kartı çek. Dönüm noktası makalelerin kısa özetleri.</p></div>
   </div>
 
   <h2 class="bolum">Dersler</h2>
-  <p class="bolum-alt">Pikselden kenar bulmaya, ders kitabındaki sırayla.</p>
+  <p class="bolum-alt">Pikselden uyarlamalı eşiklemeye, ders kitabındaki sırayla. İlk 6 ders ücretsiz, tamamı VisionCap Pro ile.</p>
   <div class="dersler">
     <div class="ders"><div><strong>Piksel ve renk kanalları</strong><code>(R, G, B)</code></div></div>
     <div class="ders"><div><strong>Gri tonlama</strong><code>0.299R + 0.587G + 0.114B</code></div></div>
@@ -129,6 +130,10 @@
     <div class="ders"><div><strong>Bulanıklaştırma</strong><code>Gauss, σ</code></div></div>
     <div class="ders"><div><strong>Keskinleştirme</strong><code>x + k·(x − bulanık)</code></div></div>
     <div class="ders"><div><strong>Kenar bulma</strong><code>√(Gx² + Gy²)</code></div></div>
+    <div class="ders"><div><strong>Negatif ve nicemleme</strong><code>1 − x, ⌊x·n⌋</code></div></div>
+    <div class="ders"><div><strong>Renk tonu (HSV)</strong><code>H, S, V</code></div></div>
+    <div class="ders"><div><strong>Aşındırma ve genişletme</strong><code>min, max</code></div></div>
+    <div class="ders"><div><strong>Uyarlamalı eşikleme</strong><code>x &gt; ort − C</code></div></div>
   </div>
 
   <div class="gizlilik-kutu">
