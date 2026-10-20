@@ -145,6 +145,8 @@ h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:.01em;margi
 .tabbar button[aria-current="page"]{color:var(--accent)}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);font-weight:700;padding:10px 18px;border-radius:999px;z-index:7;max-width:calc(100% - 32px);text-align:center;font-size:14px}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hakkinda{text-align:center;color:var(--muted);font-size:13px;margin:24px 0 0}
+.hakkinda a{color:var(--ink)}
 .pop{animation:pop .35s ease-out}
 @keyframes pop{0%{transform:scale(.96)}60%{transform:scale(1.02)}100%{transform:none}}
 @media (prefers-reduced-motion:reduce){.pop{animation:none}}
@@ -185,7 +187,7 @@ dersler: [
   bagli:["termo","esanjor"]},
  {id:"malzeme",kod:"MAK 105",ad:"Malzeme Bilimi",ozet:"Mühendislik malzemelerinin yapısı, özellikleri ve seçimi.",yariyil:"1. yarıyıl",tags:["Çelik","Isıl işlem","Faz"],
   konular:["Atom ve kristal yapı","Kusurlar ve difüzyon","Çekme deneyi","Fe-C faz diyagramı","Isıl işlemler (sertleştirme, menevişleme)","Polimer, seramik ve kompozitler"],
-  formuller:[["E = σ / ε","Elastisite modülü"],["HB ≈ 3.45 · σ_ç (MPa) ⁻¹","Brinell sertliğinden çekme dayanımı tahmini (çelik): σ_ç ≈ 3.45·HB"]],
+  formuller:[["E = σ / ε","Elastisite modülü"],["σ_ç ≈ 3.45 · HB (MPa)","Brinell sertliğinden çekme dayanımı tahmini (çelik)"]],
   bagli:["mukavemet","celik"]},
  {id:"makine-el",kod:"MAK 321",ad:"Makine Elemanları",ozet:"Mil, dişli, rulman, cıvata gibi elemanların tasarımı ve seçimi.",yariyil:"5–6. yarıyıl",tags:["Tasarım","Yorulma","Seçim"],
   konular:["Emniyet katsayısı","Yorulma ve Goodman diyagramı","Cıvata ve kaynak bağlantıları","Mil tasarımı","Rulman seçimi ve ömür hesabı","Dişli çarklar","Kayış-kasnak ve zincir"],
@@ -295,6 +297,232 @@ quiz: [
 ]};
 
 
+/* Ek içerik (sürüm 1.0): dersler, konular, ekipmanlar ve test soruları */
+const EK = {
+dersler: [
+ {id:"uretim",kod:"MAK 231",ad:"Üretim Yöntemleri",ozet:"Döküm, şekillendirme, talaşlı imalat ve kaynakla parça üretimi.",yariyil:"4. yarıyıl",tags:["İmalat","Talaşlı","Döküm"],
+  konular:["Döküm yöntemleri","Dövme, haddeleme ve ekstrüzyon","Talaşlı imalat: tornalama, frezeleme, delme","Kesme parametreleri","Kaynak yöntemleri","Toleranslar ve yüzey pürüzlülüğü","CNC'ye giriş"],
+  formuller:[["V_c = π · D · n / 1000","Kesme hızı (m/dk; D mm, n d/dk)"],["v_f = f_z · z · n","Frezede ilerleme hızı (mm/dk)"]],
+  bagli:["kesme","kaynak-yontem","torna","freze","kaynak-mak"]},
+ {id:"teknik",kod:"MAK 101",ad:"Teknik Resim",ozet:"Parçaların standartlara uygun çizimi, ölçülendirilmesi ve okunması.",yariyil:"1. yarıyıl",tags:["Çizim","Standart","Tolerans"],
+  konular:["Görünüş çıkarma (izdüşüm)","Kesit alma","Ölçülendirme","Geçmeler ve toleranslar","Yüzey işaretleri","Montaj resmi","CAD'e giriş"],
+  formuller:[["Ø25 H7/g6","Boşluklu geçme gösterimi (delik H7, mil g6)"]],
+  bagli:["tolerans","olcu"]},
+ {id:"mekanizma",kod:"MAK 301",ad:"Makine Teorisi",ozet:"Mekanizmaların yapısı, serbestlik derecesi ve hareket analizi.",yariyil:"5. yarıyıl",tags:["Mekanizma","Kinematik"],
+  konular:["Uzuv ve mafsal","Serbestlik derecesi (Grübler)","Dört çubuk mekanizması","Krank-biyel mekanizması","Kam mekanizmaları","Hız ve ivme analizi"],
+  formuller:[["F = 3(n − 1) − 2j₁ − j₂","Grübler denklemi: düzlemsel mekanizma serbestlik derecesi"],["s + l ≤ p + q","Grashof şartı: en az bir uzuv tam tur döner"]],
+  bagli:["grubler","dinamik","piston"]},
+ {id:"kontrol",kod:"MAK 402",ad:"Otomatik Kontrol",ozet:"Dinamik sistemlerin modellenmesi ve geri beslemeli kontrolü.",yariyil:"7. yarıyıl",tags:["Kontrol","PID"],
+  konular:["Transfer fonksiyonu","Blok diyagramları","Birinci ve ikinci derece sistem cevabı","Kararlılık","PID kontrolcü","Frekans cevabı (Bode)"],
+  formuller:[["u(t) = K_p·e + K_i·∫e dt + K_d·de/dt","PID kontrol yasası"],["G(s) = K / (τs + 1)","Birinci derece sistem"]],
+  bagli:["pid","titresim"]},
+ {id:"hidrolik",kod:"MAK 341",ad:"Hidrolik ve Pnömatik",ozet:"Basınçlı sıvı ve havayla güç iletimi ve devre tasarımı.",yariyil:"6. yarıyıl",tags:["Akışkan gücü","Valf"],
+  konular:["Pascal prensibi","Hidrolik pompa ve motorlar","Yön kontrol valfleri","Basınç ve akış kontrol valfleri","Pnömatik devreler","Devre sembolleri (ISO 1219)"],
+  formuller:[["F = p · A","Silindir kuvveti"],["P = p · Q / 600","Hidrolik güç (kW; p bar, Q L/dk)"]],
+  bagli:["pascal","silindir","yonvalf","pompa"]},
+ {id:"motor",kod:"MAK 421",ad:"İçten Yanmalı Motorlar",ozet:"Benzinli ve dizel motorların çevrimleri, performansı ve emisyonları.",yariyil:"7. yarıyıl",tags:["Motor","Çevrim"],
+  konular:["Otto ve Diesel çevrimleri","Dört zamanlı çalışma","Sıkıştırma oranı","Ortalama efektif basınç","Yakıt tüketimi ve verim","Emisyonlar"],
+  formuller:[["η_Otto = 1 − 1 / r^(k−1)","Otto çevrimi ısıl verimi (hava için k ≈ 1.4)"],["r = (V_s + V_c) / V_c","Sıkıştırma oranı"]],
+  bagli:["otto","termo","piston"]},
+ {id:"sogutma",kod:"MAK 431",ad:"Soğutma ve İklimlendirme",ozet:"Soğutma çevrimleri, ısı pompaları ve iklimlendirme sistemleri.",yariyil:"8. yarıyıl",tags:["Soğutma","HVAC"],
+  konular:["Buhar sıkıştırmalı çevrim","Soğutucu akışkanlar","Etkinlik katsayısı (COP)","Psikrometri","Isı pompaları","Klima santralleri"],
+  formuller:[["COP_s = Q_L / W","Soğutma etkinlik katsayısı"],["COP_ıp = Q_H / W = COP_s + 1","Isı pompası etkinlik katsayısı"]],
+  bagli:["cop","kompresor","chiller","kule"]}
+],
+konular: [
+ {id:"grubler",kod:"KNU 07",ad:"Serbestlik Derecesi (Grübler)",ozet:"Bir mekanizmayı tam tanımlamak için kaç bağımsız giriş gerektiği.",ders:"mekanizma",tags:["Mekanizma","Kinematik"],
+  aciklama:"n uzuv sayısıdır (sabit uzuv dahil). j₁ tek serbestlikli mafsallar (döner, kayar), j₂ iki serbestlikli mafsallardır (kam teması, dişli teması). F = 1 ise mekanizma tek motorla sürülebilir, F = 0 ise yapı rijittir.",
+  formuller:[["F = 3(n − 1) − 2j₁ − j₂","Düzlemsel mekanizmalar"]],
+  ornek:"Dört çubuk mekanizması: n = 4, j₁ = 4, j₂ = 0 → F = 3·3 − 2·4 = 1.",bagli:["mekanizma","piston"]},
+ {id:"reynolds",kod:"KNU 08",ad:"Reynolds Sayısı ve Akış Rejimi",ozet:"Atalet kuvvetlerinin viskoz kuvvetlere oranı.",ders:"akiskan",tags:["Akışkan","Boyutsuz sayı"],
+  aciklama:"Borularda Re < 2300 laminer, 2300–4000 geçiş, 4000 üzeri türbülanslı kabul edilir. Rejim, basınç kaybı ve ısı transferi hesaplarında hangi bağıntının kullanılacağını belirler.",
+  formuller:[["Re = ρ V D / μ = V D / ν","ν: kinematik viskozite (m²/s)"]],
+  ornek:"20 °C su (ν ≈ 1.0×10⁻⁶ m²/s), D = 50 mm, V = 1.5 m/s → Re = 1.5·0.05/10⁻⁶ = 75 000, türbülanslı.",bagli:["akiskan","darcy"]},
+ {id:"darcy",kod:"KNU 09",ad:"Borularda Basınç Kaybı",ozet:"Darcy-Weisbach denklemiyle sürtünme kaybı.",ders:"akiskan",tags:["Akışkan","Tesisat"],
+  aciklama:"Akışkan boru boyunca ilerlerken çeper sürtünmesiyle basınç kaybeder. Sürtünme katsayısı f laminer akışta yalnız Re'ye, türbülanslı akışta Re ve boru pürüzlülüğüne bağlıdır (Moody diyagramı).",
+  formuller:[["Δp = f · (L/D) · (ρV²/2)","Darcy-Weisbach"],["f = 64 / Re","Laminer akış"]],
+  ornek:"Su, f = 0.02, L = 100 m, D = 0.05 m, V = 2 m/s: Δp = 0.02 · 2000 · 2000 Pa = 80 kPa = 0.8 bar.",bagli:["reynolds","pompa","vana"]},
+ {id:"pascal",kod:"KNU 10",ad:"Pascal Prensibi",ozet:"Kapalı kaptaki sıvıda basınç her yöne eşit iletilir.",ders:"hidrolik",tags:["Hidrolik","Basınç"],
+  aciklama:"Hidrolik kriko, pres ve fren sistemlerinin temelidir. Küçük alana uygulanan küçük kuvvet, büyük alanda büyük kuvvet oluşturur; karşılığında büyük piston daha az yol alır.",
+  formuller:[["F₂ = F₁ · A₂ / A₁","Kuvvet kazancı"],["s₂ = s₁ · A₁ / A₂","Yol kaybı"]],
+  ornek:"1 cm² pistona 100 N uygulanırsa 100 cm² pistonda 10 000 N oluşur.",bagli:["hidrolik","silindir"]},
+ {id:"mohr",kod:"KNU 11",ad:"Mohr Çemberi",ozet:"Düzlem gerilme halinde asal gerilmelerin grafik bulunuşu.",ders:"mukavemet",tags:["Mukavemet","Gerilme"],
+  aciklama:"Çemberin merkezi ortalama normal gerilme, yarıçapı en büyük kayma gerilmesidir. Çember üzerindeki her nokta, farklı açıdaki bir kesitteki gerilme durumunu gösterir.",
+  formuller:[["σ₁,₂ = (σx+σy)/2 ± √[((σx−σy)/2)² + τxy²]","Asal gerilmeler"],["τ_maks = R","En büyük kayma gerilmesi"]],
+  ornek:"σx = 80, σy = 20, τxy = 40 MPa → merkez 50, R = √(30² + 40²) = 50 → σ₁ = 100, σ₂ = 0, τ_maks = 50 MPa.",bagli:["mukavemet","gerilme"]},
+ {id:"burkulma",kod:"KNU 12",ad:"Euler Burkulması",ozet:"İnce basma çubuklarının yanal olarak kararsızlaşması.",ders:"mukavemet",tags:["Mukavemet","Kararlılık"],
+  aciklama:"İnce ve uzun çubuklar, malzeme akmadan çok önce yana bükülerek göçebilir. Etkin boy katsayısı K mesnet tipine bağlıdır: iki ucu mafsallı 1, ankastre-serbest 2, ankastre-mafsallı 0.7, iki ucu ankastre 0.5.",
+  formuller:[["P_cr = π² E I / (K L)²","Kritik burkulma yükü"]],
+  ornek:"Çelik (E = 210 GPa), Ø20 mm dolu çubuk (I = 7854 mm⁴), L = 1 m, iki ucu mafsallı: P_cr ≈ 16.3 kN.",bagli:["mukavemet"]},
+ {id:"egilme",kod:"KNU 13",ad:"Kirişlerde Eğilme",ozet:"Moment altında kesitte oluşan çekme ve basma gerilmeleri.",ders:"mukavemet",tags:["Mukavemet","Kiriş"],
+  aciklama:"Eğilme gerilmesi tarafsız eksende sıfırdır, en dış liflerde en büyüktür. Kesit modülü W büyüdükçe gerilme azalır; bu yüzden I profiller malzemeyi tarafsız eksenden uzağa toplar.",
+  formuller:[["σ = M · y / I = M / W","Eğilme gerilmesi"],["W = b · h² / 6","Dikdörtgen kesit modülü"]],
+  ornek:"L = 2 m basit kiriş, ortada 5 kN: M = PL/4 = 2.5 kN·m. 40×80 mm kesit: W = 42 667 mm³ → σ ≈ 58.6 MPa.",bagli:["mukavemet","gerilme"]},
+ {id:"burulma",kod:"KNU 14",ad:"Millerde Burulma",ozet:"Tork ileten millerde kayma gerilmesi.",ders:"mukavemet",tags:["Mukavemet","Mil"],
+  aciklama:"Burulma gerilmesi mil merkezinde sıfırdır, dış yüzeyde en büyüktür. Çap iki katına çıkınca gerilme sekizde birine iner.",
+  formuller:[["τ = T · r / J","Burulma gerilmesi"],["τ = 16 T / (π d³)","Dolu mil (J = πd⁴/32)"]],
+  ornek:"T = 200 N·m, d = 30 mm → τ = 16·200 000 / (π·27 000) ≈ 37.7 MPa.",bagli:["mukavemet","mil"]},
+ {id:"yorulma",kod:"KNU 15",ad:"Yorulma ve Goodman Doğrusu",ozet:"Tekrarlı yükler altında dayanım hesabı.",ders:"makine-el",tags:["Tasarım","Yorulma"],
+  aciklama:"Değişken yükte parça akma dayanımının altındaki gerilmelerde bile çatlayabilir. Çeliklerde deney numunesi sürekli dayanımı yaklaşık Se' ≈ 0.5·Su'dur; yüzey, boyut ve güvenilirlik faktörleriyle düşürülür.",
+  formuller:[["σa / Se + σm / Su = 1 / n","Goodman ölçütü"]],
+  ornek:"Su = 600, Se = 200 MPa, σa = 60, σm = 100 MPa → 0.30 + 0.17 = 0.47 → n ≈ 2.1.",bagli:["makine-el","mil","emniyet"]},
+ {id:"emniyet",kod:"KNU 16",ad:"Emniyet Katsayısı",ozet:"Dayanım ile işletme gerilmesi arasındaki pay.",ders:"makine-el",tags:["Tasarım"],
+  aciklama:"Yük, malzeme ve hesap belirsizliklerine karşı bırakılan paydır. Sünek malzemede akma, gevrek malzemede çekme dayanımı esas alınır. Katsayı 1'in altına düşerse hasar beklenir.",
+  formuller:[["n = σ_dayanım / σ_işletme","Emniyet katsayısı"]],
+  ornek:"S355 çelik parçada işletme gerilmesi 150 MPa → n = 355 / 150 ≈ 2.4.",bagli:["makine-el","gerilme"]},
+ {id:"isil-islem",kod:"KNU 17",ad:"Isıl İşlemler",ozet:"Çeliğin iç yapısını ısıtma ve soğutmayla değiştirme.",ders:"malzeme",tags:["Malzeme","Çelik"],
+  aciklama:"Tavlama yumuşatır ve gerilim giderir. Normalizasyon taneyi inceltir. Sertleştirmede çelik östenit bölgesine ısıtılıp su veya yağda hızla soğutulur (martenzit). Menevişleme sertleşmiş çeliğin gevrekliğini azaltır. Sementasyon yüzeye karbon yayındırır.",
+  formuller:[["Islah = Sertleştirme + Menevişleme","Dayanım ve tokluk dengesi"]],
+  ornek:"C45 mil yaklaşık 840 °C'den suda sertleştirilir, 550 °C'de menevişlenir; sertlik düşer, tokluk artar.",bagli:["malzeme","celik"]},
+ {id:"fourier",kod:"KNU 18",ad:"Isı İletimi ve Isıl Direnç",ozet:"Duvarlardan iletimle ısı geçişi ve direnç devreleri.",ders:"isi",tags:["Isı","İletim"],
+  aciklama:"Isı, sıcaklık farkı olan katı içinde molekül titreşimleriyle iletilir. Katmanlı duvarlarda her katman bir ısıl direnç gibi seri bağlanır; elektrik devresindeki gibi toplanır.",
+  formuller:[["q = k · A · ΔT / L","Düz duvar"],["R = L / (k · A)","Isıl direnç (K/W)"]],
+  ornek:"0.2 m tuğla duvar, k = 0.7 W/(m·K), A = 10 m², ΔT = 20 K → q = 700 W.",bagli:["isi"]},
+ {id:"lmtd",kod:"KNU 19",ad:"Logaritmik Ortalama Sıcaklık Farkı",ozet:"Isı eşanjörü hesabında ortalama sıcaklık farkı.",ders:"isi",tags:["Isı","Eşanjör"],
+  aciklama:"Eşanjör boyunca iki akışkan arasındaki sıcaklık farkı değişir. Doğru ortalama aritmetik değil logaritmiktir. Ters akışlı düzen aynı koşulda daha büyük ΔT_lm verir.",
+  formuller:[["ΔT_lm = (ΔT₁ − ΔT₂) / ln(ΔT₁ / ΔT₂)","LMTD"],["Q = U · A · ΔT_lm","Isı yükü"]],
+  ornek:"ΔT₁ = 60 K, ΔT₂ = 20 K → ΔT_lm = 40 / ln 3 ≈ 36.4 K.",bagli:["isi","esanjor"]},
+ {id:"otto",kod:"KNU 20",ad:"Otto Çevrimi",ozet:"Benzinli motorların ideal çevrimi.",ders:"motor",tags:["Motor","Termodinamik"],
+  aciklama:"İzentropik sıkıştırma, sabit hacimde ısı girişi, izentropik genişleme ve sabit hacimde ısı atımından oluşur. Verim yalnız sıkıştırma oranına bağlıdır; vuruntu (detonasyon) oranı sınırlar.",
+  formuller:[["η = 1 − 1 / r^(k−1)","Isıl verim"]],
+  ornek:"r = 10, k = 1.4 → η = 1 − 1/10^0.4 ≈ %60 (ideal; gerçek motorlarda %30–38).",bagli:["motor","piston","carnot"]},
+ {id:"cop",kod:"KNU 21",ad:"Soğutma Çevrimi ve COP",ozet:"Buhar sıkıştırmalı soğutmanın verimlilik ölçüsü.",ders:"sogutma",tags:["Soğutma","Termodinamik"],
+  aciklama:"Evaporatörde akışkan buharlaşarak ortamdan ısı çeker, kompresör basıncı yükseltir, kondenserde ısı dışarı atılır, kısılma vanası basıncı düşürür. COP 1'den büyük olabilir çünkü iş ısıyı üretmez, taşır.",
+  formuller:[["COP = Q_L / W","Soğutma"],["COP_Carnot = T_L / (T_H − T_L)","Teorik üst sınır (K)"]],
+  ornek:"Buzdolabı 300 W ısı çekip 100 W elektrik harcıyorsa COP = 3. T_L = 263 K, T_H = 308 K için Carnot COP ≈ 5.8.",bagli:["sogutma","kompresor","chiller"]},
+ {id:"pid",kod:"KNU 22",ad:"PID Kontrol",ozet:"Endüstride en yaygın geri beslemeli kontrol yöntemi.",ders:"kontrol",tags:["Kontrol"],
+  aciklama:"Oransal terim hataya hemen tepki verir, büyütülürse aşma artar. İntegral terim kalıcı hatayı sıfırlar. Türev terim hatanın değişim hızına bakarak aşmayı azaltır, gürültüye duyarlıdır.",
+  formuller:[["u(t) = K_p·e + K_i·∫e dt + K_d·de/dt","PID yasası"]],
+  ornek:"Fırın sıcaklığı yalnız P ile hedefin altında kalıyorsa I terimi eklenir; aşma fazlaysa K_p düşürülür ya da D eklenir.",bagli:["kontrol"]},
+ {id:"tolerans",kod:"KNU 23",ad:"Geçme ve Toleranslar",ozet:"ISO 286 delik-mil geçmeleri ve tolerans sınıfları.",ders:"teknik",tags:["Teknik resim","Standart"],
+  aciklama:"Delik toleransı büyük harf (H), mil toleransı küçük harfle (g, k, p) gösterilir; sayı kalite derecesidir (IT). Boşluklu (H7/g6), geçiş (H7/k6) ve sıkı (H7/p6) geçmeler vardır.",
+  formuller:[["Ø25 H7 → 25.000 … 25.021 mm","IT7, 18–30 mm aralığı için 21 µm"]],
+  ornek:"Dönen milli rulmanlarda iç bilezik mile çoğunlukla k6, dış bilezik yuvaya H7 ile oturtulur.",bagli:["teknik","rulman","olcu"]},
+ {id:"kesme",kod:"KNU 24",ad:"Kesme Hızı ve Devir",ozet:"Talaşlı imalatta doğru devrin seçimi.",ders:"uretim",tags:["İmalat","Talaşlı"],
+  aciklama:"Kesme hızı takım ve iş parçası malzemesine göre katalogdan seçilir, devir ondan hesaplanır. Fazla hız takımı aşındırır, düşük hız verimi düşürür ve yüzeyi bozar.",
+  formuller:[["n = 1000 · V_c / (π · D)","Devir (d/dk)"]],
+  ornek:"HSS takımla yumuşak çelik, V_c ≈ 30 m/dk, D = 40 mm → n ≈ 239 d/dk.",bagli:["uretim","torna","freze"]},
+ {id:"kaynak-yontem",kod:"KNU 25",ad:"Kaynak Yöntemleri",ozet:"Metalleri ergiterek birleştirme yöntemleri.",ders:"uretim",tags:["İmalat","Birleştirme"],
+  aciklama:"Örtülü elektrot (MMA) sahada pratiktir. MIG/MAG tel beslemeli ve hızlıdır. TIG ince sac, paslanmaz ve alüminyumda temiz dikiş verir. Punta kaynağı ince sacları noktasal birleştirir.",
+  formuller:[["a ≤ 0.7 · t_min","Köşe kaynağında dikiş kalınlığı için sık kullanılan üst sınır"]],
+  ornek:"10 mm sacların köşe kaynağında dikiş kalınlığı genelde 4–7 mm seçilir.",bagli:["uretim","kaynak-mak"]}
+],
+ekipmanlar: [
+ {id:"piston",kod:"EKP 11",ad:"Pistonlu Motor",ozet:"Yanma enerjisini krank-biyel ile dönme hareketine çevirir.",tur:"Güç üretimi",tags:["Motor","Enerji"],
+  calisma:"Yakıt-hava karışımı silindirde yanar, genişleyen gaz pistonu iter. Biyel ve krank mili doğrusal hareketi dönmeye çevirir.",
+  tipler:["Benzinli (Otto)","Dizel","Dört zamanlı","İki zamanlı","Sıra, V ve boxer düzen"],kullanim:["Otomobil","Jeneratör","İş makineleri","Gemi"],
+  spec:[["Silindir hacmi","V_s = (π/4) · D² · S"],["Sıkıştırma oranı","Benzinli 9–12, dizel 15–22"],["Güç","P = T · ω"]],bagli:["motor","otto","mekanizma"],sekil:null},
+ {id:"reduktor",kod:"EKP 12",ad:"Redüktör",ozet:"Devri düşürüp torku artıran dişli kutusu.",tur:"Güç aktarımı",tags:["Güç aktarımı","Redüksiyon"],
+  calisma:"Bir ya da birkaç dişli kademesi motor devrini düşürür, torku aynı oranda (kayıplar hariç) artırır.",
+  tipler:["Helisel","Konik-helisel","Sonsuz vidalı","Planet","Paralel milli"],kullanim:["Konveyör","Vinç","Karıştırıcı","Asansör"],
+  spec:[["Çevrim oranı","i = n_giriş / n_çıkış"],["Çıkış torku","T₂ ≈ T₁ · i · η"],["Sonsuz vida verimi","%40–90"]],bagli:["disli","makine-el","konveyor"],sekil:null},
+ {id:"civata-ekp",kod:"EKP 13",ad:"Cıvata ve Somun",ozet:"Sökülebilir bağlantının temel elemanı.",tur:"Bağlantı elemanı",tags:["Bağlantı","Standart"],
+  calisma:"Vida dişinin eğik düzlem etkisiyle cıvatada ön gerilme oluşur ve parçalar birbirine bastırılır.",
+  tipler:["Altı köşe başlı (ISO 4017)","İmbus (ISO 4762)","Saplama","Ankraj","Kendinden kilitli somun"],kullanim:["Makine montajı","Çelik konstrüksiyon","Flanş bağlantıları"],
+  spec:[["Kalite sınıfı","4.6, 8.8, 10.9, 12.9"],["Metrik diş","M10 × 1.5"],["Sıkma momenti (yaklaşık)","T ≈ 0.2 · F · d"]],bagli:["civata","makine-el"],sekil:null},
+ {id:"mil",kod:"EKP 14",ad:"Mil ve Aks",ozet:"Dönen elemanları taşıyan ve tork ileten parça.",tur:"Güç aktarımı",tags:["Güç aktarımı","Tasarım"],
+  calisma:"Mil dönerek tork iletir; üzerinde dişli, kasnak, rulman taşır. Aks yalnız yük taşır, tork iletmez.",
+  tipler:["Düz mil","Kademeli mil","Kamalı ve kanallı mil","Kardan mili","Aks"],kullanim:["Redüktör","Pompa","Taşıt aktarma organları"],
+  spec:[["Burulma gerilmesi","τ = 16T / (πd³)"],["Kama","DIN 6885"],["Tasarım ölçütleri","Dayanım, yorulma, sehim, kritik devir"]],bagli:["burulma","yorulma","rulman","kaplin"],sekil:null},
+ {id:"yay",kod:"EKP 15",ad:"Yay",ozet:"Elastik şekil değiştirerek enerji depolayan eleman.",tur:"Makine elemanı",tags:["Tasarım","Enerji"],
+  calisma:"Yük altında elastik olarak şekil değiştirir, yük kalkınca eski haline dönerek enerjiyi geri verir.",
+  tipler:["Basma helis yayı","Çekme yayı","Burulma yayı","Yaprak yay","Disk yay","Gazlı yay"],kullanim:["Süspansiyon","Motor supapları","Kalıplar","Emniyet ventilleri"],
+  spec:[["Hooke yasası","F = k · x"],["Helis yay katsayısı","k = G d⁴ / (8 D³ n)"],["Yay çeliği","DIN EN 10270"]],bagli:["makine-el","titresim"],sekil:null},
+ {id:"kavrama",kod:"EKP 16",ad:"Kavrama (Debriyaj)",ozet:"Çalışırken iki mili birleştirip ayıran eleman.",tur:"Güç aktarımı",tags:["Güç aktarımı"],
+  calisma:"Sürtünme yüzeyleri yay kuvvetiyle bastırılınca tork iletilir, kuvvet kaldırılınca miller ayrılır.",
+  tipler:["Tek diskli kuru","Çok diskli yağlı","Elektromanyetik","Merkezkaç","Tek yönlü"],kullanim:["Otomobil","Motosiklet","Takım tezgâhları"],
+  spec:[["İletilen tork","T = μ · F · R_ort · z"],["z","Sürtünen yüzey sayısı"]],bagli:["kaplin","fren"],sekil:null},
+ {id:"fren",kod:"EKP 17",ad:"Fren",ozet:"Hareket enerjisini ısıya çevirerek yavaşlatan eleman.",tur:"Güvenlik",tags:["Güvenlik","Sürtünme"],
+  calisma:"Balata ile disk ya da kampana arasındaki sürtünme kinetik enerjiyi ısıya çevirir.",
+  tipler:["Disk fren","Kampanalı fren","Bantlı fren","Elektromanyetik fren","Rejeneratif fren"],kullanim:["Taşıtlar","Vinçler","Asansörler","Rüzgâr türbinleri"],
+  spec:[["Disk fren torku","T = 2 · μ · F · r"],["Harcanan enerji","E = ½ m v²"]],bagli:["kavrama","vinc"],sekil:null},
+ {id:"zincir",kod:"EKP 18",ad:"Zincir ve Zincir Dişli",ozet:"Kaymasız ve uzun mesafeli güç aktarımı.",tur:"Güç aktarımı",tags:["Güç aktarımı"],
+  calisma:"Makaralı zincir dişli çarkların dişlerine geçerek kaymadan güç iletir.",
+  tipler:["Makaralı zincir","Burç zincir","Sessiz (dişli) zincir","Konveyör zinciri"],kullanim:["Bisiklet ve motosiklet","Tarım makineleri","Konveyörler"],
+  spec:[["Hatve","Ör. 12.7 mm (1/2\")"],["Çevrim oranı","i = z₂ / z₁"],["Zincir hızı","v = z · p · n / 60 000 (m/s)"]],bagli:["kayis","konveyor"],sekil:null},
+ {id:"torna",kod:"EKP 19",ad:"Torna Tezgâhı",ozet:"Dönen iş parçasından talaş kaldıran tezgâh.",tur:"Takım tezgâhı",tags:["İmalat","Talaşlı"],
+  calisma:"İş parçası aynada döner, kesici takım eksen boyunca ve radyal yönde ilerleyerek talaş kaldırır.",
+  tipler:["Üniversal torna","CNC torna","Revolver torna","Otomat torna","Dik torna"],kullanim:["Mil","Burç","Flanş","Vida açma"],
+  spec:[["Kesme hızı","V_c = π D n / 1000"],["Ana ölçüler","Punta arası, salınım çapı"],["Takım","HSS, karbür, seramik"]],bagli:["kesme","uretim"],sekil:null},
+ {id:"freze",kod:"EKP 20",ad:"Freze Tezgâhı",ozet:"Dönen çok ağızlı takımla yüzey ve kanal işleme.",tur:"Takım tezgâhı",tags:["İmalat","Talaşlı"],
+  calisma:"Çok ağızlı takım döner, iş parçası tabla ile ilerler; düzlem, kanal, cep ve dişli işlenir.",
+  tipler:["Dik freze","Yatay freze","Üniversal freze","CNC işleme merkezi (3–5 eksen)"],kullanim:["Kalıp","Gövde parçaları","Dişli açma"],
+  spec:[["Tabla ilerlemesi","v_f = f_z · z · n"],["Eksen sayısı","3, 4 veya 5"]],bagli:["kesme","uretim"],sekil:null},
+ {id:"kaynak-mak",kod:"EKP 21",ad:"Kaynak Makinesi",ozet:"Elektrik arkıyla metali ergiterek birleştiren makine.",tur:"İmalat ekipmanı",tags:["İmalat","Birleştirme"],
+  calisma:"Elektrot ile iş parçası arasında oluşan ark metali ergitir; ergiyik soğuyunca dikiş oluşur.",
+  tipler:["Örtülü elektrot (MMA)","MIG/MAG","TIG","Plazma kesme","Punta kaynağı"],kullanim:["Çelik konstrüksiyon","Basınçlı kaplar","Otomotiv"],
+  spec:[["Kaynak akımı","10–400 A"],["Çalışma oranı","Ör. %60 (10 dakikada 6 dakika)"],["Koruyucu gaz","Ar, CO₂, karışım"]],bagli:["kaynak-yontem","uretim"],sekil:null},
+ {id:"yonvalf",kod:"EKP 22",ad:"Yön Kontrol Valfi",ozet:"Hidrolik ve pnömatik devrede akışın yönünü belirler.",tur:"Akış kontrolü",tags:["Hidrolik","Valf"],
+  calisma:"Sürgünün konumu değişince basınç hattı silindirin ya da motorun bir tarafına, dönüş hattı diğer tarafına bağlanır.",
+  tipler:["2/2, 3/2, 4/2, 4/3, 5/2","Elle kumandalı","Solenoid kumandalı","Pilot kumandalı"],kullanim:["Pres","İş makinesi","Otomasyon hatları"],
+  spec:[["Gösterim","Yol sayısı / konum sayısı"],["4/3 orta konum","Kapalı, tandem, yüzer"],["Sembol","ISO 1219"]],bagli:["hidrolik","silindir","pascal"],sekil:null},
+ {id:"kazan",kod:"EKP 23",ad:"Buhar Kazanı",ozet:"Yakıtın ısısıyla su buharı üreten basınçlı kap.",tur:"Isıl ekipman",tags:["Isı","Enerji"],
+  calisma:"Yanma gazlarının ısısı boru çeperlerinden suya geçer, su buharlaşır. Buhar türbine ya da prosese gönderilir.",
+  tipler:["Alev borulu","Su borulu","Elektrikli","Atık ısı kazanı"],kullanim:["Termik santral","Tekstil","Gıda","Bölgesel ısıtma"],
+  spec:[["Buhar kapasitesi","t/h"],["İşletme basıncı","bar"],["Verim","%85–95"]],bagli:["termo","turbin","isi"],sekil:null},
+ {id:"chiller",kod:"EKP 24",ad:"Chiller (Soğutma Grubu)",ozet:"Binalar ve prosesler için soğuk su üreten makine.",tur:"Isıl ekipman",tags:["Soğutma","HVAC"],
+  calisma:"Buhar sıkıştırmalı çevrimle evaporatörde suyu soğutur; soğuk su pompalarla fan-coil ve klima santrallerine dağıtılır.",
+  tipler:["Hava soğutmalı","Su soğutmalı","Vidalı","Santrifüj","Absorbsiyonlu"],kullanim:["AVM ve hastane","Veri merkezi","Plastik enjeksiyon"],
+  spec:[["Kapasite","kW"],["Verimlilik","COP / EER"],["Soğuk su","Tipik 7/12 °C"]],bagli:["cop","sogutma","kompresor","kule"],sekil:null},
+ {id:"fan",kod:"EKP 25",ad:"Fan",ozet:"Havaya hareket veren dönen kanatlı makine.",tur:"Akışkan makinesi",tags:["Akışkan","HVAC"],
+  calisma:"Dönen kanatlar havaya düşük basınç farkıyla debi kazandırır.",
+  tipler:["Aksiyal","Radyal (santrifüj)","Çapraz akışlı"],kullanim:["Havalandırma","Soğutma kulesi","Kazan yakma havası"],
+  spec:[["Debi","m³/h"],["Statik basınç","Pa"],["Mil gücü","P = Q · Δp / η"]],bagli:["akiskan","kule"],sekil:null},
+ {id:"kule",kod:"EKP 26",ad:"Soğutma Kulesi",ozet:"Suyu hava ile buharlaştırarak soğutan yapı.",tur:"Isıl ekipman",tags:["Isı","Soğutma"],
+  calisma:"Sıcak su dolgu malzemesine püskürtülür; hava ile temas eden suyun bir kısmı buharlaşır ve kalan su soğur.",
+  tipler:["Açık devre","Kapalı devre","Doğal çekişli","Cebri çekişli"],kullanim:["Santral kondenseri","Chiller kondenseri","Proses soğutma"],
+  spec:[["Yaklaşım","Çıkış suyu − yaş termometre, tipik 3–5 K"],["Menzil","Giriş − çıkış su sıcaklığı"]],bagli:["chiller","fan","isi"],sekil:null},
+ {id:"vinc",kod:"EKP 27",ad:"Vinç ve Caraskal",ozet:"Halat veya zincirle yük kaldıran ekipman.",tur:"Kaldırma ekipmanı",tags:["Kaldırma","Güvenlik"],
+  calisma:"Motor ve redüktör tamburu döndürür; halat ve makara sistemi yükü kaldırır, fren yükü tutar.",
+  tipler:["Gezer köprü vinç","Kule vinç","Mobil vinç","Elektrikli caraskal","Zincirli el caraskalı"],kullanim:["Fabrika","Şantiye","Liman"],
+  spec:[["Kapasite","Ton (SWL)"],["Makara sistemi","F = W / n (kayıpsız)"],["Halat emniyet katsayısı","Kaldırmada genelde 5 ve üzeri"]],bagli:["reduktor","fren"],sekil:null},
+ {id:"konveyor",kod:"EKP 28",ad:"Konveyör",ozet:"Malzemeyi sürekli taşıyan sistem.",tur:"Taşıma ekipmanı",tags:["Taşıma","Üretim"],
+  calisma:"Bant, rulo ya da zincir motor-redüktör ile tahrik edilir ve malzemeyi bir noktadan diğerine sürekli taşır.",
+  tipler:["Bantlı","Rulolu","Zincirli","Helezon","Kovalı elevatör"],kullanim:["Maden","Gıda","Lojistik merkezleri"],
+  spec:[["Kapasite","Q = 3.6 · A · v · ρ (t/h)"],["Birimler","A m², v m/s, ρ kg/m³"]],bagli:["reduktor","zincir"],sekil:null},
+ {id:"olcu",kod:"EKP 29",ad:"Kumpas ve Mikrometre",ozet:"Atölyenin temel hassas ölçme aletleri.",tur:"Ölçme aleti",tags:["Ölçme","Kalite"],
+  calisma:"Kumpas verniyer ölçeğiyle, mikrometre hassas vida ile ölçer; mikrometrede bir tam tur 0.5 mm ilerletir.",
+  tipler:["Verniyerli kumpas","Dijital kumpas","Dış mikrometre","İç mikrometre","Komparatör saat"],kullanim:["Kalite kontrol","Talaşlı imalat","Montaj"],
+  spec:[["Kumpas çözünürlüğü","0.02 mm (dijitalde 0.01)"],["Mikrometre çözünürlüğü","0.01 mm (dijitalde 0.001)"],["Mikrometre vida hatvesi","0.5 mm"]],bagli:["tolerans","teknik"],sekil:null}
+],
+quiz: [
+ {s:"Otto çevriminde sıkıştırma oranı artarsa ısıl verim ne olur?",o:["Artar","Azalır","Değişmez","Sıfırlanır"],d:0,a:"η = 1 − 1/r^(k−1); r büyüdükçe verim artar."},
+ {s:"Dört çubuk mekanizmasının serbestlik derecesi kaçtır?",o:["0","1","2","3"],d:1,a:"F = 3(4 − 1) − 2·4 = 1."},
+ {s:"Küçük piston 1 cm², büyük piston 50 cm². Küçüğe 20 N uygulanırsa büyükteki kuvvet?",o:["20 N","100 N","1000 N","2500 N"],d:2,a:"20 × 50 / 1 = 1000 N (Pascal prensibi)."},
+ {s:"Dolu milde çap iki katına çıkarsa burulma gerilmesi?",o:["Yarıya iner","1/4'e iner","1/8'e iner","Değişmez"],d:2,a:"τ = 16T/(πd³); d³ sekiz kat artar."},
+ {s:"İki ucu ankastre çubuğun etkin boy katsayısı K kaçtır?",o:["2","1","0.7","0.5"],d:3,a:"İki ucu ankastre: K = 0.5."},
+ {s:"Ø25 H7/g6 hangi geçmedir?",o:["Boşluklu","Sıkı","Geçiş","Pres"],d:0,a:"g mili her zaman H deliğinden küçüktür."},
+ {s:"Fourier yasasındaki k neyi ifade eder?",o:["Taşınım katsayısı","Isıl iletkenlik","Yayıcılık","Özgül ısı"],d:1,a:"k: W/(m·K) birimli ısıl iletkenlik."},
+ {s:"COP'u 3 olan soğutucu 100 W harcarsa ne kadar ısı çeker?",o:["33 W","100 W","300 W","400 W"],d:2,a:"Q_L = COP · W = 300 W."},
+ {s:"Islah işlemi hangi iki işlemden oluşur?",o:["Tavlama + normalizasyon","Sertleştirme + menevişleme","Sementasyon + nitrürleme","Döküm + dövme"],d:1,a:"Önce sertleştirme, ardından menevişleme."},
+ {s:"PID'de kalıcı durum hatasını sıfırlayan terim hangisi?",o:["P","I","D","Hiçbiri"],d:1,a:"İntegral terim biriken hatayı ortadan kaldırır."},
+ {s:"Çeliğin elastisite modülü yaklaşık kaçtır?",o:["70 GPa","110 GPa","210 GPa","400 GPa"],d:2,a:"Çelikte E ≈ 200–210 GPa; alüminyumda ≈ 70 GPa."},
+ {s:"Laminer boru akışında Darcy sürtünme katsayısı?",o:["f = 64/Re","f = 0.316/Re^0.25","f = Re/64","f = 16/Re"],d:0,a:"Laminerde f = 64/Re. 16/Re Fanning katsayısıdır."},
+ {s:"Basit kirişin ortasına P yükü gelirse en büyük moment?",o:["PL","PL/2","PL/4","PL/8"],d:2,a:"M_maks = P·L/4."},
+ {s:"Makaralı rulman ömür denklemindeki üs kaçtır?",o:["3","10/3","2","1/3"],d:1,a:"Bilyalılarda 3, makaralılarda 10/3."},
+ {s:"1 bar kaç kPa'dır?",o:["10","100","1000","101.3"],d:1,a:"1 bar = 100 kPa = 10⁵ Pa."},
+ {s:"Hidrolik silindirin hızı neyle bulunur?",o:["Basınç / alan","Debi / alan","Kuvvet × alan","Basınç × debi"],d:1,a:"v = Q / A."},
+ {s:"4/3 yön valfinde '3' neyi gösterir?",o:["Yol sayısı","Konum sayısı","Basınç (bar)","Bobin sayısı"],d:1,a:"4 yol, 3 konum."},
+ {s:"Mohr çemberinin yarıçapı neye eşittir?",o:["Ortalama gerilme","En büyük kayma gerilmesi","Asal gerilme σ₁","Akma dayanımı"],d:1,a:"R = τ_maks."},
+ {s:"Tornada D = 50 mm, n = 500 d/dk ise kesme hızı?",o:["25 m/dk","78.5 m/dk","157 m/dk","250 m/dk"],d:1,a:"V_c = π·50·500/1000 ≈ 78.5 m/dk."},
+ {s:"Standart verniyerli kumpasın çözünürlüğü?",o:["1 mm","0.1 mm","0.02 mm","0.001 mm"],d:2,a:"1/50 verniyer 0.02 mm okur."},
+ {s:"ΔT₁ = 60 K, ΔT₂ = 20 K için LMTD yaklaşık kaçtır?",o:["40 K","36.4 K","30 K","20 K"],d:1,a:"(60 − 20) / ln 3 ≈ 36.4 K."},
+ {s:"Kaplin ne işe yarar?",o:["Mili yataklar","İki mili birleştirip tork iletir","Devri düşürür","Sızdırmazlık sağlar"],d:1,a:"Kaplin iki mil ucunu bağlar."},
+ {s:"Dişli çarklarda standart kavrama açısı?",o:["14.5°","20°","25°","30°"],d:1,a:"Günümüz standardı 20°."},
+ {s:"Pompanın hidrolik gücü hangi ifadeyle bulunur?",o:["P = ρgQH","P = F·A","P = ½mv²","P = σ·ε"],d:0,a:"ρ yoğunluk, Q debi, H basma yüksekliği."},
+ {s:"Yüzeye karbon yayındıran sertleştirme yöntemi?",o:["Menevişleme","Sementasyon","Normalizasyon","Tavlama"],d:1,a:"Sementasyonda yüzey karbonca zenginleşir, sonra sertleştirilir."},
+ {s:"Tek serbestlikli sistemin doğal frekansı?",o:["√(m/k)","√(k/m)","k·m","k/m"],d:1,a:"ω_n = √(k/m)."},
+ {s:"Termodinamiğin 1. yasası neyi ifade eder?",o:["Entropi artar","Enerji korunur","Mutlak sıfıra ulaşılamaz","Isı soğuktan sıcağa akar"],d:1,a:"Q − W = ΔU."},
+ {s:"Grashof şartı (s + l ≤ p + q) sağlanırsa ne olur?",o:["Mekanizma kilitlenir","En az bir uzuv tam tur döner","Serbestlik derecesi 2 olur","Hiçbir uzuv dönemez"],d:1,a:"s en kısa, l en uzun uzuvdur."},
+ {s:"Soğutma kulesinde suyu asıl soğutan nedir?",o:["Işınım","Suyun bir kısmının buharlaşması","Soğutucu akışkan","Kompresör"],d:1,a:"Buharlaşma gizli ısısı suyu soğutur."},
+ {s:"Helis yayda tel çapı iki katına çıkarsa yay katsayısı?",o:["2 kat","4 kat","8 kat","16 kat"],d:3,a:"k = G d⁴ / (8 D³ n)."},
+ {s:"Zincir ve triger kayışının V kayışa üstünlüğü?",o:["Daha sessizdir","Kaymasız iletim","Hiç bakım gerektirmez","Daha ucuzdur"],d:1,a:"Diş kavraması kaymayı önler."},
+ {s:"Emniyet katsayısı 1'in altına düşerse?",o:["Parça daha güvenlidir","Gerilme dayanımı aşar, hasar beklenir","Bir şey değişmez","Ağırlık azalır"],d:1,a:"n = dayanım / gerilme < 1."},
+ {s:"Dizel motorda yakıt nasıl tutuşur?",o:["Buji kıvılcımıyla","Sıkıştırmayla ısınan havada","Elektrik arkıyla","Kızdırma bujisi her çevrimde"],d:1,a:"Yüksek sıkıştırma havayı yakıtın tutuşma sıcaklığının üstüne çıkarır."}
+]};
+for (const k in EK) DATA[k].push(...EK[k]);
+
+const QN=10; /* her testte rastgele 10 soru */
 const ALL=[...DATA.dersler.map(x=>({...x,_t:"dersler"})),...DATA.konular.map(x=>({...x,_t:"konular"})),...DATA.ekipmanlar.map(x=>({...x,_t:"ekipmanlar"}))];
 const byId=Object.fromEntries(ALL.map(x=>[x.id,x]));
 const LABEL={dersler:"Ders",konular:"Konu",ekipmanlar:"Ekipman"};
@@ -312,12 +540,14 @@ const BADGES=[
  {id:"ilk",ad:"İlk Adım",d:"1 kayıt öğren",c:"var(--teal)",m:"1",v:()=>P.learned.length,h:1},
  {id:"merakli",ad:"Meraklı",d:"5 kayıt öğren",c:"var(--sky)",m:"5",v:()=>P.learned.length,h:5},
  {id:"cirak",ad:"Çırak",d:"15 kayıt öğren",c:"var(--amber)",m:"15",v:()=>P.learned.length,h:15},
+ {id:"usta",ad:"Usta",d:"40 kayıt öğren",c:"var(--teal)",m:"40",v:()=>P.learned.length,h:40},
+ {id:"kutuphane",ad:"Baş Mühendis",d:"Tüm kayıtları öğren",c:"var(--accent)",m:"ALL",v:()=>P.learned.filter(i=>byId[i]).length,h:ALL.length},
  {id:"ders",ad:"Müfredat",d:"Tüm dersleri öğren",c:"var(--sky)",m:"DRS",v:()=>DATA.dersler.filter(x=>P.learned.includes(x.id)).length,h:DATA.dersler.length},
  {id:"ekip",ad:"Saha Ustası",d:"Tüm ekipmanları öğren",c:"var(--accent)",m:"EKP",v:()=>DATA.ekipmanlar.filter(x=>P.learned.includes(x.id)).length,h:DATA.ekipmanlar.length},
  {id:"konu",ad:"Formül Avcısı",d:"Tüm konuları öğren",c:"var(--teal)",m:"KNU",v:()=>DATA.konular.filter(x=>P.learned.includes(x.id)).length,h:DATA.konular.length},
  {id:"seri3",ad:"Isınma",d:"3 gün üst üste gir",c:"var(--amber)",m:"3G",v:streak,h:3},
  {id:"seri7",ad:"Tam Devir",d:"7 gün üst üste gir",c:"var(--accent)",m:"7G",v:streak,h:7},
- {id:"test",ad:"Tam Puan",d:"Testi hatasız bitir",c:"var(--ok)",m:"%",v:()=>P.best,h:DATA.quiz.length},
+ {id:"test",ad:"Tam Puan",d:"Testi hatasız bitir",c:"var(--ok)",m:"%",v:()=>P.best,h:QN},
  {id:"xp",ad:"100 XP",d:"100 deneyim puanı topla",c:"var(--sky)",m:"XP",v:()=>P.xp,h:100}
 ];
 function checkBadges(){
@@ -351,7 +581,7 @@ function renderPano(){
   <div class="stack">
    <div class="card hero"><div class="ring">${ring(pct)}<div class="v"><div><b>${n}</b><span>/ ${T} kayıt</span></div></div></div>
     <div><div class="label">Öğrenme ilerlemesi</div><h2>%${Math.round(pct*100)} tamamlandı</h2><p>${msg}</p></div></div>
-   <div class="tiles"><div class="tile t1"><b>${P.xp}</b><span>XP · Seviye ${level()}</span></div><div class="tile t2"><b>${P.badges.length}</b><span>/ ${BADGES.length} rozet</span></div><div class="tile t3"><b>${P.best}/${DATA.quiz.length}</b><span>en iyi test</span></div></div>
+   <div class="tiles"><div class="tile t1"><b>${P.xp}</b><span>XP · Seviye ${level()}</span></div><div class="tile t2"><b>${P.badges.length}</b><span>/ ${BADGES.length} rozet</span></div><div class="tile t3"><b>${P.best}/${QN}</b><span>en iyi test</span></div></div>
    <div class="card daily"><div class="label">Günün kartı · ${LABEL[daily._t]}</div><h3>${esc(daily.ad)}</h3><p>${esc(daily.ozet)}</p>
     <div class="row2"><button class="btn ghost" data-open="${daily.id}">İncele</button><button class="btn ${dd?"done":""}" data-learn="${daily.id}">${dd?"Öğrenildi ✓":"Öğrendim +10 XP"}</button></div></div>
    ${next?`<div class="card nextbadge"><div class="b">${badgeMedal(next,true)}</div><div style="min-width:0;flex:1"><div class="label">Sıradaki rozet</div><div style="font-weight:700;font-size:17px">${next.ad}</div><div style="color:var(--muted);font-size:14px">${next.d} · ${Math.min(next.v(),next.h)}/${next.h}</div><div class="bar" style="margin-top:8px"><i style="width:${Math.min(100,next.v()/next.h*100)}%;background:var(--accent)"></i></div></div></div>`:""}
@@ -362,7 +592,8 @@ function renderPano(){
 function badgeMedal(b,force){const on=P.badges.includes(b.id);return `<div class="badge ${on||force?"":"off"}" style="background:none;padding:0"><div class="m" style="background:${b.c}">${b.m}</div></div>`}
 function renderRozet(){
   app.innerHTML=`<div class="top"><div><div class="hi">${P.badges.length} / ${BADGES.length} kazanıldı</div><h1>Rozetler</h1></div><span class="chip">Seviye ${level()}</span></div>
-  <div class="badges">${BADGES.map(b=>{const on=P.badges.includes(b.id),v=Math.min(b.v(),b.h);return `<div class="badge ${on?"":"off"}"><div class="m" style="background:${b.c}">${b.m}</div><div class="t">${b.ad}</div><div class="d">${b.d}</div>${on?"":`<div class="pb"><i style="width:${v/b.h*100}%"></i></div>`}</div>`}).join("")}</div>`;
+  <div class="badges">${BADGES.map(b=>{const on=P.badges.includes(b.id),v=Math.min(b.v(),b.h);return `<div class="badge ${on?"":"off"}"><div class="m" style="background:${b.c}">${b.m}</div><div class="t">${b.ad}</div><div class="d">${b.d}</div>${on?"":`<div class="pb"><i style="width:${v/b.h*100}%"></i></div>`}</div>`}).join("")}</div>
+  <p class="hakkinda">İlerlemen yalnız bu cihazda saklanır.<br><a href="https://sersoz.com/mecalib-gizlilik.html" target="_blank" rel="noopener">Gizlilik</a> · <a href="https://sersoz.com/mecalib-destek.html" target="_blank" rel="noopener">Destek</a> · © Sercan Sözer</p>`;
 }
 function item(x){const on=P.learned.includes(x.id);
   const sub=x._t==="dersler"?x.kod+" · "+x.yariyil:x._t==="konular"?(byId[x.ders]?.ad||""):x.tur;
@@ -396,7 +627,9 @@ function renderDetail(x){
   <button class="btn ${on?"done":""}" data-learn="${x.id}">${on?"Öğrenildi ✓":"Öğrendim +10 XP"}</button></div>`;
   window.scrollTo({top:0});
 }
-let qi=0,score=0,answered=false;
+let qi=0,score=0,answered=false,QS=[];
+function yeniTest(){QS=[...DATA.quiz].sort(()=>Math.random()-.5).slice(0,QN);qi=0;score=0}
+yeniTest();
 const CALC={
  gerilme:{in:[["F","Kuvvet F (N)",20000],["A","Kesit alanı A (mm²)",100]],f:v=>`σ = ${(v.F/v.A).toFixed(1)} MPa`},
  rulman:{in:[["C","Dinamik yük sayısı C (kN)",14],["P","Eşdeğer yük P (kN)",2],["n","Devir n (d/dk)",1500]],f:v=>{const L=Math.pow(v.C/v.P,3);return `L₁₀ = ${L.toFixed(0)} milyon devir ≈ ${(L*1e6/(60*v.n)).toFixed(0)} saat`}},
@@ -404,16 +637,16 @@ const CALC={
  re:{in:[["V","Hız V (m/s)",1.5],["D","Çap D (m)",0.05],["nu","Kinematik viskozite ν (m²/s)",1e-6]],f:v=>{const r=v.V*v.D/v.nu;return `Re = ${r.toFixed(0)} · ${r<2300?"laminer":r<4000?"geçiş":"türbülanslı"}`}}
 };
 function renderTest(){
-  app.innerHTML=`<div class="top"><div><div class="hi">Doğru cevap başına +5 XP</div><h1>Test</h1></div><span class="chip">En iyi ${P.best}/${DATA.quiz.length}</span></div>
+  app.innerHTML=`<div class="top"><div><div class="hi">Doğru cevap başına +5 XP</div><h1>Test</h1></div><span class="chip">En iyi ${P.best}/${QN}</span></div>
   <div class="stack"><div class="card" id="quiz"></div>
   <div class="sec-h"><h3>Hızlı hesaplar</h3></div>
   <div class="card"><div class="field"><label for="calc">Hesap</label><select id="calc"><option value="gerilme">Normal gerilme σ = F / A</option><option value="rulman">Rulman ömrü L₁₀ = (C/P)³</option><option value="guc">Mil gücü P = T · ω</option><option value="re">Reynolds sayısı</option></select></div><div id="calcIn"></div><div class="result" id="calcOut"></div></div></div>`;
   renderQuiz();renderCalc();
 }
 function renderQuiz(){
-  const el=document.getElementById("quiz");if(!el)return;const N=DATA.quiz.length;
-  if(qi>=N){el.innerHTML=`<div class="label">Sonuç</div><h2 style="font-size:30px;margin:6px 0">${score}/${N} doğru</h2><p class="exp">${score===N?"Hatasız! Tam Puan rozetini kazandın.":"Yanlışları ilgili kayıtlardan tekrar edip yeniden dene."}</p><button class="btn" data-restart>Yeniden başla</button>`;return}
-  const q=DATA.quiz[qi];answered=false;
+  const el=document.getElementById("quiz");if(!el)return;const N=QS.length;
+  if(qi>=N){el.innerHTML=`<div class="label">Sonuç</div><h2 style="font-size:30px;margin:6px 0">${score}/${N} doğru</h2><p class="exp">${score===N?"Hatasız! Tam Puan rozetini kazandın.":"Yanlışları ilgili kayıtlardan tekrar et. Her test ${DATA.quiz.length} soruluk havuzdan yeni sorular seçer."}</p><button class="btn" data-restart>Yeniden başla</button>`;return}
+  const q=QS[qi];answered=false;
   el.innerHTML=`<div class="label">Soru ${qi+1} / ${N} · ${score} doğru</div><div class="qbar"><i style="width:${qi/N*100}%"></i></div><p class="q">${esc(q.s)}</p>
   <div class="opts">${q.o.map((o,i)=>`<button data-ans="${i}">${esc(o)}</button>`).join("")}</div><p class="exp" id="qexp" hidden></p><button class="btn" id="qnext" hidden>Sonraki soru</button>`;
 }
@@ -433,13 +666,13 @@ document.addEventListener("click",e=>{
   if(t.dataset.fav){const id=t.dataset.fav;P.favs=P.favs.includes(id)?P.favs.filter(i=>i!==id):[...P.favs,id];save();return render()}
   if(t.dataset.seg){S.seg=t.dataset.seg;return render()}
   if(t.hasAttribute("data-back")){S.detail=null;return render()}
-  if(t.dataset.ans!==undefined&&!answered){answered=true;const q=DATA.quiz[qi],i=+t.dataset.ans;
+  if(t.dataset.ans!==undefined&&!answered){answered=true;const q=QS[qi],i=+t.dataset.ans;
     document.querySelectorAll("[data-ans]").forEach(b=>{if(+b.dataset.ans===q.d)b.classList.add("ok");else if(b===t)b.classList.add("no")});
     if(i===q.d){score++;P.xp+=5;save();toast("Doğru! +5 XP")}
     const ex=document.getElementById("qexp");ex.textContent=q.a;ex.hidden=false;const nb=document.getElementById("qnext");nb.hidden=false;
-    if(qi===DATA.quiz.length-1){nb.textContent="Sonucu gör"}checkBadges();return}
-  if(t.id==="qnext"){qi++;if(qi>=DATA.quiz.length&&score>P.best){P.best=score;save();checkBadges()}return renderQuiz()}
-  if(t.hasAttribute("data-restart")){qi=0;score=0;return renderQuiz()}
+    if(qi===QS.length-1){nb.textContent="Sonucu gör"}checkBadges();return}
+  if(t.id==="qnext"){qi++;if(qi>=QS.length&&score>P.best){P.best=score;save();checkBadges()}return renderQuiz()}
+  if(t.hasAttribute("data-restart")){yeniTest();return renderQuiz()}
 });
 document.addEventListener("input",e=>{
   if(e.target.id==="q"){S.q=e.target.value.trim();const pos=e.target.selectionStart;render();const i=document.getElementById("q");i.focus();i.setSelectionRange(pos,pos)}
