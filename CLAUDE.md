@@ -18,6 +18,7 @@ Statik site, GitHub Pages (CNAME sersoz.com). **`main`'e push = canlı yayın**;
 | `visioncap-ders.html`, `visioncap-dersler.js` | **VisionCap uygulaması**: 8 ders (WebGL), Kwit tarzı pano, ilerleme `localStorage`. iOS kabuğu (Capacitor) bu sayfayı açar; `visioncap-dersler.js` değişince `visioncap-ders.html` içindeki `?v=` artır. Yerel eklenti yoksa ilgili özellik gizlenir |
 | `electrolib/` | **ElectroLib** web sürümü (Expo derleme çıktısı, elle düzenlenmez). Kaynak ayrı: `Desktop\Projects\ElectroLib`; orada `npm run build:web` → `dist/` içeriğini buraya kopyala. `_expo/` klasörü için kökte `.nojekyll` gerekir. `electrolib-gizlilik.html`, `electrolib-destek.html`: mağaza gizlilik ve destek sayfaları (uygulama veri toplamaz) |
 | `mecalib/`, `mecalib.css`, `mecalib-gizlilik.html`, `mecalib-destek.html` | **MecaLib**: makine mühendisliği öğrenme uygulaması (PWA, tek dosya `mecalib/index.html`, veri cihazda) ile App Store gizlilik ve destek sayfaları. Uygulama değişince `mecalib/sw.js` içindeki `CACHE` adını artır |
+| `trifed/` | **TriFed** rota uygulamasının derlenmiş hali, elle düzenlenmez. Kaynak: `Projects/TriFed` (github.com/sercansozer20-dot/trifed, private), orada `npm run build:site` |
 | `magaza*.`, `urun*`, `kategori.html`, `index.html`, `projeler.html` | SERSOZ mağaza ve tanıtım sayfaları |
 
 ## Kurallar
