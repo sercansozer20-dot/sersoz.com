@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SERSOZ</title>
-<meta name="description" content="Elif'in Dolabı, VisionCap, ElectroLib ve Sercan'ın Projeleri.">
+<meta name="description" content="Elif'in Dolabı, VisionCap, ElectroLib, MecaLib ve Sercan'ın Projeleri.">
 <meta name="theme-color" content="#f5f3ef">
 <link rel="canonical" href="https://sersoz.com/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2317191c'/%3E%3Ccircle cx='32' cy='32' r='17' fill='none' stroke='%23fff' stroke-width='7'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23d9480f'/%3E%3Cpath d='M6 37.5 58 26.5' stroke='%23d9480f' stroke-width='3'/%3E%3C/svg%3E">
@@ -28,12 +28,13 @@
   .wm .mercek::before { content: ""; position: absolute; inset: 0; margin: auto; width: .22em; height: .22em; border-radius: 50%; background: var(--ana); }
   .wm .mercek::after { content: ""; position: absolute; left: -.42em; right: -.42em; top: 50%; height: .055em; transform: translateY(-50%) rotate(-12deg); background: var(--ana); }
 
-  main { flex: 1; width: 100%; max-width: 1040px; padding: 24px 20px 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  main { flex: 1; width: 100%; max-width: 1100px; padding: 24px 20px 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   h1 { margin: 0 0 6px; font-family: "Archivo", sans-serif; font-stretch: 112%; font-weight: 800; font-size: clamp(28px, 4vw, 40px); letter-spacing: -.01em; text-align: center; }
   .alt-baslik { margin: 0 0 44px; color: var(--ikinci); text-align: center; }
 
-  .profiller { display: grid; grid-template-columns: repeat(4, minmax(0, 210px)); gap: clamp(20px, 4vw, 48px); justify-content: center; width: 100%; }
-  .profil { display: flex; flex-direction: column; align-items: center; text-align: center; outline: none; }
+  /* Kapılar yan yana sarılır; yeni bir kapı eklemek için yalnız <a class="profil"> eklemek yeter. */
+  .profiller { display: flex; flex-wrap: wrap; gap: 40px clamp(20px, 3vw, 36px); justify-content: center; width: 100%; }
+  .profil { width: 172px; display: flex; flex-direction: column; align-items: center; text-align: center; outline: none; }
   .resim {
     position: relative; width: 100%; aspect-ratio: 1; border-radius: 28px; overflow: hidden;
     display: grid; place-items: center; box-shadow: 0 10px 30px -12px rgba(0, 0, 0, .35);
@@ -50,6 +51,8 @@
   .visioncap svg { width: 58%; height: 58%; }
   .electrolib { background: linear-gradient(150deg, #8b7fff 0%, #5b4bf5 55%, #3a2bc4 100%); }
   .electrolib svg { width: 56%; height: 56%; }
+  .mecalib { background: radial-gradient(110% 90% at 30% 20%, #24384a 0%, #0f1720 75%); }
+  .mecalib svg { width: 62%; height: auto; }
   .sercan { background: #15171a; }
   .sercan img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .6; }
   .sercan .harf { position: relative; font-family: "Archivo", sans-serif; font-stretch: 125%; font-weight: 900; font-size: clamp(76px, 12vw, 116px); color: #fff; line-height: 1; }
@@ -64,8 +67,9 @@
 
   footer { padding: 18px; font-size: 12px; color: var(--ikinci); }
 
-  @media (max-width: 900px) {
-    .profiller { gap: 22px 16px; grid-template-columns: repeat(2, minmax(0, 220px)); }
+  @media (max-width: 640px) {
+    .profiller { gap: 26px 16px; }
+    .profil { width: calc(50% - 8px); }
   }
   @media (max-width: 480px) {
     .resim { border-radius: 22px; }
@@ -104,6 +108,12 @@
       </span>
       <span class="ad">ElectroLib</span>
       <span class="tanim">Elektronik dersleri</span>
+      <span class="gir">Giriş yap</span>
+    </a>
+    <a class="profil" href="mecalib/">
+      <span class="resim mecalib"><svg viewBox="0 0 100 100" aria-hidden="true"><path fill="#ff7a3d" d="M43 6h14l2 11 7 3 9-7 10 10-7 9 3 7 11 2v14l-11 2-3 7 7 9-10 10-9-7-7 3-2 11H43l-2-11-7-3-9 7-10-10 7-9-3-7-11-2V43l11-2 3-7-7-9 10-10 9 7 7-3z"/><circle cx="50" cy="50" r="17" fill="#0f1720"/><circle cx="50" cy="50" r="7" fill="#eef2f6"/></svg></span>
+      <span class="ad">MecaLib</span>
+      <span class="tanim">Makine mühendisliği dersleri</span>
       <span class="gir">Giriş yap</span>
     </a>
     <a class="profil" href="projeler.html">
