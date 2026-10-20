@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VisionCap | Görüntü işlemeyi kameranla öğren</title>
+<meta name="description" content="VisionCap: telefon kamerasıyla görüntü işlemeyi uygulayarak öğreten iOS uygulaması. Günlük seri, puan ve rozetlerle 8 ders.">
+<meta name="theme-color" content="#0b0f14">
+<link rel="canonical" href="https://sersoz.com/visioncap.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0f14'/%3E%3Ccircle cx='32' cy='32' r='20' fill='none' stroke='%23f0f6fc' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%233fb950'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="visioncap.css">
+<style>
+  .giris { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; padding: 32px 0 56px; }
+  .giris h1 { font-size: clamp(36px, 5.4vw, 60px); line-height: 1.05; letter-spacing: -.02em; margin: 0; }
+  .giris h1 em { font-style: normal; color: var(--yesil); }
+  .giris p { color: #c9d1d9; font-size: 18px; margin: 18px 0 26px; max-width: 32em; }
+  .durum { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 14px; background: var(--kart); border: 1px solid var(--kenar); font-weight: 600; }
+  .durum::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--turuncu); box-shadow: 0 0 0 4px rgba(240, 136, 62, .2); }
+  .giris .not { color: var(--soluk); font-size: 14px; margin: 10px 0 0; }
+
+  /* Uygulamanın ana panosunun HTML ile çizilmiş hali (örnek değerler) */
+  .telefon { justify-self: center; width: min(320px, 100%); aspect-ratio: 9 / 19; border-radius: 44px; padding: 14px; background: #000; border: 1px solid #30363d; box-shadow: 0 30px 80px -20px rgba(63, 185, 80, .25); }
+  .ekran { height: 100%; border-radius: 32px; background: var(--zemin); padding: 22px 14px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; font-size: 12px; }
+  .ekran b { font-size: 18px; }
+  .seri { text-align: center; background: var(--kart); border-radius: 16px; padding: 14px 0 10px; }
+  .seri span { display: block; color: var(--turuncu); font-size: 52px; font-weight: 800; line-height: 1; }
+  .seri small { color: var(--soluk); }
+  .uclu { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .uclu div, .kucuk-kart { background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; padding: 8px; text-align: center; }
+  .uclu strong { display: block; font-size: 16px; }
+  .uclu small, .kucuk-kart small { color: var(--soluk); }
+  .cubuk { height: 6px; background: var(--kenar); border-radius: 3px; margin: 6px 0 4px; overflow: hidden; }
+  .cubuk i { display: block; width: 62%; height: 100%; background: var(--yesil); }
+  .kucuk-kart { text-align: left; }
+  .gorev { border-color: var(--mavi); }
+  .gorev em { color: var(--mavi); font-style: normal; font-weight: 700; font-size: 10px; letter-spacing: .08em; }
+  .yol { display: flex; align-items: center; gap: 8px; background: var(--kart); border-radius: 12px; padding: 8px; }
+  .yol i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 700; background: var(--kenar); flex: none; }
+  .yol.bitti i { background: var(--yesil); }
+  .yol.kilit { opacity: .4; }
+
+  h2.bolum { font-size: clamp(24px, 3vw, 32px); margin: 56px 0 8px; }
+  .bolum-alt { color: var(--soluk); margin: 0 0 22px; }
+  .ozellikler { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .ozellik { background: var(--kart); border: 1px solid var(--kenar); border-radius: 18px; padding: 20px; }
+  .ozellik .sayi { font-size: 34px; font-weight: 800; line-height: 1; }
+  .ozellik h3 { margin: 10px 0 4px; font-size: 17px; }
+  .ozellik p { margin: 0; color: var(--soluk); font-size: 14px; }
+  .dersler { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; counter-reset: ders; }
+  .ders { display: flex; gap: 12px; align-items: flex-start; background: var(--kart); border-radius: 16px; padding: 14px; }
+  .ders::before { counter-increment: ders; content: counter(ders); flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--kenar); font-weight: 700; }
+  .ders strong { display: block; }
+  .ders code { color: var(--turuncu); font-size: 13px; }
+  .gizlilik-kutu { margin-top: 56px; background: var(--kart); border: 1px solid var(--kenar); border-left: 4px solid var(--yesil); border-radius: 16px; padding: 20px 22px; }
+  .gizlilik-kutu h2 { margin: 0 0 6px; font-size: 20px; }
+  .gizlilik-kutu p { margin: 0; color: #c9d1d9; }
+
+  @media (max-width: 820px) {
+    .giris { grid-template-columns: 1fr; gap: 36px; padding-top: 8px; }
+    .telefon { width: min(290px, 100%); }
+  }
+</style>
+</head>
+<body>
+<header class="ust">
+  <a class="marka" href="visioncap.html">
+    <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="22" fill="none" stroke="#f0f6fc" stroke-width="6"/><circle cx="32" cy="32" r="8" fill="#3fb950"/></svg>
+    VisionCap
+  </a>
+  <a class="geri" href="index.html">← SERSOZ</a>
+</header>
+
+<main class="icerik">
+  <section class="giris">
+    <div>
+      <h1>Görüntü işlemeyi <em>kameranla</em> öğren.</h1>
+      <p>Her derste kameradan bir kare çek, filtrenin ayarıyla oyna ve sonucu anında gör. Günlük seri, puan ve rozetler seni her gün bir adım ileri taşır.</p>
+      <span class="durum">Yakında App Store'da</span>
+      <p class="not">iPhone için. Ücretsiz, hesap gerektirmez.</p>
+    </div>
+
+    <div class="telefon" role="img" aria-label="VisionCap ana ekranı: günlük seri, ders sayısı, seviye, günün görevi ve ders yolu">
+      <div class="ekran" aria-hidden="true">
+        <b>VisionCap</b>
+        <div class="seri"><span>7</span><small>günlük seri</small></div>
+        <div class="uclu">
+          <div><strong>3/8</strong><small>Ders</small></div>
+          <div><strong>24</strong><small>Deneme</small></div>
+          <div><strong>3</strong><small>Seviye</small></div>
+        </div>
+        <div class="kucuk-kart"><strong>Seviye 3 · 262 XP</strong><div class="cubuk"><i></i></div><small>Sonraki seviyeye 38 XP</small></div>
+        <div class="kucuk-kart gorev"><em>GÜNÜN GÖREVİ</em><br><strong>Gama düzeltmesi</strong></div>
+        <div class="yol bitti"><i>✓</i>Gri tonlama</div>
+        <div class="yol"><i>4</i>Gama düzeltmesi</div>
+        <div class="yol kilit"><i>5</i>Eşikleme</div>
+        <div class="yol kilit"><i>6</i>Bulanıklaştırma</div>
+        <div class="yol kilit"><i>7</i>Keskinleştirme</div>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="bolum">Her gün bir adım</h2>
+  <p class="bolum-alt">Alışkanlık uygulamalarının seni geri getiren yanını derse taşıdık.</p>
+  <div class="ozellikler">
+    <div class="ozellik"><div class="sayi" style="color: var(--turuncu)">🔥</div><h3>Günlük seri</h3><p>Her gün bir ders ya da bir deneme yap, serini büyüt.</p></div>
+    <div class="ozellik"><div class="sayi" style="color: var(--yesil)">XP</div><h3>Puan ve seviye</h3><p>Her işlediğin kare 5, her bitirdiğin ders 50 puan.</p></div>
+    <div class="ozellik"><div class="sayi" style="color: var(--mavi)">7</div><h3>Rozet</h3><p>İlk dersten 30 günlük seriye kadar kazanılacak rozetler.</p></div>
+    <div class="ozellik"><div class="sayi">8</div><h3>Ders</h3><p>Kısa anlatım, formül, ayarlanabilir filtre ve "şunu dene" ipucu.</p></div>
+  </div>
+
+  <h2 class="bolum">Dersler</h2>
+  <p class="bolum-alt">Pikselden kenar bulmaya, ders kitabındaki sırayla.</p>
+  <div class="dersler">
+    <div class="ders"><div><strong>Piksel ve renk kanalları</strong><code>(R, G, B)</code></div></div>
+    <div class="ders"><div><strong>Gri tonlama</strong><code>0.299R + 0.587G + 0.114B</code></div></div>
+    <div class="ders"><div><strong>Parlaklık ve kontrast</strong><code>a·(x − 0.5) + 0.5 + b</code></div></div>
+    <div class="ders"><div><strong>Gama düzeltmesi</strong><code>x^γ</code></div></div>
+    <div class="ders"><div><strong>Eşikleme</strong><code>gri &gt; T ? 1 : 0</code></div></div>
+    <div class="ders"><div><strong>Bulanıklaştırma</strong><code>Gauss, σ</code></div></div>
+    <div class="ders"><div><strong>Keskinleştirme</strong><code>x + k·(x − bulanık)</code></div></div>
+    <div class="ders"><div><strong>Kenar bulma</strong><code>√(Gx² + Gy²)</code></div></div>
+  </div>
+
+  <div class="gizlilik-kutu">
+    <h2>Görüntülerin telefonunda kalır</h2>
+    <p>Filtreler telefonun ekran kartında çalışır. Çektiğin kareler hiçbir sunucuya gönderilmez, ilerlemen yalnız cihazında saklanır. <a href="visioncap-gizlilik.html">Gizlilik politikası</a></p>
+  </div>
+</main>
+
+<footer class="alt">
+  © <span id="yil"></span> Sercan Sözer · <a href="visioncap-destek.html">Destek</a><a href="visioncap-gizlilik.html">Gizlilik</a>
+</footer>
+<script>document.getElementById('yil').textContent = new Date().getFullYear();</script>
+</body>
+</html>
