@@ -1,0 +1,28 @@
+/* VisionCap sayfaları (visioncap.html, -gizlilik, -destek). Kwit tarzı koyu tema; uygulamadaki renklerle aynı. */
+:root {
+  --zemin: #0b0f14; --kart: #151b23; --kenar: #262c36; --yazi: #f0f6fc; --soluk: #8b949e;
+  --yesil: #3fb950; --mavi: #2f81f7; --turuncu: #f0883e;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { min-height: 100vh; background: var(--zemin); color: var(--yazi); font: 16px/1.55 "Inter", "Segoe UI", system-ui, sans-serif; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--mavi); outline-offset: 3px; }
+
+.ust { display: flex; align-items: center; justify-content: space-between; gap: 16px; max-width: 1080px; margin: 0 auto; padding: 22px 20px; }
+.marka { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; text-decoration: none; }
+.marka svg { width: 30px; height: 30px; }
+.geri { color: var(--soluk); font-size: 14px; text-decoration: none; }
+.geri:hover { color: var(--yazi); }
+
+.icerik { max-width: 1080px; margin: 0 auto; padding: 0 20px 64px; }
+.metin { max-width: 760px; margin: 0 auto; padding: 16px 20px 64px; }
+.metin h1 { font-size: clamp(28px, 4vw, 38px); margin: 0 0 6px; }
+.metin h2 { font-size: 18px; margin: 28px 0 8px; }
+.metin p, .metin li { color: #c9d1d9; }
+.metin .surum { color: var(--soluk); font-size: 14px; margin-bottom: 24px; }
+.metin details { border-top: 1px solid var(--kenar); padding: 12px 0; }
+.metin summary { cursor: pointer; font-weight: 600; }
+
+.alt { text-align: center; color: var(--soluk); font-size: 13px; padding: 24px 20px 32px; border-top: 1px solid var(--kenar); }
+.alt a { margin: 0 8px; }
