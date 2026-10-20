@@ -14,8 +14,9 @@ Statik site, GitHub Pages (CNAME sersoz.com). **`main`'e push = canlı yayın**;
 | `firestore.rules` | Veritabanı kuralları (şema yorumları içinde) |
 | `functions/` | Firebase Cloud Functions (Node 22, europe-west1): `jeton.js` (App Store satın alma doğrulama, jeton, Satıcı Pro), `index.js` (e-posta bildirimleri) |
 | `elif-gizlilik.html`, `elif-destek.html`, `elif-sozlesme.html` | App Store'un baktığı gizlilik, destek ve sözleşme sayfaları |
-| `visioncap.html`, `visioncap.css`, `visioncap-gizlilik.html`, `visioncap-destek.html` | **VisionCap** (iOS, ayrı proje): tanıtım, App Store gizlilik ve destek sayfaları. Uygulama veri toplamaz; gizlilik metni buna göre |
-| `electrolib/` | **ElectroLib** web sürümü (Expo derleme çıktısı, elle düzenlenmez). Kaynak ayrı: `Desktop\Projects\ElectroLib`; orada `npm run build:web` → `dist/` içeriğini buraya kopyala. `_expo/` klasörü için kökte `.nojekyll` gerekir |
+| `visioncap.html`, `visioncap.css`, `visioncap-gizlilik.html`, `visioncap-destek.html` | **VisionCap**: tanıtım, App Store gizlilik ve destek sayfaları. Uygulama veri toplamaz; gizlilik metni buna göre |
+| `visioncap-ders.html`, `visioncap-dersler.js` | **VisionCap uygulaması**: 8 ders (WebGL), Kwit tarzı pano, ilerleme `localStorage`. iOS kabuğu (Capacitor) bu sayfayı açar; `visioncap-dersler.js` değişince `visioncap-ders.html` içindeki `?v=` artır. Yerel eklenti yoksa ilgili özellik gizlenir |
+| `electrolib/` | **ElectroLib** web sürümü (Expo derleme çıktısı, elle düzenlenmez). Kaynak ayrı: `Desktop\Projects\ElectroLib`; orada `npm run build:web` → `dist/` içeriğini buraya kopyala. `_expo/` klasörü için kökte `.nojekyll` gerekir. `electrolib-gizlilik.html`, `electrolib-destek.html`: mağaza gizlilik ve destek sayfaları (uygulama veri toplamaz) |
 | `mecalib/`, `mecalib.css`, `mecalib-gizlilik.html`, `mecalib-destek.html` | **MecaLib**: makine mühendisliği öğrenme uygulaması (PWA, tek dosya `mecalib/index.html`, veri cihazda) ile App Store gizlilik ve destek sayfaları. Uygulama değişince `mecalib/sw.js` içindeki `CACHE` adını artır |
 | `magaza*.`, `urun*`, `kategori.html`, `index.html`, `projeler.html` | SERSOZ mağaza ve tanıtım sayfaları |
 
