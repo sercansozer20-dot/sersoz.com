@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dersler | VisionCap</title>
+<meta name="description" content="VisionCap derslerini tarayıcıda dene: canlı kamera görüntüsü üzerinde gri tonlama, eşikleme, bulanıklaştırma ve kenar bulma.">
+<meta name="theme-color" content="#0b0f14">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0f14'/%3E%3Ccircle cx='32' cy='32' r='20' fill='none' stroke='%23f0f6fc' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%233fb950'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="visioncap.css">
+<style>
+  #uygulama { max-width: 560px; margin: 0 auto; padding: 0 16px 56px; display: flex; flex-direction: column; gap: 12px; }
+  #uygulama h1 { font-size: 28px; margin: 4px 0 0; line-height: 1.15; }
+  #uygulama h2 { font-size: 20px; margin: 12px 0 0; }
+  .kart { display: flex; flex-direction: column; gap: 4px; background: var(--kart); border: 1px solid var(--kenar); border-radius: 16px; padding: 14px 16px; text-decoration: none; }
+  .kart small, .adim small, .rozet small { color: var(--soluk); font-size: 13px; }
+  .seri-kart { text-align: center; background: var(--kart); border-radius: 20px; padding: 22px 0 16px; }
+  .seri-kart span { display: block; color: var(--turuncu); font-size: 64px; font-weight: 800; line-height: 1; }
+  .seri-kart small { color: var(--soluk); }
+  .uclu { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .uclu .kart { align-items: center; }
+  .uclu strong { font-size: 22px; }
+  .cubuk { height: 8px; background: var(--kenar); border-radius: 4px; overflow: hidden; margin: 4px 0; }
+  .cubuk i { display: block; height: 100%; background: var(--yesil); }
+  .gorev { border-color: var(--mavi); }
+  .gorev em, .ipucu em { color: var(--mavi); font-style: normal; font-weight: 700; font-size: 12px; letter-spacing: .08em; }
+  .gorev strong { font-size: 17px; }
+  .rozetler { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .rozet { flex: none; width: 124px; background: var(--kart); border: 1px solid var(--yesil); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+  .kilitli { opacity: .35; border-color: var(--kenar); }
+  .yol { display: flex; flex-direction: column; gap: 10px; }
+  .adim { display: flex; align-items: center; gap: 12px; background: var(--kart); border-radius: 16px; padding: 12px 14px; text-decoration: none; }
+  .adim > i { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 700; background: var(--kenar); }
+  .adim.bitti > i { background: var(--yesil); }
+  .adim span { display: flex; flex-direction: column; }
+  a.adim:hover, a.kart:hover { border-color: var(--soluk); }
+
+  .geri-ic { color: var(--mavi); text-decoration: none; font-size: 17px; }
+  .anlatim { margin: 0; color: #c9d1d9; }
+  .formul { background: var(--kart); border: 1px solid var(--kenar); border-radius: 12px; padding: 12px; color: var(--turuncu); font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .sahne { position: relative; border-radius: 16px; overflow: hidden; background: #000; aspect-ratio: 3 / 4; }
+  .sahne canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: pointer; }
+  .durum { position: absolute; left: 12px; right: 12px; bottom: 12px; margin: 0; color: #fff; font-size: 13px; text-shadow: 0 1px 3px #000; }
+  .durum:empty { display: none; }
+  .kucuk { margin: -4px 0 0; color: var(--soluk); font-size: 12px; text-align: center; }
+  .ayarlar { display: flex; flex-direction: column; gap: 10px; }
+  .ayar { display: flex; flex-direction: column; gap: 6px; background: var(--kart); border-radius: 12px; padding: 12px; }
+  .ayar span { display: flex; justify-content: space-between; }
+  .ayar output { color: var(--yesil); font-variant-numeric: tabular-nums; }
+  .ayar input { width: 100%; accent-color: var(--yesil); }
+  .ipucu { background: var(--kart); border-left: 3px solid var(--mavi); border-radius: 12px; padding: 12px; }
+  .ipucu p { margin: 4px 0 0; color: #c9d1d9; }
+  .dugme { font: inherit; font-weight: 700; color: #fff; background: var(--yesil); border: 0; border-radius: 14px; padding: 15px; cursor: pointer; }
+  .dugme:disabled { opacity: .4; cursor: default; }
+  .dugme.tamam { background: transparent; color: var(--yesil); opacity: 1; }
+  .not-web { color: var(--soluk); font-size: 13px; text-align: center; margin: 8px 0 0; }
+  button.kart { font: inherit; color: inherit; text-align: left; cursor: pointer; }
+  /* iOS uygulamasında tanıtım bağlantısı gizlenir, alt bilgi kalır (gizlilik ve destek) */
+  .native .ust .geri, .native .not-web { display: none; }
+  .native .ust { padding-top: max(22px, env(safe-area-inset-top)); }
+</style>
+</head>
+<body>
+<header class="ust">
+  <a class="marka" href="visioncap.html">
+    <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="22" fill="none" stroke="#f0f6fc" stroke-width="6"/><circle cx="32" cy="32" r="8" fill="#3fb950"/></svg>
+    VisionCap
+  </a>
+  <a class="geri" href="visioncap.html">Tanıtım</a>
+</header>
+
+<main id="uygulama" aria-live="polite"></main>
+<p class="not-web">Kamera görüntüsü yalnız bu tarayıcıda işlenir, hiçbir yere gönderilmez. İlerlemen bu tarayıcıda saklanır.</p>
+
+<footer class="alt">© <span id="yil"></span> Sercan Sözer · <a href="visioncap-destek.html">Destek</a><a href="visioncap-gizlilik.html">Gizlilik</a></footer>
+<script>document.getElementById('yil').textContent = new Date().getFullYear();</script>
+<script type="module" src="visioncap-dersler.js?v=20261020a"></script>
+</body>
+</html>

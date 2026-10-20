@@ -17,6 +17,10 @@
   .giris h1 { font-size: clamp(36px, 5.4vw, 60px); line-height: 1.05; letter-spacing: -.02em; margin: 0; }
   .giris h1 em { font-style: normal; color: var(--yesil); }
   .giris p { color: #c9d1d9; font-size: 18px; margin: 18px 0 26px; max-width: 32em; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .dene { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 14px; background: var(--yesil); color: #fff; font-weight: 700; text-decoration: none; }
+  .dene::after { content: "→"; transition: transform .2s; }
+  .dene:hover::after { transform: translateX(3px); }
   .durum { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 14px; background: var(--kart); border: 1px solid var(--kenar); font-weight: 600; }
   .durum::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--turuncu); box-shadow: 0 0 0 4px rgba(240, 136, 62, .2); }
   .giris .not { color: var(--soluk); font-size: 14px; margin: 10px 0 0; }
@@ -78,8 +82,11 @@
     <div>
       <h1>Görüntü işlemeyi <em>kameranla</em> öğren.</h1>
       <p>Her derste kameradan bir kare çek, filtrenin ayarıyla oyna ve sonucu anında gör. Günlük seri, puan ve rozetler seni her gün bir adım ileri taşır.</p>
-      <span class="durum">Yakında App Store'da</span>
-      <p class="not">iPhone için. Ücretsiz, hesap gerektirmez.</p>
+      <div class="cta">
+        <a class="dene" href="visioncap-ders.html">Tarayıcıda dene</a>
+        <span class="durum">Yakında App Store'da</span>
+      </div>
+      <p class="not">Ücretsiz, hesap gerektirmez. Kamera görüntüsü cihazından çıkmaz.</p>
     </div>
 
     <div class="telefon" role="img" aria-label="VisionCap ana ekranı: günlük seri, ders sayısı, seviye, günün görevi ve ders yolu">
