@@ -9,7 +9,7 @@
  * "Apple ile giriş"i şart koşar (App Store 4.8).
  */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, signOut, onAuthStateChanged, deleteUser }
+import { getAuth, initializeAuth, indexedDBLocalPersistence, GoogleAuthProvider, OAuthProvider, signInWithPopup, signInWithCredential, signOut, onAuthStateChanged, deleteUser }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -22,12 +22,13 @@ const app = initializeApp({
   messagingSenderId: "173131115543",
   appId: "1:173131115543:web:f0313dd00ac0f2d3f80052",
 });   // varsayılan uygulama: sersoz.com'daki öbür sayfalarla aynı oturum
-const auth = getAuth(app);
 const db = getFirestore(app);
 
 const TK = window.TK;
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const yerelAuth = () => window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseAuthentication;
+// iPhone uygulamasında (capacitor://) getAuth açılır pencere altyapısını yüklemeye çalışıp takılır; orada yalnız kalıcılık verilir.
+const auth = NATIVE ? initializeAuth(app, { persistence: indexedDBLocalPersistence }) : getAuth(app);
 
 let kullanici = null;
 let hazir = false;       // ilk çekme + birleştirme bitmeden buluta yazılmaz
@@ -186,4 +187,5 @@ onAuthStateChanged(auth, async (u) => {
 });
 
 window.TKHesap = { giris, cikis, hesabiSil, degisti: yazSonra };
-TK.setAuthState({ girisli: false, native: NATIVE, hazir: true });
+// Uygulamada yerel giriş eklentisi yoksa giriş düğmeleri gizli kalır (uygulama girişsiz çalışır)
+TK.setAuthState({ girisli: false, native: NATIVE, hazir: !NATIVE || !!yerelAuth() });
