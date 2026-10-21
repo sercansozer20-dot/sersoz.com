@@ -24,6 +24,7 @@ Statik site, GitHub Pages (CNAME sersoz.com). **`main`'e push = canlı yayın**;
 | `electrolib/` | **ElectroLib** web sürümü (Expo derleme çıktısı, elle düzenlenmez). Kaynak ayrı: `Desktop\Projects\ElectroLib`; orada `npm run build:web` → `dist/` içeriğini buraya kopyala. `_expo/` klasörü için kökte `.nojekyll` gerekir. `electrolib-gizlilik.html`, `electrolib-destek.html`: mağaza gizlilik ve destek sayfaları (uygulama veri toplamaz) |
 | `mecalib/`, `mecalib.css`, `mecalib-gizlilik.html`, `mecalib-destek.html` | **MecaLib**: makine mühendisliği öğrenme uygulaması (PWA, tek dosya `mecalib/index.html`, veri cihazda) ile App Store gizlilik ve destek sayfaları. Uygulama değişince `mecalib/sw.js` içindeki `CACHE` adını artır |
 | `trifed/` | **TriFed** rota uygulamasının derlenmiş hali, elle düzenlenmez. Kaynak: `Projects/TriFed` (github.com/sercansozer20-dot/trifed, private), orada `npm run build:site` |
+| `toefl/`, `toefl.css`, `toefl-gizlilik.html`, `toefl-destek.html` | **TOEFL Kart**: Türkçe çevirili TOEFL kelime kartları (PWA, 1000 kelime). Giriş isteğe bağlı: `toefl/js/hesap.js` Firebase ile Google/Apple girişi ve `toeflKart/{uid}` belgesine ilerleme eşitleme. Kaynak: `Desktop\Projects\english_Flashcard`; uygulama değişince `toefl/sw.js` içindeki `CACHE` adını artır |
 | `magaza*.`, `urun*`, `kategori.html`, `index.html`, `projeler.html` | SERSOZ mağaza ve tanıtım sayfaları |
 
 ## Kurallar

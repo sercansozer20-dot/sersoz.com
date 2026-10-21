@@ -1156,6 +1156,18 @@ service cloud.firestore {
       allow write: if tamYetkili();
     }
 
+    /* TOEFL Kart (sersoz.com/toefl): kullanıcının öğrenme ilerlemesi, tek belge.
+       veri: uygulama kaydının JSON metni · surum: biçim sürümü · guncel: sunucu zamanı.
+       Yalnız sahibi okur, yazar ve siler (Profil → Hesabı Sil). */
+    match /toeflKart/{kimlik} {
+      allow read, delete: if request.auth != null && request.auth.uid == kimlik;
+      allow create, update: if request.auth != null && request.auth.uid == kimlik
+        && request.resource.data.keys().hasOnly(['veri', 'surum', 'guncel'])
+        && request.resource.data.veri is string && request.resource.data.veri.size() <= 900000
+        && request.resource.data.surum is int
+        && request.resource.data.guncel == request.time;
+    }
+
     /* Açıkça eşleşmeyen her yol kapalıdır (varsayılan zaten budur; niyet beyanı). */
     match /{belge=**} {
       allow read, write: if false;
