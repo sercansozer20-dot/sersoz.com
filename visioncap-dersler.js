@@ -300,17 +300,18 @@ function enUzunSeri(gunler) {
 function rozetler(i) {
   const s = seri(i.gunler);
   const t = i.tamamlanan.length;
+  const r = (ad, ik, aciklama, deger, hedef) => ({ ad, ik, aciklama, deger: Math.min(deger, hedef), hedef, kazanildi: deger >= hedef });
   return [
-    { ad: 'İlk adım', aciklama: 'İlk dersi bitir', kazanildi: t >= 1 },
-    { ad: 'Isınma', aciklama: '3 ders bitir', kazanildi: t >= 3 },
-    { ad: 'Yarı yol', aciklama: '6 ders bitir', kazanildi: t >= 6 },
-    { ad: 'Piksel ustası', aciklama: 'Tüm dersleri bitir', kazanildi: t >= DERSLER.length },
-    { ad: 'Meraklı', aciklama: '25 kare işle', kazanildi: i.denemeler >= 25 },
-    { ad: 'Kart avcısı', aciklama: '10 bilgi kartı topla', kazanildi: i.kartlar.length >= 10 },
-    { ad: 'Kitap kurdu', aciklama: '5 makale kartı oku', kazanildi: i.makaleler.length >= 5 },
-    { ad: '3 gün', aciklama: '3 günlük seri', kazanildi: s >= 3 },
-    { ad: '1 hafta', aciklama: '7 günlük seri', kazanildi: s >= 7 },
-    { ad: '1 ay', aciklama: '30 günlük seri', kazanildi: s >= 30 },
+    r('İlk adım', '👣', 'İlk dersi bitir', t, 1),
+    r('Isınma', '🔥', '3 ders bitir', t, 3),
+    r('Yarı yol', '🧭', '6 ders bitir', t, 6),
+    r('Piksel ustası', '🏆', 'Tüm dersleri bitir', t, DERSLER.length),
+    r('Meraklı', '📸', '25 kare işle', i.denemeler, 25),
+    r('Kart avcısı', '🃏', '10 bilgi kartı topla', i.kartlar.length, 10),
+    r('Kitap kurdu', '📚', '5 makale kartı oku', i.makaleler.length, 5),
+    r('3 gün', '⚡', '3 günlük seri', s, 3),
+    r('1 hafta', '🌟', '7 günlük seri', s, 7),
+    r('1 ay', '👑', '30 günlük seri', s, 30),
   ];
 }
 
@@ -441,6 +442,24 @@ const sekmeler = document.querySelector('.sekmeler');
 const kacis = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 let aktifDers = null;
 
+// Çizgi simgeler (24×24). "alev" dolgulu, diğerleri çizgi.
+const SIMGE = {
+  alev: '<path class="dolu" d="M12 2c.6 3.2 3.8 5 4.9 8.3A6 6 0 1 1 6.3 11c.6 1.5 1.6 2.3 2.7 2.5-.6-3.7 1-8.2 3-11.5z"/>',
+  hedef: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>',
+  kart: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+  yildiz: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  telefon: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2M3.5 8v8M20.5 8v8"/>',
+  elmas: '<path d="M6.5 3.5h11l3.5 5.5-9 11.5L3 9z"/><path d="M3 9h18M9.5 3.5 8 9l4 11.5L16 9l-1.5-5.5"/>',
+  zil: '<path d="M6 16v-5a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+  saat: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  makale: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/>',
+  kamera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13.5" r="3.5"/>',
+  kupa: '<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8"/>',
+  kilit: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  ok: '<path d="M9 5l7 7-7 7"/>',
+};
+const ik = (ad) => `<svg class="ik" viewBox="0 0 24 24" aria-hidden="true">${SIMGE[ad]}</svg>`;
+
 function bildirim(metin) {
   const el = document.createElement('div');
   el.className = 'toast';
@@ -460,7 +479,7 @@ function katman(icerik, { kapaninca } = {}) {
   const kapat = () => { el.remove(); kapaninca?.(); };
   el.addEventListener('click', (e) => { if (e.target === el || e.target.closest('[data-kapat]')) kapat(); });
   document.body.append(el);
-  el.querySelector('button, a')?.focus({ preventScroll: true });
+  el.querySelector('button, a')?.focus({ preventScroll: true, focusVisible: false });
   return el;
 }
 
@@ -482,7 +501,7 @@ const akisListesi = (liste) => liste.length
   : '<p class="bos">Ders bitirdikçe, kart topladıkça gelişmelerin burada görünür.</p>';
 
 const proBandi = () => proGerekli()
-  ? `<a class="kart pro-bant" href="#pro"><em>VISIONCAP PRO</em><strong>Tüm dersler, sınırsız kart</strong><small>${DERSLER.length - UCRETSIZ_DERS} ders daha, tüm makale kartları ve yeni dersler. 3 gün ücretsiz dene.</small></a>`
+  ? `<a class="kart pro-bant" href="#pro"><span class="kutu-ik mor">${ik('elmas')}</span><span class="kart-ic"><em>VISIONCAP PRO</em><strong>Tüm dersler, sınırsız kart</strong><small>${DERSLER.length - UCRETSIZ_DERS} ders daha, tüm makale kartları ve yeni dersler. 3 gün ücretsiz dene.</small></span></a>`
   : '';
 
 // ---------- Salla, öğren ----------
@@ -527,7 +546,9 @@ function kartAc(id, { cekildi = false, yeni = false } = {}) {
   const yenile = () => { if (!aktifDers) yonlendir(); };
   if (bilgi) {
     const kalan = kalanKart();
-    katman(`<em class="etiket">${kacis(bilgi.tur.toLocaleUpperCase('tr'))}${yeni ? ' · YENİ KART' : ''}</em>
+    const [renk, e] = TUR[bilgi.tur] ?? ['turuncu', '•'];
+    katman(`<span class="kart-amblem ${renk}">${e}</span>
+      <em class="etiket ${renk}">${kacis(bilgi.tur.toLocaleUpperCase('tr'))}${yeni ? ' · YENİ KART' : ''}</em>
       <h2>${kacis(bilgi.baslik)}</h2>
       <p>${kacis(bilgi.metin)}</p>
       ${bilgi.ders ? ilgiliDers(bilgi.ders) : ''}
@@ -544,7 +565,8 @@ function kartAc(id, { cekildi = false, yeni = false } = {}) {
   const m = MAKALE_KARTLARI[indeks];
   const ilk = !ilerleme.makaleler.includes(m.id);
   if (ilk) guncelle((i) => ({ ...i, makaleler: [...i.makaleler, m.id], xp: i.xp + XP_KART }), [{ ik: '📄', m: `Makale okundu: ${m.yazar.split(',')[0]}, ${m.yil}` }]);
-  katman(`<em class="etiket">MAKALE ÖZETİ · ${m.yil}</em>
+  katman(`<span class="kart-amblem mor">📄</span>
+    <em class="etiket mor">MAKALE ÖZETİ · ${m.yil}</em>
     <h2 class="makale-baslik">${kacis(m.baslik)}</h2>
     <p class="yazar">${kacis(m.yazar)}</p>
     <p>${kacis(m.ozet)}</p>
@@ -574,46 +596,82 @@ if (!NATIVE && 'DeviceMotionEvent' in window && typeof DeviceMotionEvent.request
 
 const sallaKarti = () => {
   const kalan = kalanKart();
+  const oran = (ilerleme.kartlar.length / BILGI_KARTLARI.length) * 100;
   return `<button class="kart salla" data-is="kart-cek">
-    <em>SALLA, ÖĞREN</em>
-    <strong>${NATIVE ? 'Telefonu salla ya da dokun' : 'Dokun, bir bilgi kartı çek'}</strong>
-    <small>${ilerleme.kartlar.length}/${BILGI_KARTLARI.length} kart toplandı${kalan !== Infinity ? ` · bugün ${kalan} ücretsiz kart kaldı` : ''}</small>
+    <span class="kutu-ik turuncu salla-ik">${ik('telefon')}</span>
+    <span class="kart-ic">
+      <em>SALLA, ÖĞREN</em>
+      <strong>${NATIVE ? 'Telefonu salla ya da dokun' : 'Dokun, bir bilgi kartı çek'}</strong>
+      <span class="cubuk ince"><i style="width:${oran}%"></i></span>
+      <small>${ilerleme.kartlar.length}/${BILGI_KARTLARI.length} kart toplandı${kalan !== Infinity ? ` · bugün ${kalan} ücretsiz kart kaldı` : ''}</small>
+    </span>
   </button>`;
 };
 
 // ---------- Ekranlar ----------
 
+function selam() {
+  const s = new Date().getHours();
+  return s < 5 ? 'İyi geceler' : s < 12 ? 'Günaydın' : s < 18 ? 'İyi günler' : 'İyi akşamlar';
+}
+
+// Son 7 gün (bugün en sağda): hangi günler çalışıldı
+function haftaNoktalari() {
+  const kume = new Set(ilerleme.gunler);
+  return [...Array(7)].map((_, k) => {
+    const g = new Date(); g.setDate(g.getDate() - 6 + k);
+    const ad = g.toLocaleDateString('tr', { weekday: 'short' });
+    return `<span class="${kume.has(bugun(g)) ? 'dolu' : ''}${k === 6 ? ' bugun' : ''}"><i>${kume.has(bugun(g)) ? ik('alev') : ''}</i><small>${ad}</small></span>`;
+  }).join('');
+}
+
 function bugunEkrani() {
   const s = seri(ilerleme.gunler);
+  const bugunVar = ilerleme.gunler.includes(bugun());
   const sv = seviye(ilerleme.xp);
   const kalan = ilerleme.xp % XP_SEVIYE;
   const sirakiIndeks = DERSLER.findIndex((d) => !ilerleme.tamamlanan.includes(d.id));
   const siradaki = DERSLER[sirakiIndeks] ?? DERSLER[0];
   const gorevKilit = sirakiIndeks >= 0 && dersKilidi(sirakiIndeks) === 'pro';
+  const hepsiBitti = sirakiIndeks < 0;
+  const tarih = new Date().toLocaleDateString('tr', { weekday: 'long', day: 'numeric', month: 'long' });
   kok.innerHTML = `
-    ${pro ? '<p class="pro-rozet">PRO</p>' : ''}
-    <section class="seri-kart"><span>${s}</span><small>günlük seri</small></section>
+    <header class="selam">
+      <div><small>${tarih}</small><h1>${selam()}</h1></div>
+      ${pro ? '<b class="pro-rozet">PRO</b>' : ''}
+    </header>
+    <section class="seri-kart">
+      <div class="seri-ust">
+        <span class="alev${s ? '' : ' sonuk'}">${ik('alev')}</span>
+        <div><strong>${s}</strong><small>günlük seri</small></div>
+      </div>
+      <div class="hafta">${haftaNoktalari()}</div>
+      <p>${bugunVar ? 'Bugünü kazandın. Yarın da gel, seri büyüsün.' : s ? 'Seriyi korumak için bugün bir ders ya da kart yeter.' : 'Bir ders ya da bir kartla serini bugün başlat.'}</p>
+    </section>
     <div class="uclu">
-      <a class="kart" href="#dersler"><strong>${ilerleme.tamamlanan.length}/${DERSLER.length}</strong><small>Ders</small></a>
-      <a class="kart" href="#kartlar"><strong>${ilerleme.kartlar.length}</strong><small>Kart</small></a>
-      <a class="kart" href="#gelisim"><strong>${sv}</strong><small>Seviye</small></a>
+      <a class="kart sayac" href="#dersler"><span class="mini-ik yesil">${ik('hedef')}</span><strong>${ilerleme.tamamlanan.length}/${DERSLER.length}</strong><small>Ders</small></a>
+      <a class="kart sayac" href="#kartlar"><span class="mini-ik turuncu">${ik('kart')}</span><strong>${ilerleme.kartlar.length}</strong><small>Kart</small></a>
+      <a class="kart sayac" href="#gelisim"><span class="mini-ik mavi">${ik('yildiz')}</span><strong>${ilerleme.xp}</strong><small>XP</small></a>
     </div>
-    <div class="kart">
-      <strong>Seviye ${sv} · ${ilerleme.xp} XP</strong>
-      <div class="cubuk"><i style="width:${(kalan / XP_SEVIYE) * 100}%"></i></div>
-      <small>Sonraki seviyeye ${XP_SEVIYE - kalan} XP</small>
-    </div>
-    <a class="kart gorev" href="#${gorevKilit ? 'pro' : siradaki.id}">
-      <em>GÜNÜN GÖREVİ</em><strong>${kacis(siradaki.baslik)}</strong>
-      <small>${gorevKilit ? 'Bu ders VisionCap Pro’da. Açmak için dokun.' : kacis(siradaki.ipucu)}</small>
+    <a class="kart seviye-kart" href="#gelisim">
+      <span class="seviye-ust"><b class="sv">${sv}</b><span><strong>Seviye ${sv}</strong><small>Sonraki seviyeye ${XP_SEVIYE - kalan} XP</small></span></span>
+      <span class="cubuk"><i style="width:${(kalan / XP_SEVIYE) * 100}%"></i></span>
     </a>
+    ${hepsiBitti ? `<div class="kart gorev"><span class="gorev-ust"><span class="ders-no">${ik('kupa')}</span><span><em>TEBRİKLER</em><strong>Tüm dersleri bitirdin</strong></span></span><small>Kart çekmeye ve makaleleri okumaya devam et. Yeni dersler geldiğinde burada görünecek.</small></div>` : `
+    <a class="kart gorev" href="#${gorevKilit ? 'pro' : siradaki.id}">
+      <span class="gorev-ust"><span class="ders-no">${sirakiIndeks + 1}</span><span><em>GÜNÜN GÖREVİ</em><strong>${kacis(siradaki.baslik)}</strong></span></span>
+      <small>${gorevKilit ? 'Bu ders VisionCap Pro’da. Açmak için dokun.' : kacis(siradaki.ipucu)}</small>
+      <span class="hap">${gorevKilit ? 'Pro’yu gör' : 'Derse başla'} ${ik('ok')}</span>
+    </a>`}
     ${sallaKarti()}
     ${proBandi()}
-    ${Bildirim ? `<button class="kart hatirlatma" data-is="bildirim">
-      <strong>Bildirimler ${bildirimAcik() ? 'açık' : 'kapalı'}</strong>
+    ${Bildirim ? `<button class="kart hatirlatma" data-is="bildirim" role="switch" aria-checked="${bildirimAcik()}">
+      <span class="kutu-ik mavi">${ik('zil')}</span>
+      <span class="kart-ic"><strong>Bildirimler</strong>
       <small>${bildirimAcik()
-        ? 'Akşam 20:00’de seri hatırlatması, öğlen günün makale kartı ve ders tebrikleri. Kapatmak için dokun.'
-        : 'Seri hatırlatması, günün makale kartı ve ders tebrikleri için dokun.'}</small>
+        ? 'Akşam 20:00 seri hatırlatması, öğlen günün makale kartı, ders tebrikleri.'
+        : 'Seri hatırlatması, günün makale kartı ve ders tebrikleri için aç.'}</small></span>
+      <span class="anahtar${bildirimAcik() ? ' acik' : ''}"><i></i></span>
     </button>` : ''}
     <h2>Son gelişmeler</h2>
     ${akisListesi(ilerleme.akis.slice(0, 4))}
@@ -622,39 +680,56 @@ function bugunEkrani() {
 }
 
 function derslerEkrani() {
+  const siradaki = DERSLER.findIndex((d) => !ilerleme.tamamlanan.includes(d.id));
+  const adim = (d, i) => {
+    const bitti = ilerleme.tamamlanan.includes(d.id);
+    const kilit = dersKilidi(i);
+    const simdi = i === siradaki && !kilit;
+    const alt = kilit === 'sira' ? 'Önceki dersi bitirince açılır' : kilit === 'pro' ? 'VisionCap Pro ile açılır' : bitti ? 'Bitti · tekrar edebilirsin' : d.formul;
+    const ic = `<i>${bitti ? '✓' : kilit ? ik('kilit') : i + 1}</i><span><strong>${kacis(d.baslik)}</strong><small>${kacis(alt)}</small></span>${simdi ? '<b class="hap">ŞİMDİ</b>' : kilit === 'pro' ? '<b class="pro-cip">PRO</b>' : ''}`;
+    const sinif = `adim${bitti ? ' bitti' : ''}${simdi ? ' simdi' : ''}${kilit === 'pro' ? ' pro-kilit' : ''}`;
+    if (kilit === 'sira') return `<div class="${sinif} kilitli" aria-disabled="true">${ic}</div>`;
+    return `<a class="${sinif}" href="#${kilit ? 'pro' : d.id}">${ic}</a>`;
+  };
+  const bolum = (baslik, alt, dersler, bas) => `<h2 class="bolum">${baslik} <small>${alt}</small></h2><div class="yol">${dersler.map((d, k) => adim(d, bas + k)).join('')}</div>`;
+  const oran = (ilerleme.tamamlanan.length / DERSLER.length) * 100;
   kok.innerHTML = `
     <h1>Dersler</h1>
-    <p class="alt-metin">${ilerleme.tamamlanan.length}/${DERSLER.length} ders bitti. Her ders canlı kamerayla bir yöntem öğretir.</p>
-    <div class="yol">${DERSLER.map((d, i) => {
-      const bitti = ilerleme.tamamlanan.includes(d.id);
-      const kilit = dersKilidi(i);
-      const alt = kilit === 'sira' ? 'Önceki dersi bitirince açılır' : kilit === 'pro' ? 'VisionCap Pro' : d.formul;
-      const ic = `<i>${bitti ? '✓' : i + 1}</i><span><strong>${kacis(d.baslik)}</strong><small>${kacis(alt)}</small></span>${kilit === 'pro' ? '<b class="pro-cip">PRO</b>' : ''}`;
-      if (kilit === 'sira') return `<div class="adim kilitli" aria-disabled="true">${ic}</div>`;
-      return `<a class="adim${bitti ? ' bitti' : ''}${kilit ? ' pro-kilit' : ''}" href="#${kilit ? 'pro' : d.id}">${ic}</a>`;
-    }).join('')}
+    <div class="kart ozet-kart">
+      <strong>${ilerleme.tamamlanan.length}/${DERSLER.length} ders bitti</strong>
+      <span class="cubuk"><i style="width:${oran}%"></i></span>
+      <small>Her ders canlı kamerayla bir yöntem öğretir. Sırayla açılır.</small>
     </div>
+    ${Abonelik
+      ? bolum('Temeller', 'ücretsiz', DERSLER.slice(0, UCRETSIZ_DERS), 0) + bolum('İleri teknikler', pro ? 'Pro' : 'Pro ile', DERSLER.slice(UCRETSIZ_DERS), UCRETSIZ_DERS)
+      : bolum('Ders yolu', '', DERSLER, 0)}
     ${proBandi()}`;
 }
+
+const TUR = { 'Tarihçe': ['turuncu', '📜'], 'Kavram': ['mavi', '💡'], 'İpucu': ['yesil', '🎯'] };
 
 function kartlarEkrani() {
   kok.innerHTML = `
     <h1>Kartlar</h1>
     ${sallaKarti()}
     <h2>Bilgi kartları <small>${ilerleme.kartlar.length}/${BILGI_KARTLARI.length}</small></h2>
-    <div class="kart-izgara">${[...BILGI_KARTLARI].sort((a, b) => ilerleme.kartlar.includes(b.id) - ilerleme.kartlar.includes(a.id)).map((k) => ilerleme.kartlar.includes(k.id)
-      ? `<button class="mini" data-kart="${k.id}"><em>${kacis(k.tur)}</em><strong>${kacis(k.baslik)}</strong></button>`
-      : '<div class="mini kapali" aria-label="Henüz çekilmedi"><strong>?</strong></div>').join('')}
+    <div class="tur-lejant">${Object.entries(TUR).map(([ad, [renk, e]]) => `<span class="${renk}">${e} ${ad}</span>`).join('')}</div>
+    <div class="kart-izgara">${[...BILGI_KARTLARI].sort((a, b) => ilerleme.kartlar.includes(b.id) - ilerleme.kartlar.includes(a.id)).map((k) => {
+      const [renk, e] = TUR[k.tur] ?? ['turuncu', '•'];
+      return ilerleme.kartlar.includes(k.id)
+        ? `<button class="mini ${renk}" data-kart="${k.id}"><span class="mini-ust"><em>${kacis(k.tur)}</em><b>${e}</b></span><strong>${kacis(k.baslik)}</strong></button>`
+        : '<div class="mini kapali" aria-label="Henüz çekilmedi"><strong>?</strong><small>Salla ve keşfet</small></div>';
+    }).join('')}
     </div>
     <h2>Makale kartları <small>${ilerleme.makaleler.length}/${MAKALE_KARTLARI.length}</small></h2>
     <p class="alt-metin">Görüntü işlemenin dönüm noktası olan çalışmaların kısa özetleri.</p>
-    <div class="yol">${MAKALE_KARTLARI.map((m, k) => {
+    <div class="yol makaleler">${MAKALE_KARTLARI.map((m, k) => {
       const kilit = makaleKilitli(k);
       const okundu = ilerleme.makaleler.includes(m.id);
       return `<button class="adim makale${okundu ? ' bitti' : ''}" data-kart="${m.id}">
-        <i>${okundu ? '✓' : m.yil.toString().slice(2)}</i>
-        <span><strong>${kacis(m.baslik)}</strong><small>${kacis(m.yazar)} · ${m.yil}</small></span>
-        ${kilit ? '<b class="pro-cip">PRO</b>' : ''}
+        <i>${okundu ? '✓' : m.yil}</i>
+        <span><strong>${kacis(m.baslik)}</strong><small>${kacis(m.yazar)}</small></span>
+        ${kilit ? '<b class="pro-cip">PRO</b>' : ik('ok')}
       </button>`;
     }).join('')}
     </div>`;
@@ -666,30 +741,37 @@ function gelisimEkrani() {
   const xpler = gunler.map((g) => ilerleme.gunlukXp[bugun(g)] || 0);
   const tepe = Math.max(50, ...xpler);
   const sv = seviye(ilerleme.xp);
+  const rz = rozetler(ilerleme);
+  const sayac = (renk, simge, deger, ad) => `<div class="kart sayac"><span class="mini-ik ${renk}">${ik(simge)}</span><strong>${deger}</strong><small>${ad}</small></div>`;
   kok.innerHTML = `
     <h1>Gelişim</h1>
+    <a class="kart seviye-kart" href="#dersler">
+      <span class="seviye-ust"><b class="sv">${sv}</b><span><strong>Seviye ${sv} · ${ilerleme.xp} XP</strong><small>Sonraki seviyeye ${XP_SEVIYE - (ilerleme.xp % XP_SEVIYE)} XP</small></span></span>
+      <span class="cubuk"><i style="width:${((ilerleme.xp % XP_SEVIYE) / XP_SEVIYE) * 100}%"></i></span>
+    </a>
     <div class="sayaclar">
-      <div class="kart"><strong>${ilerleme.kartlar.length}</strong><small>Öğrenilen kart</small></div>
-      <div class="kart"><strong>${ilerleme.makaleler.length}</strong><small>Okunan makale</small></div>
-      <div class="kart"><strong>${sureYaz(ilerleme.sure)}</strong><small>Çalışma süresi</small></div>
-      <div class="kart"><strong>${ilerleme.denemeler}</strong><small>İşlenen kare</small></div>
-      <div class="kart"><strong>${ilerleme.tamamlanan.length}/${DERSLER.length}</strong><small>Biten ders</small></div>
-      <div class="kart"><strong>${enUzunSeri(ilerleme.gunler)} gün</strong><small>En uzun seri</small></div>
+      ${sayac('turuncu', 'alev', `${seri(ilerleme.gunler)} gün`, 'Şu anki seri')}
+      ${sayac('turuncu', 'kupa', `${enUzunSeri(ilerleme.gunler)} gün`, 'En uzun seri')}
+      ${sayac('yesil', 'hedef', `${ilerleme.tamamlanan.length}/${DERSLER.length}`, 'Biten ders')}
+      ${sayac('mavi', 'saat', sureYaz(ilerleme.sure), 'Çalışma süresi')}
+      ${sayac('turuncu', 'kart', ilerleme.kartlar.length, 'Öğrenilen kart')}
+      ${sayac('mor', 'makale', ilerleme.makaleler.length, 'Okunan makale')}
+      ${sayac('yesil', 'kamera', ilerleme.denemeler, 'İşlenen kare')}
+      ${sayac('mavi', 'yildiz', rz.filter((r) => r.kazanildi).length + '/' + rz.length, 'Rozet')}
     </div>
     <div class="kart">
-      <strong>Seviye ${sv} · ${ilerleme.xp} XP</strong>
-      <div class="cubuk"><i style="width:${((ilerleme.xp % XP_SEVIYE) / XP_SEVIYE) * 100}%"></i></div>
-    </div>
-    <div class="kart">
-      <strong>Son 7 gün</strong>
+      <span class="baslik-satir"><strong>Son 7 gün</strong><small>${xpler.reduce((a, b) => a + b, 0)} XP</small></span>
       <div class="grafik" role="img" aria-label="Son 7 günde kazanılan XP">${xpler.map((x, k) => `
-        <div><span style="height:${Math.round((x / tepe) * 100)}%"></span><small>${gunler[k].toLocaleDateString('tr', { weekday: 'short' })}</small></div>`).join('')}
+        <div class="${k === 6 ? 'bugun' : ''}"><b>${x || ''}</b><span style="height:${Math.round((x / tepe) * 100)}%"></span><small>${gunler[k].toLocaleDateString('tr', { weekday: 'short' })}</small></div>`).join('')}
       </div>
-      <small>Bu hafta ${xpler.reduce((a, b) => a + b, 0)} XP kazandın.</small>
     </div>
-    <h2>Rozetler</h2>
-    <div class="rozetler">${rozetler(ilerleme).map((r) => `
-      <div class="rozet${r.kazanildi ? '' : ' kilitli'}"><strong>${r.ad}</strong><small>${r.aciklama}</small></div>`).join('')}
+    <h2>Rozetler <small>${rz.filter((r) => r.kazanildi).length}/${rz.length}</small></h2>
+    <div class="rozetler">${rz.map((r) => `
+      <div class="rozet${r.kazanildi ? '' : ' kilitli'}">
+        <span class="madalya">${r.ik}</span>
+        <strong>${r.ad}</strong><small>${r.aciklama}</small>
+        ${r.kazanildi ? '' : `<span class="cubuk ince"><i style="width:${(r.deger / r.hedef) * 100}%"></i></span><small class="sayi">${r.deger}/${r.hedef}</small>`}
+      </div>`).join('')}
     </div>
     <h2>Günlük akış</h2>
     ${akisListesi(ilerleme.akis)}`;
@@ -703,17 +785,19 @@ function proEkrani() {
     return;
   }
   const bitis = proBilgi?.bitis ? new Date(proBilgi.bitis).toLocaleDateString('tr', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const arti = (simge, baslik, alt) => `<li><span class="mini-ik mor">${ik(simge)}</span><span><b>${baslik}</b><small>${alt}</small></span></li>`;
   kok.innerHTML = `
     <a class="geri-ic" href="#">‹ Bugün</a>
     <section class="pro-ust">
+      <span class="pro-amblem">${ik('elmas')}</span>
       <em>VISIONCAP PRO</em>
-      <h1>${pro ? 'Pro aktif ✓' : 'Görüntü işlemenin tamamı'}</h1>
-      ${pro && bitis ? `<p class="alt-metin">Abonelik ${proBilgi?.yenilenecek === false ? 'bitiş' : 'yenileme'} tarihi: ${bitis}</p>` : ''}
+      <h1>${pro ? 'Pro aktif' : 'Görüntü işlemenin tamamı'}</h1>
+      <p class="alt-metin">${pro && bitis ? `Abonelik ${proBilgi?.yenilenecek === false ? 'bitiş' : 'yenileme'} tarihi: ${bitis}` : 'Tüm dersleri aç, sınırsız kart çek, her makaleyi oku.'}</p>
     </section>
     <ul class="artilar">
-      <li><b>${DERSLER.length} dersin hepsi</b><span>HSV, morfoloji, uyarlamalı eşik ve sonra gelecek yeni dersler</span></li>
-      <li><b>Sınırsız bilgi kartı</b><span>Ücretsizde günde ${UCRETSIZ_KART} kart</span></li>
-      <li><b>Tüm makale kartları</b><span>${MAKALE_KARTLARI.length} dönüm noktası çalışmanın özeti</span></li>
+      ${arti('hedef', `${DERSLER.length} dersin hepsi`, 'HSV, morfoloji, uyarlamalı eşik ve sonra gelecek yeni dersler')}
+      ${arti('kart', 'Sınırsız bilgi kartı', `Ücretsizde günde ${UCRETSIZ_KART} kart`)}
+      ${arti('makale', 'Tüm makale kartları', `${MAKALE_KARTLARI.length} dönüm noktası çalışmanın özeti`)}
     </ul>
     ${pro ? '' : '<div class="planlar"><p class="kucuk">Planlar yükleniyor…</p></div>'}
     <button class="dugme ikincil" data-is="geri-yukle">Satın alımları geri yükle</button>
@@ -736,6 +820,7 @@ function proEkrani() {
   if (!pro) planlariYukle(kok.querySelector('.planlar'));
 }
 
+// Plan seçilir (varsayılan yıllık), alttaki düğme seçili planı satın alır.
 async function planlariYukle(kutu) {
   let urunler = [];
   try { urunler = (await Abonelik.urunler({ kimlikler: URUNLER })).urunler || []; } catch {}
@@ -745,23 +830,40 @@ async function planlariYukle(kutu) {
     kutu.querySelector('[data-is="tekrar"]').addEventListener('click', () => { kutu.innerHTML = '<p class="kucuk">Planlar yükleniyor…</p>'; planlariYukle(kutu); });
     return;
   }
-  urunler.sort((a, b) => URUNLER.indexOf(a.kimlik) - URUNLER.indexOf(b.kimlik));
+  urunler.sort((a, b) => URUNLER.indexOf(b.kimlik) - URUNLER.indexOf(a.kimlik));
   const etiket = { hafta: 'Haftalık', ay: 'Aylık', yıl: 'Yıllık' };
-  kutu.innerHTML = urunler.map((u) => `
-    <button class="plan${u.donem === 'yıl' ? ' one-cikan' : ''}" data-urun="${kacis(u.kimlik)}">
-      ${u.donem === 'yıl' ? '<em>EN AVANTAJLI</em>' : ''}
-      <strong>${etiket[u.donem] ?? kacis(u.ad)}</strong>
-      <span>${kacis(u.fiyat)} / ${kacis(u.donem)}</span>
-      ${u.deneme && u.denemeUygun ? `<small>${kacis(u.deneme)} ücretsiz, sonra ${kacis(u.fiyat)} / ${kacis(u.donem)}</small>` : ''}
-    </button>`).join('');
-  kutu.querySelectorAll('[data-urun]').forEach((b) => b.addEventListener('click', async () => {
+  let secili = (urunler.find((u) => u.donem === 'yıl') ?? urunler[0]).kimlik;
+  kutu.innerHTML = `<div class="plan-liste" role="radiogroup" aria-label="Plan">${urunler.map((u) => `
+    <button class="plan" role="radio" data-urun="${kacis(u.kimlik)}">
+      <span class="secim"></span>
+      <span class="plan-ad"><strong>${etiket[u.donem] ?? kacis(u.ad)}</strong>${u.donem === 'yıl' ? '<em>EN AVANTAJLI</em>' : ''}
+        ${u.deneme && u.denemeUygun ? `<small>${kacis(u.deneme)} ücretsiz deneme</small>` : ''}</span>
+      <span class="plan-fiyat"><b>${kacis(u.fiyat)}</b><small>/ ${kacis(u.donem)}</small></span>
+    </button>`).join('')}</div>
+    <button class="dugme pro-dugme" data-is="satin-al"></button>
+    <p class="kucuk plan-not"></p>`;
+  const al = kutu.querySelector('[data-is="satin-al"]');
+  const not = kutu.querySelector('.plan-not');
+  const goster = () => {
+    const u = urunler.find((x) => x.kimlik === secili);
+    kutu.querySelectorAll('.plan').forEach((b) => { const s = b.dataset.urun === secili; b.classList.toggle('secili', s); b.setAttribute('aria-checked', s); });
+    const deneme = u.deneme && u.denemeUygun;
+    al.textContent = deneme ? `${u.deneme} ücretsiz başla` : 'Abone ol';
+    not.textContent = deneme
+      ? `Deneme bitince ${u.fiyat} / ${u.donem}. İstediğin zaman iptal edebilirsin.`
+      : `${u.fiyat} / ${u.donem}. İstediğin zaman iptal edebilirsin.`;
+  };
+  goster();
+  kutu.querySelectorAll('[data-urun]').forEach((b) => b.addEventListener('click', () => { secili = b.dataset.urun; goster(); }));
+  al.addEventListener('click', async () => {
     kutu.querySelectorAll('button').forEach((x) => { x.disabled = true; });
     try {
-      const s = await Abonelik.satinAl({ kimlik: b.dataset.urun });
+      const s = await Abonelik.satinAl({ kimlik: secili });
       if (s.durum === 'tamam') {
         guncelle((i) => i, [{ ik: '💎', m: 'VisionCap Pro aktif' }], { sessiz: true });
         proAyarla(s);
         katman(`<div class="konfeti" aria-hidden="true">${'<i></i>'.repeat(18)}</div>
+          <span class="pro-amblem">${ik('elmas')}</span>
           <em class="etiket">VISIONCAP PRO</em><h2>Hoş geldin!</h2>
           <p>Tüm dersler, sınırsız kart ve bütün makale kartları artık açık.</p>
           <a class="dugme" href="#dersler" data-kapat>Derslere git</a>`);
@@ -770,7 +872,7 @@ async function planlariYukle(kutu) {
       if (s.durum === 'bekliyor') bildirim('Satın alma onay bekliyor. Onaylanınca Pro kendiliğinden açılır.');
     } catch { bildirim('Satın alma tamamlanamadı. Tekrar deneyebilirsin.'); }
     kutu.querySelectorAll('button').forEach((x) => { x.disabled = false; });
-  }));
+  });
 }
 
 // Ders bitince açılan tebrik kartı (ve bildirimler açıksa tebrik bildirimi).
@@ -781,10 +883,10 @@ function tebrik(d, { yeniSeviye, yeniRozetler }) {
   const sonrakiKilit = sonraki ? dersKilidi(sonrakiIndeks) : '';
   const hepsiBitti = ilerleme.tamamlanan.length === DERSLER.length;
   katman(`<div class="konfeti" aria-hidden="true">${'<i></i>'.repeat(18)}</div>
-    <p class="tebrik-ik" aria-hidden="true">✓</p>
+    <p class="tebrik-ik" aria-hidden="true">${hepsiBitti ? '🏆' : '✓'}</p>
     <h2>Tebrikler!</h2>
     <p><b>${kacis(d.baslik)}</b> dersini bitirdin.</p>
-    <p class="kazanc">+${XP_DERS} XP</p>
+    <p class="kazanc-hap">+${XP_DERS} XP</p>
     ${yeniSeviye ? `<p class="olay">⭐ Yeni seviye: ${yeniSeviye}</p>` : ''}
     ${yeniRozetler.map((r) => `<p class="olay">🏅 Rozet açıldı: ${kacis(r)}</p>`).join('')}
     <div class="cubuk"><i style="width:${(ilerleme.tamamlanan.length / DERSLER.length) * 100}%"></i></div>
@@ -873,9 +975,10 @@ async function ders(d) {
 
   kok.innerHTML = `
     <a class="geri-ic" href="#dersler">‹ Dersler</a>
+    <p class="ders-ust"><span class="hap">DERS ${indeks + 1}/${DERSLER.length}</span>${bitti() ? '<span class="hap yesil">✓ Bitti</span>' : ''}</p>
     <h1>${kacis(d.baslik)}</h1>
     <p class="anlatim">${kacis(d.anlatim)}</p>
-    <div class="formul">${kacis(d.formul)}</div>
+    <div class="formul"><em>FORMÜL</em>${kacis(d.formul)}</div>
     <div class="sahne"><canvas aria-label="Filtre uygulanmış görüntü"></canvas><p class="durum">Kamera açılıyor…</p></div>
     <p class="kucuk">Orijinali görmek için görüntüye basılı tut.</p>
     <button class="dugme" data-is="kare">Kare çek</button>
