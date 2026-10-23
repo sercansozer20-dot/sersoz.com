@@ -1,5 +1,5 @@
 /* TOEFL Kart — Service Worker (çevrimdışı destek) */
-const CACHE = "toefl-kart-v7";
+const CACHE = "toefl-kart-v8";
 const ASSETS = [
   "./",
   "./index.html",

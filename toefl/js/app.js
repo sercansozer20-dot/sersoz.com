@@ -67,6 +67,13 @@ function icon(name, cls) {
 }
 const deckIcon = (id) => icon(DECK_ICONS[id]);
 
+/* Her desteye kendi rengi (ton açısı); CSS --h ile kullanılır */
+const DECK_HUES = [238, 162, 32, 200, 340, 268, 96, 12, 186, 300, 48, 222, 128];
+const deckHue = (id) => {
+  const i = DECKS.findIndex((d) => d.id === id);
+  return DECK_HUES[(i < 0 ? 0 : i) % DECK_HUES.length];
+};
+
 /* ─────────── Kayıt (localStorage) ─────────── */
 
 const STORE_KEY = "toefl_kart_v1";
@@ -77,7 +84,7 @@ const MAX_BOX = 5;
 
 function defaultStore() {
   return {
-    settings: { theme: "light", autoSpeak: true, accent: "en-US", sessionSize: 20, dailyGoal: 20 },
+    settings: { theme: "light", autoSpeak: true, accent: "en-US", sessionSize: 20, dailyGoal: 20, tanitim: false },
     profile: { name: "", photo: "", email: "", google: false },
     words: {},   // { kelime: {box, due, seen, right, wrong, fav} }
     days: {},    // { 'YYYY-AA-GG': {studied, known, quiz} }
@@ -129,6 +136,13 @@ function streakDays() {
     if (d && (d.studied + d.quiz) > 0) n++;
     else break;
   }
+  return n;
+}
+
+// wp() her kelimeye boş kayıt açar; gerçekten çalışılmış kelimeleri say
+function gorulenSayisi() {
+  let n = 0;
+  for (const k in store.words) if (store.words[k].seen > 0) n++;
   return n;
 }
 
@@ -236,7 +250,43 @@ document.querySelectorAll(".tab").forEach((tab) => {
 
 /* ─────────── Ana Sayfa ─────────── */
 
+const AYLAR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+const GUNLER = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+
+function renderGreeting() {
+  const d = new Date();
+  const h = d.getHours();
+  const selam = h < 5 ? "İyi geceler" : h < 12 ? "Günaydın" : h < 18 ? "İyi günler" : "İyi akşamlar";
+  const ad = String(store.profile.name || "").trim().split(/\s+/)[0];
+  $("greet-date").textContent = GUNLER[d.getDay()] + ", " + d.getDate() + " " + AYLAR[d.getMonth()];
+  $("greet-text").textContent = ad ? selam + ", " + ad : selam;
+}
+
+/* Günün kelimesi: tarihe göre herkes için aynı, her gün farklı */
+function wordOfDay() {
+  if (!WORDS.length) return null;
+  const k = todayKey();
+  let h = 0;
+  for (const c of k) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return WORDS[h % WORDS.length];
+}
+
+function renderWotd() {
+  const w = wordOfDay();
+  $("wotd").classList.toggle("hidden", !w);
+  if (!w) return;
+  $("wotd").style.setProperty("--h", deckHue(w.deckId));
+  $("wotd-level").textContent = w.level || "";
+  $("wotd-word").textContent = w.word;
+  $("wotd-ipa").textContent = (w.ipa || "") + (w.pos ? "  ·  " + (POS_TR[w.pos] || w.pos) : "");
+  $("wotd-tr").textContent = w.tr;
+  const ex = (w.examples || [])[0];
+  $("wotd-ex").innerHTML = ex ? highlightWord(ex, w.word) : "";
+}
+
 function renderHome() {
+  renderGreeting();
+  renderWotd();
   const t = today();
   const goal = store.settings.dailyGoal;
   const done = t.studied + t.quiz;
@@ -273,12 +323,15 @@ function renderHome() {
     const deckWords = WORDS.filter((w) => w.deckId === d.id);
     const learned = deckWords.filter(isLearned).length;
     const pctd = d.count ? Math.round((learned / d.count) * 100) : 0;
+    const seen = deckWords.filter((w) => !isNew(w)).length;
     const btn = document.createElement("button");
     btn.className = "deck-card";
+    btn.style.setProperty("--h", deckHue(d.id));
     btn.innerHTML =
-      '<span class="deck-ico">' + deckIcon(d.id) + "</span>" +
+      '<span class="deck-head"><span class="deck-ico">' + deckIcon(d.id) + "</span>" +
+      '<span class="deck-pct">' + (pctd ? "%" + pctd : seen ? "Başladın" : "Yeni") + "</span></span>" +
       '<span class="deck-name">' + escapeHtml(d.name) + "</span>" +
-      '<span class="deck-meta">' + d.count + " kelime • %" + pctd + " öğrenildi</span>" +
+      '<span class="deck-meta">' + d.count + " kelime · " + learned + " öğrenildi</span>" +
       '<span class="deck-bar"><i style="width:' + pctd + '%"></i></span>';
     btn.addEventListener("click", () => startSession({ deckId: d.id }));
     grid.appendChild(btn);
@@ -287,6 +340,13 @@ function renderHome() {
     grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><span class="es-ico">' + icon("i-book-open") + '</span>Kelime verisi yüklenemedi.<br>js/data klasörünü kontrol edin.</div>';
   }
 }
+
+$("wotd").addEventListener("click", (e) => {
+  const w = wordOfDay();
+  if (!w) return;
+  if (e.target.closest("#wotd-speak")) { speak(w.word); return; }
+  startSession({ list: [w], name: "Günün Kelimesi" });
+});
 
 $("btn-due").addEventListener("click", () => {
   const due = WORDS.filter(isDue);
@@ -345,6 +405,8 @@ function startSession(opts) {
   session.active = true;
 
   $("study-deck-name").textContent = name;
+  // ipucu satırı yalnız ilk günlerde: 40 kelime görüldükten sonra gizlenir
+  $("study-hint").classList.toggle("faded", gorulenSayisi() > 40);
   $("study-end").classList.add("hidden");
   $("study").classList.remove("hidden");
   renderStack(true);
@@ -366,8 +428,10 @@ function cardHTML(w) {
     return '<div class="example"><p class="en">' + highlightWord(en, w.word) + '</p><p class="tr">' + escapeHtml(tr) + "</p></div>";
   }).join("");
   const syns = (w.synonyms || []).map((s) => '<span class="syn-chip">' + escapeHtml(s) + "</span>").join("");
+  const dots = [1, 2, 3, 4, 5].map((i) => '<i class="' + (p.box >= i ? "on" : "") + '"></i>').join("");
+  const boxText = p.seen === 0 ? "Yeni kelime" : p.box >= 4 ? "Öğrenildi · kutu " + p.box : "Kutu " + p.box;
   return (
-    '<div class="card-inner">' +
+    '<div class="card-inner" style="--h:' + deckHue(w.deckId) + '">' +
       '<div class="card-face card-front">' +
         '<div class="card-top">' +
           '<span class="chip level">' + escapeHtml(w.level || "") + "</span>" +
@@ -376,8 +440,9 @@ function cardHTML(w) {
         "</div>" +
         '<div class="card-word">' + escapeHtml(w.word) + "</div>" +
         '<div class="card-ipa">' + escapeHtml(w.ipa || "") + ' <button class="speak-inline">' + icon("i-volume") + "</button></div>" +
-        '<div class="card-hint">Dokun ve çevir</div>' +
-        '<div class="card-deck">' + escapeHtml(w.deckTr) + "</div>" +
+        '<div class="card-box"><span class="box-dots">' + dots + "</span>" + boxText + "</div>" +
+        '<div class="card-hint">' + icon("i-rotate", "ico-xs") + "Dokun ve çevir</div>" +
+        '<div class="card-deck">' + icon(DECK_ICONS[w.deckId], "ico-xs") + escapeHtml(w.deckTr) + "</div>" +
       "</div>" +
       '<div class="card-face card-back">' +
         '<div class="back-word">' + escapeHtml(w.word) + " " + escapeHtml(w.ipa || "") + "</div>" +
@@ -867,8 +932,10 @@ const BOX_META = [
 const DAY_NAMES = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
 
 function renderStats() {
-  $("st-total").textContent = WORDS.length;
   $("st-learned").textContent = WORDS.filter(isLearned).length;
+  let dogru = 0, yanlis = 0;
+  for (const k in store.words) { dogru += store.words[k].right || 0; yanlis += store.words[k].wrong || 0; }
+  $("st-acc").textContent = dogru + yanlis ? "%" + Math.round((dogru / (dogru + yanlis)) * 100) : "–";
   $("st-streak").textContent = streakDays();
   const t = today();
   $("st-today").textContent = t.studied + t.quiz;
@@ -876,12 +943,14 @@ function renderStats() {
   // Leitner kutuları
   const counts = [0, 0, 0, 0, 0, 0];
   for (const w of WORDS) counts[Math.min(wp(w.word).box, 5)]++;
-  const max = Math.max(1, ...counts);
+  $("box-stack").innerHTML = counts.map((c, i) =>
+    c ? '<span style="flex:' + c + ";background:" + BOX_META[i].color + '" title="' + BOX_META[i].label + '"></span>' : ""
+  ).join("");
   $("box-bars").innerHTML = counts.map((c, i) =>
-    '<div class="box-bar-row">' +
-      '<span class="bb-label">' + BOX_META[i].label + "</span>" +
-      '<span class="bb-track"><span class="bb-fill" style="width:' + Math.round((c / max) * 100) + "%;background:" + BOX_META[i].color + '"></span></span>' +
-      '<span class="bb-count">' + c + "</span>" +
+    '<div class="bl-item">' +
+      '<span class="bl-dot" style="background:' + BOX_META[i].color + '"></span>' +
+      '<span class="bl-label">' + BOX_META[i].label + (i ? "<small>" + BOX_INTERVALS[i] + " gün</small>" : "") + "</span>" +
+      '<b class="bl-count">' + c + "</b>" +
     "</div>"
   ).join("");
 
@@ -894,6 +963,8 @@ function renderStats() {
     days.push({ label: DAY_NAMES[date.getDay()], val: d.studied + d.quiz, isToday: i === 0 });
   }
   const wmax = Math.max(1, ...days.map((d) => d.val));
+  const haftaToplam = days.reduce((a, d) => a + d.val, 0);
+  $("week-total").textContent = haftaToplam ? haftaToplam + " kart" : "";
   $("week-bars").innerHTML = days.map((d) =>
     '<div class="week-col' + (d.isToday ? " today" : "") + '">' +
       '<span class="wk-val">' + (d.val || "") + "</span>" +
@@ -907,7 +978,7 @@ function renderStats() {
     const words = WORDS.filter((w) => w.deckId === d.id);
     const learned = words.filter(isLearned).length;
     const pct = words.length ? Math.round((learned / words.length) * 100) : 0;
-    return '<div class="deck-prog-row">' +
+    return '<div class="deck-prog-row" style="--h:' + deckHue(d.id) + '">' +
       '<span class="dp-ico">' + deckIcon(d.id) + "</span>" +
       '<span class="dp-name">' + escapeHtml(d.name) + "</span>" +
       '<span class="dp-track"><span class="dp-fill" style="width:' + pct + '%"></span></span>' +
@@ -1052,6 +1123,7 @@ $("name-edit").addEventListener("click", () => {
   store.profile.name = yeni.trim().slice(0, 40);
   save();
   renderProfile();
+  renderGreeting();
 });
 
 /* Satırlar */
@@ -1144,10 +1216,32 @@ window.TK = {
 
 /* ─────────── Başlatma ─────────── */
 
+/* ─────────── İlk açılış ─────────── */
+
+function showWelcome() {
+  // eski kullanıcılar (ilerlemesi olanlar) tanıtımı görmez
+  if (store.settings.tanitim || gorulenSayisi()) return;
+  $("welcome").classList.remove("hidden");
+}
+document.querySelectorAll("#welcome-goal button").forEach((b) => {
+  b.addEventListener("click", () => {
+    document.querySelectorAll("#welcome-goal button").forEach((x) => x.classList.remove("seg-active"));
+    b.classList.add("seg-active");
+    store.settings.dailyGoal = parseInt(b.dataset.goal, 10);
+  });
+});
+$("welcome-start").addEventListener("click", () => {
+  store.settings.tanitim = true;
+  save();
+  $("welcome").classList.add("hidden");
+  renderHome();
+});
+
 applyTheme();
 fillDeckSelects();
 renderHome();
 renderProfile();
+showWelcome();
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   window.addEventListener("load", () => {
