@@ -70,7 +70,10 @@
       <header class="home-header">
         <div class="logo">
           <span class="logo-mark"><svg class="ico"><use href="#i-cap"/></svg></span>
-          <span class="logo-type">TOEFL <b>Kart</b></span>
+          <span class="greet">
+            <small id="greet-date">TOEFL Kart</small>
+            <b id="greet-text">Hoş geldin</b>
+          </span>
         </div>
         <button id="btn-profile" class="avatar-btn" aria-label="Profil">
           <span id="avatar-header" class="avatar"><svg class="ico"><use href="#i-user"/></svg></span>
@@ -107,12 +110,23 @@
         <span class="due-count" id="due-count">0</span>
       </button>
 
+      <button id="wotd" class="wotd">
+        <span class="wotd-top">
+          <span class="wotd-label"><svg class="ico ico-xs"><use href="#i-sparkles"/></svg>Günün Kelimesi</span>
+          <span id="wotd-level" class="chip level">C1</span>
+        </span>
+        <span class="wotd-word"><b id="wotd-word">word</b><span id="wotd-speak" class="wotd-speak" role="button" aria-label="Seslendir"><svg class="ico"><use href="#i-volume"/></svg></span></span>
+        <span id="wotd-ipa" class="wotd-ipa"></span>
+        <span id="wotd-tr" class="wotd-tr"></span>
+        <span id="wotd-ex" class="wotd-ex"></span>
+      </button>
+
       <h3 class="section-title">Hızlı Başla</h3>
       <div class="quick-grid">
-        <button class="quick-btn" data-quick="new"><span class="q-ico c-indigo"><svg class="ico"><use href="#i-sparkles"/></svg></span><span class="q-label">Yeni Kelimeler</span><small id="qc-new">0</small></button>
-        <button class="quick-btn" data-quick="hard"><span class="q-ico c-red"><svg class="ico"><use href="#i-zap"/></svg></span><span class="q-label">Zor Kelimeler</span><small id="qc-hard">0</small></button>
-        <button class="quick-btn" data-quick="fav"><span class="q-ico c-gold"><svg class="ico"><use href="#i-star"/></svg></span><span class="q-label">Favorilerim</span><small id="qc-fav">0</small></button>
-        <button class="quick-btn" data-quick="all"><span class="q-ico c-green"><svg class="ico"><use href="#i-shuffle"/></svg></span><span class="q-label">Karışık</span><small id="qc-all">0</small></button>
+        <button class="quick-btn" data-quick="new"><span class="q-ico c-indigo"><svg class="ico"><use href="#i-sparkles"/></svg></span><span class="q-text"><span class="q-label">Yeni Kelimeler</span><small id="qc-new">0</small></span></button>
+        <button class="quick-btn" data-quick="hard"><span class="q-ico c-red"><svg class="ico"><use href="#i-zap"/></svg></span><span class="q-text"><span class="q-label">Zor Kelimeler</span><small id="qc-hard">0</small></span></button>
+        <button class="quick-btn" data-quick="fav"><span class="q-ico c-gold"><svg class="ico"><use href="#i-star"/></svg></span><span class="q-text"><span class="q-label">Favorilerim</span><small id="qc-fav">0</small></span></button>
+        <button class="quick-btn" data-quick="all"><span class="q-ico c-green"><svg class="ico"><use href="#i-shuffle"/></svg></span><span class="q-text"><span class="q-label">Karışık</span><small id="qc-all">0</small></span></button>
       </div>
 
       <h3 class="section-title">Desteler</h3>
@@ -186,19 +200,21 @@
       <header class="screen-header"><h1>İstatistik</h1><p class="screen-sub">Öğrenme yolculuğunun özeti</p></header>
 
       <div class="stat-tiles">
-        <div class="stat-tile"><b id="st-total">0</b><span>Toplam Kelime</span></div>
-        <div class="stat-tile"><b id="st-learned">0</b><span>Öğrenilen</span></div>
-        <div class="stat-tile"><b id="st-streak">0</b><span>Gün Serisi</span></div>
-        <div class="stat-tile"><b id="st-today">0</b><span>Bugün Çalışılan</span></div>
+        <div class="stat-tile t-green"><span class="st-ico"><svg class="ico"><use href="#i-check"/></svg></span><b id="st-learned">0</b><span>Öğrenilen kelime</span></div>
+        <div class="stat-tile t-gold"><span class="st-ico"><svg class="ico"><use href="#i-flame"/></svg></span><b id="st-streak">0</b><span>Gün serisi</span></div>
+        <div class="stat-tile t-indigo"><span class="st-ico"><svg class="ico"><use href="#i-target"/></svg></span><b id="st-acc">%0</b><span>Doğruluk</span></div>
+        <div class="stat-tile t-red"><span class="st-ico"><svg class="ico"><use href="#i-clock"/></svg></span><b id="st-today">0</b><span>Bugün çalışılan</span></div>
       </div>
 
       <div class="stat-panel">
         <h3><svg class="ico ico-sm"><use href="#i-layers"/></svg>Öğrenme Kutuları <small>Leitner sistemi</small></h3>
-        <div id="box-bars" class="box-bars"></div>
+        <div id="box-stack" class="box-stack"></div>
+        <div id="box-bars" class="box-legend"></div>
+        <p class="box-note">Bildiğin kelime bir üst kutuya geçer ve 1, 2, 4, 10, 30 gün sonra yeniden sorulur. Bilmediğin kelime 1. kutuya döner.</p>
       </div>
 
       <div class="stat-panel">
-        <h3><svg class="ico ico-sm"><use href="#i-chart"/></svg>Son 7 Gün</h3>
+        <h3><svg class="ico ico-sm"><use href="#i-chart"/></svg>Son 7 Gün <small id="week-total"></small></h3>
         <div id="week-bars" class="week-bars"></div>
       </div>
 
@@ -238,7 +254,7 @@
       <button id="ctl-fav" class="ctl ctl-small" aria-label="Favori"><svg class="ico"><use href="#i-star"/></svg></button>
       <button id="ctl-know" class="ctl ctl-know" aria-label="Biliyorum"><svg class="ico"><use href="#i-check"/></svg></button>
     </div>
-    <p class="study-hint">Dokun: çevir &nbsp;·&nbsp; Sağa kaydır: biliyorum &nbsp;·&nbsp; Sola kaydır: tekrar</p>
+    <p id="study-hint" class="study-hint">Dokun: çevir &nbsp;·&nbsp; Sağa kaydır: biliyorum &nbsp;·&nbsp; Sola kaydır: tekrar</p>
 
     <div id="study-end" class="study-end hidden">
       <div class="result-card">
@@ -290,7 +306,7 @@
         <button class="p-row hidden" id="pr-delete"><svg class="ico ico-sm"><use href="#i-trash"/></svg>Hesabı Sil<span class="p-note">buluttaki ilerleme silinir</span></button>
       </div>
 
-      <p class="about">TOEFL Kart v2.1 · 1000 kelime · 25 deste</p>
+      <p class="about">TOEFL Kart 1.0 · 1000 kelime · 25 deste<br>TOEFL®, ETS'nin tescilli markasıdır; bu uygulama ETS ile bağlantılı değildir.</p>
     </div>
   </div>
   <input type="file" id="photo-input" accept="image/*" style="display:none" />
@@ -343,7 +359,29 @@
       </div>
 
       <button id="btn-reset" class="btn-danger"><svg class="ico ico-sm"><use href="#i-trash"/></svg>İlerlemeyi Sıfırla</button>
-      <p class="about">TOEFL Kart v2.0 — Türkçe çevirili TOEFL kelime kartları</p>
+      <p class="about">TOEFL Kart 1.0 · Türkçe çevirili kelime kartları</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ İLK AÇILIŞ ═══════════ -->
+  <div id="welcome" class="welcome hidden">
+    <div class="welcome-card">
+      <span class="welcome-mark"><svg class="ico"><use href="#i-cap"/></svg></span>
+      <h1>TOEFL Kart'a hoş geldin</h1>
+      <p class="welcome-sub">Sınavda en çok çıkan 1000 kelime, Türkçe çevirisi ve örnek cümleleriyle.</p>
+      <ul class="welcome-list">
+        <li><span class="q-ico c-indigo"><svg class="ico"><use href="#i-layers"/></svg></span><span><b>Kaydır, öğren</b><small>Sağa kaydır: biliyorum. Sola kaydır: tekrar. Dokun: çevir.</small></span></li>
+        <li><span class="q-ico c-green"><svg class="ico"><use href="#i-clock"/></svg></span><span><b>Unutmadan tekrar et</b><small>Her kelime, unutmak üzereyken yeniden karşına çıkar.</small></span></li>
+        <li><span class="q-ico c-gold"><svg class="ico"><use href="#i-chart"/></svg></span><span><b>Kendini sına</b><small>Çoktan seçmeli testler ve günlük ilerleme.</small></span></li>
+      </ul>
+      <label class="field-label">Günlük hedefin</label>
+      <div class="segmented" id="welcome-goal">
+        <button data-goal="10">10 kart</button>
+        <button data-goal="20" class="seg-active">20 kart</button>
+        <button data-goal="40">40 kart</button>
+      </div>
+      <button id="welcome-start" class="btn-primary">Başla</button>
+      <p class="welcome-foot">Hesap gerekmez. İlerlemen bu cihazda saklanır.</p>
     </div>
   </div>
 
